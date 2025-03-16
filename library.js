@@ -2207,4 +2207,8 @@ if (typeof module !== 'undefined' && module.exports) {
   window.Prime = Prime;
 }
 
-export { Prime };
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = Prime;
+} else if (typeof window !== 'undefined') {
+  window.Prime = Prime;
+}
