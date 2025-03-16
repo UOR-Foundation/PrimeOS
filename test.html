@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrimeOS Library Tests</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+        }
+        .pass { color: green; }
+        .fail { color: red; }
+        .skip { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>PrimeOS Library Tests</h1>
+    <div id="results">Running tests...</div>
+    <pre id="log"></pre>
+
+    <!-- Load the library first -->
+    <script src="primeos-js-library.js"></script>
+    
+    <!-- Then load the tests -->
+    <script src="primeos-js-tests.js"></script>
+    
+    <script>
+        // Capture console output to display in the page
+        const resultsDiv = document.getElementById('results');
+        const logEl = document.getElementById('log');
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn
+        };
+        
+        console.log = function(...args) {
+            originalConsole.log(...args);
+            logEl.textContent += args.join(' ') + '\n';
+        };
+        
+        console.error = function(...args) {
+            originalConsole.error(...args);
+            logEl.textContent += '🔴 ' + args.join(' ') + '\n';
+        };
+        
+        console.warn = function(...args) {
+            originalConsole.warn(...args);
+            logEl.textContent += '⚠️ ' + args.join(' ') + '\n';
+        };
+        
+        // Listen for test completion
+        window.addEventListener('load', function() {
+            // Tests will automatically run due to the code at the end of the test file
+            resultsDiv.innerHTML = 'Tests started. See results below:';
+        });
+    </script>
+</body>
+</html>
