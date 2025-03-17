@@ -4,8 +4,6 @@
  * This file initializes the PrimeOS Shell environment and serves as the entry point for the application.
  */
 
-import { initializeShell } from '../core/shell/index.js';
-
 // Event Bus from framework.js
 const { EventBus } = window.Prime || {};
 
@@ -100,7 +98,11 @@ async function initializeApp() {
     await animateLoading();
     
     // Initialize the shell
-    const shell = await initializeShell();
+    if (typeof window.initializeShell !== 'function') {
+      throw new Error('Shell initialization function not found. Make sure core/shell/index.js is properly loaded.');
+    }
+    
+    const shell = await window.initializeShell();
     
     // Hide loading screen
     const loadingScreen = document.getElementById('loading');

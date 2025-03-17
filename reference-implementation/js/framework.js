@@ -182,32 +182,63 @@ const Framework = {
                     // Log the event for debugging
                     console.log(`Event published: ${event}`, payload);
                     
-                    // Call specific event handlers
-                    if (this.events[event]) {
-                        for (const callback of this.events[event]) {
+                    // Handle asynchronous execution of event handlers
+                    const processHandlers = async (handlers, eventData) => {
+                        if (!handlers || handlers.length === 0) return [];
+                        
+                        const handlerResults = [];
+                        
+                        // Execute handlers one at a time to avoid race conditions
+                        for (const callback of handlers) {
                             try {
-                                results.push(callback(payload));
+                                // Support both sync and async handlers
+                                const result = callback(eventData);
+                                if (result instanceof Promise) {
+                                    const resolvedResult = await result;
+                                    handlerResults.push(resolvedResult);
+                                } else {
+                                    handlerResults.push(result);
+                                }
                             } catch (error) {
                                 console.error(`Error in handler for ${event}:`, error);
+                                handlerResults.push(null);
                             }
                         }
-                    }
+                        
+                        return handlerResults;
+                    };
                     
-                    // Call wildcard handlers
-                    if (this._wildcardHandlers) {
-                        for (const callback of this._wildcardHandlers) {
-                            try {
-                                results.push(callback({
-                                    event,
-                                    payload
-                                }));
-                            } catch (error) {
-                                console.error(`Error in wildcard handler for ${event}:`, error);
+                    // Process specific event handlers
+                    const specificHandlers = this.events[event] || [];
+                    
+                    // Process wildcard handlers
+                    const wildcardHandlers = this._wildcardHandlers || [];
+                    
+                    // Execute handlers asynchronously but don't wait for results
+                    processHandlers(specificHandlers, payload).then(specificResults => {
+                        // Process wildcard handlers after specific handlers
+                        processHandlers(wildcardHandlers, {
+                            event,
+                            payload
+                        }).then(wildcardResults => {
+                            // Combine results
+                            const allResults = [...specificResults, ...wildcardResults];
+                            
+                            // Notify any event completion listeners (for internal use)
+                            if (this.events[`${event}:completed`]) {
+                                this.events[`${event}:completed`].forEach(callback => {
+                                    try {
+                                        callback({ results: allResults });
+                                    } catch (error) {
+                                        console.error(`Error in completion handler for ${event}:`, error);
+                                    }
+                                });
                             }
-                        }
-                    }
+                        });
+                    });
                     
-                    return results;
+                    // Return immediately - this is now fire-and-forget
+                    return [];
                 },
                 
                 unsubscribe: function(event, callback) {

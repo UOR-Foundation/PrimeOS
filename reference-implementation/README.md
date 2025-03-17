@@ -46,30 +46,24 @@ The reference implementation includes the following core services:
 - **Diagnostics & Troubleshooting** - Tools for system health monitoring and issue resolution
 - **Update & Recovery** - Manages system updates and provides recovery mechanisms
 
-## Included Applications
+## Implemented Applications
 
-The reference implementation includes these essential applications:
+The reference implementation currently includes these essential applications:
 
 ### Productivity Suite
-- **Prime Documents** - Coherence-aware document editor
-- **Prime Sheets** - Mathematical spreadsheet with coherence validation
-- **Prime Board** - Visual organization and planning tool
-
-### Development Tools
-- **Model Explorer** - Visual interface for exploring and manipulating Prime models
-- **Coherence Inspector** - Advanced tool for analyzing and optimizing system coherence
-- **Component Workshop** - Environment for building and testing Prime components
+- **Text Editor** - A simple text editor for creating and editing documents
+- **Calculator** - Basic calculator application with keyboard support
 
 ### Utilities
-- **PrimeSearch** - Unified search across all system resources
-- **Resource Browser** - Explore and manage local and remote resources
-- **System Settings** - Configure and personalize your PrimeOS experience
-- **Terminal** - Command-line interface for advanced system interaction
+- **File Explorer** - Browse and manage virtual files and directories
+- **Settings** (placeholder) - System configuration interface
 
-### Media & Communication
-- **MediaHub** - Organize and enjoy your media with mathematical tagging
-- **Connect** - Communication platform with coherence-verified message integrity
-- **WebAccess** - Secure browser with mathematically verified connection security
+### Application Features
+- Application lifecycle management (launch, suspend, resume, close)
+- User preferences and state persistence
+- Inter-application communication
+- File handling between applications
+- Responsive user interfaces with light/dark themes
 
 ## Architecture Overview
 
@@ -111,8 +105,8 @@ To run the PrimeOS Reference Implementation locally:
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/UOR-Foundation/PrimeOS.git
-   cd PrimeOS
+   git clone https://github.com/your-username/PrimeOS.git
+   cd PrimeOS/reference-implementation
    ```
 
 2. Install dependencies
@@ -120,15 +114,32 @@ To run the PrimeOS Reference Implementation locally:
    npm install
    ```
 
-3. Build the PrimeOS core
+3. Run tests to verify the implementation
    ```bash
-   npm run build
+   npm test
+   npm run test:shell
    ```
 
-4. Launch the reference implementation
+4. Launch the application
    ```bash
-   npm run start:reference
+   npm start
    ```
+
+### Available Commands
+
+```bash
+# Building
+npm run build        # Build all packages
+npm run build:dev    # Build for development
+npm run build:prod   # Build for production
+
+# Testing
+npm test             # Run all tests
+npm run test:shell   # Run shell integration tests
+
+# Development
+npm start            # Start development server
+```
 
 ### Online Demo
 
@@ -140,55 +151,67 @@ Experience PrimeOS without installation at:
 ### Directory Structure
 
 - `apps/` - Built-in applications
-  - `documents/` - Prime Documents application
-  - `sheets/` - Prime Sheets application
-  - `terminal/` - Terminal application
-  - `settings/` - System Settings application
-  - `explorer/` - Resource Explorer application
-  - ...
+  - `text-editor/` - Text editor application
+  - `calculator/` - Calculator application
+  - `file-explorer/` - File explorer application
 - `core/` - Core system services
   - `identity/` - Identity management system
+    - `identity-provider.js` - User authentication
   - `storage/` - Storage and data management 
-  - `coherence/` - Coherence monitoring and optimization
-  - ...
-- `shell/` - User interface shell
-  - `desktop/` - Desktop environment
-  - `components/` - UI components
-  - `themes/` - Visual themes
-  - ...
-- `services/` - System services
-  - `backup/` - Backup and synchronization
-  - `packages/` - Package management
-  - `notifications/` - Notification system
-  - ...
-- `utils/` - Utility functions and helpers
-- `assets/` - Icons, images, and other assets
+    - `primestore.js` - Persistent data storage
+  - `apps/` - Application support
+    - `app-api.js` - Application API
+  - `shell/` - Shell system
+    - `shell.js` - Main shell implementation
+    - `index.js` - Shell initialization
+    - `shell.css` - Shell styling
+- `css/` - Stylesheets
+  - `styles.css` - Global styles
+- `js/` - JavaScript modules
+  - `app.js` - Main application entry point
+  - `components.js` - UI component definitions
+  - `framework.js` - Core framework code
+  - `visualization.js` - Data visualization utilities
+- `tests/` - Test suite
+  - `shell-tests.js` - Shell unit tests
+  - `shell-integration-tests.js` - Shell integration tests
 - `index.html` - Main entry point
 
 ### Technology Stack
 
 - **Core**: PrimeOS Framework (JavaScript ES6+)
-- **Storage**: IndexedDB with Prime coherence validation
-- **UI Rendering**: Custom renderer with HTML5 Canvas and DOM
-- **Networking**: Fetch API with mathematical verification
-- **Authentication**: WebAuthn/FIDO2 support for strong authentication
-- **Data Processing**: WebAssembly modules for performance-critical operations
+- **Storage**: IndexedDB with coherence validation
+- **UI Rendering**: DOM-based component system
+- **Event System**: Custom EventBus for communication
+- **State Management**: Variant/Invariant pattern for efficient updates
+- **Application Lifecycle**: Suspended/Active states for resource optimization
 
-## Extension and Customization
+## Implementation Progress
 
-PrimeOS is designed to be extended and customized:
+The current implementation focuses on core functionality:
 
-### Package System
-Install additional applications and services through the built-in package manager.
+### Completed Features
+- ✅ Shell environment with desktop, taskbar, app launcher, and notifications
+- ✅ Window management system (create, minimize, maximize, close)
+- ✅ Application API with lifecycle management
+- ✅ Inter-application communication
+- ✅ Persistent storage system
+- ✅ File handling between applications
+- ✅ Three demo applications (Text Editor, Calculator, File Explorer)
 
-### Plugin Architecture
-Extend system capabilities through the plugin API, allowing third-party developers to add new features.
+### Upcoming Features
+- 🔲 User authentication improvements
+- 🔲 Advanced window management (snap, resize)
+- 🔲 More application demos
+- 🔲 Package installation system
+- 🔲 Multi-user support
+- 🔲 Cloud synchronization
 
-### Theming Engine
-Customize the look and feel of PrimeOS through comprehensive theming support.
-
-### Configuration API
-Tailor PrimeOS behavior to your specific needs through detailed configuration options.
+### Extending the System
+You can create new applications by:
+1. Creating a new directory in `/apps/`
+2. Implementing an application that follows the AppAPI pattern
+3. Updating the application registry in the shell
 
 ## Contributing
 

@@ -63,9 +63,18 @@ jobs:
           </html>
           EOF
           
-          # Copy all the built library files to the reference implementation
-          cp dist/primeos*.js dist/reference-implementation/
-          cp dist/primeos*.map dist/reference-implementation/
+          # Check if built files exist before copying
+          if [ -f "dist/primeos.js" ]; then
+            # Copy all the built library files to the reference implementation
+            cp dist/primeos*.js dist/reference-implementation/ || true
+            cp dist/primeos*.map dist/reference-implementation/ || true
+          elif [ -f "primeos.min.js" ]; then
+            # Alternative location
+            cp primeos*.js dist/reference-implementation/ || true
+            cp primeos*.map dist/reference-implementation/ || true
+          else
+            echo "Warning: Could not find built PrimeOS files to copy"
+          fi
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
@@ -73,9 +82,6 @@ jobs:
           path: ./dist
 
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
     steps:

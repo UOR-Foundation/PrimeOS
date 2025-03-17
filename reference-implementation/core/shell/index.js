@@ -4,7 +4,7 @@
  * This file initializes the Shell environment and exports the public API
  */
 
-const { Shell } = require('./shell');
+import { Shell } from './shell.js';
 
 // Create global stylesheet link
 function loadShellStyles() {
@@ -13,7 +13,7 @@ function loadShellStyles() {
   
   const linkElement = document.createElement('link');
   linkElement.rel = 'stylesheet';
-  linkElement.href = '/reference-implementation/core/shell/shell.css';
+  linkElement.href = '/core/shell/shell.css';
   document.head.appendChild(linkElement);
   
   // Also add Google Fonts for Roboto
@@ -30,7 +30,7 @@ let shellInstance = null;
  * Get the shell instance, creating it if it doesn't exist
  * @returns {Shell} The shell instance
  */
-function getShell() {
+export function getShell() {
   if (!shellInstance) {
     // Load shell styles
     loadShellStyles();
@@ -46,13 +46,14 @@ function getShell() {
  * Initialize the shell environment
  * @returns {Promise<Shell>} The initialized shell instance
  */
-async function initializeShell() {
+export async function initializeShell() {
   const shell = getShell();
   await shell.initialize();
   return shell;
 }
 
-module.exports = {
-  getShell,
-  initializeShell
-};
+// Make functions available to window for browser usage
+if (typeof window !== 'undefined') {
+  window.getShell = getShell;
+  window.initializeShell = initializeShell;
+}

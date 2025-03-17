@@ -105,6 +105,11 @@
   background-color: var(--taskbar-item-active, rgba(255, 255, 255, 0.25));
 }
 
+.taskbar-item.minimized-window {
+  background-color: var(--taskbar-item-minimized, rgba(255, 255, 255, 0.1));
+  box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.3);
+}
+
 .taskbar-item:hover {
   background-color: var(--taskbar-item-hover, rgba(255, 255, 255, 0.2));
 }
@@ -226,35 +231,62 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 16px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease-in-out;
+  background-color: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .app-item:hover {
-  background-color: var(--app-item-hover, rgba(255, 255, 255, 0.1));
+  background-color: var(--app-item-hover, rgba(255, 255, 255, 0.15));
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.app-item:active {
+  transform: translateY(0);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .app-icon {
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  margin-bottom: 8px;
-  background-color: var(--app-icon-bg, rgba(255, 255, 255, 0.1));
-  border-radius: 12px;
+  font-size: 28px;
+  margin-bottom: 12px;
+  background-color: var(--app-icon-bg, rgba(255, 255, 255, 0.15));
+  border-radius: 16px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.app-item:hover .app-icon {
+  transform: scale(1.1);
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 .app-name {
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 500;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: color 0.2s ease;
+}
+
+.app-item:hover .app-name {
+  color: #ffffff;
 }
 
 /* Notification Center */
@@ -501,7 +533,13 @@
 }
 
 .window.minimized {
-  display: none;
+  /* Hide but keep in DOM for event handlers */
+  visibility: hidden;
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
 }
 
 .window.maximized {

@@ -6,7 +6,7 @@
  * It implements the four-tier architecture using the PrimeOS framework.
  */
 
-// Import from global modules if available, otherwise attempt to require the modules
+// Import from global modules if available, otherwise attempt to import modules
 let EventBus, createComponent, PrimeStore, PrimeIdentity;
 
 try {
@@ -36,16 +36,9 @@ try {
       return component;
     };
     
-    // Use global PrimeStore or create a simple mock
-    PrimeStore = window.PrimeStore || require('../storage/primestore').PrimeStore;
-    PrimeIdentity = window.PrimeIdentity || require('../identity/identity-provider').PrimeIdentity;
-  } else {
-    // Node.js environment, import with require
-    const framework = require('../../js/framework');
-    EventBus = framework.EventBus;
-    createComponent = framework.createComponent;
-    PrimeStore = require('../storage/primestore').PrimeStore;
-    PrimeIdentity = require('../identity/identity-provider').PrimeIdentity;
+    // Use global PrimeStore or import it
+    PrimeStore = window.PrimeStore;
+    PrimeIdentity = window.PrimeIdentity;
   }
 } catch (error) {
   console.error('Failed to import dependencies:', error);
@@ -83,8 +76,19 @@ try {
   };
   
   PrimeStore = function(storeName) {
+    // Validate storeName and default to system if invalid
+    if (!['system', 'files', 'apps', 'identity'].includes(storeName)) {
+      console.warn(`Mock PrimeStore: Unknown store "${storeName}", defaulting to "system"`);
+      storeName = 'system';
+    }
+    
     this.storeName = storeName;
     this.data = {};
+    
+    this.initialize = async function() {
+      console.log(`Mock PrimeStore: Initialized ${this.storeName} store`);
+      return true;
+    };
     
     this.get = async function(key) {
       return this.data[key];
@@ -132,8 +136,43 @@ class Shell {
     this.apps = [];
     this.notifications = [];
     this.eventBus = EventBus;
-    this.store = new PrimeStore('shell');
-    this.identity = new PrimeIdentity();
+    
+    // Initialize store - handle both object pattern and constructor pattern
+    if (typeof PrimeStore === 'function') {
+      // Constructor pattern - use 'system' store instead of 'shell' to match available stores
+      this.store = new PrimeStore('system');
+    } else if (typeof PrimeStore === 'object') {
+      // Module pattern (object with methods)
+      this.store = PrimeStore;
+    } else {
+      console.error('PrimeStore not found or not properly initialized');
+      // Create a minimal mock
+      this.store = {
+        storeName: 'system',
+        get: async function(key) { return null; },
+        put: async function(key, value) { return value; },
+        query: async function() { return []; },
+        saveAll: async function(key, values) { return values; }
+      };
+    }
+    
+    // Initialize identity - handle both object pattern and constructor pattern
+    if (typeof PrimeIdentity === 'function') {
+      // Constructor pattern
+      this.identity = new PrimeIdentity();
+    } else if (typeof PrimeIdentity === 'object') {
+      // Module pattern (object with methods)
+      this.identity = PrimeIdentity;
+    } else {
+      console.error('PrimeIdentity not found or not properly initialized');
+      // Create a minimal mock
+      this.identity = {
+        checkSession: async function() { return false; },
+        getCurrentUser: async function() { return null; },
+        login: async function() { return true; },
+        createUser: async function() { return true; }
+      };
+    }
     
     // Register shell events
     this.eventBus.subscribe('shell:launch-app', this.launchApp.bind(this));
@@ -143,6 +182,7 @@ class Shell {
     this.eventBus.subscribe('shell:focus-window', this.focusWindow.bind(this));
     this.eventBus.subscribe('shell:show-notification', this.showNotification.bind(this));
     this.eventBus.subscribe('shell:dismiss-notification', this.dismissNotification.bind(this));
+    this.eventBus.subscribe('shell:update-window-title', this.updateWindowTitle.bind(this));
     
     // Initialize desktop
     this.desktop = createComponent({
@@ -237,25 +277,40 @@ class Shell {
    * @returns {Promise<void>}
    */
   async initialize() {
-    // Load available applications
-    await this.loadApplications();
-    
-    // Load user preferences
-    await this.loadPreferences();
-    
-    // Render shell components
-    this.renderShell();
-    
-    // Check user authentication
-    const isAuthenticated = await this.identity.checkSession();
-    if (!isAuthenticated) {
-      this.showLoginScreen();
+    try {
+      // Initialize store first if it has an initialize method
+      if (this.store && typeof this.store.initialize === 'function') {
+        await this.store.initialize();
+      }
+      
+      // Initialize identity provider if it has an initialize method
+      if (this.identity && typeof this.identity.initialize === 'function') {
+        await this.identity.initialize();
+      }
+      
+      // Load available applications
+      await this.loadApplications();
+      
+      // Render shell components first to ensure DOM elements exist
+      this.renderShell();
+      
+      // Now load user preferences (DOM elements will be available for preference application)
+      await this.loadPreferences();
+      
+      // Check user authentication
+      const isAuthenticated = await this.identity.checkSession();
+      if (!isAuthenticated) {
+        this.showLoginScreen();
+      }
+      
+      console.log('PrimeOS Shell initialized');
+      
+      // Publish shell ready event
+      this.eventBus.publish('shell:ready', { timestamp: Date.now() });
+    } catch (error) {
+      console.error('Failed to initialize shell:', error);
+      throw error;
     }
-    
-    console.log('PrimeOS Shell initialized');
-    
-    // Publish shell ready event
-    this.eventBus.publish('shell:ready', { timestamp: Date.now() });
   }
   
   /**
@@ -264,45 +319,90 @@ class Shell {
    */
   async loadApplications() {
     try {
-      // Fetch installed apps from storage
-      const apps = await this.store.query('applications');
+      // Fetch installed apps from storage - use 'apps' instead of 'applications'
+      // to match the store name defined in primestore.js
+      const apps = await this.store.query('apps');
       if (apps && apps.length > 0) {
         this.apps = apps;
       } else {
         // Load default applications if none are found
         this.apps = [
           {
-            id: 'file-manager',
-            name: 'File Manager',
-            icon: 'folder',
+            id: 'file-explorer',
+            name: 'File Explorer',
+            icon: '📁',
             description: 'Browse and manage your files',
-            path: '/apps/file-manager/index.js'
-          },
-          {
-            id: 'terminal',
-            name: 'Terminal',
-            icon: 'terminal',
-            description: 'Command-line interface',
-            path: '/apps/terminal/index.js'
-          },
-          {
-            id: 'settings',
-            name: 'Settings',
-            icon: 'cog',
-            description: 'System configuration',
-            path: '/apps/settings/index.js'
+            path: '/apps/file-explorer/index.js'
           },
           {
             id: 'text-editor',
             name: 'Text Editor',
-            icon: 'edit',
+            icon: '📝',
             description: 'Create and edit documents',
             path: '/apps/text-editor/index.js'
+          },
+          {
+            id: 'calculator',
+            name: 'Calculator',
+            icon: '🧮',
+            description: 'Perform calculations',
+            path: '/apps/calculator/index.js'
+          },
+          {
+            id: 'settings',
+            name: 'Settings',
+            icon: '⚙️',
+            description: 'System configuration',
+            path: '/apps/settings/index.js'
           }
         ];
         
-        // Store default apps
-        await this.store.saveAll('applications', this.apps);
+        // Store default apps in the correct store ('apps' instead of 'applications')
+        await this.store.saveAll('apps', this.apps);
+      }
+      
+      // Try to detect installed applications from the filesystem
+      try {
+        // We can't directly access the filesystem in the browser,
+        // but in a real system we would scan for installed apps.
+        // For now, we'll just make sure our three demo apps are registered.
+        
+        // Make sure our three demo apps are included
+        const requiredApps = [
+          {
+            id: 'file-explorer',
+            name: 'File Explorer',
+            icon: '📁',
+            description: 'Browse and manage your files',
+            path: '/apps/file-explorer/index.js'
+          },
+          {
+            id: 'text-editor',
+            name: 'Text Editor',
+            icon: '📝',
+            description: 'Create and edit documents',
+            path: '/apps/text-editor/index.js'
+          },
+          {
+            id: 'calculator',
+            name: 'Calculator',
+            icon: '🧮',
+            description: 'Perform calculations',
+            path: '/apps/calculator/index.js'
+          }
+        ];
+        
+        // Add any missing apps
+        for (const app of requiredApps) {
+          if (!this.apps.find(a => a.id === app.id)) {
+            this.apps.push(app);
+          }
+        }
+        
+        // Store the updated app list
+        await this.store.saveAll('apps', this.apps);
+      } catch (error) {
+        console.warn('Failed to scan for installed applications:', error);
       }
       
       // Update app launcher component
@@ -331,22 +431,61 @@ class Shell {
       const currentUser = await this.identity.getCurrentUser();
       if (!currentUser) return;
       
-      const preferences = await this.store.get('user_preferences', currentUser.id);
-      if (preferences) {
-        // Apply user preferences (theme, layout, etc.)
-        if (preferences.theme) {
-          document.documentElement.setAttribute('data-theme', preferences.theme);
+      // We'll store preferences in the 'system' store as that's one of the stores defined in primestore.js
+      const prefStore = new PrimeStore('system');
+      
+      // Initialize the store before using it
+      if (typeof prefStore.initialize === 'function') {
+        await prefStore.initialize();
+      }
+      
+      const prefKey = `user_preferences_${currentUser.id}`;
+      const preferences = await prefStore.get(prefKey);
+      
+      // Default preferences
+      const defaultPrefs = {
+        id: prefKey,
+        type: 'preferences',
+        theme: 'light',
+        fontSize: '16px',
+        taskbarPosition: 'bottom'
+      };
+      
+      // Use stored preferences or defaults
+      const prefs = preferences || defaultPrefs;
+      
+      try {
+        // Apply theme if document root exists
+        if (prefs.theme && document.documentElement) {
+          document.documentElement.setAttribute('data-theme', prefs.theme);
         }
         
-        if (preferences.fontSize) {
-          document.documentElement.style.setProperty('--font-size-base', preferences.fontSize);
+        // Apply font size if document root exists
+        if (prefs.fontSize && document.documentElement) {
+          document.documentElement.style.setProperty('--font-size-base', prefs.fontSize);
         }
         
-        if (preferences.taskbarPosition) {
-          document.getElementById('taskbar').setAttribute('data-position', preferences.taskbarPosition);
+        // Apply taskbar position if element exists
+        const taskbar = document.getElementById('taskbar');
+        if (prefs.taskbarPosition && taskbar) {
+          taskbar.setAttribute('data-position', prefs.taskbarPosition);
+        } else {
+          console.log('Taskbar element not found. Will apply preferences after rendering.');
+          
+          // Save preferences to apply after rendering
+          this._pendingPreferences = {
+            taskbarPosition: prefs.taskbarPosition
+          };
+        }
+        
+        // Save default preferences if none existed
+        if (!preferences) {
+          await prefStore.put(defaultPrefs);
         }
         
         console.log('Applied user preferences');
+      } catch (e) {
+        console.error('Error applying preferences:', e);
       }
     } catch (error) {
       console.error('Failed to load preferences:', error);
@@ -448,8 +587,35 @@ class Shell {
       this.notificationCenter.render();
     }
     
+    // Apply pending preferences if any
+    this.applyPendingPreferences();
+    
     // Start clock
     this.startClock();
+  }
+  
+  /**
+   * Apply any preferences that couldn't be applied earlier because DOM elements weren't ready
+   * @private
+   */
+  applyPendingPreferences() {
+    if (!this._pendingPreferences) return;
+    
+    try {
+      // Apply taskbar position
+      if (this._pendingPreferences.taskbarPosition) {
+        const taskbar = document.getElementById('taskbar');
+        if (taskbar) {
+          taskbar.setAttribute('data-position', this._pendingPreferences.taskbarPosition);
+          console.log('Applied pending taskbar position preference');
+        }
+      }
+      
+      // Clear pending preferences after applying
+      this._pendingPreferences = null;
+    } catch (error) {
+      console.error('Error applying pending preferences:', error);
+    }
   }
   
   /**
@@ -484,35 +650,100 @@ class Shell {
    */
   initializeEventListeners() {
     try {
-      // Start button
+      // Start button - Direct implementation for reliability
       const startButton = document.getElementById('start-button');
       if (startButton) {
-        startButton.addEventListener('click', () => {
-          if (this.appLauncher && this.appLauncher.invariant && 
-              typeof this.appLauncher.invariant.toggleVisible === 'function') {
-            this.appLauncher.invariant.toggleVisible.call(this.appLauncher);
+        console.log('Adding click handler to start button');
+        startButton.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent event bubbling
+          console.log('Start button clicked');
+          
+          // Direct toggle of app launcher visibility for reliability
+          const appLauncher = document.getElementById('app-launcher');
+          if (appLauncher) {
+            const isHidden = appLauncher.classList.contains('hidden');
+            console.log('App launcher visibility:', isHidden ? 'hidden -> visible' : 'visible -> hidden');
+            
+            if (isHidden) {
+              appLauncher.classList.remove('hidden');
+              // Update component state if available
+              if (this.appLauncher && this.appLauncher.variant) {
+                this.appLauncher.variant.visible = true;
+              }
+              
+              // Force update the launcher to ensure apps are displayed
+              this.updateAppLauncher();
+            } else {
+              appLauncher.classList.add('hidden');
+              // Update component state if available
+              if (this.appLauncher && this.appLauncher.variant) {
+                this.appLauncher.variant.visible = false;
+              }
+            }
+          } else {
+            console.error('App launcher element not found in DOM');
           }
         });
+      } else {
+        console.error('Start button not found in DOM');
       }
       
-      // Notification icon
+      // Notification icon - Same direct approach
       const notificationIcon = document.getElementById('notification-icon');
       if (notificationIcon) {
-        notificationIcon.addEventListener('click', () => {
-          if (this.notificationCenter && this.notificationCenter.invariant && 
-              typeof this.notificationCenter.invariant.toggleVisible === 'function') {
-            this.notificationCenter.invariant.toggleVisible.call(this.notificationCenter);
+        notificationIcon.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent event bubbling
+          
+          // Direct toggle of notification center visibility for reliability
+          const notificationCenter = document.getElementById('notification-center');
+          if (notificationCenter) {
+            const isHidden = notificationCenter.classList.contains('hidden');
+            
+            if (isHidden) {
+              notificationCenter.classList.remove('hidden');
+              // Update component state if available
+              if (this.notificationCenter && this.notificationCenter.variant) {
+                this.notificationCenter.variant.visible = true;
+              }
+              
+              // Force update to ensure notifications are displayed
+              this.updateNotificationCenter();
+            } else {
+              notificationCenter.classList.add('hidden');
+              // Update component state if available
+              if (this.notificationCenter && this.notificationCenter.variant) {
+                this.notificationCenter.variant.visible = false;
+              }
+            }
+          } else {
+            console.error('Notification center element not found in DOM');
           }
         });
       }
       
-      // App search
+      // App search with direct DOM access
       const appSearch = document.getElementById('app-search');
       if (appSearch) {
         appSearch.addEventListener('input', (e) => {
-          if (this.appLauncher && this.appLauncher.invariant && 
-              typeof this.appLauncher.invariant.search === 'function') {
-            this.appLauncher.invariant.search.call(this.appLauncher, e.target.value);
+          const searchQuery = e.target.value.trim().toLowerCase();
+          console.log(`Search input: "${searchQuery}"`);
+          
+          if (this.appLauncher && this.appLauncher.variant) {
+            // Set the search query in the component
+            this.appLauncher.variant.searchQuery = searchQuery;
+            
+            // Filter apps directly
+            if (Array.isArray(this.appLauncher.variant.apps)) {
+              this.appLauncher.variant.filteredApps = this.appLauncher.variant.apps.filter(app => 
+                app.name.toLowerCase().includes(searchQuery) ||
+                app.description?.toLowerCase().includes(searchQuery)
+              );
+              
+              console.log(`Filtered apps: ${this.appLauncher.variant.filteredApps.length} matches`);
+              
+              // Update the UI
+              this.updateAppLauncher();
+            }
           }
         });
       }
@@ -526,31 +757,38 @@ class Shell {
       }
       
       // Close app launcher when clicking outside
-      if (document && this.appLauncher && this.notificationCenter) {
-        document.addEventListener('click', (e) => {
-          // Only handle app launcher if it exists with proper structure
-          if (this.appLauncher && this.appLauncher.variant && 
-              this.appLauncher.variant.visible && 
-              this.appLauncher.invariant && 
-              typeof this.appLauncher.invariant.toggleVisible === 'function') {
-              
-            if (!e.target.closest('#app-launcher') && !e.target.closest('#start-button')) {
-              this.appLauncher.invariant.toggleVisible.call(this.appLauncher);
+      document.addEventListener('click', (e) => {
+        // Direct DOM element checks for reliability
+        const appLauncher = document.getElementById('app-launcher');
+        const startButton = document.getElementById('start-button');
+        
+        if (appLauncher && !appLauncher.classList.contains('hidden')) {
+          if (!appLauncher.contains(e.target) && !startButton.contains(e.target)) {
+            console.log('Click outside app launcher, hiding it');
+            appLauncher.classList.add('hidden');
+            
+            // Update component state if available
+            if (this.appLauncher && this.appLauncher.variant) {
+              this.appLauncher.variant.visible = false;
             }
           }
-          
-          // Only handle notification center if it exists with proper structure
-          if (this.notificationCenter && this.notificationCenter.variant && 
-              this.notificationCenter.variant.visible && 
-              this.notificationCenter.invariant && 
-              typeof this.notificationCenter.invariant.toggleVisible === 'function') {
-              
-            if (!e.target.closest('#notification-center') && !e.target.closest('#notification-icon')) {
-              this.notificationCenter.invariant.toggleVisible.call(this.notificationCenter);
+        }
+        
+        // Same for notification center
+        const notificationCenter = document.getElementById('notification-center');
+        const notificationIcon = document.getElementById('notification-icon');
+        
+        if (notificationCenter && !notificationCenter.classList.contains('hidden')) {
+          if (!notificationCenter.contains(e.target) && !notificationIcon.contains(e.target)) {
+            notificationCenter.classList.add('hidden');
+            
+            // Update component state if available
+            if (this.notificationCenter && this.notificationCenter.variant) {
+              this.notificationCenter.variant.visible = false;
             }
           }
-        });
-      }
+        }
+      });
     } catch (error) {
       console.error('Error initializing event listeners:', error);
     }
@@ -561,14 +799,50 @@ class Shell {
    */
   updateDesktop() {
     const container = document.getElementById('windows-container');
+    if (!container) return;
     
-    // Clear existing windows
+    // Get the current windows in the DOM
+    const currentWindowEls = {};
+    Array.from(container.querySelectorAll('.window')).forEach(el => {
+      const windowId = el.getAttribute('data-window-id');
+      if (windowId) {
+        currentWindowEls[windowId] = el;
+      }
+    });
+    
+    // Clear container but don't destroy elements yet
     container.innerHTML = '';
     
-    // Add windows in z-index order
+    // Add windows in z-index order, reusing elements when possible
     this.windows.forEach(window => {
-      const windowEl = this.createWindowElement(window);
-      container.appendChild(windowEl);
+      // Check if we have an existing element for this window
+      if (currentWindowEls[window.id]) {
+        // Update the existing element
+        const windowEl = currentWindowEls[window.id];
+        
+        // Update window classes for minimized/maximized state
+        windowEl.className = 'window' + (window.minimized ? ' minimized' : '') + (window.maximized ? ' maximized' : '');
+        
+        // Update maximize button text
+        const maxButton = windowEl.querySelector('.window-maximize');
+        if (maxButton) {
+          maxButton.textContent = window.maximized ? '❐' : '□';
+        }
+        
+        // Update position and size for non-maximized windows
+        if (!window.maximized) {
+          windowEl.style.width = `${window.width}px`;
+          windowEl.style.height = `${window.height}px`;
+          windowEl.style.left = `${window.x}px`;
+          windowEl.style.top = `${window.y}px`;
+        }
+        
+        container.appendChild(windowEl);
+      } else {
+        // Create a new window element
+        const windowEl = this.createWindowElement(window);
+        container.appendChild(windowEl);
+      }
     });
   }
   
@@ -576,34 +850,45 @@ class Shell {
    * Update taskbar component
    */
   updateTaskbar() {
-    const taskbarItems = document.getElementById('taskbar-items');
-    
-    // Clear existing items
-    taskbarItems.innerHTML = '';
-    
-    // Add open windows to taskbar
-    this.windows.forEach(window => {
-      const item = document.createElement('div');
-      item.className = 'taskbar-item' + (window.id === this.activeWindow?.id ? ' active' : '');
-      item.setAttribute('data-window-id', window.id);
+    try {
+      const taskbarItems = document.getElementById('taskbar-items');
+      if (!taskbarItems) return;
       
-      // Find app info
-      const app = this.apps.find(a => a.id === window.appId);
+      // Clear existing items
+      taskbarItems.innerHTML = '';
       
-      item.innerHTML = `
-        <span class="icon">${app?.icon || '📄'}</span>
-        <span class="title">${window.title}</span>
-      `;
-      
-      item.addEventListener('click', () => {
-        this.focusWindow(window.id);
+      // Add open windows to taskbar
+      this.windows.forEach(window => {
+        const item = document.createElement('div');
+        item.className = 'taskbar-item' + (window.id === this.activeWindow?.id ? ' active' : '');
+        item.setAttribute('data-window-id', window.id);
+        
+        // Find app info
+        const app = this.apps.find(a => a.id === window.appId);
+        
+        item.innerHTML = `
+          <span class="icon">${app?.icon || '📄'}</span>
+          <span class="title">${window.title}</span>
+        `;
+        
+        item.addEventListener('click', () => {
+          if (window.id === this.activeWindow?.id && !window.minimized) {
+            // If already active, minimize it
+            this.minimizeWindow(window.id);
+          } else {
+            // Otherwise focus it (this will unminimize if needed)
+            this.focusWindow(window.id);
+          }
+        });
+        
+        taskbarItems.appendChild(item);
       });
       
-      taskbarItems.appendChild(item);
-    });
-    
-    // Update clock
-    this.updateClock();
+      // Update clock
+      this.updateClock();
+    } catch (error) {
+      console.error('Error updating taskbar:', error);
+    }
   }
   
   /**
@@ -643,13 +928,67 @@ class Shell {
     // Check if apps array exists
     if (!Array.isArray(appsToDisplay)) {
       console.warn('No apps to display');
-      return;
+      
+      // Fallback to using the apps from the shell instance
+      if (Array.isArray(this.apps) && this.apps.length > 0) {
+        console.log('Using fallback apps array from shell instance');
+        appLauncher.variant.apps = this.apps;
+        appLauncher.variant.filteredApps = this.apps;
+      } else {
+        // Add default apps as last resort
+        console.log('Using default apps as fallback');
+        const defaultApps = [
+          {
+            id: 'calculator',
+            name: 'Calculator',
+            icon: '🧮',
+            description: 'Perform calculations',
+            path: '/apps/calculator/index.js'
+          },
+          {
+            id: 'text-editor',
+            name: 'Text Editor',
+            icon: '📝',
+            description: 'Create and edit documents',
+            path: '/apps/text-editor/index.js'
+          },
+          {
+            id: 'file-explorer',
+            name: 'File Explorer',
+            icon: '📁',
+            description: 'Browse and manage your files',
+            path: '/apps/file-explorer/index.js'
+          }
+        ];
+        
+        appLauncher.variant.apps = defaultApps;
+        appLauncher.variant.filteredApps = defaultApps;
+      }
+      
+      // Recursively call this function again with the updated apps array
+      return this.updateAppLauncher();
     }
     
-    // Add apps to grid
-    appsToDisplay.forEach(app => {
-      if (!app || !app.id) return;
+    // Filter out user preferences and other non-app entries
+    const validApps = appsToDisplay.filter(app => {
+      // Skip null or undefined apps
+      if (!app || !app.id) return false;
       
+      // Skip user preference entries
+      if (app.id.startsWith('user_preferences_')) return false;
+      
+      // Skip app preference entries
+      if (app.id.startsWith('app_preferences_')) return false;
+      
+      // Skip if name is missing (essential for display)
+      if (!app.name) return false;
+      
+      // Valid app
+      return true;
+    });
+    
+    // Add apps to grid
+    validApps.forEach(app => {
       const appItem = document.createElement('div');
       appItem.className = 'app-item';
       appItem.setAttribute('data-app-id', app.id);
@@ -659,8 +998,27 @@ class Shell {
         <div class="app-name">${app.name}</div>
       `;
       
+      // Add debugging info to the console for this app
+      console.log(`Adding app to launcher: ${app.name} (${app.id})`, app);
+      
+      // Make the app item clearly interactive with cursor styling
+      appItem.style.cursor = 'pointer';
+      
+      // Add a hover effect to make it more obvious it's clickable
+      appItem.addEventListener('mouseenter', () => {
+        appItem.style.transform = 'scale(1.05)';
+        appItem.style.transition = 'transform 0.2s';
+      });
+      
+      appItem.addEventListener('mouseleave', () => {
+        appItem.style.transform = 'scale(1)';
+      });
+      
+      // Add click event with debugging
       appItem.addEventListener('click', () => {
+        console.log(`App ${app.id} clicked, launching...`);
         this.launchApp({ appId: app.id });
+        
         if (appLauncher.invariant && typeof appLauncher.invariant.toggleVisible === 'function') {
           appLauncher.invariant.toggleVisible.call(appLauncher);
         }
@@ -668,6 +1026,9 @@ class Shell {
       
       appGrid.appendChild(appItem);
     });
+    
+    // Log completion
+    console.log(`Updated app launcher with ${validApps.length} valid apps`);
   }
   
   /**
@@ -835,31 +1196,67 @@ class Shell {
       windowEl.style.top = `${window.y}px`;
     }
     
-    windowEl.innerHTML = `
-      <div class="window-titlebar">
-        <div class="window-title">${window.title}</div>
-        <div class="window-controls">
-          <button class="window-control window-minimize">_</button>
-          <button class="window-control window-maximize">${window.maximized ? '❐' : '□'}</button>
-          <button class="window-control window-close">×</button>
-        </div>
+    // Create the window elements
+    const titlebar = document.createElement('div');
+    titlebar.className = 'window-titlebar';
+    titlebar.innerHTML = `
+      <div class="window-title">${window.title}</div>
+      <div class="window-controls">
+        <button class="window-control window-minimize">_</button>
+        <button class="window-control window-maximize">${window.maximized ? '❐' : '□'}</button>
+        <button class="window-control window-close">×</button>
       </div>
-      <div class="window-content" id="window-content-${window.id}"></div>
-      <div class="window-resize-handle"></div>
     `;
     
+    // Create window content separately to ensure it exists before app initialization
+    const contentEl = document.createElement('div');
+    contentEl.className = 'window-content';
+    contentEl.id = `window-content-${window.id}`;
+    
+    // Create resize handle
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'window-resize-handle';
+    
+    // Append elements to window
+    windowEl.appendChild(titlebar);
+    windowEl.appendChild(contentEl);
+    windowEl.appendChild(resizeHandle);
+    
+    // Debug output to confirm content element creation
+    console.log(`Created window content element with ID: window-content-${window.id}`);
+    
     // Add event listeners for window controls
-    windowEl.querySelector('.window-minimize').addEventListener('click', () => {
-      this.minimizeWindow(window.id);
-    });
+    const self = this; // Store reference to this
     
-    windowEl.querySelector('.window-maximize').addEventListener('click', () => {
-      this.maximizeWindow(window.id);
-    });
+    // Add minimize button handler
+    const minimizeBtn = windowEl.querySelector('.window-minimize');
+    if (minimizeBtn) {
+      minimizeBtn.addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent event bubbling
+        console.log('Minimize button clicked for window:', window.id);
+        self.minimizeWindow(window.id);
+      });
+    }
     
-    windowEl.querySelector('.window-close').addEventListener('click', () => {
-      this.closeWindow(window.id);
-    });
+    // Add maximize button handler
+    const maximizeBtn = windowEl.querySelector('.window-maximize');
+    if (maximizeBtn) {
+      maximizeBtn.addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent event bubbling
+        console.log('Maximize button clicked for window:', window.id);
+        self.maximizeWindow(window.id);
+      });
+    }
+    
+    // Add close button handler
+    const closeBtn = windowEl.querySelector('.window-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent event bubbling
+        console.log('Close button clicked for window:', window.id);
+        self.closeWindow(window.id);
+      });
+    }
     
     // Make window draggable
     this.makeWindowDraggable(windowEl);
@@ -883,8 +1280,9 @@ class Shell {
     const titlebar = windowEl.querySelector('.window-titlebar');
     let isDragging = false;
     let offsetX, offsetY;
+    const self = this; // Store reference to this
     
-    titlebar.addEventListener('mousedown', (e) => {
+    titlebar.addEventListener('mousedown', function(e) {
       // Ignore if clicking on a control button
       if (e.target.closest('.window-control')) return;
       
@@ -892,12 +1290,13 @@ class Shell {
       const windowId = windowEl.getAttribute('data-window-id');
       
       // Focus window
-      this.focusWindow(windowId);
+      self.focusWindow(windowId);
       
       // Get window data
-      const window = this.windows.find(w => w.id === windowId);
+      const window = self.windows.find(w => w.id === windowId);
       
-      // Don't drag if maximized
+      // Don't drag if window not found or if maximized
+      if (!window) return;
       if (window.maximized) return;
       
       isDragging = true;
@@ -921,11 +1320,15 @@ class Shell {
       
       // Update window position in our state
       const windowId = windowEl.getAttribute('data-window-id');
-      const window = this.windows.find(w => w.id === windowId);
       
-      if (window) {
-        window.x = parseInt(windowEl.style.left);
-        window.y = parseInt(windowEl.style.top);
+      // Only update if windowEl still exists and has valid style properties
+      if (windowEl && windowEl.style && windowEl.style.left && windowEl.style.top) {
+        const window = self.windows.find(w => w.id === windowId);
+        
+        if (window) {
+          window.x = parseInt(windowEl.style.left) || 0;
+          window.y = parseInt(windowEl.style.top) || 0;
+        }
       }
       
       // Remove global event listeners
@@ -942,15 +1345,17 @@ class Shell {
     const resizeHandle = windowEl.querySelector('.window-resize-handle');
     let isResizing = false;
     let startWidth, startHeight, startX, startY;
+    const self = this; // Store reference to this
     
-    resizeHandle.addEventListener('mousedown', (e) => {
+    resizeHandle.addEventListener('mousedown', function(e) {
       // Get the window ID
       const windowId = windowEl.getAttribute('data-window-id');
       
       // Get window data
-      const window = this.windows.find(w => w.id === windowId);
+      const window = self.windows.find(w => w.id === windowId);
       
-      // Don't resize if maximized
+      // Don't resize if window not found or if maximized
+      if (!window) return;
       if (window.maximized) return;
       
       isResizing = true;
@@ -988,11 +1393,15 @@ class Shell {
       
       // Update window dimensions in our state
       const windowId = windowEl.getAttribute('data-window-id');
-      const window = this.windows.find(w => w.id === windowId);
       
-      if (window) {
-        window.width = parseInt(windowEl.style.width);
-        window.height = parseInt(windowEl.style.height);
+      // Only update if windowEl still exists and has valid style properties
+      if (windowEl && windowEl.style && windowEl.style.width && windowEl.style.height) {
+        const window = self.windows.find(w => w.id === windowId);
+        
+        if (window) {
+          window.width = parseInt(windowEl.style.width) || 300;
+          window.height = parseInt(windowEl.style.height) || 200;
+        }
       }
       
       // Remove global event listeners
@@ -1005,11 +1414,13 @@ class Shell {
    * Launch an application
    * @param {Object} params - Launch parameters
    * @param {string} params.appId - Application ID
+   * @param {Object} [params.fileToOpen] - File to open with the application
+   * @param {Object} [params.options] - Additional launch options
    * @returns {Promise<void>}
    */
   async launchApp(params) {
     try {
-      const { appId } = params;
+      const { appId, fileToOpen, options = {} } = params;
       
       // Find app in registry
       const app = this.apps.find(a => a.id === appId);
@@ -1017,43 +1428,256 @@ class Shell {
         throw new Error(`Application ${appId} not found`);
       }
       
-      // Check if app is already running
-      const existingWindow = this.windows.find(w => w.appId === appId);
-      if (existingWindow) {
-        // Focus existing window instead of launching a new instance
-        this.focusWindow(existingWindow.id);
-        return;
+      // Check if app is already running and we're not force-launching a new instance
+      if (!options.forceNewInstance) {
+        const existingWindow = this.windows.find(w => w.appId === appId);
+        if (existingWindow) {
+          // Focus existing window instead of launching a new instance
+          this.focusWindow(existingWindow.id);
+          
+          // If there's a file to open, send it to the existing application
+          if (fileToOpen) {
+            this.eventBus.publish(`app:${appId}:open-file`, {
+              windowId: existingWindow.id,
+              file: fileToOpen
+            });
+          }
+          
+          return;
+        }
       }
       
       console.log(`Launching application: ${app.name}`);
       
-      // Load application module
-      const appModule = await import(app.path);
+      // Load application module - use a more reliable approach
+      // First check if the app is already available in window.PrimeOS namespace
+      let appModule;
       
-      // Create window for the application
+      if (window.PrimeOS && window.PrimeOS[app.name]) {
+        console.log(`Using globally registered app: ${app.name}`);
+        appModule = { default: window.PrimeOS[app.name] };
+      } else {
+        // Try to load the app from its path
+        try {
+          console.log(`Loading app from path: /apps/${appId}/index.js`);
+          
+          // First check if we already have this script in the document to avoid duplicates
+          const existingScript = document.querySelector(`script[src="/apps/${appId}/index.js"]`);
+          if (existingScript) {
+            console.log(`Script for ${appId} already loaded`);
+            // Script already exists, no need to load again
+            // Wait a moment to ensure it's initialized
+            await new Promise(resolve => setTimeout(resolve, 100));
+          } else {
+            // For demo, use a more reliable direct script loading approach
+            const appScript = document.createElement('script');
+            appScript.src = `/apps/${appId}/index.js`;
+            appScript.type = 'text/javascript';
+            
+            // Safety timeout in case the load event doesn't fire
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error(`Timed out loading ${appId}`)), 5000);
+            });
+            
+            // Script load promise
+            const loadPromise = new Promise((resolve, reject) => {
+              appScript.onload = resolve;
+              appScript.onerror = reject;
+              document.head.appendChild(appScript);
+            });
+            
+            // Wait for script to load or timeout
+            await Promise.race([loadPromise, timeoutPromise]);
+            
+            // Add a small delay to ensure script is processed
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+          
+          // After script is loaded, look for the app constructor in window.PrimeOS
+          // Try the app name, app ID, or capitalized app ID
+          const capitalizedAppId = appId.charAt(0).toUpperCase() + appId.slice(1);
+          
+          // For FileExplorer and TextEditor, use their direct class references
+          if (appId === 'file-explorer' && window.PrimeOS && window.PrimeOS.FileExplorer) {
+            console.log('Found File Explorer app directly');
+            appModule = { default: window.PrimeOS.FileExplorer };
+          } else if (appId === 'text-editor' && window.PrimeOS && window.PrimeOS.TextEditor) {
+            console.log('Found Text Editor app directly');
+            appModule = { default: window.PrimeOS.TextEditor };
+          } else if (window.PrimeOS && window.PrimeOS[app.name]) {
+            console.log(`Found app constructor using app.name: ${app.name}`);
+            appModule = { default: window.PrimeOS[app.name] };
+          } else if (window.PrimeOS && window.PrimeOS[capitalizedAppId]) {
+            console.log(`Found app constructor using capitalized appId: ${capitalizedAppId}`);
+            appModule = { default: window.PrimeOS[capitalizedAppId] };
+          } else if (window.PrimeOS && window.PrimeOS[appId]) {
+            console.log(`Found app constructor using appId: ${appId}`);
+            appModule = { default: window.PrimeOS[appId] };
+          } else {
+            // Create a generic app on-the-fly as fallback
+            console.warn(`App ${app.name} (${appId}) not found in global PrimeOS object - creating generic app`);
+            
+            // Define a minimal demo application
+            window.PrimeOS = window.PrimeOS || {};
+            window.PrimeOS[appId] = class GenericApp {
+              static async initialize(container, options) {
+                const app = new GenericApp(container, options);
+                await app.init();
+                return app;
+              }
+              
+              constructor(container, options) {
+                this.container = container;
+                this.options = options;
+                this.title = app.name || "Application";
+              }
+              
+              async init() {
+                this.container.innerHTML = `
+                  <div style="padding: 20px; text-align: center;">
+                    <h2>${app.name || 'Application'}</h2>
+                    <p>This is a placeholder for ${app.name || 'the application'}.</p>
+                    <p>The actual application module could not be loaded.</p>
+                  </div>
+                `;
+                return this;
+              }
+              
+              getTitle() {
+                return this.title;
+              }
+            };
+            
+            appModule = { default: window.PrimeOS[appId] };
+          }
+        } catch (error) {
+          console.error(`Failed to load application module: ${error.message}`);
+          
+          // Create a fallback app for the demo
+          console.warn(`Creating fallback app for ${app.name}`);
+          
+          // Define a fallback application class
+          class FallbackApp {
+            static async initialize(container, options) {
+              const app = new FallbackApp(container, options);
+              await app.init();
+              return app;
+            }
+            
+            constructor(container, options) {
+              this.container = container;
+              this.options = options;
+              this.title = `${app.name || 'Application'} (Fallback)`;
+            }
+            
+            async init() {
+              this.container.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #333; font-family: sans-serif;">
+                  <h2>${app.name || 'Application'}</h2>
+                  <p style="color: #e74c3c;">Error loading application: ${error.message}</p>
+                  <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; border: 1px solid #ddd;">
+                    <p>This is a fallback interface for demonstration purposes.</p>
+                    <p>In a production environment, this would provide more robust error recovery options.</p>
+                  </div>
+                  <button id="retry-btn" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Retry
+                  </button>
+                </div>
+              `;
+              
+              // Add retry button functionality
+              const retryBtn = this.container.querySelector('#retry-btn');
+              if (retryBtn) {
+                retryBtn.addEventListener('click', () => {
+                  retryBtn.textContent = 'Retrying...';
+                  retryBtn.disabled = true;
+                  
+                  setTimeout(() => {
+                    // This is just for demo - in reality, we would implement proper retry logic
+                    retryBtn.textContent = 'Retry Failed';
+                    retryBtn.disabled = false;
+                  }, 1500);
+                });
+              }
+              
+              return this;
+            }
+            
+            getTitle() {
+              return this.title;
+            }
+          }
+          
+          appModule = { default: FallbackApp };
+        }
+      }
+      
+      // Set window position with some randomness to avoid stacking
+      const randomOffset = Math.floor(Math.random() * 50);
+      const docWidth = document.documentElement.clientWidth || 1024;
+      const docHeight = document.documentElement.clientHeight || 768;
+      
+      // Create window for the application - DON'T use variable name 'window' as it conflicts with global window
       const windowId = `${appId}-${Date.now()}`;
-      const window = {
+      const appWindow = {
         id: windowId,
         appId,
-        title: app.name,
+        title: app.name || 'Application',
         minimized: false,
         maximized: false,
-        x: Math.round(window.innerWidth / 2 - 400),
-        y: Math.round(window.innerHeight / 2 - 300),
+        x: Math.max(50, Math.round((docWidth / 2 - 400) + randomOffset)),
+        y: Math.max(50, Math.round((docHeight / 2 - 300) + randomOffset)),
         width: 800,
         height: 600,
-        zIndex: this.windows.length + 1
+        zIndex: this.windows.length + 1,
+        appInstance: null, // Will hold a reference to the app instance
+        state: {
+          isSuspended: false,
+          isInitialized: false
+        }
       };
       
+      // CRITICAL: Create the window DOM element first!
+      // Create window element directly (don't wait for desktop render which might be async)
+      const windowEl = this.createWindowElement(appWindow);
+      
+      // Add the window element to the DOM immediately
+      const windowsContainer = document.getElementById('windows-container');
+      if (windowsContainer) {
+        windowsContainer.appendChild(windowEl);
+        console.log(`Window element created and added to DOM with id: window-${windowId}`);
+      } else {
+        console.error("Windows container not found in DOM, creating it");
+        // If windows container doesn't exist, create it
+        const desktop = document.getElementById('desktop') || document.querySelector('.desktop');
+        if (desktop) {
+          const newContainer = document.createElement('div');
+          newContainer.id = 'windows-container';
+          newContainer.className = 'windows-container';
+          desktop.appendChild(newContainer);
+          newContainer.appendChild(windowEl);
+          console.log("Created windows container and added window");
+        } else {
+          console.error("Desktop element not found, cannot create window");
+        }
+      }
+      
       // Add to windows array
-      this.windows.push(window);
+      this.windows.push(appWindow);
       
       // Set as active window
-      this.activeWindow = window;
+      this.activeWindow = appWindow;
       
-      // Update desktop to show the new window
+      // Update desktop model
       this.desktop.variant.windows = [...this.windows];
       this.desktop.variant.activeWindowId = windowId;
+      
+      // Now get content element directly from the element we just created
+      // This is more reliable than querying the DOM after a render
+      let contentEl = windowEl.querySelector('.window-content');
+      console.log('Content element found directly from window element:', !!contentEl);
+      
+      // For good measure, update the desktop UI
       this.desktop.render();
       
       // Update taskbar
@@ -1065,14 +1689,48 @@ class Shell {
       }));
       this.taskbar.render();
       
-      // Initialize application within the window
-      const contentEl = document.getElementById(`window-content-${windowId}`);
       if (contentEl && appModule.default) {
-        await appModule.default.initialize(contentEl, {
+        // Pass file to open and other options to the application
+        const appParams = {
           windowId,
           eventBus: this.eventBus,
           store: this.store,
-          identity: this.identity
+          identity: this.identity,
+          fileToOpen,
+          ...options
+        };
+        
+        // Ensure the AppAPI is available globally for apps to use
+        if (typeof window !== 'undefined' && window.PrimeOS && !window.PrimeOS.AppAPI && typeof AppAPI === 'function') {
+          window.PrimeOS.AppAPI = AppAPI;
+        }
+        
+        const appInstance = await appModule.default.initialize(contentEl, appParams);
+        
+        // Store app instance for lifecycle management
+        appWindow.appInstance = appInstance;
+        appWindow.state.isInitialized = true;
+        
+        // Set window title to app-provided title if available
+        if (appInstance && appInstance.getTitle) {
+          const appTitle = appInstance.getTitle();
+          if (appTitle) {
+            appWindow.title = appTitle;
+            
+            // Update window UI
+            const windowTitleEl = document.querySelector(`#window-${windowId} .window-title`);
+            if (windowTitleEl) {
+              windowTitleEl.textContent = appTitle;
+            }
+            
+            // Update taskbar
+            this.updateTaskbar();
+          }
+        }
+      } else {
+        console.error('Could not initialize application: Either content element or app module not found', {
+          contentEl: !!contentEl,
+          appModuleDefault: !!appModule?.default
         });
       }
       
@@ -1091,14 +1749,90 @@ class Shell {
   }
   
   /**
+   * Suspend an application to conserve resources
+   * @param {string} windowId - Window ID
+   */
+  suspendApp(windowId) {
+    const window = this.windows.find(w => w.id === windowId);
+    if (!window || window.state.isSuspended) return;
+    
+    const appInstance = window.appInstance;
+    if (appInstance && typeof appInstance.onSuspend === 'function') {
+      try {
+        appInstance.onSuspend();
+        window.state.isSuspended = true;
+        
+        console.log(`Application ${window.appId} suspended`);
+        this.eventBus.publish('shell:app-suspended', { windowId, appId: window.appId });
+      } catch (error) {
+        console.error(`Error suspending application: ${error.message}`, error);
+      }
+    }
+  }
+  
+  /**
+   * Resume a suspended application
+   * @param {string} windowId - Window ID
+   */
+  resumeApp(windowId) {
+    const window = this.windows.find(w => w.id === windowId);
+    if (!window || !window.state.isSuspended) return;
+    
+    const appInstance = window.appInstance;
+    if (appInstance && typeof appInstance.onResume === 'function') {
+      try {
+        appInstance.onResume();
+        window.state.isSuspended = false;
+        
+        console.log(`Application ${window.appId} resumed`);
+        this.eventBus.publish('shell:app-resumed', { windowId, appId: window.appId });
+      } catch (error) {
+        console.error(`Error resuming application: ${error.message}`, error);
+      }
+    }
+  }
+  
+  /**
+   * Suspend all applications except the active one
+   */
+  suspendBackgroundApps() {
+    this.windows.forEach(window => {
+      // Skip the active window
+      if (window.id === this.activeWindow?.id) return;
+      
+      // Skip already suspended windows
+      if (window.state.isSuspended) return;
+      
+      // Suspend the application
+      this.suspendApp(window.id);
+    });
+  }
+  
+  /**
    * Close a window
    * @param {string} windowId - Window ID
    */
-  closeWindow(windowId) {
+  async closeWindow(windowId) {
+    console.log('Closing window:', windowId);
     const windowIndex = this.windows.findIndex(w => w.id === windowId);
     if (windowIndex === -1) return;
     
     const window = this.windows[windowIndex];
+    
+    // Direct DOM manipulation - remove the window element
+    const windowEl = document.querySelector(`#window-${windowId}`);
+    
+    // Notify application it's about to be closed
+    if (window.appInstance) {
+      try {
+        // Call application's lifecycle method if available
+        if (typeof window.appInstance.onBeforeClose === 'function') {
+          await window.appInstance.onBeforeClose();
+        }
+      } catch (error) {
+        console.error(`Error calling onBeforeClose for application: ${error.message}`, error);
+      }
+    }
     
     // Publish window closing event
     this.eventBus.publish('shell:window-closing', { windowId, appId: window.appId });
@@ -1109,14 +1843,42 @@ class Shell {
     // Update active window if needed
     if (this.activeWindow?.id === windowId) {
       this.activeWindow = this.windows.length > 0 ? this.windows[this.windows.length - 1] : null;
+      
+      // Resume the newly active window if it was suspended
+      if (this.activeWindow && this.activeWindow.state.isSuspended) {
+        this.resumeApp(this.activeWindow.id);
+      }
     }
     
-    // Update desktop
+    // Direct DOM manipulation - remove the window element
+    if (windowEl) {
+      windowEl.remove();
+    }
+    
+    // Update desktop state without full rerender
     this.desktop.variant.windows = [...this.windows];
     this.desktop.variant.activeWindowId = this.activeWindow?.id || null;
-    this.desktop.render();
     
-    // Update taskbar
+    // Update active window in DOM
+    if (this.activeWindow) {
+      const activeWindowEl = document.querySelector(`#window-${this.activeWindow.id}`);
+      if (activeWindowEl) {
+        document.querySelectorAll('.window').forEach(el => {
+          if (el === activeWindowEl) {
+            el.classList.add('active');
+            el.style.zIndex = '10'; // Bring to front
+          } else {
+            el.classList.remove('active');
+            el.style.zIndex = '1';
+          }
+        });
+      }
+    }
+    
+    // Directly update the taskbar first for immediate feedback
+    this.updateTaskbarDirectly();
+    
+    // Update taskbar through component system as backup
     this.taskbar.variant.openWindows = this.windows.map(w => ({
       id: w.id,
       appId: w.appId,
@@ -1124,6 +1886,18 @@ class Shell {
       isActive: w.id === this.activeWindow?.id
     }));
     this.taskbar.render();
+    
+    // Cleanup application instance
+    if (window.appInstance) {
+      try {
+        // Call application's lifecycle method if available
+        if (typeof window.appInstance.onClose === 'function') {
+          await window.appInstance.onClose();
+        }
+      } catch (error) {
+        console.error(`Error calling onClose for application: ${error.message}`, error);
+      }
+    }
     
     // Publish window closed event
     this.eventBus.publish('shell:window-closed', { windowId, appId: window.appId });
@@ -1134,24 +1908,66 @@ class Shell {
    * @param {string} windowId - Window ID
    */
   minimizeWindow(windowId) {
+    console.log('Minimizing window:', windowId);
     const window = this.windows.find(w => w.id === windowId);
     if (!window) return;
     
     // Toggle minimized state
     window.minimized = !window.minimized;
     
-    // If minimizing, set a different active window
-    if (window.minimized && this.activeWindow?.id === windowId) {
-      const visibleWindows = this.windows.filter(w => !w.minimized);
-      this.activeWindow = visibleWindows.length > 0 ? visibleWindows[visibleWindows.length - 1] : null;
+    // Direct DOM manipulation - find and update the window element
+    const windowEl = document.querySelector(`#window-${windowId}`);
+    if (windowEl) {
+      if (window.minimized) {
+        windowEl.classList.add('minimized');
+      } else {
+        windowEl.classList.remove('minimized');
+      }
     }
     
-    // Update desktop
+    // If minimizing, set a different active window and suspend the app
+    if (window.minimized && this.activeWindow?.id === windowId) {
+      // Suspend the minimized application
+      this.suspendApp(windowId);
+      
+      // Find a new active window
+      const visibleWindows = this.windows.filter(w => !w.minimized);
+      this.activeWindow = visibleWindows.length > 0 ? visibleWindows[visibleWindows.length - 1] : null;
+      
+      // Resume the newly active window if needed
+      if (this.activeWindow && this.activeWindow.state.isSuspended) {
+        this.resumeApp(this.activeWindow.id);
+      }
+    } else if (!window.minimized) {
+      // If restoring from minimized, make it active and resume it
+      this.activeWindow = window;
+      
+      // Resume the application if it was suspended
+      if (window.state.isSuspended) {
+        this.resumeApp(windowId);
+      }
+    }
+    
+    // Update desktop state without full rerender
     this.desktop.variant.windows = [...this.windows];
     this.desktop.variant.activeWindowId = this.activeWindow?.id || null;
-    this.desktop.render();
     
-    // Update taskbar
+    // Update active window in DOM
+    document.querySelectorAll('.window').forEach(el => {
+      const wId = el.getAttribute('data-window-id');
+      if (wId === this.activeWindow?.id) {
+        el.classList.add('active');
+        el.style.zIndex = '10'; // Bring to front
+      } else {
+        el.classList.remove('active');
+        el.style.zIndex = '1';
+      }
+    });
+    
+    // Directly update the taskbar first for immediate feedback
+    this.updateTaskbarDirectly();
+    
+    // Update taskbar through component system as backup
     this.taskbar.variant.openWindows = this.windows.map(w => ({
       id: w.id,
       appId: w.appId,
@@ -1168,10 +1984,66 @@ class Shell {
   }
   
   /**
+   * Update taskbar directly with DOM manipulation for immediate feedback
+   * This ensures minimized windows show up in the taskbar without delay
+   */
+  updateTaskbarDirectly() {
+    try {
+      const taskbarItems = document.getElementById('taskbar-items');
+      if (!taskbarItems) return;
+      
+      console.log('Directly updating taskbar for immediate feedback');
+      
+      // Clear existing items
+      taskbarItems.innerHTML = '';
+      
+      // Add all windows to taskbar
+      this.windows.forEach(window => {
+        const item = document.createElement('div');
+        item.className = 'taskbar-item' + (window.id === this.activeWindow?.id ? ' active' : '');
+        if (window.minimized) {
+          item.classList.add('minimized-window');
+        }
+        item.setAttribute('data-window-id', window.id);
+        
+        // Find app info
+        const app = this.apps.find(a => a.id === window.appId);
+        
+        item.innerHTML = `
+          <span class="icon">${app?.icon || '📄'}</span>
+          <span class="title">${window.title}</span>
+        `;
+        
+        // Use self to maintain context in the event listener
+        const self = this;
+        item.addEventListener('click', function() {
+          const windowId = this.getAttribute('data-window-id');
+          const window = self.windows.find(w => w.id === windowId);
+          
+          if (!window) return;
+          
+          if (window.id === self.activeWindow?.id && !window.minimized) {
+            // If already active, minimize it
+            self.minimizeWindow(window.id);
+          } else {
+            // Otherwise focus it (this will unminimize if needed)
+            self.focusWindow(window.id);
+          }
+        });
+        
+        taskbarItems.appendChild(item);
+      });
+    } catch (error) {
+      console.error('Error directly updating taskbar:', error);
+    }
+  }
+  
+  /**
    * Maximize a window
    * @param {string} windowId - Window ID
    */
   maximizeWindow(windowId) {
+    console.log('Maximizing window:', windowId);
     const window = this.windows.find(w => w.id === windowId);
     if (!window) return;
     
@@ -1184,12 +2056,53 @@ class Shell {
     // Make this the active window
     this.activeWindow = window;
     
-    // Update desktop
+    // Direct DOM manipulation - find and update the window element
+    const windowEl = document.querySelector(`#window-${windowId}`);
+    if (windowEl) {
+      // Toggle maximized class
+      if (window.maximized) {
+        windowEl.classList.add('maximized');
+      } else {
+        windowEl.classList.remove('maximized');
+      }
+      
+      // Remove minimized class if present
+      windowEl.classList.remove('minimized');
+      
+      // Update maximize button text
+      const maxButton = windowEl.querySelector('.window-maximize');
+      if (maxButton) {
+        maxButton.textContent = window.maximized ? '❐' : '□';
+      }
+      
+      // Update position and size for non-maximized windows
+      if (!window.maximized) {
+        windowEl.style.width = `${window.width}px`;
+        windowEl.style.height = `${window.height}px`;
+        windowEl.style.left = `${window.x}px`;
+        windowEl.style.top = `${window.y}px`;
+      }
+      
+      // Set active state and z-index
+      document.querySelectorAll('.window').forEach(el => {
+        if (el === windowEl) {
+          el.classList.add('active');
+          el.style.zIndex = '10'; // Bring to front
+        } else {
+          el.classList.remove('active');
+          el.style.zIndex = '1';
+        }
+      });
+    }
+    
+    // Update desktop state without full rerender
     this.desktop.variant.windows = [...this.windows];
     this.desktop.variant.activeWindowId = windowId;
-    this.desktop.render();
     
-    // Update taskbar
+    // Directly update the taskbar first for immediate feedback
+    this.updateTaskbarDirectly();
+    
+    // Update taskbar through component system as backup
     this.taskbar.variant.openWindows = this.windows.map(w => ({
       id: w.id,
       appId: w.appId,
@@ -1210,13 +2123,31 @@ class Shell {
    * @param {string} windowId - Window ID
    */
   focusWindow(windowId) {
+    console.log('Focusing window:', windowId);
     const window = this.windows.find(w => w.id === windowId);
     if (!window) return;
+    
+    // If this is already the active window, do nothing
+    if (this.activeWindow?.id === windowId && !window.minimized) return;
+    
+    // Direct DOM manipulation - find window element
+    const windowEl = document.querySelector(`#window-${windowId}`);
+    if (!windowEl) {
+      console.warn(`Window element not found for ID: ${windowId}`);
+      return;
+    }
     
     // If window is minimized, restore it
     if (window.minimized) {
       window.minimized = false;
+      
+      // Update DOM to show window
+      windowEl.classList.remove('minimized');
+      console.log('Restoring minimized window:', windowId);
     }
+    
+    // Get the previously active window
+    const previousActiveWindow = this.activeWindow;
     
     // Move window to front by updating z-index
     this.windows.forEach(w => {
@@ -1229,19 +2160,47 @@ class Shell {
     // Set as active window
     this.activeWindow = window;
     
-    // Update desktop
+    // Direct DOM manipulation - update active window
+    document.querySelectorAll('.window').forEach(el => {
+      if (el === windowEl) {
+        el.classList.add('active');
+        el.style.zIndex = '10'; // Bring to front
+      } else {
+        el.classList.remove('active');
+        el.style.zIndex = '1';
+      }
+    });
+    
+    // Resume the application if it was suspended
+    if (window.state && window.state.isSuspended) {
+      this.resumeApp(windowId);
+    }
+    
+    // Update desktop state without full rerender
     this.desktop.variant.windows = [...this.windows];
     this.desktop.variant.activeWindowId = windowId;
-    this.desktop.render();
     
-    // Update taskbar
-    this.taskbar.variant.openWindows = this.windows.map(w => ({
-      id: w.id,
-      appId: w.appId,
-      title: w.title,
-      isActive: w.id === windowId
-    }));
-    this.taskbar.render();
+    // Update taskbar to show active window and restore minimized windows
+    this.updateTaskbar();
+    
+    // Suspend previous window (if exists and different from current)
+    if (previousActiveWindow && previousActiveWindow.id !== windowId) {
+      this.suspendApp(previousActiveWindow.id);
+    }
+    
+    // Resume newly focused window if it was suspended
+    if (window.state.isSuspended) {
+      this.resumeApp(windowId);
+    }
+    
+    // Call application's focus handler if available
+    if (window.appInstance && typeof window.appInstance.onFocus === 'function') {
+      try {
+        window.appInstance.onFocus();
+      } catch (error) {
+        console.error(`Error calling onFocus for application: ${error.message}`, error);
+      }
+    }
     
     // Publish event
     this.eventBus.publish('shell:window-focused', { windowId });
@@ -1392,6 +2351,32 @@ class Shell {
     
     // Publish event
     this.eventBus.publish('shell:notifications-cleared');
+  }
+  
+  /**
+   * Update a window's title
+   * @param {Object} params - Parameters
+   * @param {string} params.windowId - Window ID
+   * @param {string} params.title - New window title
+   */
+  updateWindowTitle(params) {
+    const { windowId, title } = params;
+    
+    // Find the window
+    const window = this.windows.find(w => w.id === windowId);
+    if (!window) return;
+    
+    // Update window title
+    window.title = title;
+    
+    // Update window titlebar
+    const windowTitleEl = document.querySelector(`#window-${windowId} .window-title`);
+    if (windowTitleEl) {
+      windowTitleEl.textContent = title;
+    }
+    
+    // Update taskbar
+    this.updateTaskbar();
   }
   
   /**
@@ -1568,4 +2553,10 @@ class Shell {
   }
 }
 
-module.exports = { Shell };
+// Export as ES module
+export { Shell };
+
+// Make available on window for browser usage
+if (typeof window !== 'undefined') {
+  window.Shell = Shell;
+}
