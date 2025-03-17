@@ -11,10 +11,51 @@ function loadShellStyles() {
   // Don't add another stylesheet if it already exists
   if (document.querySelector('link[href*="shell.css"]')) return;
   
-  const linkElement = document.createElement('link');
-  linkElement.rel = 'stylesheet';
-  linkElement.href = '/core/shell/shell.css';
-  document.head.appendChild(linkElement);
+  // Wait for document.head to be available
+  if (!document.head) {
+    console.warn('Document head not available, deferring style loading');
+    setTimeout(loadShellStyles, 10);
+    return;
+  }
+  
+  // Try to load CSS using dynamic import.meta.url (for ESM modules)
+  try {
+    const linkElement = document.createElement('link');
+    linkElement.rel = 'stylesheet';
+    
+    // Use relative path instead of absolute to fix GitHub Pages deployment
+    // This will look for shell.css in the same directory as index.js
+    linkElement.href = new URL('./shell.css', import.meta.url).href;
+    
+    // Add load error handler with fallbacks
+    linkElement.onerror = () => {
+      console.warn('Failed to load shell.css using import.meta.url, trying fallback paths');
+      
+      // Try relative path as first fallback
+      linkElement.href = './core/shell/shell.css';
+      
+      // Add another error handler for the second fallback
+      linkElement.onerror = () => {
+        console.warn('Failed to load shell.css with first fallback, trying second fallback');
+        linkElement.href = 'core/shell/shell.css';
+        
+        // Final fallback error handler
+        linkElement.onerror = () => {
+          console.error('All attempts to load shell.css failed');
+        };
+      };
+    };
+    
+    document.head.appendChild(linkElement);
+  } catch (error) {
+    console.error('Error loading shell styles with import.meta.url:', error);
+    
+    // Fallback to relative path if import.meta.url fails
+    const fallbackLink = document.createElement('link');
+    fallbackLink.rel = 'stylesheet';
+    fallbackLink.href = './core/shell/shell.css';
+    document.head.appendChild(fallbackLink);
+  }
   
   // Also add Google Fonts for Roboto
   const fontLink = document.createElement('link');
@@ -47,6 +88,17 @@ export function getShell() {
  * @returns {Promise<Shell>} The initialized shell instance
  */
 export async function initializeShell() {
+  // Ensure styles are loaded first
+  loadShellStyles();
+  
+  // Wait for document to be ready
+  if (document.readyState !== 'complete' && document.readyState !== 'interactive') {
+    await new Promise(resolve => {
+      document.addEventListener('DOMContentLoaded', resolve, { once: true });
+    });
+  }
+  
+  // Create and initialize shell
   const shell = getShell();
   await shell.initialize();
   return shell;
