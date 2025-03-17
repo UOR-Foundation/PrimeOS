@@ -216,24 +216,27 @@ class Calculator {
       }
       
       .key {
-        border: none;
-        background-color: #fff;
+        border: 1px solid #aaa;
+        background-color: #c8c8c8;
         font-size: 20px;
         padding: 15px;
         cursor: pointer;
         transition: background-color 0.2s;
+        color: #000 !important;
+        font-weight: bold;
       }
       
       .key:hover {
-        background-color: #f5f5f5;
+        background-color: #b8b8b8;
       }
       
       .key:active {
-        background-color: #e0e0e0;
+        background-color: #a8a8a8;
       }
       
       .key-operator {
-        background-color: #f8f9fa;
+        background-color: #b0b0b0;
+        color: #000 !important;
       }
       
       .key-equals {
@@ -247,6 +250,8 @@ class Calculator {
       
       .key-clear, .key-backspace {
         background-color: #f8d7da;
+        color: #000 !important;
+        font-weight: bold;
       }
       
       /* Dark theme */
@@ -268,7 +273,7 @@ class Calculator {
       
       .calculator.theme-dark .key {
         background-color: #343a40;
-        color: #f8f9fa;
+        color: #f8f9fa !important;
       }
       
       .calculator.theme-dark .key:hover {
@@ -294,7 +299,7 @@ class Calculator {
       .calculator.theme-dark .key-clear, 
       .calculator.theme-dark .key-backspace {
         background-color: #721c24;
-        color: #f8d7da;
+        color: #f8d7da !important;
       }
     `;
     

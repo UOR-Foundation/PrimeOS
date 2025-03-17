@@ -61,14 +61,45 @@ PrimeIdentity.prototype.initialize = async function() {
  */
 PrimeIdentity.prototype.checkSession = async function() {
     try {
+        console.log('Checking for existing session...');
+        
+        // For demo purposes, create a guest account if needed
+        try {
+            // Create a guest user account if it doesn't exist
+            if (window.PrimeStore) {
+                const identityStore = new window.PrimeStore('identity');
+                if (typeof identityStore.initialize === 'function') {
+                    await identityStore.initialize();
+                }
+                
+                // Check if we have any users
+                const users = await identityStore.query ? await identityStore.query() : [];
+                console.log('Existing users count:', users ? users.length : 0);
+                
+                if (!users || users.length === 0) {
+                    console.log('No users found, creating guest account');
+                    await this.createUser('guest', 'guest123', {
+                        displayName: 'Guest User',
+                        email: 'guest@primeos.example',
+                        roles: ['user']
+                    });
+                    console.log('Guest account created (username: guest, password: guest123)');
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to create guest account:', err);
+        }
+        
         // Try to get session from local storage
         const sessionData = localStorage.getItem('prime_session');
         
         if (sessionData) {
+            console.log('Found session data in localStorage');
             const session = JSON.parse(sessionData);
             
             // Check if session is still valid
             if (new Date(session.expiresAt) > new Date()) {
+                console.log('Session is still valid');
                 // Get user data
                 if (window.PrimeStore) {
                     const identityStore = new window.PrimeStore('identity');
@@ -80,6 +111,7 @@ PrimeIdentity.prototype.checkSession = async function() {
                     
                     const userData = await identityStore.get(session.userId);
                     if (userData) {
+                        console.log('Found user data for session:', userData.username);
                         // Set current session
                         this.currentSession = {
                             ...session,
@@ -93,16 +125,24 @@ PrimeIdentity.prototype.checkSession = async function() {
                         });
                         
                         return true;
+                    } else {
+                        console.log('User data not found for session userId:', session.userId);
                     }
+                } else {
+                    console.warn('PrimeStore not available for session check');
                 }
             } else {
+                console.log('Session has expired');
                 // Session expired, remove it
                 localStorage.removeItem('prime_session');
             }
+        } else {
+            console.log('No session data found in localStorage');
         }
         
         // No valid session
         this.currentSession = null;
+        console.log('No valid session found, returning false');
         return false;
     } catch (error) {
         console.error('Error checking existing session:', error);

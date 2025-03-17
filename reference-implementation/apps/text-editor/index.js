@@ -245,14 +245,16 @@ class TextEditor {
       button {
         margin-right: 5px;
         padding: 5px 10px;
-        background-color: #fff;
-        border: 1px solid #ddd;
+        background-color: #d0d0d0;
+        border: 1px solid #aaa;
         border-radius: 3px;
         cursor: pointer;
+        color: #222;
+        font-weight: 500;
       }
       
       button:hover {
-        background-color: #f0f0f0;
+        background-color: #c0c0c0;
       }
       
       select {

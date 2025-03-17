@@ -227,9 +227,10 @@ class Shell {
     this.appLauncher = createComponent({
       id: 'app-launcher',
       variant: {
-        visible: false,
+        visible: false, // Ensure launcher is initially hidden
         apps: [],
-        searchQuery: ''
+        searchQuery: '',
+        filteredApps: []
       },
       invariant: {
         render: function() {
@@ -278,6 +279,8 @@ class Shell {
    */
   async initialize() {
     try {
+      console.log('Initializing PrimeOS Shell...');
+      
       // Initialize store first if it has an initialize method
       if (this.store && typeof this.store.initialize === 'function') {
         await this.store.initialize();
@@ -297,10 +300,23 @@ class Shell {
       // Now load user preferences (DOM elements will be available for preference application)
       await this.loadPreferences();
       
-      // Check user authentication
-      const isAuthenticated = await this.identity.checkSession();
+      // Check user authentication with improved error handling
+      let isAuthenticated = false;
+      try {
+        console.log('Checking user authentication...');
+        isAuthenticated = await this.identity.checkSession();
+        console.log('Authentication check result:', isAuthenticated);
+      } catch (authError) {
+        console.error('Authentication check failed:', authError);
+        isAuthenticated = false;
+      }
+      
+      // Show login screen if not authenticated
       if (!isAuthenticated) {
+        console.log('User is not authenticated, showing login screen');
         this.showLoginScreen();
+      } else {
+        console.log('User is authenticated, proceeding with shell initialization');
       }
       
       console.log('PrimeOS Shell initialized');
@@ -309,6 +325,15 @@ class Shell {
       this.eventBus.publish('shell:ready', { timestamp: Date.now() });
     } catch (error) {
       console.error('Failed to initialize shell:', error);
+      
+      // Show login screen even if initialization fails
+      try {
+        console.log('Showing login screen due to initialization failure');
+        this.showLoginScreen();
+      } catch (loginError) {
+        console.error('Failed to show login screen after initialization error:', loginError);
+      }
+      
       throw error;
     }
   }
@@ -567,6 +592,11 @@ class Shell {
       </div>
     `;
     
+    // Ensure app launcher is hidden by default
+    if (this.appLauncher && this.appLauncher.variant) {
+      this.appLauncher.variant.visible = false;
+    }
+    
     // Initialize event listeners
     this.initializeEventListeners();
     
@@ -821,7 +851,11 @@ class Shell {
         const windowEl = currentWindowEls[window.id];
         
         // Update window classes for minimized/maximized state
-        windowEl.className = 'window' + (window.minimized ? ' minimized' : '') + (window.maximized ? ' maximized' : '');
+        windowEl.className = 'window' + (window.minimized ? ' minimized' : '') + (window.maximized ? ' maximized' : '') + 
+          (window.id === this.activeWindow?.id ? ' active' : '');
+        
+        // Set z-index based on window status
+        windowEl.style.zIndex = window.id === this.activeWindow?.id ? '1000' : window.zIndex || '10';
         
         // Update maximize button text
         const maxButton = windowEl.querySelector('.window-maximize');
@@ -841,6 +875,13 @@ class Shell {
       } else {
         // Create a new window element
         const windowEl = this.createWindowElement(window);
+        
+        // Add active class and higher z-index if it's the active window
+        if (window.id === this.activeWindow?.id) {
+          windowEl.classList.add('active');
+          windowEl.style.zIndex = '1000';
+        }
+        
         container.appendChild(windowEl);
       }
     });
@@ -904,10 +945,14 @@ class Shell {
     }
     
     // Get the correct component and variant
-    const appLauncher = this.appLauncher;
+    let appLauncher = this.appLauncher;
     if (!appLauncher || !appLauncher.variant) {
       console.warn('App launcher component not initialized properly');
-      return;
+      // Create variant object if it doesn't exist
+      appLauncher = this.appLauncher = this.appLauncher || {};
+      appLauncher.variant = appLauncher.variant || {};
+      // Ensure launcher is initially hidden
+      appLauncher.variant.visible = false;
     }
     
     // Update visibility
@@ -1188,6 +1233,9 @@ class Shell {
     windowEl.id = `window-${window.id}`;
     windowEl.setAttribute('data-window-id', window.id);
     
+    // Set z-index to be visible
+    windowEl.style.zIndex = window.zIndex || 10;
+    
     // Set position and size for non-maximized windows
     if (!window.maximized) {
       windowEl.style.width = `${window.width}px`;
@@ -1459,10 +1507,10 @@ class Shell {
       } else {
         // Try to load the app from its path
         try {
-          console.log(`Loading app from path: /apps/${appId}/index.js`);
+          console.log(`Loading app from path: /reference-implementation/apps/${appId}/index.js`);
           
           // First check if we already have this script in the document to avoid duplicates
-          const existingScript = document.querySelector(`script[src="/apps/${appId}/index.js"]`);
+          const existingScript = document.querySelector(`script[src="/reference-implementation/apps/${appId}/index.js"]`);
           if (existingScript) {
             console.log(`Script for ${appId} already loaded`);
             // Script already exists, no need to load again
@@ -1471,7 +1519,7 @@ class Shell {
           } else {
             // For demo, use a more reliable direct script loading approach
             const appScript = document.createElement('script');
-            appScript.src = `/apps/${appId}/index.js`;
+            appScript.src = `/reference-implementation/apps/${appId}/index.js`;
             appScript.type = 'text/javascript';
             
             // Safety timeout in case the load event doesn't fire
@@ -1701,8 +1749,32 @@ class Shell {
         };
         
         // Ensure the AppAPI is available globally for apps to use
-        if (typeof window !== 'undefined' && window.PrimeOS && !window.PrimeOS.AppAPI && typeof AppAPI === 'function') {
-          window.PrimeOS.AppAPI = AppAPI;
+        if (typeof window !== 'undefined') {
+          // Make sure PrimeOS namespace exists
+          if (!window.PrimeOS) {
+            window.PrimeOS = {};
+          }
+          
+          // Import AppAPI if not already available
+          if (!window.PrimeOS.AppAPI) {
+            try {
+              // Load AppAPI from the core apps directory
+              const appApiScript = document.createElement('script');
+              appApiScript.src = '/reference-implementation/core/apps/app-api.js';
+              appApiScript.type = 'text/javascript';
+              
+              // Wait for the script to load
+              await new Promise((resolve, reject) => {
+                appApiScript.onload = resolve;
+                appApiScript.onerror = reject;
+                document.head.appendChild(appApiScript);
+              });
+              
+              console.log('AppAPI loaded successfully for app:', appId);
+            } catch (apiError) {
+              console.error('Failed to load AppAPI:', apiError);
+            }
+          }
         }
         
         const appInstance = await appModule.default.initialize(contentEl, appParams);
