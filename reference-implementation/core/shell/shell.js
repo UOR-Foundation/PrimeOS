@@ -1507,10 +1507,14 @@ class Shell {
       } else {
         // Try to load the app from its path
         try {
-          console.log(`Loading app from path: /reference-implementation/apps/${appId}/index.js`);
+          // For GitHub Pages, we need to add the PrimeOS prefix to the path
+          const isGithubPages = location.hostname.includes('github.io');
+          const basePath = isGithubPages ? '/PrimeOS' : '';
+          const scriptPath = `${basePath}/reference-implementation/apps/${appId}/index.js`;
+          console.log(`Loading app from path: ${scriptPath}`);
           
           // First check if we already have this script in the document to avoid duplicates
-          const existingScript = document.querySelector(`script[src="/reference-implementation/apps/${appId}/index.js"]`);
+          const existingScript = document.querySelector(`script[src="${scriptPath}"]`);
           if (existingScript) {
             console.log(`Script for ${appId} already loaded`);
             // Script already exists, no need to load again
@@ -1520,9 +1524,9 @@ class Shell {
             // For demo, use a more reliable direct script loading approach
             const appScript = document.createElement('script');
             
-            // Check if running in GitHub Pages and adjust paths accordingly
-            const basePath = location.hostname.includes('github.io') ? '/PrimeOS' : '';
-            appScript.src = `${basePath}/reference-implementation/apps/${appId}/index.js`;
+            // Use the same scriptPath we already calculated
+            appScript.src = scriptPath;
+            console.log(`Loading app script from: ${appScript.src}`);
             appScript.type = 'text/javascript';
             
             // Safety timeout in case the load event doesn't fire
