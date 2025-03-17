@@ -4,8 +4,14 @@
  * Version 1.0.0
  */
 
-// Import the fully extended Prime object
-const { Prime } = require('./components-2.js');
+// Import core Prime and ensure all modules are loaded in correct order
+const Prime = require('./core.js');
+require('./mathematics.js');
+require('./coherence.js');
+require('./framework/index.js');
+
+// Import refactored component system
+require('./components/index.js');
 
 // Export all modules
 module.exports = Prime;
@@ -31,3 +37,4 @@ module.exports.render = Prime.render;
 module.exports.performance = Prime.performance;
 module.exports.analytic = Prime.analytic;
 module.exports.generateDocumentation = Prime.generateDocumentation;
+module.exports.Components = Prime.Components;

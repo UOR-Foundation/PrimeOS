@@ -1,0 +1,84 @@
+name: Deploy Reference Implementation
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build PrimeOS library
+        run: npm run build:prod
+        
+      - name: Run tests
+        run: npm test
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+        
+      - name: Build Reference Implementation
+        run: |
+          # Create dist directory for the reference implementation
+          mkdir -p dist/reference-implementation
+          
+          # Copy the reference implementation files
+          cp -r reference-implementation/* dist/reference-implementation/
+          
+          # Create a redirecting index.html in the root
+          cat > dist/index.html << EOF
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta http-equiv="refresh" content="0;url=reference-implementation/">
+              <title>PrimeOS</title>
+          </head>
+          <body>
+              <p>Redirecting to <a href="reference-implementation/">PrimeOS Reference Implementation</a>...</p>
+          </body>
+          </html>
+          EOF
+          
+          # Copy all the built library files to the reference implementation
+          cp dist/primeos*.js dist/reference-implementation/
+          cp dist/primeos*.map dist/reference-implementation/
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

@@ -77,6 +77,29 @@ app.start();
 
 Comprehensive documentation is available in the [primeos-spec.md](./primeos-spec.md) file.
 
+## Testing
+
+PrimeOS has a comprehensive testing suite that includes:
+
+1. **Unit Tests**: Using Jest for individual modules
+2. **Integration Tests**: Testing cross-module functionality
+3. **Browser Tests**: Testing in a browser environment using Puppeteer
+
+Run tests with:
+
+```bash
+# Run Jest unit tests
+npm test
+
+# Run browser tests
+npm run test:browser
+
+# Run all tests
+npm run test:all
+```
+
+The browser tests use Puppeteer to launch a headless browser and run tests against the actual browser environment, ensuring that the library works correctly in both Node.js and browser contexts.
+
 ## License
 
 MIT

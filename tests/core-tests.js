@@ -3,21 +3,39 @@
  * Test suite for the core.js module
  */
 
-import { Prime } from '../src/core.js';
+// Use CommonJS require instead of ES module import to avoid circular dependency issues
+const Prime = require('../src/core.js');
 
-// Simple test framework
+// Enhanced test framework with better error handling and reporting
 const Test = {
   passed: 0,
   failed: 0,
   skipped: 0,
+  failureDetails: [],
   
   assert: function(condition, message) {
-    if (condition) {
-      this.passed++;
-      console.log(`✓ PASS: ${message}`);
-    } else {
+    try {
+      if (condition) {
+        this.passed++;
+        console.log(`✓ PASS: ${message}`);
+      } else {
+        this.failed++;
+        const error = new Error(`Assertion failed: ${message}`);
+        this.failureDetails.push({
+          message: message,
+          error: error,
+          stack: error.stack
+        });
+        console.error(`✗ FAIL: ${message}`);
+      }
+    } catch (e) {
       this.failed++;
-      console.error(`✗ FAIL: ${message}`);
+      this.failureDetails.push({
+        message: `Exception during assertion: ${message}`,
+        error: e,
+        stack: e.stack
+      });
+      console.error(`✗ ERROR: Exception during assertion: ${message}`, e);
     }
   },
   
@@ -25,6 +43,14 @@ const Test = {
     try {
       fn();
       this.failed++;
+      const error = new Error(`Expected to throw ${errorType.name}`);
+      this.failureDetails.push({
+        message: message,
+        error: error,
+        stack: error.stack,
+        expected: errorType.name,
+        actual: 'No error thrown'
+      });
       console.error(`✗ FAIL: ${message} - Expected to throw ${errorType.name}`);
     } catch (error) {
       if (error instanceof errorType) {
@@ -32,9 +58,49 @@ const Test = {
         console.log(`✓ PASS: ${message}`);
       } else {
         this.failed++;
+        this.failureDetails.push({
+          message: message,
+          error: error,
+          stack: error.stack,
+          expected: errorType.name,
+          actual: error.constructor.name
+        });
         console.error(`✗ FAIL: ${message} - Expected error of type ${errorType.name}, got ${error.constructor.name}`);
         console.error(error);
       }
+    }
+  },
+  
+  assertDeepEquals: function(actual, expected, message) {
+    try {
+      // Simple deep equality check - for more complex objects, consider using a dedicated library
+      const actualStr = JSON.stringify(actual);
+      const expectedStr = JSON.stringify(expected);
+      
+      if (actualStr === expectedStr) {
+        this.passed++;
+        console.log(`✓ PASS: ${message}`);
+      } else {
+        this.failed++;
+        this.failureDetails.push({
+          message: message,
+          expected: expected,
+          actual: actual,
+          diff: {
+            expected: expectedStr,
+            actual: actualStr
+          }
+        });
+        console.error(`✗ FAIL: ${message} - Expected: ${expectedStr}, Actual: ${actualStr}`);
+      }
+    } catch (e) {
+      this.failed++;
+      this.failureDetails.push({
+        message: `Exception during deep equality assertion: ${message}`,
+        error: e,
+        stack: e.stack
+      });
+      console.error(`✗ ERROR: Exception during deep equality assertion: ${message}`, e);
     }
   },
   
@@ -45,18 +111,43 @@ const Test = {
   
   run: function(name, tests) {
     console.log(`\n=== Running Test Suite: ${name} ===`);
-    tests();
+    this.failureDetails = [];
+    
+    try {
+      tests();
+    } catch (error) {
+      this.failed++;
+      this.failureDetails.push({
+        message: `Uncaught exception in test suite: ${name}`,
+        error: error,
+        stack: error.stack
+      });
+      console.error(`✗ FATAL ERROR: Uncaught exception in test suite: ${name}`, error);
+    }
+    
     console.log(`\n=== Test Summary: ${name} ===`);
     console.log(`Passed: ${this.passed}, Failed: ${this.failed}, Skipped: ${this.skipped}`);
+    
+    if (this.failed > 0) {
+      console.error(`\n=== Failure Details for ${name} ===`);
+      this.failureDetails.forEach((detail, index) => {
+        console.error(`Failure #${index + 1}: ${detail.message}`);
+        if (detail.stack) {
+          console.error(`Stack: ${detail.stack.split('\n')[1]}`);
+        }
+      });
+    }
     
     // Reset counters for next suite
     const total = this.passed + this.failed;
     const oldPassed = this.passed;
     const oldFailed = this.failed;
     const oldSkipped = this.skipped;
+    const oldFailureDetails = [...this.failureDetails];
     this.passed = 0;
     this.failed = 0;
     this.skipped = 0;
+    this.failureDetails = [];
     
     return {
       suite: name,
@@ -64,7 +155,8 @@ const Test = {
       failed: oldFailed,
       skipped: oldSkipped,
       total: total,
-      success: oldFailed === 0
+      success: oldFailed === 0,
+      failureDetails: oldFailureDetails
     };
   }
 };
@@ -278,6 +370,30 @@ testResults.push(Test.run("EventBus", function() {
   Prime.EventBus.publish('test-event', {});
   Test.assert(secondCallCount === 2, "Handler not called after clear");
   
+  // Test clear entire bus
+  let thirdCallCount = 0;
+  Prime.EventBus.subscribe('another-event', () => thirdCallCount++);
+  Prime.EventBus.publish('another-event', {});
+  Test.assert(thirdCallCount === 1, "Handler for another event was called");
+  
+  Prime.EventBus.clear(); // Clear all events
+  Prime.EventBus.publish('another-event', {});
+  Test.assert(thirdCallCount === 1, "Handler not called after clearing all events");
+  
+  // Test error handling in event handlers
+  Prime.EventBus.clear();
+  
+  let safeHandlerCalled = false;
+  const errorHandler = () => { throw new Error('Error in handler'); };
+  const safeHandler = () => { safeHandlerCalled = true; };
+  
+  Prime.EventBus.subscribe('error-event', errorHandler);
+  Prime.EventBus.subscribe('error-event', safeHandler);
+  
+  // This should not throw, and the second handler should still be called
+  Prime.EventBus.publish('error-event', {});
+  Test.assert(safeHandlerCalled, "Safe handler called despite error in another handler");
+  
   // Test error handling for invalid event name
   Test.assertThrows(
     () => Prime.EventBus.subscribe(123, () => {}),
@@ -291,6 +407,16 @@ testResults.push(Test.run("EventBus", function() {
     Prime.ValidationError,
     "subscribe throws for non-function callback"
   );
+  
+  // Test unsubscribe edge cases
+  const emptyUnsubscribe = Prime.EventBus.unsubscribe('non-existent-event', () => {});
+  Test.assert(emptyUnsubscribe === false, "unsubscribe returns false for non-existent event");
+  
+  const validEvent = 'valid-event';
+  const validHandler = () => {};
+  Prime.EventBus.subscribe(validEvent, validHandler);
+  const validUnsubscribe = Prime.EventBus.unsubscribe(validEvent, validHandler);
+  Test.assert(validUnsubscribe === true, "unsubscribe returns true for successful unsubscribe");
 }));
 
 // Test Logger
@@ -492,10 +618,11 @@ testResults.push(Test.run("ModuleLoader", function() {
   delete Prime.testModule;
 }));
 
-// Output final test summary
+// Output final test summary with enhanced reporting
 let overallPassed = 0;
 let overallFailed = 0;
 let overallSkipped = 0;
+let allFailureDetails = [];
 
 console.log("\n=== OVERALL TEST SUMMARY ===");
 testResults.forEach(result => {
@@ -503,18 +630,86 @@ testResults.forEach(result => {
   overallPassed += result.passed;
   overallFailed += result.failed;
   overallSkipped += result.skipped;
+  
+  // Collect failure details
+  if (result.failureDetails && result.failureDetails.length > 0) {
+    allFailureDetails.push({
+      suite: result.suite,
+      details: result.failureDetails
+    });
+  }
 });
 
 console.log(`\nTOTAL: ${overallPassed}/${overallPassed + overallFailed} passed, ${overallFailed} failed, ${overallSkipped} skipped`);
 console.log(`OVERALL STATUS: ${overallFailed === 0 ? 'SUCCESS' : 'FAILURE'}`);
 
-// Export test results
-export const testSummary = {
+// If any tests failed, output a consolidated failure report
+if (overallFailed > 0) {
+  console.error("\n=== CONSOLIDATED FAILURE REPORT ===");
+  allFailureDetails.forEach(suiteFails => {
+    console.error(`\nSuite: ${suiteFails.suite}`);
+    suiteFails.details.forEach((detail, index) => {
+      console.error(`  ${index + 1}. ${detail.message}`);
+      if (detail.expected && detail.actual) {
+        console.error(`     Expected: ${detail.expected}`);
+        console.error(`     Actual: ${detail.actual}`);
+      }
+      if (detail.stack) {
+        const stackLine = detail.stack.split('\n')[1] || detail.stack.split('\n')[0];
+        console.error(`     Location: ${stackLine.trim()}`);
+      }
+    });
+  });
+}
+
+// Export test results using CommonJS
+const testSummary = {
   suites: testResults,
   total: {
     passed: overallPassed,
     failed: overallFailed,
     skipped: overallSkipped,
     success: overallFailed === 0
-  }
+  },
+  failureDetails: allFailureDetails
 };
+
+module.exports = { testSummary };
+
+// Add Jest-compatible tests
+test('Core module tests - overall success', () => {
+  // Our custom test framework already ran the tests and output results
+  // This test is just to make Jest happy
+  expect(testSummary.total.passed).toBeGreaterThan(0);
+  
+  // Also make Jest fail if our tests failed
+  if (testSummary.total.failed > 0) {
+    // Create a detailed error message from the failure details
+    const errorMessages = allFailureDetails.map(suite => 
+      `Suite "${suite.suite}" had ${suite.details.length} failure(s): ${
+        suite.details.map(d => d.message).join('; ')
+      }`
+    ).join('\n');
+    
+    throw new Error(`${testSummary.total.failed} test(s) failed:\n${errorMessages}`);
+  }
+});
+
+// Test that all expected test suites were run
+test('Core module test suites', () => {
+  const expectedSuites = [
+    "Utilities", 
+    "Error Classes", 
+    "EventBus", 
+    "Logger", 
+    "Version Management", 
+    "Testing Utilities", 
+    "ModuleLoader"
+  ];
+  
+  const actualSuites = testResults.map(r => r.suite);
+  
+  expectedSuites.forEach(suiteName => {
+    expect(actualSuites).toContain(suiteName);
+  });
+});

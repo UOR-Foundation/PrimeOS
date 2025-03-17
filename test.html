@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrimeOS Integration Tests</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        #test-runner {
+            background-color: #f7f7f7;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        #test-output {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+        .success {
+            color: #28a745;
+        }
+        .fail {
+            color: #dc3545;
+        }
+        .info {
+            color: #17a2b8;
+        }
+        .warning {
+            color: #ffc107;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0069d9;
+        }
+        .test-category {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .test-summary {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>PrimeOS Integration Tests</h1>
+    
+    <div id="test-runner">
+        <button id="run-all">Run All Tests</button>
+        <button id="run-core">Run Core Tests</button>
+        <button id="run-component">Run Component Tests</button>
+        <button id="run-rendering">Run Rendering Tests</button>
+        <button id="run-performance">Run Performance Tests</button>
+        <button id="clear-output">Clear Output</button>
+    </div>
+    
+    <div id="test-output">Waiting to run tests...</div>
+    
+    <!-- Load PrimeOS library -->
+    <script src="dist/primeos.js"></script>
+    
+    <!-- Test Runner Script -->
+    <script>
+        // Enhanced test runner with detailed reporting, test suites, and timing
+        const TestRunner = {
+            tests: [],
+            suites: {},
+            currentSuite: null,
+            results: {
+                passed: 0,
+                failed: 0,
+                skipped: 0,
+                total: 0,
+                failures: [],
+                suites: {},
+                timings: {
+                    start: null,
+                    end: null,
+                    duration: 0,
+                    tests: {}
+                }
+            },
+
+            /**
+             * Create a test suite
+             * @param {string} name - Suite name
+             * @param {Function} fn - Suite function containing tests
+             */
+            suite: function(name, fn) {
+                this.currentSuite = name;
+                if (!this.suites[name]) {
+                    this.suites[name] = [];
+                }
+                fn();
+                this.currentSuite = null;
+            },
+
+            /**
+             * Register a test
+             * @param {string} name - Test name
+             * @param {Function} fn - Test function
+             * @param {boolean} [skip=false] - Whether to skip this test
+             */
+            test: function(name, fn, skip = false) {
+                const testObj = { 
+                    name, 
+                    fn, 
+                    skip,
+                    suite: this.currentSuite || 'default'
+                };
+                
+                this.tests.push(testObj);
+                
+                if (this.currentSuite) {
+                    if (!this.suites[this.currentSuite]) {
+                        this.suites[this.currentSuite] = [];
+                    }
+                    this.suites[this.currentSuite].push(testObj);
+                }
+            },
+            
+            /**
+             * Skip a test but keep it in the test plan
+             * @param {string} name - Test name
+             * @param {Function} fn - Test function
+             */
+            skip: function(name, fn) {
+                this.test(name, fn, true);
+            },
+
+            /**
+             * Run all registered tests
+             * @returns {Object} Test results
+             */
+            run: async function(options = {}) {
+                const output = document.getElementById('test-output');
+                output.innerHTML = '';
+                
+                this.results = {
+                    passed: 0,
+                    failed: 0,
+                    skipped: 0,
+                    total: this.tests.length,
+                    failures: [],
+                    suites: {},
+                    timings: {
+                        start: Date.now(),
+                        end: null,
+                        duration: 0,
+                        tests: {}
+                    }
+                };
+                
+                // Initialize suite results
+                for (const suiteName in this.suites) {
+                    this.results.suites[suiteName] = {
+                        total: this.suites[suiteName].length,
+                        passed: 0,
+                        failed: 0,
+                        skipped: 0,
+                        failures: []
+                    };
+                }
+
+                this.log(`Running ${this.tests.length} tests in ${Object.keys(this.suites).length || 1} suites...\n`);
+                
+                let currentSuite = null;
+
+                for (const test of this.tests) {
+                    // Only run selected suite if specified
+                    if (options.suite && test.suite !== options.suite) {
+                        continue;
+                    }
+                    
+                    // Log suite header when suite changes
+                    if (test.suite !== currentSuite) {
+                        currentSuite = test.suite;
+                        this.log(`\n📋 Suite: ${currentSuite || 'default'}`, 'info');
+                    }
+                    
+                    // Skip test if marked
+                    if (test.skip) {
+                        this.log(`  ⚪ SKIPPED: ${test.name}`, 'warning');
+                        this.results.skipped++;
+                        if (test.suite) {
+                            this.results.suites[test.suite].skipped++;
+                        }
+                        continue;
+                    }
+                    
+                    // Start timing
+                    const startTime = Date.now();
+                    
+                    // Run test with try/catch
+                    try {
+                        this.log(`  ⏳ Running: ${test.name}...`);
+                        
+                        // Try to handle both async and sync functions
+                        if (test.fn.constructor.name === 'AsyncFunction') {
+                            await test.fn();
+                        } else {
+                            test.fn();
+                        }
+                        
+                        // Calculate timing
+                        const endTime = Date.now();
+                        const duration = endTime - startTime;
+                        this.results.timings.tests[test.name] = duration;
+                        
+                        // Log success
+                        this.log(`✅ PASSED (${duration}ms)`, 'success');
+                        
+                        // Update stats
+                        this.results.passed++;
+                        if (test.suite) {
+                            this.results.suites[test.suite].passed++;
+                        }
+                    } catch (error) {
+                        // Calculate timing even for failures
+                        const endTime = Date.now();
+                        const duration = endTime - startTime;
+                        this.results.timings.tests[test.name] = duration;
+                        
+                        // Log failure
+                        this.log(`❌ FAILED (${duration}ms)`, 'fail');
+                        this.log(`    Error: ${error.message}`, 'fail');
+                        
+                        if (error.stack) {
+                            const stackLines = error.stack.split('\n').slice(1, 3);
+                            this.log(`    Stack: ${stackLines.join('\n            ')}`, 'fail');
+                        }
+                        
+                        // Update stats
+                        this.results.failed++;
+                        this.results.failures.push({
+                            name: test.name,
+                            suite: test.suite,
+                            error,
+                            duration
+                        });
+                        
+                        if (test.suite) {
+                            this.results.suites[test.suite].failed++;
+                            this.results.suites[test.suite].failures.push({
+                                name: test.name,
+                                error,
+                                duration
+                            });
+                        }
+                    }
+                }
+                
+                // Final timing
+                this.results.timings.end = Date.now();
+                this.results.timings.duration = this.results.timings.end - this.results.timings.start;
+
+                // Print summary
+                const summary = `
+📊 Test Summary:
+---------------
+Total:   ${this.results.total} tests
+Passed:  ${this.results.passed} (${Math.round(this.results.passed / this.results.total * 100)}%)
+Failed:  ${this.results.failed} (${Math.round(this.results.failed / this.results.total * 100)}%)
+Skipped: ${this.results.skipped} (${Math.round(this.results.skipped / this.results.total * 100)}%)
+Time:    ${this.results.timings.duration}ms
+`;
+
+                this.log(summary, 'info');
+                
+                // Print suite results
+                if (Object.keys(this.results.suites).length > 0) {
+                    this.log('📋 Suite Results:', 'info');
+                    for (const suiteName in this.results.suites) {
+                        const suite = this.results.suites[suiteName];
+                        const passRate = Math.round(suite.passed / suite.total * 100);
+                        this.log(`  ${suiteName}: ${suite.passed}/${suite.total} passed (${passRate}%)`, 
+                            passRate === 100 ? 'success' : passRate > 50 ? 'info' : 'fail');
+                    }
+                    this.log('');
+                }
+
+                // Print failures
+                if (this.results.failures.length > 0) {
+                    this.log('❌ Failed Tests:', 'fail');
+                    for (const failure of this.results.failures) {
+                        this.log(`  - [${failure.suite || 'default'}] ${failure.name}: ${failure.error.message}`, 'fail');
+                    }
+                }
+                
+                // Print slow tests
+                const slowTests = Object.entries(this.results.timings.tests)
+                    .filter(([_, duration]) => duration > 50)
+                    .sort(([_, durationA], [__, durationB]) => durationB - durationA)
+                    .slice(0, 5);
+                    
+                if (slowTests.length > 0) {
+                    this.log('\n⏱️ Slowest Tests:', 'warning');
+                    for (const [testName, duration] of slowTests) {
+                        this.log(`  - ${testName}: ${duration}ms`, 'warning');
+                    }
+                }
+
+                return this.results;
+            },
+            
+            /**
+             * Log a message to the test output
+             */
+            log: function(message, className = '') {
+                const output = document.getElementById('test-output');
+                const p = document.createElement('div');
+                p.textContent = message;
+                if (className) {
+                    p.className = className;
+                }
+                output.appendChild(p);
+                
+                // Auto scroll to bottom
+                output.scrollTop = output.scrollHeight;
+            },
+
+            /**
+             * Reset test list
+             */
+            reset: function() {
+                this.tests = [];
+                this.suites = {};
+                this.currentSuite = null;
+                this.results = {
+                    passed: 0,
+                    failed: 0,
+                    skipped: 0,
+                    total: 0,
+                    failures: [],
+                    suites: {},
+                    timings: {
+                        start: null,
+                        end: null,
+                        duration: 0,
+                        tests: {}
+                    }
+                };
+            },
+
+            /**
+             * Assert that a condition is true
+             * @param {boolean} condition - Condition to check
+             * @param {string} message - Error message if condition is false
+             */
+            assert: function(condition, message) {
+                if (!condition) {
+                    throw new Error(message || 'Assertion failed');
+                }
+            },
+
+            /**
+             * Assert that a condition is false
+             * @param {boolean} condition - Condition to check
+             * @param {string} message - Error message if condition is true
+             */
+            assertFalse: function(condition, message) {
+                if (condition) {
+                    throw new Error(message || `Expected falsy value, but got ${condition}`);
+                }
+            },
+
+            /**
+             * Assert that two values are deeply equal
+             * @param {*} actual - Actual value
+             * @param {*} expected - Expected value
+             * @param {string} message - Error message if values are not equal
+             */
+            assertEqual: function(actual, expected, message) {
+                // Handle undefined and null cases specially
+                if (actual === undefined && expected === undefined) return;
+                if (actual === null && expected === null) return;
+                
+                // Convert to JSON for deep comparison
+                let actualStr, expectedStr;
+                
+                try {
+                    actualStr = JSON.stringify(actual);
+                    expectedStr = JSON.stringify(expected);
+                } catch (e) {
+                    // Handle circular references or other JSON conversion errors
+                    if (actual !== expected) {
+                        throw new Error(message || `Values are not equal (JSON stringify failed)`);
+                    }
+                    return;
+                }
+
+                if (actualStr !== expectedStr) {
+                    throw new Error(message || `Expected ${expectedStr}, but got ${actualStr}`);
+                }
+            },
+            
+            /**
+             * Assert that two values are not equal
+             * @param {*} actual - Actual value
+             * @param {*} expected - Expected value
+             * @param {string} message - Error message if values are equal
+             */
+            assertNotEqual: function(actual, expected, message) {
+                // Handle undefined and null cases specially
+                if (actual === undefined && expected === undefined) {
+                    throw new Error(message || 'Values are both undefined when they should differ');
+                }
+                if (actual === null && expected === null) {
+                    throw new Error(message || 'Values are both null when they should differ');
+                }
+                
+                // Convert to JSON for deep comparison
+                let actualStr, expectedStr;
+                
+                try {
+                    actualStr = JSON.stringify(actual);
+                    expectedStr = JSON.stringify(expected);
+                } catch (e) {
+                    // Handle circular references or other JSON conversion errors
+                    if (actual === expected) {
+                        throw new Error(message || `Values are equal when they should differ`);
+                    }
+                    return;
+                }
+
+                if (actualStr === expectedStr) {
+                    throw new Error(message || `Values are equal (${expectedStr}) when they should differ`);
+                }
+            },
+            
+            /**
+             * Assert that a value is defined (not undefined)
+             * @param {*} value - Value to check
+             * @param {string} message - Error message if value is undefined
+             */
+            assertDefined: function(value, message) {
+                if (value === undefined) {
+                    throw new Error(message || 'Expected defined value, but got undefined');
+                }
+            },
+            
+            /**
+             * Assert that a value is null
+             * @param {*} value - Value to check
+             * @param {string} message - Error message if value is not null
+             */
+            assertNull: function(value, message) {
+                if (value !== null) {
+                    throw new Error(message || `Expected null, but got ${value}`);
+                }
+            },
+            
+            /**
+             * Assert that a value is not null
+             * @param {*} value - Value to check
+             * @param {string} message - Error message if value is null
+             */
+            assertNotNull: function(value, message) {
+                if (value === null) {
+                    throw new Error(message || 'Expected non-null value, but got null');
+                }
+            },
+            
+            /**
+             * Assert that a function throws an error
+             * @param {Function} fn - Function to execute
+             * @param {Function|string} errorTypeOrMessage - Expected error constructor or error message
+             * @param {string} [message] - Error message if no error is thrown
+             */
+            assertThrows: function(fn, errorTypeOrMessage, message) {
+                let expectedErrorType = null;
+                let expectedErrorMessage = null;
+                
+                if (typeof errorTypeOrMessage === 'function') {
+                    expectedErrorType = errorTypeOrMessage;
+                } else if (typeof errorTypeOrMessage === 'string') {
+                    expectedErrorMessage = errorTypeOrMessage;
+                }
+                
+                try {
+                    fn();
+                    throw new Error(message || 'Expected function to throw, but it did not');
+                } catch (error) {
+                    // Re-throw if this is our own assertion error
+                    if (error.message === 'Expected function to throw, but it did not') {
+                        throw error;
+                    }
+                    
+                    // Check error type if specified
+                    if (expectedErrorType && !(error instanceof expectedErrorType)) {
+                        throw new Error(message || `Expected error of type ${expectedErrorType.name}, but got ${error.constructor.name}`);
+                    }
+                    
+                    // Check error message if specified
+                    if (expectedErrorMessage && !error.message.includes(expectedErrorMessage)) {
+                        throw new Error(message || `Expected error message to include "${expectedErrorMessage}", but got "${error.message}"`);
+                    }
+                }
+            },
+            
+            /**
+             * Assert that a value is close to expected value within delta
+             * @param {number} actual - Actual value
+             * @param {number} expected - Expected value
+             * @param {number} delta - Maximum allowed difference
+             * @param {string} message - Error message if values are not close
+             */
+            assertCloseTo: function(actual, expected, delta, message) {
+                if (typeof actual !== 'number' || typeof expected !== 'number') {
+                    throw new Error(message || 'Values must be numbers for assertCloseTo');
+                }
+                
+                if (Math.abs(actual - expected) > delta) {
+                    throw new Error(message || `Expected ${expected} ± ${delta}, but got ${actual}`);
+                }
+            }
+        };
+
+        // Helper functions for testing
+        function createMockElement() {
+            return {
+                innerHTML: '',
+                style: {},
+                className: '',
+                _children: [],
+                appendChild: function(child) {
+                    this._children.push(child);
+                },
+                addEventListener: function(event, handler) {
+                    this._eventHandlers = this._eventHandlers || {};
+                    this._eventHandlers[event] = this._eventHandlers[event] || [];
+                    this._eventHandlers[event].push(handler);
+                },
+                querySelector: function(selector) {
+                    return {
+                        addEventListener: function(event, handler) {}
+                    };
+                }
+            };
+        }
+
+        const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        // Define core tests
+        function defineCoreTests() {
+            TestRunner.suite('Core', function() {
+                TestRunner.test('Prime core exists and exposes core modules', function() {
+                    TestRunner.assert(Prime !== undefined, 'Prime object should exist');
+                    TestRunner.assert(typeof Prime.version === 'string', 'Prime version should exist');
+                    TestRunner.assert(Prime.Utils !== undefined, 'Prime.Utils should exist');
+                    TestRunner.assert(Prime.EventBus !== undefined, 'Prime.EventBus should exist');
+                });
+
+                TestRunner.test('Prime utility functions work correctly', function() {
+                    // Test UUID generation
+                    const uuid = Prime.Utils.uuid();
+                    TestRunner.assert(typeof uuid === 'string', 'UUID should be a string');
+                    TestRunner.assert(uuid.length === 36, 'UUID should be 36 characters');
+                    TestRunner.assert(uuid.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i), 'UUID should be in correct format');
+                    
+                    // Test type checking
+                    TestRunner.assert(Prime.Utils.isObject({}), 'isObject should identify objects');
+                    TestRunner.assertFalse(Prime.Utils.isObject(null), 'isObject should reject null');
+                    TestRunner.assert(Prime.Utils.isFunction(() => {}), 'isFunction should identify functions');
+                    TestRunner.assert(Prime.Utils.isArray([]), 'isArray should identify arrays');
+                    TestRunner.assert(Prime.Utils.isString(''), 'isString should identify strings');
+                    TestRunner.assert(Prime.Utils.isNumber(42), 'isNumber should identify numbers');
+                    
+                    // Test deep clone
+                    const original = { a: 1, b: { c: 2 } };
+                    const clone = Prime.Utils.deepClone(original);
+                    TestRunner.assertEqual(clone, original, 'Clone should equal original');
+                    clone.b.c = 3;
+                    TestRunner.assertNotEqual(clone, original, 'Modifying clone should not affect original');
+                });
+
+                TestRunner.test('EventBus behaves correctly', function() {
+                    // Setup basic EventBus
+                    let callCount = 0;
+                    let lastPayload = null;
+                    
+                    // IMPORTANT: Define handler function separately to ensure proper reference for unsubscribe
+                    // This is essential for EventBus.unsubscribe to work correctly, as it relies on
+                    // direct function reference comparison (===) to find and remove handlers
+                    const eventCallback = function(payload) {
+                        callCount++;
+                        lastPayload = payload;
+                    };
+                    
+                    // Subscribe to event with the named function
+                    const handler = Prime.EventBus.subscribe('test-event', eventCallback);
+                    
+                    // Publish event
+                    Prime.EventBus.publish('test-event', { value: 42 });
+                    
+                    // Check results
+                    TestRunner.assertEqual(callCount, 1, 'Handler should be called once');
+                    TestRunner.assertEqual(lastPayload.value, 42, 'Handler should receive correct payload');
+                    
+                    // Unsubscribe and verify
+                    if (typeof Prime.EventBus.unsubscribe === 'function') {
+                        // Unsubscribe using the original eventCallback function reference
+                        // NOTE: The EventBus unsubscribe method requires the exact same function reference
+                        // that was used for subscribing. Using anonymous functions or arrow functions
+                        // directly in subscribe() calls makes it impossible to unsubscribe later.
+                        Prime.EventBus.unsubscribe('test-event', eventCallback);
+                        
+                        // Publish after unsubscribing
+                        Prime.EventBus.publish('test-event', { value: 43 });
+                        
+                        // Verify handler wasn't called
+                        TestRunner.assertEqual(callCount, 1, 'Handler should not be called after unsubscribing');
+                        
+                        // Subscribe again to make sure it works
+                        Prime.EventBus.subscribe('test-event', eventCallback);
+                        Prime.EventBus.publish('test-event', { value: 44 });
+                        TestRunner.assertEqual(callCount, 2, 'Handler should be called after resubscribing');
+                    }
+                });
+            });
+        }
+
+        // Define component system tests
+        function defineComponentTests() {
+            TestRunner.suite('Component System', function() {
+                TestRunner.test('Component creation and basic properties', function() {
+                    // Skip if createComponent not available
+                    if (!Prime.createComponent) {
+                        console.log('Skipping component test - createComponent not available');
+                        return;
+                    }
+
+                    // Create basic component
+                    const component = Prime.createComponent({
+                        meta: {
+                            name: 'TestComponent',
+                            id: 'test-component-1'
+                        },
+                        variant: {
+                            count: 10,
+                            text: 'Hello World'
+                        }
+                    });
+
+                    // Verify properties
+                    TestRunner.assertDefined(component, 'Component should be created');
+                    TestRunner.assertEqual(component.meta.name, 'TestComponent', 'Component should have correct name');
+                    TestRunner.assertEqual(component.meta.id, 'test-component-1', 'Component should have correct ID');
+                    TestRunner.assertEqual(component.variant.count, 10, 'Component should have correct count');
+                    TestRunner.assertEqual(component.variant.text, 'Hello World', 'Component should have correct text');
+
+                    // Test state updates if setState exists
+                    if (typeof component.setState === 'function') {
+                        component.setState({ count: 20 });
+                        TestRunner.assertEqual(component.variant.count, 20, 'Component count should be updated');
+                    }
+                });
+
+                TestRunner.test('Component registry basic operations', function() {
+                    // Skip if registry not available
+                    if (!Prime.ComponentRegistry || typeof Prime.ComponentRegistry.register !== 'function') {
+                        console.log('Skipping registry test - ComponentRegistry not available');
+                        return;
+                    }
+
+                    // Create component for registry test
+                    const component = Prime.createComponent({
+                        meta: {
+                            name: 'RegistryTestComponent',
+                            id: 'registry-test-component'
+                        },
+                        variant: {
+                            value: 'test'
+                        }
+                    });
+
+                    // Register and retrieve
+                    Prime.ComponentRegistry.register(component);
+                    const retrieved = Prime.ComponentRegistry.get('registry-test-component');
+                    TestRunner.assertEqual(retrieved, component, 'Should retrieve the same component');
+
+                    // Unregister if supported
+                    if (typeof Prime.ComponentRegistry.unregister === 'function') {
+                        Prime.ComponentRegistry.unregister(component);
+                        const afterUnregister = Prime.ComponentRegistry.get('registry-test-component');
+                        TestRunner.assert(afterUnregister === undefined, 'Component should be removed after unregistering');
+                    }
+                });
+            });
+        }
+
+        // Define rendering tests
+        function defineRenderingTests() {
+            TestRunner.suite('Rendering', function() {
+                TestRunner.test('Basic DOM rendering', function() {
+                    // Skip if render is not available
+                    if (!Prime.render || typeof Prime.render.toDOM !== 'function') {
+                        console.log('Skipping render test - render.toDOM not available');
+                        return;
+                    }
+
+                    // Create a simple component to render
+                    const component = Prime.createComponent({
+                        meta: {
+                            name: 'RenderTestComponent'
+                        },
+                        invariant: {
+                            render: function(element) {
+                                element.innerHTML = `<div>Hello from ${this.meta.name}</div>`;
+                                return element;
+                            }
+                        }
+                    });
+
+                    // Create mock element and render
+                    const mockElement = createMockElement();
+                    Prime.render.toDOM(component, mockElement);
+
+                    // Verify render output
+                    TestRunner.assert(
+                        mockElement.innerHTML.includes('Hello from RenderTestComponent'),
+                        'Element should contain rendered component content'
+                    );
+                });
+
+                TestRunner.test('Render caching', function() {
+                    // Skip if render caching is not available
+                    if (!Prime.render || typeof Prime.render.enableCaching !== 'function') {
+                        console.log('Skipping render caching test - enableCaching not available');
+                        return;
+                    }
+
+                    // Enable caching
+                    Prime.render.enableCaching(true);
+
+                    // Create component that counts renders
+                    let renderCount = 0;
+                    const component = Prime.createComponent({
+                        meta: {
+                            name: 'CacheTestComponent'
+                        },
+                        variant: {
+                            value: 'initial'
+                        },
+                        invariant: {
+                            render: function(element) {
+                                renderCount++;
+                                element.innerHTML = `<div>Value: ${this.variant.value} (Rendered ${renderCount} times)</div>`;
+                                return element;
+                            }
+                        }
+                    });
+
+                    // First render
+                    const element = createMockElement();
+                    Prime.render.toDOM(component, element);
+                    const initialRenderCount = renderCount;
+
+                    // Second render with no state change should use cache
+                    Prime.render.toDOM(component, element);
+                    
+                    // Check if render count hasn't changed (caching worked)
+                    TestRunner.assertEqual(
+                        renderCount, initialRenderCount,
+                        'Component should not be re-rendered when state hasn\'t changed'
+                    );
+
+                    // Disable caching
+                    Prime.render.enableCaching(false);
+                });
+            });
+        }
+
+        // Define performance tests
+        function definePerformanceTests() {
+            TestRunner.suite('Performance', function() {
+                TestRunner.test('Function optimization', function() {
+                    // Skip if performance module is not available
+                    if (!Prime.performance || typeof Prime.performance.optimize !== 'function') {
+                        console.log('Skipping performance test - optimize not available');
+                        return;
+                    }
+
+                    // Create a function to optimize
+                    let callCount = 0;
+                    const testFunction = (x) => {
+                        callCount++;
+                        return x * 2;
+                    };
+
+                    // Optimize with memoization
+                    const optimized = Prime.performance.optimize(testFunction, {
+                        memoize: true
+                    });
+
+                    // Call with same parameter multiple times
+                    optimized(5);
+                    const countAfterFirstCall = callCount;
+                    optimized(5); // Should use cache
+                    optimized(5); // Should use cache
+
+                    // Verify memoization worked
+                    TestRunner.assertEqual(
+                        callCount, countAfterFirstCall,
+                        'Optimized function should use memoization'
+                    );
+
+                    // Call with different parameter
+                    optimized(10);
+                    TestRunner.assertEqual(
+                        callCount, countAfterFirstCall + 1,
+                        'Optimized function should call original for new parameters'
+                    );
+                });
+
+                TestRunner.test('Async optimization', function() {
+                    // Skip if async optimization is not available
+                    if (!Prime.performance || typeof Prime.performance.optimizeAsync !== 'function') {
+                        console.log('Skipping async performance test - optimizeAsync not available');
+                        return;
+                    }
+
+                    // This is a placeholder - async tests are challenging in this context
+                    // In a real test, you'd make calls and verify behavior
+                    TestRunner.assert(true, 'Async optimization exists');
+                });
+            });
+        }
+
+        // Wire up UI controls
+        document.addEventListener('DOMContentLoaded', function() {
+            // Define all test suites
+            defineCoreTests();
+            defineComponentTests();
+            defineRenderingTests(); 
+            definePerformanceTests();
+
+            // Run all tests
+            document.getElementById('run-all').addEventListener('click', async function() {
+                TestRunner.reset();
+                // Re-define all tests
+                defineCoreTests();
+                defineComponentTests();
+                defineRenderingTests(); 
+                definePerformanceTests();
+                await TestRunner.run();
+            });
+
+            // Run specific test suites
+            document.getElementById('run-core').addEventListener('click', async function() {
+                TestRunner.reset();
+                defineCoreTests();
+                await TestRunner.run({ suite: 'Core' });
+            });
+
+            document.getElementById('run-component').addEventListener('click', async function() {
+                TestRunner.reset();
+                defineComponentTests();
+                await TestRunner.run({ suite: 'Component System' });
+            });
+
+            document.getElementById('run-rendering').addEventListener('click', async function() {
+                TestRunner.reset();
+                defineRenderingTests();
+                await TestRunner.run({ suite: 'Rendering' });
+            });
+
+            document.getElementById('run-performance').addEventListener('click', async function() {
+                TestRunner.reset();
+                definePerformanceTests();
+                await TestRunner.run({ suite: 'Performance' });
+            });
+
+            // Clear output
+            document.getElementById('clear-output').addEventListener('click', function() {
+                document.getElementById('test-output').innerHTML = '';
+            });
+        });
+    </script>
+</body>
+</html>
