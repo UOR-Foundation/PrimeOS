@@ -223,6 +223,9 @@ class Shell {
       }
     });
     
+    // Initialize apps array
+    this.apps = [];
+    
     // Initialize app launcher
     this.appLauncher = createComponent({
       id: 'app-launcher',
@@ -357,28 +360,21 @@ class Shell {
             name: 'File Explorer',
             icon: '📁',
             description: 'Browse and manage your files',
-            path: '/apps/file-explorer/index.js'
+            path: '/reference-implementation/apps/file-explorer/index.js'
           },
           {
             id: 'text-editor',
             name: 'Text Editor',
             icon: '📝',
             description: 'Create and edit documents',
-            path: '/apps/text-editor/index.js'
+            path: '/reference-implementation/apps/text-editor/index.js'
           },
           {
             id: 'calculator',
             name: 'Calculator',
             icon: '🧮',
             description: 'Perform calculations',
-            path: '/apps/calculator/index.js'
-          },
-          {
-            id: 'settings',
-            name: 'Settings',
-            icon: '⚙️',
-            description: 'System configuration',
-            path: '/apps/settings/index.js'
+            path: '/reference-implementation/apps/calculator/index.js'
           }
         ];
         
@@ -399,21 +395,21 @@ class Shell {
             name: 'File Explorer',
             icon: '📁',
             description: 'Browse and manage your files',
-            path: '/apps/file-explorer/index.js'
+            path: '/reference-implementation/apps/file-explorer/index.js'
           },
           {
             id: 'text-editor',
             name: 'Text Editor',
             icon: '📝',
             description: 'Create and edit documents',
-            path: '/apps/text-editor/index.js'
+            path: '/reference-implementation/apps/text-editor/index.js'
           },
           {
             id: 'calculator',
             name: 'Calculator',
             icon: '🧮',
             description: 'Perform calculations',
-            path: '/apps/calculator/index.js'
+            path: '/reference-implementation/apps/calculator/index.js'
           }
         ];
         
@@ -431,8 +427,19 @@ class Shell {
       }
       
       // Update app launcher component
-      this.appLauncher.variant.apps = this.apps;
-      this.taskbar.variant.apps = this.apps;
+      if (this.appLauncher && this.appLauncher.variant) {
+        this.appLauncher.variant.apps = this.apps;
+        // Make sure filteredApps is initialized with all apps initially
+        this.appLauncher.variant.filteredApps = [...this.apps];
+        
+        // Debug the apps array to make sure it's correct
+        console.log('Available apps:', this.apps.map(app => `${app.name} (${app.id})`).join(', '));
+        console.log(`Initialized app launcher with ${this.apps.length} apps`);
+      }
+      
+      if (this.taskbar && this.taskbar.variant) {
+        this.taskbar.variant.apps = this.apps;
+      }
       
       console.log(`Loaded ${this.apps.length} applications`);
     } catch (error) {
@@ -702,7 +709,7 @@ class Shell {
               }
               
               // Force update the launcher to ensure apps are displayed
-              this.updateAppLauncher();
+              this.updateAppLauncherContent();
             } else {
               appLauncher.classList.add('hidden');
               // Update component state if available
@@ -765,14 +772,14 @@ class Shell {
             // Filter apps directly
             if (Array.isArray(this.appLauncher.variant.apps)) {
               this.appLauncher.variant.filteredApps = this.appLauncher.variant.apps.filter(app => 
-                app.name.toLowerCase().includes(searchQuery) ||
-                app.description?.toLowerCase().includes(searchQuery)
+                (app.name?.toLowerCase().includes(searchQuery)) || 
+                (app.description?.toLowerCase().includes(searchQuery))
               );
               
               console.log(`Filtered apps: ${this.appLauncher.variant.filteredApps.length} matches`);
               
-              // Update the UI
-              this.updateAppLauncher();
+              // Update the UI by updating the app launcher DOM directly
+              this.updateAppLauncherContent();
             }
           }
         });
@@ -1223,6 +1230,118 @@ class Shell {
   }
   
   /**
+   * Update app launcher content with current filtered apps
+   * Ensures icons are visible and clickable during search
+   */
+  updateAppLauncherContent() {
+    try {
+      const appLauncherGrid = document.querySelector('#app-launcher .app-grid');
+      if (!appLauncherGrid) return;
+      
+      // Store the scroll position
+      const scrollTop = appLauncherGrid.scrollTop;
+      
+      // Clear existing apps
+      appLauncherGrid.innerHTML = '';
+      
+      // Get the apps to display (filtered or all)
+      let appsToDisplay = this.appLauncher?.variant?.filteredApps || 
+                         this.appLauncher?.variant?.apps || 
+                         [];
+      
+      // Ensure we only have valid apps with required properties
+      appsToDisplay = appsToDisplay.filter(app => 
+        app && app.id && app.name && 
+        // Make sure this is a real app that can be launched
+        (app.path || app.launch || typeof app.initialize === 'function')
+      );
+      
+      console.log(`Updating app launcher with ${appsToDisplay.length} valid apps`);
+      
+      // Add each app to the grid
+      appsToDisplay.forEach(app => {
+        if (!app) return; // Skip undefined apps
+        
+        const appElement = document.createElement('div');
+        appElement.className = 'app-item';
+        appElement.setAttribute('data-app-id', app.id || app.name || 'unknown');
+        
+        // Use app.icon if available, otherwise a default icon
+        let iconClass = 'fa-cube'; // Default icon
+        
+        if (app.icon) {
+          // For emoji icons or raw icons, use them directly
+          if (app.icon.includes('📁') || app.icon.includes('📝') || app.icon.includes('🧮')) {
+            appElement.innerHTML = `
+              <div class="app-icon">${app.icon}</div>
+              <div class="app-name">${app.name || 'Unnamed App'}</div>
+            `;
+            appLauncherGrid.appendChild(appElement);
+            
+            // Add click event and continue to next app
+            const self = this;
+            appElement.addEventListener('click', function() {
+              console.log(`Launching app: ${app.name}`);
+              self.launchApp(app);
+              
+              const launcher = document.getElementById('app-launcher');
+              if (launcher) launcher.classList.add('hidden');
+              
+              if (self.appLauncher && self.appLauncher.variant) {
+                self.appLauncher.variant.visible = false;
+              }
+            });
+            
+            return; // Skip the rest of the current iteration
+          }
+          
+          // For FontAwesome icons
+          iconClass = app.icon.startsWith('fa-') ? app.icon : `fa-${app.icon}`;
+        }
+        
+        appElement.innerHTML = `
+          <div class="app-icon"><i class="fas ${iconClass}"></i></div>
+          <div class="app-name">${app.name || 'Unnamed App'}</div>
+        `;
+        
+        appLauncherGrid.appendChild(appElement);
+        
+        // Add click event with proper binding
+        const self = this; // Preserve "this" context
+        appElement.addEventListener('click', function() {
+          console.log(`Launching app: ${app.name}`);
+          self.launchApp(app);
+          
+          // Hide the launcher after clicking
+          const launcher = document.getElementById('app-launcher');
+          if (launcher) launcher.classList.add('hidden');
+          
+          if (self.appLauncher && self.appLauncher.variant) {
+            self.appLauncher.variant.visible = false;
+          }
+        });
+      });
+      
+      // If no apps match, show a message
+      if (appsToDisplay.length === 0) {
+        const noAppsMessage = document.createElement('div');
+        noAppsMessage.className = 'no-apps-message';
+        noAppsMessage.textContent = 'No matching apps found';
+        noAppsMessage.style.gridColumn = '1 / span 4'; // Span all columns
+        noAppsMessage.style.textAlign = 'center';
+        noAppsMessage.style.padding = '20px';
+        noAppsMessage.style.color = 'rgba(255, 255, 255, 0.7)';
+        appLauncherGrid.appendChild(noAppsMessage);
+      }
+      
+      // Restore scroll position
+      appLauncherGrid.scrollTop = scrollTop;
+    } catch (error) {
+      console.error('Error updating app launcher content:', error);
+    }
+  }
+  
+  /**
    * Create a window element
    * @param {Object} window - Window configuration
    * @returns {HTMLElement} Window element
@@ -1460,21 +1579,42 @@ class Shell {
   
   /**
    * Launch an application
-   * @param {Object} params - Launch parameters
-   * @param {string} params.appId - Application ID
+   * @param {Object|string} params - Launch parameters or app ID
+   * @param {string} [params.appId] - Application ID
    * @param {Object} [params.fileToOpen] - File to open with the application
    * @param {Object} [params.options] - Additional launch options
    * @returns {Promise<void>}
    */
   async launchApp(params) {
     try {
-      const { appId, fileToOpen, options = {} } = params;
+      // Support both object params and direct app object
+      let app;
+      let appId;
+      let fileToOpen;
+      let options = {};
       
-      // Find app in registry
-      const app = this.apps.find(a => a.id === appId);
-      if (!app) {
-        throw new Error(`Application ${appId} not found`);
+      if (typeof params === 'string') {
+        // If params is a string, treat it as an appId
+        appId = params;
+        app = this.apps.find(a => a.id === appId);
+      } else if (params.id) {
+        // If params has an id property, it might be an app object directly
+        app = params;
+        appId = app.id;
+      } else {
+        // Regular object with appId, fileToOpen, options
+        appId = params.appId;
+        fileToOpen = params.fileToOpen;
+        options = params.options || {};
+        app = this.apps.find(a => a.id === appId);
       }
+      
+      if (!app) {
+        console.error(`Application not found:`, params);
+        throw new Error(`Application ${appId || 'unknown'} not found`);
+      }
+      
+      console.log(`Attempting to launch app:`, app);
       
       // Check if app is already running and we're not force-launching a new instance
       if (!options.forceNewInstance) {
