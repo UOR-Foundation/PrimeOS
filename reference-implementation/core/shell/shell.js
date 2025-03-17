@@ -1519,7 +1519,10 @@ class Shell {
           } else {
             // For demo, use a more reliable direct script loading approach
             const appScript = document.createElement('script');
-            appScript.src = `/reference-implementation/apps/${appId}/index.js`;
+            
+            // Check if running in GitHub Pages and adjust paths accordingly
+            const basePath = location.hostname.includes('github.io') ? '/PrimeOS' : '';
+            appScript.src = `${basePath}/reference-implementation/apps/${appId}/index.js`;
             appScript.type = 'text/javascript';
             
             // Safety timeout in case the load event doesn't fire
