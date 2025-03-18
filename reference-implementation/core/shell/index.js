@@ -6,6 +6,29 @@
 
 import { Shell } from './shell.js';
 
+// Import App Factory for system integration
+let AppFactory;
+
+// Try to load App Factory either from global namespace or dynamically
+if (typeof window !== 'undefined' && window.PrimeOS && window.PrimeOS.AppFactory) {
+  console.log('Loading App Factory from global PrimeOS object');
+  AppFactory = window.PrimeOS.AppFactory;
+} else {
+  try {
+    if (typeof require !== 'undefined') {
+      console.log('Loading App Factory using require()');
+      AppFactory = require('../app-factory/index.js');
+    } else {
+      console.log('App Factory will be loaded later via script tag');
+      // Will be loaded via script tag
+      AppFactory = null;
+    }
+  } catch (error) {
+    console.warn('App Factory module not available:', error);
+    AppFactory = null;
+  }
+}
+
 // Create global stylesheet link
 function loadShellStyles() {
   // Don't add another stylesheet if it already exists
@@ -709,6 +732,27 @@ export async function initializeShell() {
   // Create and initialize shell
   const shell = getShell();
   await shell.initialize();
+  
+  // Initialize App Factory if available
+  if (AppFactory) {
+    try {
+      console.log('Initializing App Factory...');
+      
+      // Initialize App Factory with Shell and system components
+      await AppFactory.initializeSystem({
+        shell: shell,
+        store: shell.store,
+        bundleManager: shell.bundleManager,
+        eventBus: shell.eventBus,
+        identity: shell.identity
+      });
+      
+      console.log('App Factory initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize App Factory:', error);
+    }
+  }
+  
   return shell;
 }
 

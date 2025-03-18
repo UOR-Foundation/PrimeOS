@@ -375,6 +375,15 @@ class Shell {
             icon: '🧮',
             description: 'Perform calculations',
             path: '/reference-implementation/apps/calculator/index.js'
+          },
+          {
+            id: 'app-factory',
+            name: 'App Factory',
+            icon: '🏭',
+            description: 'AI-powered application creation',
+            path: '/reference-implementation/core/app-factory/index.js',
+            isSystem: true,
+            category: 'development'
           }
         ];
         
@@ -388,7 +397,7 @@ class Shell {
         // but in a real system we would scan for installed apps.
         // For now, we'll just make sure our three demo apps are registered.
         
-        // Make sure our three demo apps are included
+        // Make sure our demo apps are included
         const requiredApps = [
           {
             id: 'file-explorer',
@@ -410,6 +419,15 @@ class Shell {
             icon: '🧮',
             description: 'Perform calculations',
             path: '/reference-implementation/apps/calculator/index.js'
+          },
+          {
+            id: 'app-factory',
+            name: 'App Factory',
+            icon: '🏭',
+            description: 'AI-powered application creation',
+            path: '/reference-implementation/core/app-factory/index.js',
+            isSystem: true,
+            category: 'development'
           }
         ];
         
@@ -1650,7 +1668,12 @@ class Shell {
           // For GitHub Pages, we need to add the PrimeOS prefix to the path
           const isGithubPages = location.hostname.includes('github.io');
           const basePath = isGithubPages ? '/PrimeOS' : '';
-          const scriptPath = `${basePath}/reference-implementation/apps/${appId}/index.js`;
+          
+          // Use the app's path property if available, otherwise fall back to the standard apps path
+          const scriptPath = app.path 
+            ? `${basePath}${app.path}` 
+            : `${basePath}/reference-implementation/apps/${appId}/index.js`;
+          
           console.log(`Loading app from path: ${scriptPath}`);
           
           // First check if we already have this script in the document to avoid duplicates

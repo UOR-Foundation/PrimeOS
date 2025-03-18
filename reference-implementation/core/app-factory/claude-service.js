@@ -5,20 +5,54 @@
  * app creation, code generation, and improvement in the App Factory.
  */
 
+// Import dependencies if in Node environment
+let SecureVault;
+try {
+  if (typeof window === 'undefined' || !window.PrimeOS || !window.PrimeOS.SecureVault) {
+    const secureVaultModule = require('../identity/secure-vault');
+    SecureVault = secureVaultModule.SecureVault;
+  } else {
+    SecureVault = window.PrimeOS.SecureVault;
+  }
+} catch (error) {
+  console.warn('SecureVault not available, will use direct API key:', error);
+}
+
 class ClaudeService {
   /**
    * Creates a new Claude Service instance
    * @param {Object} options - Configuration options
-   * @param {string} options.apiKey - Anthropic API key
+   * @param {string} options.apiKey - Anthropic API key (optional if secureVault provided)
    * @param {string} options.apiUrl - API endpoint URL
    * @param {Object} options.eventBus - Event bus for notifications
    * @param {Object} options.promptTemplates - Custom prompt templates
+   * @param {Object} options.secureVault - Secure vault for API key storage
+   * @param {Object} options.configManager - Configuration manager
    */
   constructor(options = {}) {
+    // Store dependencies
+    this.eventBus = options.eventBus || null;
+    
+    // Create secure vault if not provided
+    if (options.secureVault) {
+      this.secureVault = options.secureVault;
+    } else if (SecureVault) {
+      try {
+        this.secureVault = new SecureVault({ eventBus: this.eventBus });
+        console.log('Created new SecureVault for API key storage');
+      } catch (error) {
+        console.error('Failed to create SecureVault:', error);
+        this.secureVault = null;
+      }
+    } else {
+      this.secureVault = null;
+    }
+    
+    this.configManager = options.configManager || null;
+    
     // Store configuration
     this.apiKey = options.apiKey || '';
     this.apiUrl = options.apiUrl || 'https://api.anthropic.com/v1/messages';
-    this.eventBus = options.eventBus || null;
     this.model = options.model || 'claude-3-opus-20240229';
     
     // Load custom prompt templates if provided
@@ -41,8 +75,80 @@ class ClaudeService {
     // Bind methods
     this._executeRequest = this._executeRequest.bind(this);
     this._enforceRateLimit = this._enforceRateLimit.bind(this);
+    this._loadApiKey = this._loadApiKey.bind(this);
+    
+    // Try to load API key from secure vault
+    if (this.secureVault) {
+      this._loadApiKey()
+        .then(() => console.log('API key loaded from secure vault'))
+        .catch(err => console.error('Failed to load API key:', err));
+    }
+    
+    // Listen for API key changes from Settings app
+    if (this.eventBus) {
+      this.eventBus.subscribe('settings:api-key-changed', this._handleApiKeyChange.bind(this));
+      
+      // Also listen for changes to API URL and model from settings
+      this.eventBus.subscribe('settings:changed', event => {
+        if (event.category === 'apiKeys') {
+          if (event.key === 'claudeApiUrl' && event.value) {
+            this.apiUrl = event.value;
+            console.log('Claude API URL updated from settings');
+          }
+          else if (event.key === 'claudeModel' && event.value) {
+            this.model = event.value;
+            console.log('Claude model updated from settings');
+          }
+        }
+      });
+    }
     
     console.log('ClaudeService initialized');
+  }
+  
+  /**
+   * Load API key from secure vault
+   * @private
+   * @returns {Promise<void>}
+   */
+  async _loadApiKey() {
+    try {
+      if (!this.secureVault) {
+        return;
+      }
+      
+      // Load API key from secure vault
+      const apiKey = await this.secureVault.getSecret('claudeApiKey');
+      
+      if (apiKey) {
+        this.apiKey = apiKey;
+        console.log('API key loaded from secure vault');
+      } else {
+        console.warn('No API key found in secure vault');
+      }
+      
+      // Load API URL from configuration manager
+      if (this.configManager) {
+        const apiUrl = await this.configManager.getConfig('apiEndpoints.claudeApiUrl', this.apiUrl);
+        if (apiUrl) {
+          this.apiUrl = apiUrl;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load API key from secure vault:', error);
+    }
+  }
+  
+  /**
+   * Handle API key change event from Settings app
+   * @private
+   * @param {Object} event - API key change event
+   */
+  _handleApiKeyChange(event) {
+    if (event.key === 'claudeApiKey' && event.value) {
+      console.log('API key updated from Settings app');
+      this.apiKey = event.value;
+    }
   }
   
   /**
@@ -146,6 +252,15 @@ class ClaudeService {
         5. API contract correctness
         6. UI component definition completeness
         
+        Additionally, validate these Prime Framework requirements:
+        1. Proper manifold structure (meta/invariant/variant decomposition)
+        2. Base 0-3 hierarchy alignment
+        3. Mathematical coherence between components
+        4. Interface contract completeness
+        5. Proper manifold depth assignments for data properties
+        6. Coherence constraints and thresholds
+        7. Component responsibility boundaries
+        
         Provide a validation report with any issues found and suggestions for improvement.
         Return your response as JSON with valid: true/false and errors/warnings if applicable.
       `,
@@ -165,6 +280,15 @@ class ClaudeService {
         6. Include comprehensive unit tests for core functionality
         7. Provide clear comments and documentation
         8. Structure the code for maintainability and performance
+        
+        Important: Follow these manifold decomposition principles from the Prime Framework:
+        1. Break down components into discrete manifolds with the meta/invariant/variant structure
+        2. Organize code according to the Base 0-3 hierarchy (Neural Network, Resource, Kernel, Application)
+        3. Ensure each component has a clearly defined mathematical coherence
+        4. Implement proper interface contracts between components
+        5. Use pure functions and immutable data patterns
+        6. Maintain single responsibility for each file
+        7. Apply depth-based organization for data models with manifest depth indicators
         
         For each file, provide the full path and complete code content.
         Format your response as a JSON array of file objects, each with "path" and "content" properties.
@@ -219,14 +343,83 @@ class ClaudeService {
   /**
    * Set the API key
    * @param {string} apiKey - Anthropic API key
+   * @returns {Promise<boolean>} Success indicator
    */
-  setApiKey(apiKey) {
-    if (!apiKey) {
+  async setApiKey(apiKey) {
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
       throw new Error('API key is required');
     }
     
+    // Store API key
     this.apiKey = apiKey;
-    console.log('API key updated');
+    
+    // Store API key in secure vault if available
+    if (this.secureVault) {
+      try {
+        await this.secureVault.setSecret('claudeApiKey', apiKey, {
+          created: new Date().toISOString(),
+          source: 'claude-service'
+        });
+        
+        // Notify that the API key has been updated
+        if (this.eventBus) {
+          this.eventBus.publish('claude-service:api-key-updated', {
+            timestamp: new Date().toISOString()
+          });
+        }
+        
+        console.log('API key updated and stored in secure vault');
+        return true;
+      } catch (error) {
+        console.error('Failed to store API key in secure vault:', error);
+        return false;
+      }
+    } else {
+      console.log('API key updated (secure vault not available)');
+      return true;
+    }
+  }
+  
+  /**
+   * Check if an API key is set
+   * @returns {Promise<boolean>} True if an API key is available
+   */
+  async hasApiKey() {
+    // If API key is already loaded in memory, return true
+    if (this.apiKey) {
+      return true;
+    }
+    
+    // Otherwise, try to load from secure vault
+    if (this.secureVault) {
+      try {
+        await this._loadApiKey();
+        return !!this.apiKey;
+      } catch (error) {
+        console.error('Failed to check for API key:', error);
+        return false;
+      }
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Get the currently set API key
+   * @returns {string} Current API key
+   */
+  getApiKey() {
+    return this.apiKey;
+  }
+  
+  /**
+   * Execute a request with a prompt - compatibility with ClaudeOrchestrator
+   * @param {string} prompt - The prompt to send
+   * @param {string} conversationId - The conversation ID for context
+   * @returns {Promise<string>} The response from Claude
+   */
+  async executeRequest(prompt, conversationId) {
+    return this._executeRequest(prompt, conversationId);
   }
   
   /**
@@ -626,8 +819,15 @@ class ClaudeService {
    * @returns {Promise<string>} Claude API response
    */
   async _executeRequest(prompt, conversationId) {
+    // If API key not already loaded, try to load it from secure vault
+    if (!this.apiKey && this.secureVault) {
+      await this._loadApiKey();
+    }
+    
     if (!this.apiKey) {
-      throw new Error('API key is required');
+      // In a real implementation, this would redirect to settings
+      // For now, show a more helpful error message
+      throw new Error('API key is required. Please set a Claude API key in the Settings app.');
     }
     
     // Apply rate limiting
@@ -678,11 +878,40 @@ class ClaudeService {
       // Check for HTTP errors
       if (!response.ok) {
         const errorData = await response.json();
+        
+        // Check if the error is due to an invalid API key
+        if (response.status === 401 || response.status === 403) {
+          // Notify about invalid API key
+          if (this.eventBus) {
+            this.eventBus.publish('claude-service:api-key-invalid', {
+              error: errorData.error?.message || 'Invalid API key',
+              timestamp: new Date().toISOString()
+            });
+          }
+          
+          throw new Error('Invalid Claude API key. Please check your API key in the Settings app.');
+        }
+        
         throw new Error(`Claude API error: ${errorData.error?.message || response.statusText}`);
       }
       
       // Parse and return the response
       const responseData = await response.json();
+      
+      // Track API usage if event bus is available
+      if (this.eventBus) {
+        const inputTokens = prompt.length / 4; // Rough estimate
+        const outputTokens = responseData.content[0].text.length / 4; // Rough estimate
+        
+        this.eventBus.publish('claude-service:api-usage', {
+          inputTokens,
+          outputTokens,
+          totalTokens: inputTokens + outputTokens,
+          model: this.model,
+          operation: conversationId || 'unknown',
+          timestamp: new Date().toISOString()
+        });
+      }
       
       // Store in conversation history
       this._updateConversationHistory(conversationId, prompt, responseData.content[0].text);

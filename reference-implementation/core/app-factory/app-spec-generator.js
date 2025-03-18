@@ -131,8 +131,11 @@ class AppSpecGenerator {
       // Apply template defaults
       const completeSpec = this._applyTemplateDefaults(specification, options);
       
+      // Break down the specification into manifolds (discrete object depths)
+      const manifestedSpec = this._decomposeSpecIntoManifolds(completeSpec);
+      
       // Validate the specification
-      const validationResult = await this.validateSpecification(completeSpec);
+      const validationResult = await this.validateSpecification(manifestedSpec);
       
       if (!validationResult.valid) {
         console.warn('Generated specification has validation issues:', validationResult.errors);
@@ -140,11 +143,11 @@ class AppSpecGenerator {
       
       // Notify specification creation
       this._notifyEvent('specification-created', {
-        specification: completeSpec,
+        specification: manifestedSpec,
         validationResult
       });
       
-      return completeSpec;
+      return manifestedSpec;
     } catch (error) {
       console.error('Failed to generate app specification:', error);
       throw error;
@@ -340,7 +343,48 @@ class AppSpecGenerator {
       standard: {
         architecture: {
           type: 'modular',
-          layers: ['ui', 'business-logic', 'data']
+          layers: ['ui', 'business-logic', 'data'],
+          bases: {
+            base0: {
+              // Neural Network Specification layer
+              embedding: { dimensions: 128, algorithm: 'default' },
+              logic: { operators: ['basic', 'extended'] },
+              representation: { model: 'symmetric' },
+              processor: { type: 'spectral' }
+            },
+            base1: {
+              // Resource layer
+              runtime: { mode: 'standard' },
+              observation: { events: true },
+              interaction: { protocols: ['http', 'event'] },
+              representation: { formats: ['json', 'binary'] }
+            },
+            base2: {
+              // Kernel layer
+              resourceClient: { type: 'standard' },
+              appManagement: { lifecycle: true },
+              systemManagement: { services: true }
+            },
+            base3: {
+              // Application layer
+              behavior: { language: 'javascript' },
+              framework: { styling: true },
+              structure: { componentBased: true }
+            }
+          }
+        },
+        manifestStructure: {
+          meta: {
+            requiredFields: ['name', 'version', 'description']
+          },
+          invariant: {
+            assets: true,
+            staticCode: true
+          },
+          variant: {
+            stateModel: 'immutable',
+            persistence: true
+          }
         },
         styling: {
           cssFramework: 'primeOS-ui',
@@ -354,13 +398,47 @@ class AppSpecGenerator {
         testingStrategy: {
           unit: true,
           integration: true,
+          coherenceChecks: true,
           testingFramework: 'jest'
         }
       },
       utility: {
         architecture: {
           type: 'service',
-          layers: ['business-logic', 'data']
+          layers: ['business-logic', 'data'],
+          bases: {
+            base0: {
+              embedding: { dimensions: 64, algorithm: 'lightweight' },
+              logic: { operators: ['basic'] },
+              representation: { model: 'minimal' },
+              processor: { type: 'basic' }
+            },
+            base1: {
+              runtime: { mode: 'headless' },
+              observation: { events: true },
+              interaction: { protocols: ['event'] },
+              representation: { formats: ['json'] }
+            },
+            base2: {
+              resourceClient: { type: 'minimal' },
+              appManagement: { lifecycle: true }
+            },
+            base3: {
+              behavior: { language: 'javascript' }
+            }
+          }
+        },
+        manifestStructure: {
+          meta: {
+            requiredFields: ['name', 'version', 'description']
+          },
+          invariant: {
+            staticCode: true
+          },
+          variant: {
+            stateModel: 'functional',
+            persistence: false
+          }
         },
         uiPresence: 'minimal',
         buildConfig: {
@@ -372,7 +450,44 @@ class AppSpecGenerator {
       game: {
         architecture: {
           type: 'component-based',
-          layers: ['rendering', 'game-logic', 'input', 'audio']
+          layers: ['rendering', 'game-logic', 'input', 'audio'],
+          bases: {
+            base0: {
+              embedding: { dimensions: 256, algorithm: 'optimized' },
+              logic: { operators: ['basic', 'extended', 'spatial'] },
+              representation: { model: 'dynamic' },
+              processor: { type: 'realtime' }
+            },
+            base1: {
+              runtime: { mode: 'performance' },
+              observation: { events: true, metrics: true },
+              interaction: { protocols: ['event', 'binary'] },
+              representation: { formats: ['json', 'binary', 'compressed'] }
+            },
+            base2: {
+              resourceClient: { type: 'optimized' },
+              appManagement: { lifecycle: true },
+              systemManagement: { services: true }
+            },
+            base3: {
+              behavior: { language: 'javascript' },
+              framework: { styling: true },
+              structure: { componentBased: true }
+            }
+          }
+        },
+        manifestStructure: {
+          meta: {
+            requiredFields: ['name', 'version', 'description', 'gameType']
+          },
+          invariant: {
+            assets: true,
+            staticCode: true
+          },
+          variant: {
+            stateModel: 'immutable',
+            persistence: true
+          }
         },
         gameLoop: true,
         assetManagement: {
@@ -402,6 +517,240 @@ class AppSpecGenerator {
         ...data
       });
     }
+  }
+  
+  /**
+   * Decomposes a specification into discrete manifolds (depth levels)
+   * This ensures each component has a clear single responsibility
+   * @private
+   * @param {Object} specification - The complete specification
+   * @returns {Object} The decomposed specification with proper manifold structure
+   */
+  _decomposeSpecIntoManifolds(specification) {
+    console.log('Decomposing specification into manifolds');
+    
+    // Deep clone the specification
+    const spec = JSON.parse(JSON.stringify(specification));
+    
+    // Ensure base architecture manifolds are present
+    if (!spec.architecture) {
+      spec.architecture = {};
+    }
+    
+    if (!spec.architecture.bases) {
+      spec.architecture.bases = {
+        base0: {}, // Neural Network Specification
+        base1: {}, // Resource
+        base2: {}, // Kernel
+        base3: {}  // Application
+      };
+    }
+    
+    // Ensure manifest structure 
+    if (!spec.manifestStructure) {
+      spec.manifestStructure = {
+        meta: { requiredFields: ['name', 'version', 'description'] },
+        invariant: { assets: true, staticCode: true },
+        variant: { stateModel: 'immutable', persistence: true }
+      };
+    }
+    
+    // Convert components to proper manifold structure
+    if (spec.components && Array.isArray(spec.components)) {
+      spec.components = this._decomposeComponentsIntoManifolds(spec.components);
+    }
+    
+    // Convert data models to proper manifold structure
+    if (spec.dataModels && Array.isArray(spec.dataModels)) {
+      spec.dataModels = this._decomposeDataModelsIntoManifolds(spec.dataModels);
+    }
+    
+    // Ensure coherence information
+    spec.coherence = spec.coherence || {
+      normThreshold: 0.85,
+      measurementStrategy: 'dynamic',
+      enforceInvariantPreservation: true
+    };
+    
+    return spec;
+  }
+  
+  /**
+   * Decomposes components into proper manifold structure
+   * @private
+   * @param {Array} components - Array of components
+   * @returns {Array} - Components with proper manifold structure
+   */
+  _decomposeComponentsIntoManifolds(components) {
+    return components.map(component => {
+      // Create deep clone
+      const manifestedComponent = JSON.parse(JSON.stringify(component));
+      
+      // Ensure component has proper manifold structure
+      manifestedComponent.meta = manifestedComponent.meta || {
+        name: component.name,
+        id: component.id || this._generateId(component.name),
+        description: component.description || `Component for ${component.name}`,
+        version: component.version || '1.0.0'
+      };
+      
+      manifestedComponent.invariant = manifestedComponent.invariant || {
+        type: component.type,
+        interfaces: component.interfaces || [],
+        dependencies: component.dependencies || []
+      };
+      
+      manifestedComponent.variant = manifestedComponent.variant || {
+        state: component.state || {},
+        defaultConfig: component.defaultConfig || {}
+      };
+      
+      // Determine base assignments
+      manifestedComponent.baseAssignments = manifestedComponent.baseAssignments || {
+        primary: this._determineComponentPrimaryBase(component),
+        secondary: []
+      };
+      
+      // Add coherence constraints for this component
+      manifestedComponent.coherenceConstraints = manifestedComponent.coherenceConstraints || {
+        requiredInterfaces: manifestedComponent.invariant.interfaces.filter(i => i.required),
+        invariantPreservation: true,
+        stateValidation: true
+      };
+      
+      return manifestedComponent;
+    });
+  }
+  
+  /**
+   * Decomposes data models into proper manifold structure
+   * @private
+   * @param {Array} dataModels - Array of data models
+   * @returns {Array} - Data models with proper manifold structure
+   */
+  _decomposeDataModelsIntoManifolds(dataModels) {
+    return dataModels.map(model => {
+      // Create deep clone
+      const manifestedModel = JSON.parse(JSON.stringify(model));
+      
+      // Ensure model has proper manifold structure
+      manifestedModel.meta = manifestedModel.meta || {
+        name: model.name,
+        id: model.id || this._generateId(model.name),
+        description: model.description || `Data model for ${model.name}`,
+        version: model.version || '1.0.0'
+      };
+      
+      manifestedModel.invariant = manifestedModel.invariant || {
+        schema: {
+          properties: model.properties || [],
+          required: model.required || []
+        },
+        relations: model.relations || []
+      };
+      
+      manifestedModel.variant = manifestedModel.variant || {
+        persistence: model.persistence || {
+          type: 'memory',
+          indexedFields: []
+        },
+        defaultInstances: model.defaultInstances || []
+      };
+      
+      // Determine manifold depth for properties
+      if (manifestedModel.invariant.schema.properties) {
+        manifestedModel.invariant.schema.properties = this._assignPropertyManifoldDepths(
+          manifestedModel.invariant.schema.properties
+        );
+      }
+      
+      // Add coherence constraints
+      manifestedModel.coherenceConstraints = manifestedModel.coherenceConstraints || {
+        validateRelations: true,
+        enforceTypes: true,
+        checkCircularDependencies: true
+      };
+      
+      return manifestedModel;
+    });
+  }
+  
+  /**
+   * Assigns manifold depths to properties based on their complexity
+   * @private
+   * @param {Array} properties - Array of model properties
+   * @returns {Array} - Properties with manifold depth information
+   */
+  _assignPropertyManifoldDepths(properties) {
+    return properties.map(prop => {
+      const property = { ...prop };
+      
+      // Determine manifold depth based on property type and complexity
+      if (property.type === 'object' && property.properties) {
+        property.manifoldDepth = 2;
+        property.properties = this._assignPropertyManifoldDepths(property.properties);
+      } else if (property.type === 'array' && property.items && property.items.type === 'object') {
+        property.manifoldDepth = 2;
+        if (property.items.properties) {
+          property.items.properties = this._assignPropertyManifoldDepths(property.items.properties);
+        }
+      } else if (property.type === 'array') {
+        property.manifoldDepth = 1;
+      } else {
+        property.manifoldDepth = 0;
+      }
+      
+      // Add coherence metadata for types
+      property.coherence = property.coherence || {
+        preserveType: true,
+        validationRules: property.validation || []
+      };
+      
+      return property;
+    });
+  }
+  
+  /**
+   * Determines the primary base for a component
+   * @private
+   * @param {Object} component - Component object
+   * @returns {string} - Primary base (base0, base1, base2, or base3)
+   */
+  _determineComponentPrimaryBase(component) {
+    // Logic to determine which base this component primarily belongs to
+    const type = component.type?.toLowerCase() || '';
+    
+    if (type.includes('data') || type.includes('model') || type.includes('store')) {
+      return 'base1'; // Resource layer
+    } else if (type.includes('service') || type.includes('manager') || type.includes('system')) {
+      return 'base2'; // Kernel layer
+    } else if (type.includes('ui') || type.includes('view') || type.includes('component')) {
+      return 'base3'; // Application layer
+    } else if (type.includes('logic') || type.includes('algorithm') || type.includes('processor')) {
+      return 'base0'; // Neural Network Specification layer
+    }
+    
+    // Default to application layer
+    return 'base3';
+  }
+  
+  /**
+   * Generates a stable ID from a name
+   * @private
+   * @param {string} name - Name to generate ID from
+   * @returns {string} - Generated ID
+   */
+  _generateId(name) {
+    // Create a simplified slug from the name
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+      
+    // Add a timestamp hash for uniqueness
+    const timestamp = Date.now().toString(36);
+    
+    return `${slug}-${timestamp}`;
   }
 }
 

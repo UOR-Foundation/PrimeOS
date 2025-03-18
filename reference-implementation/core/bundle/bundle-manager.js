@@ -15,6 +15,7 @@ class BundleManager {
    * @param {Object} options.store - PrimeStore instance for bundle data
    * @param {Object} options.eventBus - EventBus for notifications
    * @param {Object} options.identity - Identity service for signatures
+   * @param {Object} options.appFactory - Optional App Factory integration
    */
   constructor(options = {}) {
     // Validate required dependencies
@@ -30,6 +31,7 @@ class BundleManager {
     this.store = options.store;
     this.eventBus = options.eventBus;
     this.identity = options.identity || null;
+    this.appFactory = options.appFactory || null;
     
     // Initialize internal state
     this.connectedRemotes = [];
@@ -42,6 +44,13 @@ class BundleManager {
     
     // Register event handlers
     this.eventBus.subscribe('system:ready', this._loadInstalledBundles);
+    
+    // Register App Factory events if available
+    if (this.appFactory) {
+      this.eventBus.subscribe('app-factory:bundle-created', (data) => {
+        console.log('App Factory created bundle:', data.bundleId);
+      });
+    }
     
     console.log('BundleManager initialized');
   }
