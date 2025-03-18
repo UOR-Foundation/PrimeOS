@@ -13,6 +13,9 @@ require('./framework/index.js');
 // Import refactored component system
 require('./components/index.js');
 
+// Initialize framework as a top-level property
+Prime.framework = Prime.createPrimeFramework();
+
 // Export all modules
 module.exports = Prime;
 
