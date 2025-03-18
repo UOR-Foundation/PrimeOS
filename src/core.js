@@ -1024,6 +1024,31 @@ const Prime = (function() {
     }
   }
 
+  /**
+   * Error thrown when an operation would reduce coherence below acceptable threshold
+   * Represents mathematical inconsistency in the system state
+   */
+  class CoherenceError extends PrimeError {
+    constructor(message, options = {}) {
+      super(message, {
+        code: options.code || 'COHERENCE_ERROR',
+        context: options.context
+      });
+      this.name = 'CoherenceError';
+      
+      // Store coherence metrics if provided
+      if (options.context && options.context.currentScore !== undefined) {
+        this.currentScore = options.context.currentScore;
+      }
+      if (options.context && options.context.projectedScore !== undefined) {
+        this.projectedScore = options.context.projectedScore;
+      }
+      if (options.context && options.context.threshold !== undefined) {
+        this.threshold = options.context.threshold;
+      }
+    }
+  }
+
   class MathematicalError extends PrimeError {
     constructor(message, options = {}) {
       super(message, {
@@ -1455,6 +1480,7 @@ const Prime = (function() {
     // Error classes
     PrimeError,
     CoherenceViolationError,
+    CoherenceError,
     MathematicalError,
     InvalidOperationError,
     ConfigurationError,

@@ -9,7 +9,9 @@
     "test:coverage": "jest --coverage",
     "test:integration": "node tests/shell-integration-tests.js",
     "test:shell": "node tests/shell-integration-tests.js",
-    "test:all": "npm run test && npm run test:integration",
+    "test:browser": "node run-browser-tests.js",
+    "test:secure-vault": "node run-secure-vault-browser-tests.js",
+    "test:all": "npm run test && npm run test:integration && npm run test:browser",
     "build": "rollup -c",
     "start": "serve .",
     "lint": "eslint ."

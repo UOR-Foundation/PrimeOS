@@ -517,7 +517,9 @@ const updatedBundle = await appFactory.exportApp(projectId);
 
 ## Testing
 
-The App Factory components are thoroughly tested using Jest. Tests are organized in the following test files:
+The App Factory components are thoroughly tested using Jest and Puppeteer. Tests are organized into both Node.js unit tests and browser-based integration tests.
+
+### Node.js Tests
 
 1. **app-factory-tests.js**: Tests for the main App Factory functionality
 2. **app-factory-components-tests.js**: Tests for key components like CoherenceEngine, ClaudeOrchestrator, and AppFactoryManager
@@ -528,11 +530,22 @@ The App Factory components are thoroughly tested using Jest. Tests are organized
    - Bundle exporting and importing
    - Event notifications
 4. **app-factory-utils-tests.js**: Tests for utility modules like claude-api, persistence, and configuration
+5. **app-factory-integration-tests.js**: Tests for integration components that connect App Factory with other PrimeOS systems:
+   - AppFactoryBundleIntegration: Tests for Bundle System integration
+   - AppFactoryAppAPIIntegration: Tests for AppAPI lifecycle and system services integration
+   - AppFactoryShellIntegration: Tests for Shell UI and window management integration
 
-To run the tests:
+### Browser Integration Tests
+
+The reference implementation provides browser integration tests using Puppeteer, allowing components to be tested in a real browser environment:
+
+1. **test.html**: Main browser test page that tests basic Shell and UI components
+2. **browser-secure-vault-test.html**: Tests for SecureVault's event notification system in a browser context
+
+### Running Tests
 
 ```bash
-# Run all tests
+# Run all Node.js unit tests
 npm test
 
 # Run specific App Factory tests
@@ -541,13 +554,17 @@ npm test -- -t "App Factory"
 # Run BundleManager tests
 npm test -- -t "App Factory BundleManager"
 
+# Run browser integration tests
+npm run test:browser
+
+# Run secure vault browser tests specifically
+npm run test:secure-vault
+
+# Run all tests (Node.js and browser)
+npm run test:all
+
 # Get code coverage report
 npm run test:coverage
 ```
 
-The test suite provides over 90% code coverage for all App Factory components, ensuring reliability and stability.
-
-5. **app-factory-integration-tests.js**: Tests for integration components that connect App Factory with other PrimeOS systems:
-   - AppFactoryBundleIntegration: Tests for Bundle System integration
-   - AppFactoryAppAPIIntegration: Tests for AppAPI lifecycle and system services integration
-   - AppFactoryShellIntegration: Tests for Shell UI and window management integration
+The test suite provides over 90% code coverage for all App Factory components, ensuring reliability and stability across both Node.js and browser environments.
