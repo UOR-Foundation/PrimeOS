@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrimeOS - Extension System Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      color: #333;
+    }
+    
+    h1 {
+      color: #0066cc;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .card h2 {
+      margin-top: 0;
+      color: #333;
+      font-size: 18px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .control-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    button {
+      padding: 8px 12px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background-color: #0055aa;
+    }
+    
+    button.secondary {
+      background-color: #6c757d;
+    }
+    
+    button.secondary:hover {
+      background-color: #5a6268;
+    }
+    
+    button.success {
+      background-color: #28a745;
+    }
+    
+    button.success:hover {
+      background-color: #218838;
+    }
+    
+    button.danger {
+      background-color: #dc3545;
+    }
+    
+    button.danger:hover {
+      background-color: #c82333;
+    }
+    
+    input, select, textarea {
+      padding: 8px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      resize: vertical;
+      font-family: monospace;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    .log-container {
+      background-color: #f8f9fa;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    
+    .log-entry {
+      margin: 5px 0;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    .log-time {
+      color: #6c757d;
+      font-size: 0.85em;
+      margin-right: 8px;
+    }
+    
+    .log-info {
+      color: #0066cc;
+    }
+    
+    .log-success {
+      color: #28a745;
+    }
+    
+    .log-error {
+      color: #dc3545;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .extension-item {
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .extension-item:hover {
+      background-color: #e9ecef;
+    }
+    
+    .extension-item.selected {
+      border-color: #0066cc;
+      background-color: #e6f2ff;
+    }
+    
+    .extension-info {
+      flex: 1;
+    }
+    
+    .extension-name {
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    
+    .extension-id {
+      font-size: 0.85em;
+      color: #6c757d;
+    }
+    
+    .extension-controls {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: #28a745;
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(18px);
+    }
+    
+    /* Toolbar preview */
+    .toolbar-preview {
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      margin-bottom: 15px;
+    }
+    
+    .toolbar-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    
+    .toolbar-item:hover {
+      background-color: #e9ecef;
+    }
+    
+    /* Sidebar preview */
+    .preview-container {
+      display: flex;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      height: 300px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+    
+    .sidebar-preview {
+      width: 200px;
+      background-color: #f8f9fa;
+      border-right: 1px solid #ddd;
+      overflow-y: auto;
+    }
+    
+    .sidebar-item {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      white-space: nowrap;
+    }
+    
+    .sidebar-item:hover {
+      background-color: #e9ecef;
+    }
+    
+    .sidebar-item.active {
+      background-color: #e6f2ff;
+      border-left: 3px solid #0066cc;
+    }
+    
+    .content-preview {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: white;
+      padding: 20px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Extension System Test</h1>
+    
+    <div class="grid">
+      <div class="card">
+        <h2>Extension Points</h2>
+        <div class="form-group">
+          <label for="extension-point-id">Extension Point ID</label>
+          <input type="text" id="extension-point-id" placeholder="ui:custom">
+        </div>
+        <div class="form-group">
+          <label for="extension-point-name">Name</label>
+          <input type="text" id="extension-point-name" placeholder="Custom UI Element">
+        </div>
+        <div class="form-group">
+          <label for="extension-point-description">Description</label>
+          <input type="text" id="extension-point-description" placeholder="Adds custom UI elements to the interface">
+        </div>
+        <div class="form-group">
+          <label for="extension-point-schema">Schema (JSON)</label>
+          <textarea id="extension-point-schema" placeholder='{
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "label": { "type": "string" }
+  },
+  "required": ["id", "label"]
+}'></textarea>
+        </div>
+        <div class="control-panel">
+          <button id="create-extension-point" class="success">Create Extension Point</button>
+        </div>
+        <div id="extension-points-list"></div>
+      </div>
+      
+      <div class="card">
+        <h2>Extensions</h2>
+        <div class="form-group">
+          <label for="extension-id">Extension ID</label>
+          <input type="text" id="extension-id" placeholder="my-extension">
+        </div>
+        <div class="form-group">
+          <label for="extension-name">Name</label>
+          <input type="text" id="extension-name" placeholder="My Extension">
+        </div>
+        <div class="form-group">
+          <label for="extension-version">Version</label>
+          <input type="text" id="extension-version" placeholder="1.0.0">
+        </div>
+        <div class="form-group">
+          <label for="extension-description">Description</label>
+          <input type="text" id="extension-description" placeholder="A custom extension for testing">
+        </div>
+        <div class="form-group">
+          <label for="extension-content">Extension Point Content (JSON)</label>
+          <textarea id="extension-content" placeholder='{
+  "ui:toolbar": [
+    {
+      "id": "my-button",
+      "label": "My Button",
+      "icon": "icon-test"
+    }
+  ],
+  "ui:sidebar": [
+    {
+      "id": "my-panel",
+      "label": "My Panel",
+      "icon": "icon-panel"
+    }
+  ]
+}'></textarea>
+        </div>
+        <div class="control-panel">
+          <button id="create-extension" class="success">Create Extension</button>
+        </div>
+        <div id="extensions-list"></div>
+      </div>
+      
+      <div class="card">
+        <h2>Toolbar Preview</h2>
+        <div class="toolbar-preview" id="toolbar-preview">
+          <div class="toolbar-item">Home</div>
+          <div class="toolbar-item">Files</div>
+          <!-- Extension items will be added here -->
+        </div>
+      </div>
+      
+      <div class="card">
+        <h2>Sidebar Preview</h2>
+        <div class="preview-container">
+          <div class="sidebar-preview" id="sidebar-preview">
+            <div class="sidebar-item active">Home</div>
+            <div class="sidebar-item">Files</div>
+            <!-- Extension items will be added here -->
+          </div>
+          <div class="content-preview">
+            <div id="content-placeholder">Select a sidebar item</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Extension System Log</h2>
+      <div class="control-panel">
+        <button id="clear-log" class="secondary">Clear Log</button>
+      </div>
+      <div id="log-container" class="log-container"></div>
+    </div>
+  </div>
+  
+  <script type="module">
+    // Import Extension System
+    import { ExtensionManager, ExtensionPoint, Extension } from '../core/extensions/extension-system.js';
+    
+    // Mock SecureVault
+    class MockSecureVault {
+      constructor() {
+        this.secrets = new Map();
+      }
+      
+      async getSecret(key) {
+        return this.secrets.get(key) || null;
+      }
+      
+      async setSecret(key, value) {
+        this.secrets.set(key, value);
+        return true;
+      }
+      
+      async hasSecret(key) {
+        return this.secrets.has(key);
+      }
+      
+      async removeSecret(key) {
+        return this.secrets.delete(key);
+      }
+    }
+    
+    // Mock EventBus
+    class MockEventBus {
+      constructor() {
+        this.handlers = new Map();
+        this.logContainer = document.getElementById('log-container');
+      }
+      
+      subscribe(event, handler) {
+        if (!this.handlers.has(event)) {
+          this.handlers.set(event, []);
+        }
+        
+        this.handlers.get(event).push(handler);
+        this.log(`Subscribed to ${event}`, 'info');
+        
+        // Return unsubscribe function
+        return () => {
+          const handlers = this.handlers.get(event) || [];
+          const index = handlers.indexOf(handler);
+          if (index !== -1) {
+            handlers.splice(index, 1);
+          }
+          this.log(`Unsubscribed from ${event}`, 'info');
+        };
+      }
+      
+      publish(event, data) {
+        this.log(`Published ${event}: ${JSON.stringify(data)}`, 'info');
+        
+        if (!this.handlers.has(event)) {
+          return;
+        }
+        
+        for (const handler of this.handlers.get(event)) {
+          try {
+            handler(data);
+          } catch (error) {
+            console.error(`Error in event handler for ${event}:`, error);
+            this.log(`Error in handler for ${event}: ${error.message}`, 'error');
+          }
+        }
+      }
+      
+      log(message, type = 'info') {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'log-time';
+        timeSpan.textContent = new Date().toLocaleTimeString();
+        
+        const messageSpan = document.createElement('span');
+        messageSpan.className = `log-${type}`;
+        messageSpan.textContent = message;
+        
+        logEntry.appendChild(timeSpan);
+        logEntry.appendChild(messageSpan);
+        
+        this.logContainer.appendChild(logEntry);
+        this.logContainer.scrollTop = this.logContainer.scrollHeight;
+      }
+    }
+    
+    // Helper function to log to UI
+    function logToUI(message, type = 'info') {
+      const logContainer = document.getElementById('log-container');
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry';
+      
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'log-time';
+      timeSpan.textContent = new Date().toLocaleTimeString();
+      
+      const messageSpan = document.createElement('span');
+      messageSpan.className = `log-${type}`;
+      messageSpan.textContent = message;
+      
+      logEntry.appendChild(timeSpan);
+      logEntry.appendChild(messageSpan);
+      
+      logContainer.appendChild(logEntry);
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+    
+    // Helper to update extension points list
+    function updateExtensionPointsList(extensionPoints) {
+      const container = document.getElementById('extension-points-list');
+      
+      // Clear current items
+      container.innerHTML = '';
+      
+      // Add each extension point
+      extensionPoints.forEach(point => {
+        // Add to list
+        const item = document.createElement('div');
+        item.className = 'extension-item';
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'extension-info';
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'extension-name';
+        nameDiv.textContent = point.name;
+        
+        const idDiv = document.createElement('div');
+        idDiv.className = 'extension-id';
+        idDiv.textContent = `ID: ${point.id}`;
+        
+        infoDiv.appendChild(nameDiv);
+        infoDiv.appendChild(idDiv);
+        item.appendChild(infoDiv);
+        
+        container.appendChild(item);
+      });
+    }
+    
+    // Helper to update extensions list
+    function updateExtensionsList(extensions) {
+      const container = document.getElementById('extensions-list');
+      
+      // Clear current items
+      container.innerHTML = '';
+      
+      // Add each extension
+      extensions.forEach(extension => {
+        // Add to list
+        const item = document.createElement('div');
+        item.className = 'extension-item';
+        item.dataset.id = extension.id;
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'extension-info';
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'extension-name';
+        nameDiv.textContent = extension.name;
+        
+        const idDiv = document.createElement('div');
+        idDiv.className = 'extension-id';
+        idDiv.textContent = `ID: ${extension.id} (v${extension.version})`;
+        
+        infoDiv.appendChild(nameDiv);
+        infoDiv.appendChild(idDiv);
+        item.appendChild(infoDiv);
+        
+        // Add controls
+        const controlsDiv = document.createElement('div');
+        controlsDiv.className = 'extension-controls';
+        
+        // Toggle switch
+        const toggleLabel = document.createElement('label');
+        toggleLabel.className = 'toggle-switch';
+        
+        const toggleInput = document.createElement('input');
+        toggleInput.type = 'checkbox';
+        toggleInput.checked = extension.enabled;
+        toggleInput.addEventListener('change', async () => {
+          try {
+            await extensionManager.setExtensionEnabled(extension.id, toggleInput.checked);
+            updatePreviewPanels();
+          } catch (error) {
+            logToUI(`Error toggling extension: ${error.message}`, 'error');
+          }
+        });
+        
+        const toggleSlider = document.createElement('span');
+        toggleSlider.className = 'toggle-slider';
+        
+        toggleLabel.appendChild(toggleInput);
+        toggleLabel.appendChild(toggleSlider);
+        
+        // Uninstall button
+        const uninstallButton = document.createElement('button');
+        uninstallButton.className = 'danger';
+        uninstallButton.textContent = '✕';
+        uninstallButton.title = 'Uninstall';
+        uninstallButton.addEventListener('click', async () => {
+          try {
+            await extensionManager.uninstallExtension(extension.id);
+            updateExtensionsList(extensionManager.getAllExtensions());
+            updatePreviewPanels();
+          } catch (error) {
+            logToUI(`Error uninstalling extension: ${error.message}`, 'error');
+          }
+        });
+        
+        controlsDiv.appendChild(toggleLabel);
+        controlsDiv.appendChild(uninstallButton);
+        item.appendChild(controlsDiv);
+        
+        container.appendChild(item);
+      });
+    }
+    
+    // Helper to update toolbar preview
+    function updateToolbarPreview(toolbarItems) {
+      const container = document.getElementById('toolbar-preview');
+      
+      // Keep first two fixed items
+      const fixedItems = Array.from(container.querySelectorAll('.toolbar-item')).slice(0, 2);
+      
+      // Clear current items
+      container.innerHTML = '';
+      
+      // Add fixed items back
+      fixedItems.forEach(item => container.appendChild(item));
+      
+      // Add extension items
+      toolbarItems.forEach(item => {
+        const toolbarItem = document.createElement('div');
+        toolbarItem.className = 'toolbar-item';
+        toolbarItem.textContent = item.label;
+        toolbarItem.title = `From extension: ${item.extensionName}`;
+        
+        container.appendChild(toolbarItem);
+      });
+    }
+    
+    // Helper to update sidebar preview
+    function updateSidebarPreview(sidebarItems) {
+      const container = document.getElementById('sidebar-preview');
+      
+      // Keep first two fixed items
+      const fixedItems = Array.from(container.querySelectorAll('.sidebar-item')).slice(0, 2);
+      
+      // Clear current items
+      container.innerHTML = '';
+      
+      // Add fixed items back
+      fixedItems.forEach(item => container.appendChild(item));
+      
+      // Add extension items
+      sidebarItems.forEach(item => {
+        const sidebarItem = document.createElement('div');
+        sidebarItem.className = 'sidebar-item';
+        sidebarItem.textContent = item.label;
+        sidebarItem.title = `From extension: ${item.extensionName}`;
+        
+        sidebarItem.addEventListener('click', () => {
+          // Deactivate all items
+          container.querySelectorAll('.sidebar-item').forEach(i => {
+            i.classList.remove('active');
+          });
+          
+          // Activate this item
+          sidebarItem.classList.add('active');
+          
+          // Update content preview
+          document.getElementById('content-placeholder').textContent = `Viewing: ${item.label} from ${item.extensionName}`;
+        });
+        
+        container.appendChild(sidebarItem);
+      });
+    }
+    
+    // Helper to update all preview panels
+    function updatePreviewPanels() {
+      // Update toolbar preview
+      const toolbarItems = extensionManager.getExtensionPointContent('ui:toolbar');
+      updateToolbarPreview(toolbarItems);
+      
+      // Update sidebar preview
+      const sidebarItems = extensionManager.getExtensionPointContent('ui:sidebar');
+      updateSidebarPreview(sidebarItems);
+    }
+    
+    // Main initialization
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Create dependencies
+      const secureVault = new MockSecureVault();
+      const eventBus = new MockEventBus();
+      
+      // Create extension manager
+      const extensionManager = new ExtensionManager({
+        eventBus,
+        secureVault,
+        manifoldRegistry: null
+      });
+      
+      // Initialize
+      await extensionManager.initialize();
+      logToUI('Extension system initialized', 'success');
+      
+      // Register standard extension points
+      await extensionManager.registerExtensionPoint({
+        id: 'ui:toolbar',
+        name: 'Toolbar',
+        description: 'Add items to the main toolbar',
+        schema: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            label: { type: 'string' },
+            icon: { type: 'string' },
+            position: { type: 'number' }
+          },
+          required: ['id', 'label']
+        }
+      });
+      
+      await extensionManager.registerExtensionPoint({
+        id: 'ui:sidebar',
+        name: 'Sidebar',
+        description: 'Add panels to the sidebar',
+        schema: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            label: { type: 'string' },
+            icon: { type: 'string' },
+            position: { type: 'number' }
+          },
+          required: ['id', 'label']
+        }
+      });
+      
+      await extensionManager.registerExtensionPoint({
+        id: 'ui:contextmenu',
+        name: 'Context Menu',
+        description: 'Add items to context menus',
+        schema: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            label: { type: 'string' },
+            icon: { type: 'string' },
+            context: { type: 'string' }
+          },
+          required: ['id', 'label', 'context']
+        }
+      });
+      
+      // Update UI
+      updateExtensionPointsList(extensionManager.getAllExtensionPoints());
+      
+      // Subscribe to extension changes
+      extensionManager.subscribeToExtensionPoint('ui:toolbar', (toolbarItems) => {
+        updateToolbarPreview(toolbarItems);
+      });
+      
+      extensionManager.subscribeToExtensionPoint('ui:sidebar', (sidebarItems) => {
+        updateSidebarPreview(sidebarItems);
+      });
+      
+      // Set up UI handlers
+      document.getElementById('create-extension-point').addEventListener('click', async () => {
+        try {
+          const id = document.getElementById('extension-point-id').value.trim();
+          const name = document.getElementById('extension-point-name').value.trim();
+          const description = document.getElementById('extension-point-description').value.trim();
+          const schemaStr = document.getElementById('extension-point-schema').value.trim();
+          
+          if (!id || !name) {
+            throw new Error('Extension point ID and name are required');
+          }
+          
+          // Parse schema
+          let schema = null;
+          if (schemaStr) {
+            try {
+              schema = JSON.parse(schemaStr);
+            } catch (err) {
+              throw new Error(`Invalid schema JSON: ${err.message}`);
+            }
+          }
+          
+          // Register extension point
+          await extensionManager.registerExtensionPoint({
+            id,
+            name,
+            description,
+            schema
+          });
+          
+          logToUI(`Created extension point: ${name}`, 'success');
+          
+          // Clear form
+          document.getElementById('extension-point-id').value = '';
+          document.getElementById('extension-point-name').value = '';
+          document.getElementById('extension-point-description').value = '';
+          document.getElementById('extension-point-schema').value = '';
+          
+          // Update UI
+          updateExtensionPointsList(extensionManager.getAllExtensionPoints());
+        } catch (error) {
+          logToUI(`Error creating extension point: ${error.message}`, 'error');
+        }
+      });
+      
+      document.getElementById('create-extension').addEventListener('click', async () => {
+        try {
+          const id = document.getElementById('extension-id').value.trim();
+          const name = document.getElementById('extension-name').value.trim();
+          const version = document.getElementById('extension-version').value.trim();
+          const description = document.getElementById('extension-description').value.trim();
+          const contentStr = document.getElementById('extension-content').value.trim();
+          
+          if (!id || !name || !version) {
+            throw new Error('Extension ID, name, and version are required');
+          }
+          
+          // Parse extension point content
+          let extensionPoints = {};
+          if (contentStr) {
+            try {
+              extensionPoints = JSON.parse(contentStr);
+            } catch (err) {
+              throw new Error(`Invalid content JSON: ${err.message}`);
+            }
+          }
+          
+          // Create extension manifest
+          const manifest = {
+            id,
+            name,
+            version,
+            description,
+            extensionPoints
+          };
+          
+          // Install extension
+          await extensionManager.installExtension(manifest);
+          
+          logToUI(`Installed extension: ${name}`, 'success');
+          
+          // Clear form
+          document.getElementById('extension-id').value = '';
+          document.getElementById('extension-name').value = '';
+          document.getElementById('extension-version').value = '';
+          document.getElementById('extension-description').value = '';
+          document.getElementById('extension-content').value = '';
+          
+          // Update UI
+          updateExtensionsList(extensionManager.getAllExtensions());
+          updatePreviewPanels();
+        } catch (error) {
+          logToUI(`Error installing extension: ${error.message}`, 'error');
+        }
+      });
+      
+      document.getElementById('clear-log').addEventListener('click', () => {
+        document.getElementById('log-container').innerHTML = '';
+        logToUI('Log cleared', 'info');
+      });
+      
+      // Create initial test data
+      try {
+        // Create test extension
+        await extensionManager.installExtension({
+          id: 'test-extension',
+          name: 'Test Extension',
+          version: '1.0.0',
+          description: 'A test extension',
+          extensionPoints: {
+            'ui:toolbar': [
+              { id: 'test-button', label: 'Test', icon: 'icon-test' },
+              { id: 'advanced-button', label: 'Advanced', icon: 'icon-advanced' }
+            ],
+            'ui:sidebar': [
+              { id: 'test-panel', label: 'Test Panel', icon: 'icon-panel' }
+            ]
+          }
+        });
+        
+        // Create another extension
+        await extensionManager.installExtension({
+          id: 'tools-extension',
+          name: 'Tools Extension',
+          version: '1.2.0',
+          description: 'Adds developer tools',
+          extensionPoints: {
+            'ui:toolbar': [
+              { id: 'dev-tools', label: 'Dev Tools', icon: 'icon-tools' }
+            ],
+            'ui:sidebar': [
+              { id: 'console-panel', label: 'Console', icon: 'icon-console' },
+              { id: 'debug-panel', label: 'Debug', icon: 'icon-debug' }
+            ],
+            'ui:contextmenu': [
+              { id: 'inspect', label: 'Inspect', context: 'element' }
+            ]
+          }
+        });
+        
+        updateExtensionsList(extensionManager.getAllExtensions());
+        updatePreviewPanels();
+        
+        logToUI('Created initial test data', 'success');
+      } catch (error) {
+        logToUI(`Error creating test data: ${error.message}`, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

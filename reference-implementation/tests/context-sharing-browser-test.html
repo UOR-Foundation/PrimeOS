@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrimeOS - Context Sharing Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      color: #333;
+    }
+    
+    h1 {
+      color: #0066cc;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .card h2 {
+      margin-top: 0;
+      color: #333;
+      font-size: 18px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .control-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    button {
+      padding: 8px 12px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background-color: #0055aa;
+    }
+    
+    button.secondary {
+      background-color: #6c757d;
+    }
+    
+    button.secondary:hover {
+      background-color: #5a6268;
+    }
+    
+    button.success {
+      background-color: #28a745;
+    }
+    
+    button.success:hover {
+      background-color: #218838;
+    }
+    
+    button.danger {
+      background-color: #dc3545;
+    }
+    
+    button.danger:hover {
+      background-color: #c82333;
+    }
+    
+    input, select, textarea {
+      padding: 8px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    .log-container {
+      background-color: #f8f9fa;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    
+    .log-entry {
+      margin: 5px 0;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    .log-time {
+      color: #6c757d;
+      font-size: 0.85em;
+      margin-right: 8px;
+    }
+    
+    .log-info {
+      color: #0066cc;
+    }
+    
+    .log-success {
+      color: #28a745;
+    }
+    
+    .log-error {
+      color: #dc3545;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .connections-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      background-color: #f8f9fa;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .connections-grid div {
+      padding: 8px;
+    }
+    
+    .connections-grid .header {
+      font-weight: 600;
+      background-color: #e9ecef;
+      border-radius: 4px;
+    }
+    
+    .context-item {
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .context-name {
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    
+    .context-id {
+      font-size: 0.85em;
+      color: #6c757d;
+    }
+    
+    .visualization {
+      width: 100%;
+      height: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .provider-node, .consumer-node {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: white;
+      font-weight: 500;
+      font-size: 12px;
+      text-align: center;
+    }
+    
+    .provider-node {
+      background-color: #0066cc;
+    }
+    
+    .consumer-node {
+      background-color: #28a745;
+    }
+    
+    .connection-line {
+      position: absolute;
+      height: 2px;
+      background-color: #666;
+      transform-origin: 0 0;
+      pointer-events: none;
+    }
+    
+    .connection-active {
+      background-color: #f8c41b;
+      height: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Context Sharing Test</h1>
+    
+    <div class="grid">
+      <div class="card">
+        <h2>Context Providers</h2>
+        <div class="form-group">
+          <label for="provider-id">Provider ID</label>
+          <input type="text" id="provider-id" placeholder="weather-provider">
+        </div>
+        <div class="form-group">
+          <label for="provider-type">Context Type</label>
+          <input type="text" id="provider-type" placeholder="weather-data">
+        </div>
+        <div class="form-group">
+          <label for="provider-description">Description</label>
+          <input type="text" id="provider-description" placeholder="Provides weather data context">
+        </div>
+        <div class="control-panel">
+          <button id="create-provider" class="success">Create Provider</button>
+        </div>
+        <div id="providers-list"></div>
+      </div>
+      
+      <div class="card">
+        <h2>Context Consumers</h2>
+        <div class="form-group">
+          <label for="consumer-id">Consumer ID</label>
+          <input type="text" id="consumer-id" placeholder="weather-consumer">
+        </div>
+        <div class="form-group">
+          <label for="consumer-types">Context Types (comma-separated)</label>
+          <input type="text" id="consumer-types" placeholder="weather-data,location-data">
+        </div>
+        <div class="form-group">
+          <label for="consumer-description">Description</label>
+          <input type="text" id="consumer-description" placeholder="Consumes weather data context">
+        </div>
+        <div class="control-panel">
+          <button id="create-consumer" class="success">Create Consumer</button>
+        </div>
+        <div id="consumers-list"></div>
+      </div>
+      
+      <div class="card">
+        <h2>Update Context</h2>
+        <div class="form-group">
+          <label for="update-provider">Select Provider</label>
+          <select id="update-provider"></select>
+        </div>
+        <div class="form-group">
+          <label for="context-data">Context Data (JSON)</label>
+          <textarea id="context-data" placeholder='{
+  "temperature": 25,
+  "conditions": "Sunny",
+  "location": "San Francisco"
+}'></textarea>
+        </div>
+        <div class="control-panel">
+          <button id="update-context" class="success">Update Context</button>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h2>Context Connections</h2>
+        <div class="connections-grid">
+          <div class="header">Provider</div>
+          <div class="header">Context Type</div>
+          <div class="header">Consumer</div>
+          <!-- Dynamic connections here -->
+        </div>
+        <div class="visualization" id="context-visualization">
+          <!-- Dynamic visualization here -->
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Context Updates Log</h2>
+      <div class="control-panel">
+        <button id="clear-log" class="secondary">Clear Log</button>
+      </div>
+      <div id="log-container" class="log-container"></div>
+    </div>
+  </div>
+  
+  <script type="module">
+    // Import Context Sharing
+    import { ContextHub, ContextProvider, ContextConsumer } from '../core/context/context-sharing.js';
+    
+    // Mock EventBus
+    class MockEventBus {
+      constructor() {
+        this.handlers = new Map();
+        this.logContainer = document.getElementById('log-container');
+      }
+      
+      subscribe(event, handler) {
+        if (!this.handlers.has(event)) {
+          this.handlers.set(event, []);
+        }
+        
+        this.handlers.get(event).push(handler);
+        this.log(`Subscribed to ${event}`, 'info');
+        
+        // Return unsubscribe function
+        return () => {
+          const handlers = this.handlers.get(event) || [];
+          const index = handlers.indexOf(handler);
+          if (index !== -1) {
+            handlers.splice(index, 1);
+          }
+          this.log(`Unsubscribed from ${event}`, 'info');
+        };
+      }
+      
+      publish(event, data) {
+        this.log(`Published ${event}: ${JSON.stringify(data)}`, 'info');
+        
+        if (!this.handlers.has(event)) {
+          return;
+        }
+        
+        for (const handler of this.handlers.get(event)) {
+          try {
+            handler(data);
+          } catch (error) {
+            console.error(`Error in event handler for ${event}:`, error);
+            this.log(`Error in handler for ${event}: ${error.message}`, 'error');
+          }
+        }
+      }
+      
+      log(message, type = 'info') {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'log-time';
+        timeSpan.textContent = new Date().toLocaleTimeString();
+        
+        const messageSpan = document.createElement('span');
+        messageSpan.className = `log-${type}`;
+        messageSpan.textContent = message;
+        
+        logEntry.appendChild(timeSpan);
+        logEntry.appendChild(messageSpan);
+        
+        this.logContainer.appendChild(logEntry);
+        this.logContainer.scrollTop = this.logContainer.scrollHeight;
+      }
+    }
+    
+    // Helper function to log to UI
+    function logToUI(message, type = 'info') {
+      const logContainer = document.getElementById('log-container');
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry';
+      
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'log-time';
+      timeSpan.textContent = new Date().toLocaleTimeString();
+      
+      const messageSpan = document.createElement('span');
+      messageSpan.className = `log-${type}`;
+      messageSpan.textContent = message;
+      
+      logEntry.appendChild(timeSpan);
+      logEntry.appendChild(messageSpan);
+      
+      logContainer.appendChild(logEntry);
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+    
+    // Helper to update provider list
+    function updateProvidersList(providers) {
+      const container = document.getElementById('providers-list');
+      const select = document.getElementById('update-provider');
+      
+      // Clear current items
+      container.innerHTML = '';
+      select.innerHTML = '';
+      
+      // Add each provider
+      providers.forEach(provider => {
+        // Add to list
+        const item = document.createElement('div');
+        item.className = 'context-item';
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'context-name';
+        nameDiv.textContent = provider.id;
+        
+        const idDiv = document.createElement('div');
+        idDiv.className = 'context-id';
+        idDiv.textContent = `Type: ${provider.contextType}`;
+        
+        item.appendChild(nameDiv);
+        item.appendChild(idDiv);
+        container.appendChild(item);
+        
+        // Add to select
+        const option = document.createElement('option');
+        option.value = provider.id;
+        option.textContent = `${provider.id} (${provider.contextType})`;
+        select.appendChild(option);
+      });
+    }
+    
+    // Helper to update consumer list
+    function updateConsumersList(consumers) {
+      const container = document.getElementById('consumers-list');
+      
+      // Clear current items
+      container.innerHTML = '';
+      
+      // Add each consumer
+      consumers.forEach(consumer => {
+        const item = document.createElement('div');
+        item.className = 'context-item';
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'context-name';
+        nameDiv.textContent = consumer.id;
+        
+        const idDiv = document.createElement('div');
+        idDiv.className = 'context-id';
+        idDiv.textContent = `Types: ${consumer.contextTypes.join(', ')}`;
+        
+        item.appendChild(nameDiv);
+        item.appendChild(idDiv);
+        container.appendChild(item);
+      });
+    }
+    
+    // Helper to update connections grid
+    function updateConnectionsGrid(connections) {
+      const grid = document.querySelector('.connections-grid');
+      
+      // Clear existing rows (keep header)
+      const headers = grid.querySelectorAll('.header');
+      grid.innerHTML = '';
+      headers.forEach(header => grid.appendChild(header));
+      
+      // Add each connection
+      connections.forEach(connection => {
+        const providerCell = document.createElement('div');
+        providerCell.textContent = connection.providerId;
+        
+        const typeCell = document.createElement('div');
+        typeCell.textContent = connection.contextType;
+        
+        const consumerCell = document.createElement('div');
+        consumerCell.textContent = connection.consumerId;
+        
+        grid.appendChild(providerCell);
+        grid.appendChild(typeCell);
+        grid.appendChild(consumerCell);
+      });
+    }
+    
+    // Helper to render visualization
+    function renderVisualization(providers, consumers, connections, activeConnection = null) {
+      const container = document.getElementById('context-visualization');
+      
+      // Clear container
+      container.innerHTML = '';
+      
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      
+      // Calculate positions
+      const providerY = height * 0.25;
+      const consumerY = height * 0.75;
+      
+      const providerNodes = [];
+      const consumerNodes = [];
+      
+      // Add provider nodes
+      providers.forEach((provider, index) => {
+        const providerX = (width / (providers.length + 1)) * (index + 1);
+        
+        const node = document.createElement('div');
+        node.className = 'provider-node';
+        node.textContent = provider.id;
+        node.style.left = `${providerX - 30}px`;
+        node.style.top = `${providerY - 30}px`;
+        node.dataset.id = provider.id;
+        node.dataset.type = provider.contextType;
+        
+        container.appendChild(node);
+        
+        providerNodes.push({
+          id: provider.id,
+          type: provider.contextType,
+          x: providerX,
+          y: providerY,
+          element: node
+        });
+      });
+      
+      // Add consumer nodes
+      consumers.forEach((consumer, index) => {
+        const consumerX = (width / (consumers.length + 1)) * (index + 1);
+        
+        const node = document.createElement('div');
+        node.className = 'consumer-node';
+        node.textContent = consumer.id;
+        node.style.left = `${consumerX - 30}px`;
+        node.style.top = `${consumerY - 30}px`;
+        node.dataset.id = consumer.id;
+        node.dataset.types = consumer.contextTypes.join(',');
+        
+        container.appendChild(node);
+        
+        consumerNodes.push({
+          id: consumer.id,
+          types: consumer.contextTypes,
+          x: consumerX,
+          y: consumerY,
+          element: node
+        });
+      });
+      
+      // Add connection lines
+      connections.forEach(connection => {
+        const provider = providerNodes.find(p => p.id === connection.providerId);
+        const consumer = consumerNodes.find(c => c.id === connection.consumerId);
+        
+        if (provider && consumer) {
+          // Calculate line
+          const dx = consumer.x - provider.x;
+          const dy = consumer.y - provider.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+          
+          const line = document.createElement('div');
+          line.className = 'connection-line';
+          
+          // Add active class if this is the active connection
+          if (activeConnection && 
+              activeConnection.providerId === connection.providerId &&
+              activeConnection.consumerId === connection.consumerId) {
+            line.classList.add('connection-active');
+          }
+          
+          line.style.width = `${distance}px`;
+          line.style.left = `${provider.x}px`;
+          line.style.top = `${provider.y}px`;
+          line.style.transform = `rotate(${angle}deg)`;
+          
+          container.appendChild(line);
+        }
+      });
+    }
+    
+    // Main initialization
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Create event bus
+      const eventBus = new MockEventBus();
+      
+      // Create context hub
+      const contextHub = new ContextHub({
+        eventBus,
+        manifoldRegistry: null
+      });
+      
+      // Initialize hub
+      await contextHub.initialize();
+      logToUI('Context hub initialized', 'success');
+      
+      // Track active connection (for visualization)
+      let activeConnection = null;
+      
+      // Subscribe to events
+      eventBus.subscribe('context:provider-registered', (data) => {
+        logToUI(`Provider registered: ${data.id} (${data.contextType})`, 'success');
+        
+        // Update UI
+        updateProvidersList(Array.from(contextHub.providers.values()));
+        
+        // Update visualization
+        renderVisualization(
+          Array.from(contextHub.providers.values()),
+          Array.from(contextHub.consumers.values()),
+          contextHub.getConnectionInfo(),
+          activeConnection
+        );
+      });
+      
+      eventBus.subscribe('context:consumer-registered', (data) => {
+        logToUI(`Consumer registered: ${data.id} (${data.contextTypes.join(', ')})`, 'success');
+        
+        // Update UI
+        updateConsumersList(Array.from(contextHub.consumers.values()));
+        
+        // Update visualization
+        renderVisualization(
+          Array.from(contextHub.providers.values()),
+          Array.from(contextHub.consumers.values()),
+          contextHub.getConnectionInfo(),
+          activeConnection
+        );
+      });
+      
+      eventBus.subscribe('context:connection-created', (data) => {
+        logToUI(`Connection created: ${data.providerId} → ${data.consumerId} (${data.contextType})`, 'success');
+        
+        // Update connections UI
+        updateConnectionsGrid(contextHub.getConnectionInfo());
+        
+        // Update visualization
+        renderVisualization(
+          Array.from(contextHub.providers.values()),
+          Array.from(contextHub.consumers.values()),
+          contextHub.getConnectionInfo(),
+          activeConnection
+        );
+      });
+      
+      eventBus.subscribe('context:updated', (data) => {
+        logToUI(`Context updated: ${data.providerId} (${data.contextType})`, 'info');
+        
+        // Set active connection for visualization
+        activeConnection = {
+          providerId: data.providerId,
+          contextType: data.contextType
+        };
+        
+        // Update visualization
+        renderVisualization(
+          Array.from(contextHub.providers.values()),
+          Array.from(contextHub.consumers.values()),
+          contextHub.getConnectionInfo(),
+          activeConnection
+        );
+        
+        // Clear active connection after a delay
+        setTimeout(() => {
+          activeConnection = null;
+          
+          renderVisualization(
+            Array.from(contextHub.providers.values()),
+            Array.from(contextHub.consumers.values()),
+            contextHub.getConnectionInfo(),
+            null
+          );
+        }, 2000);
+      });
+      
+      // Set up UI handlers
+      document.getElementById('create-provider').addEventListener('click', async () => {
+        try {
+          const id = document.getElementById('provider-id').value.trim();
+          const contextType = document.getElementById('provider-type').value.trim();
+          const description = document.getElementById('provider-description').value.trim();
+          
+          if (!id || !contextType) {
+            throw new Error('Provider ID and context type are required');
+          }
+          
+          // Register provider
+          await contextHub.registerProvider({
+            id,
+            contextType,
+            description,
+            schema: null // No schema validation for simplicity
+          });
+          
+          // Clear form
+          document.getElementById('provider-id').value = '';
+          document.getElementById('provider-type').value = '';
+          document.getElementById('provider-description').value = '';
+        } catch (error) {
+          logToUI(`Error creating provider: ${error.message}`, 'error');
+        }
+      });
+      
+      document.getElementById('create-consumer').addEventListener('click', async () => {
+        try {
+          const id = document.getElementById('consumer-id').value.trim();
+          const contextTypesStr = document.getElementById('consumer-types').value.trim();
+          const description = document.getElementById('consumer-description').value.trim();
+          
+          if (!id || !contextTypesStr) {
+            throw new Error('Consumer ID and context types are required');
+          }
+          
+          const contextTypes = contextTypesStr.split(',').map(t => t.trim());
+          
+          // Register consumer
+          await contextHub.registerConsumer({
+            id,
+            contextTypes,
+            description
+          });
+          
+          // Clear form
+          document.getElementById('consumer-id').value = '';
+          document.getElementById('consumer-types').value = '';
+          document.getElementById('consumer-description').value = '';
+        } catch (error) {
+          logToUI(`Error creating consumer: ${error.message}`, 'error');
+        }
+      });
+      
+      document.getElementById('update-context').addEventListener('click', async () => {
+        try {
+          const providerId = document.getElementById('update-provider').value;
+          const contextDataStr = document.getElementById('context-data').value.trim();
+          
+          if (!providerId) {
+            throw new Error('Provider is required');
+          }
+          
+          if (!contextDataStr) {
+            throw new Error('Context data is required');
+          }
+          
+          // Parse context data
+          const contextData = JSON.parse(contextDataStr);
+          
+          // Get provider
+          const provider = contextHub.providers.get(providerId);
+          if (!provider) {
+            throw new Error(`Provider ${providerId} not found`);
+          }
+          
+          // Update context
+          await provider.updateContext(contextData);
+          
+          logToUI(`Context updated for ${providerId}`, 'success');
+        } catch (error) {
+          logToUI(`Error updating context: ${error.message}`, 'error');
+        }
+      });
+      
+      document.getElementById('clear-log').addEventListener('click', () => {
+        document.getElementById('log-container').innerHTML = '';
+        logToUI('Log cleared', 'info');
+      });
+      
+      // Create some initial test data
+      try {
+        // Register weather provider
+        await contextHub.registerProvider({
+          id: 'weather-provider',
+          contextType: 'weather-data',
+          description: 'Provides weather data'
+        });
+        
+        // Register location provider
+        await contextHub.registerProvider({
+          id: 'location-provider',
+          contextType: 'location-data',
+          description: 'Provides location data'
+        });
+        
+        // Register weather consumer
+        await contextHub.registerConsumer({
+          id: 'weather-app',
+          contextTypes: ['weather-data'],
+          description: 'Weather application'
+        });
+        
+        // Register combined consumer
+        await contextHub.registerConsumer({
+          id: 'travel-app',
+          contextTypes: ['weather-data', 'location-data'],
+          description: 'Travel application that uses weather and location'
+        });
+        
+        // Update the weather context
+        const weatherProvider = contextHub.providers.get('weather-provider');
+        await weatherProvider.updateContext({
+          temperature: 22,
+          conditions: 'Partly Cloudy',
+          humidity: 65,
+          windSpeed: 10
+        });
+        
+        // Update the location context
+        const locationProvider = contextHub.providers.get('location-provider');
+        await locationProvider.updateContext({
+          latitude: 37.7749,
+          longitude: -122.4194,
+          city: 'San Francisco',
+          country: 'USA'
+        });
+        
+        logToUI('Created initial test data', 'success');
+      } catch (error) {
+        logToUI(`Error creating test data: ${error.message}`, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

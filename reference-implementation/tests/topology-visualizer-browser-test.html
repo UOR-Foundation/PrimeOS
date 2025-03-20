@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrimeOS - Topology Visualizer Browser Test</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #333;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      padding: 8px 12px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background-color: #0055aa;
+    }
+    
+    .test-sections {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .test-section {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .test-section h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #333;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .test-section p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+    
+    .visualizer-container {
+      width: 100%;
+      height: 400px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .test-output {
+      margin-top: 15px;
+      background-color: #f8f8f8;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .test-output.success {
+      border-left: 4px solid #28a745;
+    }
+    
+    .test-output.error {
+      border-left: 4px solid #dc3545;
+    }
+    
+    .log-entry {
+      margin: 5px 0;
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    .log-time {
+      color: #999;
+      font-size: 0.8em;
+      margin-right: 8px;
+    }
+    
+    .log-success {
+      color: #28a745;
+    }
+    
+    .log-error {
+      color: #dc3545;
+    }
+    
+    .log-info {
+      color: #0066cc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Topology Visualizer Browser Test</h1>
+      <div class="controls">
+        <button id="run-all-tests">Run All Tests</button>
+        <button id="clear-logs">Clear Logs</button>
+      </div>
+    </div>
+    
+    <div class="test-sections">
+      <div class="test-section">
+        <h2>Visualization Test</h2>
+        <p>Tests the rendering and interaction capabilities of the TopologyVisualizer.</p>
+        <div id="visualizer-container" class="visualizer-container"></div>
+        <div class="controls">
+          <button id="add-node">Add Node</button>
+          <button id="add-relation">Add Relation</button>
+          <button id="remove-node">Remove Node</button>
+        </div>
+        <div id="visualizer-output" class="test-output">
+          <div class="log-entry">
+            <span class="log-time">00:00:00</span>
+            <span class="log-info">Waiting to run tests...</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="test-section">
+        <h2>Event Handling Test</h2>
+        <p>Tests the event handling and data synchronization of the TopologyVisualizer.</p>
+        <div id="event-container" class="visualizer-container"></div>
+        <div class="controls">
+          <button id="trigger-manifold-created">Trigger Manifold Created</button>
+          <button id="trigger-relation-created">Trigger Relation Created</button>
+          <button id="trigger-manifold-deleted">Trigger Manifold Deleted</button>
+        </div>
+        <div id="event-output" class="test-output">
+          <div class="log-entry">
+            <span class="log-time">00:00:00</span>
+            <span class="log-info">Waiting to run tests...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script type="module">
+    // Import TopologyVisualizer
+    import { TopologyVisualizer } from '../core/visualization/topology-visualizer.js';
+    
+    // Create synthetic event bus for testing
+    class TestEventBus {
+      constructor() {
+        this.handlers = new Map();
+        this.log = [];
+      }
+      
+      subscribe(eventName, handler) {
+        if (!this.handlers.has(eventName)) {
+          this.handlers.set(eventName, []);
+        }
+        
+        this.handlers.get(eventName).push(handler);
+        this.logEvent(`Subscribed to ${eventName}`);
+        
+        // Return unsubscribe function
+        return () => {
+          const handlers = this.handlers.get(eventName) || [];
+          const index = handlers.indexOf(handler);
+          if (index !== -1) {
+            handlers.splice(index, 1);
+          }
+          this.logEvent(`Unsubscribed from ${eventName}`);
+        };
+      }
+      
+      publish(eventName, data) {
+        this.logEvent(`Published ${eventName}`);
+        
+        if (!this.handlers.has(eventName)) {
+          return;
+        }
+        
+        for (const handler of this.handlers.get(eventName)) {
+          try {
+            handler(data);
+          } catch (error) {
+            console.error(`Error in event handler for ${eventName}:`, error);
+            this.logEvent(`Error in event handler for ${eventName}: ${error.message}`, 'error');
+          }
+        }
+      }
+      
+      logEvent(message, type = 'info') {
+        const time = new Date().toLocaleTimeString();
+        this.log.push({ time, message, type });
+        console.log(`[${time}] ${message}`);
+      }
+      
+      getLogs() {
+        return this.log;
+      }
+      
+      clearLogs() {
+        this.log = [];
+      }
+    }
+    
+    // Create synthetic ManifoldRegistry for testing
+    class TestManifoldRegistry {
+      constructor() {
+        this.manifolds = [];
+        this.relationships = [];
+        this.log = [];
+      }
+      
+      async getManifolds() {
+        this.logAction('getManifolds', 'Retrieved manifolds');
+        return this.manifolds;
+      }
+      
+      async getRelationships() {
+        this.logAction('getRelationships', 'Retrieved relationships');
+        return this.relationships;
+      }
+      
+      async findManifolds(space, property, value) {
+        this.logAction('findManifolds', `Finding manifolds with ${property}=${value} in space ${space}`);
+        return this.manifolds.filter(m => m[property] === value);
+      }
+      
+      async getManifold(id) {
+        this.logAction('getManifold', `Getting manifold with ID ${id}`);
+        return this.manifolds.find(m => m.id === id) || null;
+      }
+      
+      addManifold(manifold) {
+        this.manifolds.push(manifold);
+        this.logAction('addManifold', `Added manifold ${manifold.id}`);
+        return manifold;
+      }
+      
+      addRelationship(relationship) {
+        this.relationships.push(relationship);
+        this.logAction('addRelationship', `Added relationship from ${relationship.source} to ${relationship.target}`);
+        return relationship;
+      }
+      
+      removeManifold(id) {
+        const index = this.manifolds.findIndex(m => m.id === id);
+        if (index !== -1) {
+          this.manifolds.splice(index, 1);
+          this.logAction('removeManifold', `Removed manifold ${id}`);
+          return true;
+        }
+        return false;
+      }
+      
+      removeRelationship(source, target) {
+        const index = this.relationships.findIndex(
+          r => r.source === source && r.target === target
+        );
+        
+        if (index !== -1) {
+          this.relationships.splice(index, 1);
+          this.logAction('removeRelationship', `Removed relationship from ${source} to ${target}`);
+          return true;
+        }
+        return false;
+      }
+      
+      logAction(action, message) {
+        const time = new Date().toLocaleTimeString();
+        this.log.push({ time, action, message });
+        console.log(`[${time}] ${action}: ${message}`);
+      }
+      
+      getLogs() {
+        return this.log;
+      }
+      
+      clearLogs() {
+        this.log = [];
+      }
+    }
+    
+    // Helper for logging to UI
+    function logToOutput(output, message, type = 'info') {
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry';
+      
+      const time = document.createElement('span');
+      time.className = 'log-time';
+      time.textContent = new Date().toLocaleTimeString();
+      
+      const content = document.createElement('span');
+      content.className = `log-${type}`;
+      content.textContent = message;
+      
+      logEntry.appendChild(time);
+      logEntry.appendChild(content);
+      
+      output.appendChild(logEntry);
+      output.scrollTop = output.scrollHeight;
+    }
+    
+    // Clear an output element
+    function clearOutput(output) {
+      output.innerHTML = '';
+    }
+    
+    // Generate a random ID
+    function generateId() {
+      return `m-${Math.random().toString(36).substr(2, 9)}`;
+    }
+    
+    // ---- Visualization Test ----
+    function runVisualizationTest() {
+      const containerElement = document.getElementById('visualizer-container');
+      const outputElement = document.getElementById('visualizer-output');
+      
+      clearOutput(outputElement);
+      logToOutput(outputElement, 'Starting visualization test...');
+      
+      // Create test instances
+      const eventBus = new TestEventBus();
+      const registry = new TestManifoldRegistry();
+      
+      // Create initial test data
+      const manifolds = [
+        {
+          id: 'app1',
+          name: 'Test Application',
+          type: 'application',
+          depth: 1
+        },
+        {
+          id: 'component1',
+          name: 'UI Component',
+          type: 'component',
+          depth: 2
+        },
+        {
+          id: 'component2',
+          name: 'Data Component',
+          type: 'component',
+          depth: 2
+        }
+      ];
+      
+      const relationships = [
+        {
+          source: 'app1',
+          target: 'component1',
+          type: 'uses',
+          strength: 0.8
+        }
+      ];
+      
+      // Add to registry
+      manifolds.forEach(m => registry.addManifold(m));
+      relationships.forEach(r => registry.addRelationship(r));
+      
+      // Create visualizer
+      const visualizer = new TopologyVisualizer({
+        container: containerElement,
+        manifoldRegistry: registry,
+        eventBus
+      });
+      
+      // Initialize visualizer
+      visualizer.initialize()
+        .then(() => {
+          logToOutput(outputElement, 'Visualizer initialized successfully', 'success');
+          
+          // Add event listeners
+          document.getElementById('add-node').addEventListener('click', () => {
+            const id = generateId();
+            const newManifold = {
+              id,
+              name: `New Node ${id}`,
+              type: 'component',
+              depth: 2
+            };
+            
+            registry.addManifold(newManifold);
+            eventBus.publish('manifold:created', { manifold: newManifold });
+            
+            logToOutput(outputElement, `Added node: ${newManifold.name}`, 'success');
+          });
+          
+          document.getElementById('add-relation').addEventListener('click', () => {
+            // Get two random manifolds
+            if (registry.manifolds.length < 2) {
+              logToOutput(outputElement, 'Need at least 2 manifolds to create a relation', 'error');
+              return;
+            }
+            
+            const manifolds = registry.manifolds;
+            const source = manifolds[Math.floor(Math.random() * manifolds.length)];
+            let target;
+            
+            do {
+              target = manifolds[Math.floor(Math.random() * manifolds.length)];
+            } while (target.id === source.id);
+            
+            const relationship = {
+              source: source.id,
+              target: target.id,
+              type: 'related',
+              strength: 0.6
+            };
+            
+            registry.addRelationship(relationship);
+            eventBus.publish('relationship:created', { relationship });
+            
+            logToOutput(outputElement, `Added relation: ${source.name} -> ${target.name}`, 'success');
+          });
+          
+          document.getElementById('remove-node').addEventListener('click', () => {
+            if (registry.manifolds.length === 0) {
+              logToOutput(outputElement, 'No manifolds to remove', 'error');
+              return;
+            }
+            
+            const index = Math.floor(Math.random() * registry.manifolds.length);
+            const manifold = registry.manifolds[index];
+            const id = manifold.id;
+            
+            registry.removeManifold(id);
+            eventBus.publish('manifold:deleted', { manifoldId: id });
+            
+            logToOutput(outputElement, `Removed node: ${manifold.name}`, 'success');
+          });
+          
+          logToOutput(outputElement, 'Test setup complete - use the buttons to interact', 'info');
+        })
+        .catch(error => {
+          logToOutput(outputElement, `Visualization test failed: ${error.message}`, 'error');
+          console.error('Visualization test error:', error);
+        });
+    }
+    
+    // ---- Event Handling Test ----
+    function runEventHandlingTest() {
+      const containerElement = document.getElementById('event-container');
+      const outputElement = document.getElementById('event-output');
+      
+      clearOutput(outputElement);
+      logToOutput(outputElement, 'Starting event handling test...');
+      
+      // Create test instances
+      const eventBus = new TestEventBus();
+      const registry = new TestManifoldRegistry();
+      
+      // Create visualizer
+      const visualizer = new TopologyVisualizer({
+        container: containerElement,
+        manifoldRegistry: registry,
+        eventBus
+      });
+      
+      // Initialize visualizer
+      visualizer.initialize()
+        .then(() => {
+          logToOutput(outputElement, 'Visualizer initialized successfully', 'success');
+          
+          // Log all events
+          eventBus.subscribe('topology:node-selected', (data) => {
+            logToOutput(outputElement, `Node selected: ${data.node.name}`, 'info');
+          });
+          
+          eventBus.subscribe('topology:node-deselected', (data) => {
+            logToOutput(outputElement, `Node deselected: ${data.node.name}`, 'info');
+          });
+          
+          // Add event listeners
+          document.getElementById('trigger-manifold-created').addEventListener('click', () => {
+            const id = generateId();
+            const manifold = {
+              id,
+              name: `Event Test Node ${id}`,
+              type: Math.random() > 0.5 ? 'application' : 'component',
+              depth: Math.floor(Math.random() * 3) + 1
+            };
+            
+            eventBus.publish('manifold:created', { manifold });
+            logToOutput(outputElement, `Published manifold:created event for ${manifold.name}`, 'success');
+          });
+          
+          document.getElementById('trigger-relation-created').addEventListener('click', () => {
+            if (visualizer.nodes.length < 2) {
+              logToOutput(outputElement, 'Need at least 2 nodes to create a relation', 'error');
+              return;
+            }
+            
+            // Get two random nodes
+            const nodes = visualizer.nodes;
+            const source = nodes[Math.floor(Math.random() * nodes.length)];
+            let target;
+            
+            do {
+              target = nodes[Math.floor(Math.random() * nodes.length)];
+            } while (target.id === source.id);
+            
+            const relationship = {
+              source: source.id,
+              target: target.id,
+              type: 'event-relation',
+              strength: Math.random()
+            };
+            
+            eventBus.publish('relationship:created', { relationship });
+            logToOutput(outputElement, `Published relationship:created event: ${source.name} -> ${target.name}`, 'success');
+          });
+          
+          document.getElementById('trigger-manifold-deleted').addEventListener('click', () => {
+            if (visualizer.nodes.length === 0) {
+              logToOutput(outputElement, 'No nodes to delete', 'error');
+              return;
+            }
+            
+            const index = Math.floor(Math.random() * visualizer.nodes.length);
+            const node = visualizer.nodes[index];
+            
+            eventBus.publish('manifold:deleted', { manifoldId: node.id });
+            logToOutput(outputElement, `Published manifold:deleted event for ${node.name}`, 'success');
+          });
+          
+          logToOutput(outputElement, 'Event test setup complete - use the buttons to interact', 'info');
+        })
+        .catch(error => {
+          logToOutput(outputElement, `Event handling test failed: ${error.message}`, 'error');
+          console.error('Event handling test error:', error);
+        });
+    }
+    
+    // Add global event listeners
+    document.getElementById('run-all-tests').addEventListener('click', () => {
+      runVisualizationTest();
+      runEventHandlingTest();
+    });
+    
+    document.getElementById('clear-logs').addEventListener('click', () => {
+      clearOutput(document.getElementById('visualizer-output'));
+      clearOutput(document.getElementById('event-output'));
+      logToOutput(document.getElementById('visualizer-output'), 'Logs cleared', 'info');
+      logToOutput(document.getElementById('event-output'), 'Logs cleared', 'info');
+    });
+    
+    // Auto-run tests on load
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        runVisualizationTest();
+        runEventHandlingTest();
+      }, 500);
+    });
+  </script>
+</body>
+</html>
