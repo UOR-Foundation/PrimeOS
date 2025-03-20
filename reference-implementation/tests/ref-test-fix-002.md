@@ -194,7 +194,7 @@ The implementation provides a complete reference for how to bridge between modul
   - [x] access-control-tests.js (completed)
   - [x] api-keys-tests.js (completed)
   - [x] coherence-engine-tests.js (completed)
-  - [x] manifold-registry-tests.js (completed)
+  - [x] manifold-registry-tests.js (completed and enabled)
   - [x] app-factory-manifold-integration-tests.js (completed)
   - [x] app-factory-components-tests.js (completed)
   - [x] app-factory-tests.js (completed and enabled)
@@ -231,7 +231,6 @@ The implementation provides a complete reference for how to bridge between modul
   - /tests/esm-bridges/ (bridge infrastructure)
   - /tests/esm-test.js (replaced by wrapper)
   - /tests/coherence-integration-test.html (HTML test harness)
-  - /tests/manifold-registry-tests.js
   - /tests/settings-ui-tests.js
   - /tests/settings-app-tests.js
   - /tests/phase2-integration-tests.js

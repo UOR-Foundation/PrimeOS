@@ -80,7 +80,6 @@
       "/tests/esm-bridges/",
       "/tests/esm-test.js",
       "/tests/coherence-integration-test.html",
-      "/tests/manifold-registry-tests.js",
       "/tests/settings-ui-tests.js",
       "/tests/settings-app-tests.js",
       "/tests/phase2-integration-tests.js",

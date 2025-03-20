@@ -185,6 +185,17 @@ class ManifoldSpaceBridge {
   }
   
   /**
+   * Check if manifold exists in space
+   * @param {string|Object} manifoldOrId - Manifold or ID
+   * @returns {boolean} True if exists
+   */
+  hasManifold(manifoldOrId) {
+    const id = typeof manifoldOrId === 'string' ? manifoldOrId : 
+      (manifoldOrId && manifoldOrId.getId ? manifoldOrId.getId() : null);
+    return id ? this.manifolds.has(id) : false;
+  }
+  
+  /**
    * Create a relation between manifolds
    * @param {string} sourceId - Source manifold ID
    * @param {string} targetId - Target manifold ID
