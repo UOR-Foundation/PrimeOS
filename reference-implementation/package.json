@@ -13,6 +13,9 @@
     "test:secure-vault": "node run-secure-vault-browser-tests.js",
     "test:all": "npm run test && npm run test:integration && npm run test:browser",
     "build": "rollup -c",
+    "build:dev": "NODE_ENV=development rollup -c",
+    "build:prod": "NODE_ENV=production rollup -c",
+    "clean": "rm -rf primeos.min.js primeos.min.js.map primeos.js",
     "start": "serve .",
     "lint": "eslint ."
   },
@@ -31,6 +34,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.22.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.26.3",
     "@babel/preset-env": "^7.22.5",
     "@rollup/plugin-babel": "^6.0.3",
     "@rollup/plugin-commonjs": "^25.0.2",
@@ -53,14 +57,59 @@
       "node_modules"
     ],
     "transform": {
-      "^.+\\.js$": "babel-jest"
+      "^.+\\.js$": [
+        "babel-jest", 
+        {
+          "presets": [
+            ["@babel/preset-env", { "targets": { "node": "current" } }]
+          ],
+          "plugins": [
+            "@babel/plugin-transform-modules-commonjs"
+          ]
+        }
+      ]
     },
     "transformIgnorePatterns": [
-      "/node_modules/"
+      "/node_modules/(?!(idb))"
     ],
     "testMatch": [
       "**/tests/**/*.js"
     ],
+    "testPathIgnorePatterns": [
+      "/tests/phase3/",
+      "/tests/esm-bridges/",
+      "/tests/esm-test.js",
+      "/tests/coherence-integration-test.html",
+      "/tests/manifold-registry-tests.js",
+      "/tests/settings-ui-tests.js",
+      "/tests/settings-app-tests.js",
+      "/tests/phase2-integration-tests.js",
+      "/tests/phase2-integration-wrapper.js",
+      "/tests/claude-service-tests.js",
+      "/tests/app-factory-settings-tests.js",
+      "/tests/app-factory-manifold-integration-tests.js",
+      "/tests/adapters/settings-store-bridge.js",
+      "/tests/adapters/claude-service-bridge.js",
+      "/tests/adapters/phase2-integration-bridge.js"
+    ],
+    "moduleNameMapper": {
+      "^../../src/framework/base0/manifold$": "<rootDir>/tests/jest-mock/framework/base0/manifold.js",
+      "^../../src/framework/base0/coherence-validator$": "<rootDir>/tests/jest-mock/framework/base0/coherence-validator.js",
+      "^../../src/framework/base0/index$": "<rootDir>/tests/jest-mock/framework/base0/index.js",
+      "^../../src/framework/math/index$": "<rootDir>/tests/jest-mock/framework/math/index.js",
+      "^./esm-bridges/coherence-engine.esm.js$": "<rootDir>/tests/esm-bridges/esm-test-bridge.js",
+      "^./esm-bridges/manifold-registry.esm.js$": "<rootDir>/tests/esm-bridges/esm-test-bridge.js",
+      "^../apps/settings/models/settings-store$": "<rootDir>/tests/adapters/settings-store-bridge.js",
+      "^../core/identity/secure-vault$": "<rootDir>/tests/jest-mock/secure-vault.js",
+      "^../core/app-factory/claude-service$": "<rootDir>/tests/adapters/claude-service-bridge.js",
+      "^../core/app-factory/CoherenceEngine$": "<rootDir>/tests/adapters/coherence-engine-bridge.js",
+      "^../core/app-factory/AppFactoryManager$": "<rootDir>/tests/adapters/app-factory-bridge.js",
+      "^../core/app-factory/app-factory-manager$": "<rootDir>/tests/adapters/app-factory-bridge.js",
+      "^../apps/settings/components/settings-panel$": "<rootDir>/tests/adapters/settings-panel-bridge.js",
+      "^../apps/settings/components/secrets-manager$": "<rootDir>/tests/adapters/secrets-manager-bridge.js",
+      "^../apps/settings/index$": "<rootDir>/tests/adapters/settings-app-bridge.js",
+      "^../core/shell/shell$": "<rootDir>/tests/adapters/shell-bridge.js"
+    },
     "collectCoverageFrom": [
       "core/**/*.js",
       "js/**/*.js"
