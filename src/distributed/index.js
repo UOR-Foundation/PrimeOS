@@ -13,6 +13,7 @@ Prime.Distributed = {};
 require("./cluster");
 require("./communication");
 require("./partition");
+require("./coherence");
 
 // Export the enhanced Prime object
 module.exports = Prime;

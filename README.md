@@ -127,6 +127,11 @@ npm run test:uor        # UOR verification tests (high memory usage)
 npm run test:integration # Integration tests
 npm run test:browser    # Browser environment tests
 
+# Run distributed coherence tests
+npm run test:coherence         # Run distributed coherence tests
+npm run test:coherence:bench   # Run distributed coherence benchmarks
+npm run test:coherence:mock    # Run mock distributed network simulation
+
 # Run complete test suite (all tests)
 npm run test:all
 ```

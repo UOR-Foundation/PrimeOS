@@ -1,76 +1,96 @@
-# PrimeOS Core Library Enhancement Plan
+# PrimeOS Refactoring Plan
 
-## Problem Analysis
+## Current Structure
+The current structure is organized as follows:
+- `core.js`: Contains the main Prime object and core utilities
+- `mathematics.js`: Mathematical foundations including Clifford Algebra
+- `coherence.js`: Coherence system and Universal Object Reference (UOR)
+- `components/`: Component system modules
+- `framework/`: Four-tier architecture (base0, base1, base2, base3)
 
-Based on the test failures observed, the primary issues with the PrimeOS src/ library are:
+## Refactoring Goals
+1. Better modularization and encapsulation
+2. Clearer separation of concerns
+3. Improved organization of related functionality
+4. Structure prepared for additional features
+5. Consistent module patterns and exports
+6. Reduced circular dependencies
 
-1. **Missing `CoherenceError` class**: 
-   - The `src/core.js` file has a comprehensive error hierarchy but lacks the `CoherenceError` class that is being used in `Manifold.updateVariant()`.
-   - The test setup provides a mock, but the actual implementation is needed in the core library.
+## New Directory Structure
+```
+src/
+├── core/                  # Core functionality
+│   ├── prime.js           # Main Prime object (formerly core.js)
+│   ├── utils.js           # Utility functions
+│   ├── error.js           # Error classes
+│   ├── logger.js          # Logging system
+│   ├── event-bus.js       # Event system
+│   ├── version.js         # Version management
+│   └── index.js           # Exports core modules
+│
+├── math/                  # Mathematical foundations
+│   ├── clifford.js        # Clifford algebra
+│   ├── lie.js             # Lie groups
+│   ├── vector.js          # Vector operations
+│   ├── matrix.js          # Matrix operations
+│   ├── numerical.js       # Numerical methods
+│   ├── spectral.js        # Spectral decomposition
+│   └── index.js           # Exports math modules
+│
+├── coherence/             # Coherence system
+│   ├── inner-product.js   # Inner product calculations
+│   ├── constraints.js     # Constraint management
+│   ├── optimization.js    # Optimization algorithms
+│   ├── uor.js             # Universal Object Reference
+│   ├── manifold.js        # Manifold implementation
+│   └── index.js           # Exports coherence modules
+│
+├── components/            # Component system
+│   ├── base.js            # Base component
+│   ├── registry.js        # Component registry
+│   ├── factory.js         # Component factory
+│   ├── template.js        # Component templates
+│   ├── rendering.js       # Rendering system
+│   ├── performance.js     # Performance monitoring
+│   ├── documentation.js   # Documentation generation
+│   └── index.js           # Exports component modules
+│
+├── framework/             # Framework architecture
+│   ├── base0/             # Neural Network Specification
+│   ├── base1/             # Resource
+│   ├── base2/             # Kernel
+│   ├── base3/             # Application
+│   └── index.js           # Exports framework
+│
+├── experimental/          # Experimental features
+│   └── README.md          # Documentation for experimental features
+│
+├── types/                 # Type definitions
+│   └── index.d.ts         # TypeScript definitions
+│
+└── index.js               # Main entry point
+```
 
-2. **Coherence Validation Issues**:
-   - The `src/framework/base0/manifold.js` implementation is throwing coherence errors that prevent the tests from passing.
-   - The mathematical foundation requires proper coherence checks before variant updates.
+## Implementation Approach
+1. Create the new directory structure
+2. Move code to appropriate modules
+3. Update imports/exports
+4. Update API documentation
+5. Ensure backward compatibility
+6. Add tests for the refactored code
+7. Update examples
 
-3. **Incomplete Integration Between Components**:
-   - SecureVault tests fail when retrieving stored secrets
-   - SettingsStore tests show issues with the resetToDefaults method and updating API keys
+## Migration Considerations
+- Maintain backward compatibility
+- Update all imports in test files
+- Document any breaking changes
+- Provide migration guide for users
 
-## Enhancement Strategy
-
-### 1. Core Error Hierarchy
-
-- Add `CoherenceError` class to the error hierarchy in `src/core.js`
-- Ensure it follows the same pattern as other error classes
-- Make it properly extend `PrimeError` with appropriate default code and contextual information
-
-### 2. Coherence System Improvements
-
-- Review and enhance the coherence validator implementation 
-- Ensure the Manifold class properly handles coherence checks
-- Add robustness to the updateVariant method to prevent test failures
-- Implement mathematical coherence validation with proper thresholds
-
-### 3. Component Integration
-
-- Fix the SecureVault implementation to properly store and retrieve secrets
-- Ensure the SettingsStore implementation properly resets to defaults
-- Fix API key update functionality
-
-## Implementation Plan
-
-### Phase 1: Error Hierarchy Enhancement
-
-1. Add `CoherenceError` class to `src/core.js` alongside other error classes
-2. Ensure it has appropriate properties and methods
-3. Verify error inheritance chain
-
-### Phase 2: Coherence System Improvements
-
-1. Enhance `src/framework/base0/coherence-validator.js` implementation
-2. Improve the Manifold class's coherence checks
-3. Add robustness to updateVariant method in Manifold 
-4. Implement proper coherence impact calculation
-
-### Phase 3: Component Integration
-
-1. Fix SecureVault implementation to properly store/retrieve secrets
-2. Enhance SettingsStore implementation for resetting defaults
-3. Fix API key functionality
-
-## Testing Strategy
-
-- Verify each enhancement with the failing tests
-- Maintain mathematical coherence principles
-- Ensure no regression in passing tests
-- Add documentation for components affected
-
-## Mathematical Considerations
-
-The coherence system is based on mathematical principles of invariance and manifold theory. The enhancements must maintain the mathematical integrity of the system while ensuring practical functionality. The coherence validator must accurately calculate impact of state changes on the mathematical coherence of the system.
-
-## Implementation Priorities
-
-1. Fix `CoherenceError` class - highest priority as it's blocking many tests
-2. Enhance coherence validation - critical for maintaining mathematical foundation
-3. Fix component-specific implementations - necessary for end-to-end functionality
+## Expected Benefits
+1. Improved code readability and maintainability
+2. Better separation of concerns
+3. Easier addition of new features
+4. Reduced circular dependencies
+5. More efficient testing
+6. Clearer documentation
+7. Improved developer experience

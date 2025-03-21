@@ -411,6 +411,96 @@ const EventBus = require("../event-bus");
         throw new Error("Invalid coherence check task data");
       }
 
+      // Use enhanced coherence module if available
+      if (Prime.Distributed && Prime.Distributed.Coherence) {
+        try {
+          // Create layer object from parameters
+          const layer = {
+            id: data.layerId || 'coherence_check_layer',
+            config: layerConfig,
+            weights: parameters.weights,
+            biases: parameters.biases
+          };
+          
+          // Create context object with additional information
+          const context = {
+            isDistributed: true,
+            nodeId: this.id,
+            nodeType: this.type,
+            checkTime: Date.now()
+          };
+          
+          // Add global parameters if provided
+          if (data.globalParams) {
+            context.globalParams = data.globalParams;
+          }
+          
+          // Add gradients if provided
+          if (data.gradients) {
+            context.gradients = data.gradients;
+          }
+          
+          // Create coherence manager
+          const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager();
+          
+          // Perform comprehensive coherence check
+          const result = coherenceManager.checkLayerCoherence(layer, context);
+          
+          // If coherence violations detected, emit event
+          if (!result.isCoherent) {
+            for (const violation of result.violations) {
+              this.eventBus.emit('coherence:violation', {
+                taskId: data.taskId,
+                type: violation.type,
+                severity: violation.severity,
+                score: violation.score,
+                message: violation.message
+              });
+            }
+            
+            // If automatic correction is requested, apply corrections
+            if (data.autoCorrect) {
+              const correctionResult = coherenceManager.applyCoherenceCorrection(
+                layer, 
+                result.violations,
+                context
+              );
+              
+              // Return corrected parameters if corrections were applied
+              if (correctionResult.applied) {
+                result.correctionApplied = true;
+                result.correctedParameters = {
+                  weights: layer.weights,
+                  biases: layer.biases
+                };
+              }
+            }
+          }
+          
+          return result;
+        } catch (e) {
+          // Fallback to legacy implementation if error occurs
+          Prime.Logger.warn('Error using enhanced coherence check, falling back to legacy implementation', {
+            error: e.message
+          });
+          return this._legacyHandleCoherenceCheck(data);
+        }
+      } else {
+        // Use legacy implementation if coherence module not available
+        return this._legacyHandleCoherenceCheck(data);
+      }
+    }
+    
+    /**
+     * Legacy coherence check task handler
+     * @private
+     * @param {Object} data - Task input data
+     * @returns {Promise<Object>} Task result
+     */
+    async _legacyHandleCoherenceCheck(data) {
+      // Extract layer information
+      const { layerConfig, parameters } = data;
+
       // Calculate coherence score
       const coherenceScore = this._calculateCoherenceScore(
         parameters.weights,
@@ -447,6 +537,50 @@ const EventBus = require("../event-bus");
      * @returns {number} Coherence score between 0 and 1
      */
     _calculateCoherenceScore(parameters, config) {
+      // Use the dedicated coherence manager if available
+      if (Prime.Distributed && Prime.Distributed.Coherence) {
+        try {
+          // Create temporary layer structure
+          const layer = {
+            id: 'temp_layer',
+            config: config,
+            weights: Array.isArray(parameters) && Array.isArray(parameters[0]) ? parameters : null,
+            biases: Array.isArray(parameters) && !Array.isArray(parameters[0]) ? parameters : null
+          };
+          
+          // If parameters doesn't match expected types, use default implementation
+          if (!layer.weights && !layer.biases) {
+            return this._legacyCalculateCoherence(parameters, config);
+          }
+          
+          // Create a temporary coherence manager
+          const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager();
+          
+          // Check coherence
+          const result = coherenceManager.checkLayerCoherence(layer);
+          
+          return result.coherenceScore;
+        } catch (e) {
+          // Fallback to legacy implementation if error occurs
+          Prime.Logger.warn('Error using enhanced coherence check, falling back to legacy implementation', {
+            error: e.message
+          });
+          return this._legacyCalculateCoherence(parameters, config);
+        }
+      } else {
+        // Fallback to legacy implementation if coherence module not available
+        return this._legacyCalculateCoherence(parameters, config);
+      }
+    }
+    
+    /**
+     * Legacy coherence calculation method
+     * @private
+     * @param {Array|Matrix} parameters - Parameters to check
+     * @param {Object} config - Layer configuration
+     * @returns {number} Coherence score between 0 and 1
+     */
+    _legacyCalculateCoherence(parameters, config) {
       // Simple coherence score calculation (placeholder)
       // In a real implementation, this would be a more sophisticated
       // calculation based on mathematical principles
