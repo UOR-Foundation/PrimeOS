@@ -28,10 +28,16 @@ The new extreme condition handling has the following limitations:
    - Extreme condition tests should be validated with domain-specific libraries for production use
    - Memory consumption can be significant for large simulations
    - **IMPORTANT**: Current extreme condition tests require significant memory (8GB+) to run completely
+   - Extreme condition tests are skipped in CI due to memory constraints
 
 4. **Test Coverage:**
    - Not all extreme conditions are covered by automated tests yet
    - Users should validate results from ExtremePrecision module in their specific domains
    - Corner cases should be manually verified for critical applications
 
-To run the extreme condition tests: `node run-extreme-tests.js`
+To run the extreme condition tests locally (requires 8GB+ RAM):
+```bash
+npm run test:extreme
+# or
+node run-extreme-tests.js
+```
