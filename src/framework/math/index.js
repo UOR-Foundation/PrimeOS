@@ -1419,6 +1419,44 @@ const integration = {
   },
 };
 
+// Import additional math modules if available
+let patternRecognition;
+try {
+  patternRecognition = require('./patternRecognition.js');
+} catch (e) {
+  patternRecognition = {};
+}
+
+let spectral;
+try {
+  spectral = require('./spectral.js');
+} catch (e) {
+  spectral = {};
+}
+
+let coherence;
+try {
+  coherence = require('./coherence.js');
+} catch (e) {
+  coherence = {};
+}
+
+// Import linear algebra module
+let linalg;
+try {
+  linalg = require('./linalg.js');
+} catch (e) {
+  linalg = {};
+}
+
+// Import Prime.math module
+let primeMath;
+try {
+  primeMath = require('./prime-math.js');
+} catch (e) {
+  primeMath = {};
+}
+
 // Export the math utilities
 module.exports = {
   CONSTANTS,
@@ -1428,4 +1466,9 @@ module.exports = {
   matrix,
   optimization,
   integration,
+  patternRecognition,
+  spectral,
+  coherence,
+  linalg,
+  primeMath
 };

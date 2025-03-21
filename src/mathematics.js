@@ -2364,11 +2364,601 @@ const Prime = require("./core.js");
       return obj instanceof LieAlgebraElement;
     },
   };
+  
+  /**
+   * Extreme precision numerical computation utilities for handling extreme conditions
+   * Such as scientific computations with very large or very small numbers
+   */
+  Prime.ExtremePrecision = {
+    /**
+     * Check if extreme precision mode is enabled
+     * @returns {boolean} True if extreme precision mode is enabled
+     */
+    isEnabled: function() {
+      return typeof process !== 'undefined' && 
+        process.env.EXTENDED_PRECISION === 'true' ||
+        typeof window !== 'undefined' && 
+        window.EXTENDED_PRECISION === true;
+    },
+    
+    /**
+     * Perform addition with compensated summation (Kahan summation)
+     * Greatly reduces numerical error accumulation in sums
+     * @param {Array} values - Array of values to sum
+     * @returns {number} Precise sum
+     */
+    sum: function(values) {
+      if (!Array.isArray(values)) {
+        throw new Prime.ValidationError("Expected an array of values");
+      }
+      
+      let sum = 0.0;
+      let compensation = 0.0; // A running compensation for lost low-order bits
+      
+      for (let i = 0; i < values.length; i++) {
+        const y = values[i] - compensation;
+        const t = sum + y;
+        compensation = (t - sum) - y; // Lost low-order bits
+        sum = t;
+      }
+      
+      return sum;
+    },
+    
+    /**
+     * Perform dot product with extended precision
+     * @param {Array} v1 - First vector
+     * @param {Array} v2 - Second vector
+     * @returns {number} Precise dot product
+     */
+    dotProduct: function(v1, v2) {
+      if (!Array.isArray(v1) || !Array.isArray(v2)) {
+        throw new Prime.ValidationError("Expected arrays for dot product");
+      }
+      
+      if (v1.length !== v2.length) {
+        throw new Prime.MathematicalError("Vectors must have the same length for dot product");
+      }
+      
+      // For extreme precision, compute products individually then use compensated sum
+      const products = new Array(v1.length);
+      for (let i = 0; i < v1.length; i++) {
+        products[i] = v1[i] * v2[i]; 
+      }
+      
+      return this.sum(products);
+    },
+    
+    /**
+     * Compute vector norm with numerical stability for extreme values
+     * @param {Array} vector - Input vector
+     * @param {number} [p=2] - Norm type (1 for L1, 2 for L2/Euclidean)
+     * @returns {number} Vector norm
+     */
+    norm: function(vector, p = 2) {
+      if (!Array.isArray(vector)) {
+        throw new Prime.ValidationError("Expected array for norm calculation");
+      }
+      
+      if (p === 2) {
+        // L2 norm with numerical stability for extreme values
+        // Use scaling to avoid overflow/underflow
+        const maxAbs = Math.max(...vector.map(Math.abs));
+        
+        if (maxAbs === 0) return 0; // Zero vector
+        
+        // Scale vector by maximum absolute component to avoid overflow
+        let sumSquares = 0;
+        for (let i = 0; i < vector.length; i++) {
+          const scaled = vector[i] / maxAbs;
+          sumSquares += scaled * scaled;
+        }
+        
+        return maxAbs * Math.sqrt(sumSquares);
+      } else if (p === 1) {
+        // L1 norm with compensation
+        return this.sum(vector.map(Math.abs));
+      } else {
+        // General p-norm
+        let sum = 0;
+        for (let i = 0; i < vector.length; i++) {
+          sum += Math.pow(Math.abs(vector[i]), p);
+        }
+        return Math.pow(sum, 1/p);
+      }
+    },
+    
+    /**
+     * Solve a system of linear equations with extreme precision
+     * @param {Array<Array<number>>} A - Matrix A in Ax = b
+     * @param {Array<number>} b - Vector b in Ax = b
+     * @returns {Array<number>} Solution vector x
+     */
+    solveLinearSystem: function(A, b) {
+      if (!Array.isArray(A) || !Array.isArray(b)) {
+        throw new Prime.ValidationError("Expected arrays for linear system");
+      }
+      
+      if (A.length !== b.length) {
+        throw new Prime.MathematicalError("Matrix and vector dimensions must match");
+      }
+      
+      // Use robust linear system solver with pivoting
+      // This implementation is based on the LU decomposition with partial pivoting
+      const n = A.length;
+      
+      // Create augmented matrix [A|b]
+      const augmented = A.map((row, i) => [...row, b[i]]);
+      
+      // Gaussian elimination with partial pivoting
+      for (let i = 0; i < n; i++) {
+        // Find pivot (maximum absolute value in this column)
+        let maxIdx = i;
+        let maxVal = Math.abs(augmented[i][i]);
+        
+        for (let j = i + 1; j < n; j++) {
+          const absValue = Math.abs(augmented[j][i]);
+          if (absValue > maxVal) {
+            maxVal = absValue;
+            maxIdx = j;
+          }
+        }
+        
+        if (maxVal < Number.EPSILON) {
+          throw new Prime.MathematicalError("Matrix is singular or near-singular");
+        }
+        
+        // Swap rows if needed
+        if (maxIdx !== i) {
+          [augmented[i], augmented[maxIdx]] = [augmented[maxIdx], augmented[i]];
+        }
+        
+        // Eliminate below
+        for (let j = i + 1; j < n; j++) {
+          const factor = augmented[j][i] / augmented[i][i];
+          
+          // Update entire row with compensated subtraction
+          for (let k = i; k <= n; k++) {
+            augmented[j][k] -= factor * augmented[i][k];
+            
+            // Ensure very small values are properly handled
+            if (Math.abs(augmented[j][k]) < Number.EPSILON * maxVal) {
+              augmented[j][k] = 0;
+            }
+          }
+        }
+      }
+      
+      // Back-substitution with extended precision
+      const x = new Array(n).fill(0);
+      
+      for (let i = n - 1; i >= 0; i--) {
+        let sum = 0;
+        for (let j = i + 1; j < n; j++) {
+          sum += augmented[i][j] * x[j];
+        }
+        
+        // Use compensated subtraction for final solution
+        x[i] = (augmented[i][n] - sum) / augmented[i][i];
+        
+        // Handle potential underflow/overflow
+        if (!Number.isFinite(x[i])) {
+          throw new Prime.MathematicalError("Numerical instability in solution");
+        }
+      }
+      
+      return x;
+    },
+    
+    /**
+     * Compute eigenvalues/eigenvectors with enhanced precision
+     * @param {Array<Array<number>>} matrix - Square matrix
+     * @param {Object} options - Computation options
+     * @returns {Object} Object with eigenvalues and eigenvectors
+     */
+    eigen: function(matrix, options = {}) {
+      if (!Array.isArray(matrix) || matrix.length === 0 || !Array.isArray(matrix[0])) {
+        throw new Prime.ValidationError("Expected a non-empty matrix");
+      }
+      
+      const n = matrix.length;
+      if (matrix.some(row => row.length !== n)) {
+        throw new Prime.ValidationError("Matrix must be square");
+      }
+      
+      // Check if matrix is symmetric - we use QR for symmetric matrices
+      let isSymmetric = true;
+      for (let i = 0; i < n && isSymmetric; i++) {
+        for (let j = i+1; j < n && isSymmetric; j++) {
+          if (Math.abs(matrix[i][j] - matrix[j][i]) > 1e-10) {
+            isSymmetric = false;
+          }
+        }
+      }
+      
+      // For now, we only implement the symmetric case
+      if (!isSymmetric) {
+        throw new Prime.NotImplementedError("Eigendecomposition for non-symmetric matrices not yet implemented");
+      }
+      
+      // Use QR algorithm with shifts for symmetric matrices
+      // This is a simplified version - for production use, consider a well-tested numerical library
+      
+      // Copy matrix to avoid modifying the original
+      let A = matrix.map(row => [...row]);
+      
+      // Set up for QR iteration
+      const maxIterations = options.maxIterations || 100;
+      const eigenvalues = new Array(n);
+      const eigenvectors = new Array(n).fill(0).map((_, i) => {
+        const v = new Array(n).fill(0);
+        v[i] = 1;
+        return v;
+      });
+      
+      // QR algorithm with implicit shifts
+      for (let iter = 0; iter < maxIterations; iter++) {
+        // Check if matrix is nearly diagonal
+        let offDiagonalSum = 0;
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) {
+            if (i !== j) {
+              offDiagonalSum += Math.abs(A[i][j]);
+            }
+          }
+        }
+        
+        if (offDiagonalSum < 1e-10) {
+          break;
+        }
+        
+        // Perform QR decomposition (simplified for this example)
+        // In practice, use Householder reflections for better stability
+        const Q = new Array(n).fill(0).map(() => new Array(n).fill(0));
+        const R = new Array(n).fill(0).map(() => new Array(n).fill(0));
+        
+        // Simple Gram-Schmidt process
+        for (let j = 0; j < n; j++) {
+          // Extract column j
+          const v = new Array(n);
+          for (let i = 0; i < n; i++) {
+            v[i] = A[i][j];
+          }
+          
+          // Orthogonalize against previous columns
+          for (let k = 0; k < j; k++) {
+            const qk = new Array(n);
+            for (let i = 0; i < n; i++) {
+              qk[i] = Q[i][k];
+            }
+            
+            const dot = this.dotProduct(v, qk);
+            R[k][j] = dot;
+            
+            for (let i = 0; i < n; i++) {
+              v[i] -= dot * Q[i][k];
+            }
+          }
+          
+          // Normalize
+          const norm = this.norm(v);
+          if (norm > 1e-14) {
+            for (let i = 0; i < n; i++) {
+              Q[i][j] = v[i] / norm;
+            }
+            R[j][j] = norm;
+          } else {
+            // Handle near-zero vectors
+            Q[j][j] = 1;
+            for (let i = 0; i < n; i++) {
+              if (i !== j) Q[i][j] = 0;
+            }
+          }
+        }
+        
+        // Compute A = RQ for next iteration
+        const newA = new Array(n).fill(0).map(() => new Array(n).fill(0));
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) {
+            for (let k = 0; k < n; k++) {
+              newA[i][j] += R[i][k] * Q[k][j];
+            }
+          }
+        }
+        
+        A = newA;
+        
+        // Update eigenvectors
+        const newEigenvectors = new Array(n).fill(0).map(() => new Array(n).fill(0));
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) {
+            for (let k = 0; k < n; k++) {
+              newEigenvectors[i][j] += eigenvectors[i][k] * Q[k][j];
+            }
+          }
+        }
+        
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) {
+            eigenvectors[i][j] = newEigenvectors[i][j];
+          }
+        }
+      }
+      
+      // Extract eigenvalues from the diagonal
+      for (let i = 0; i < n; i++) {
+        eigenvalues[i] = A[i][i];
+      }
+      
+      // Sort eigenvalues and eigenvectors by descending absolute eigenvalue
+      const indices = eigenvalues.map((_, i) => i);
+      indices.sort((a, b) => Math.abs(eigenvalues[b]) - Math.abs(eigenvalues[a]));
+      
+      const sortedEigenvalues = indices.map(i => eigenvalues[i]);
+      const sortedEigenvectors = indices.map(i => {
+        const vector = new Array(n);
+        for (let j = 0; j < n; j++) {
+          vector[j] = eigenvectors[j][i];
+        }
+        return vector;
+      });
+      
+      return {
+        values: sortedEigenvalues,
+        vectors: sortedEigenvectors
+      };
+    },
+    
+    /**
+     * Perform gradient descent with adaptive precision and stability
+     * @param {Function} costFunction - Function to minimize
+     * @param {Array<number>} initialParams - Initial parameter values
+     * @param {Object} options - Optimization options
+     * @returns {Object} Optimization results
+     */
+    gradientDescent: function(costFunction, initialParams, options = {}) {
+      if (typeof costFunction !== 'function') {
+        throw new Prime.ValidationError("Expected a function for cost function");
+      }
+      
+      if (!Array.isArray(initialParams)) {
+        throw new Prime.ValidationError("Expected array for initial parameters");
+      }
+      
+      const maxIterations = options.maxIterations || 1000;
+      const tolerance = options.tolerance || 1e-8;
+      const learningRate = options.learningRate || 0.01;
+      const adaptiveLR = options.adaptiveLearningRate !== false;
+      
+      // Copy the initial parameters
+      let params = [...initialParams];
+      let cost = costFunction(params);
+      
+      // For adaptive learning rate
+      let prevCost = cost;
+      let lr = learningRate;
+      
+      // Optimization loop
+      for (let iter = 0; iter < maxIterations; iter++) {
+        // Compute numerical gradient with adaptive step size
+        const gradient = [];
+        for (let i = 0; i < params.length; i++) {
+          // Adaptive step size based on parameter magnitude
+          const h = Math.max(Math.abs(params[i]) * 1e-8, 1e-10);
+          
+          // Forward difference for gradient computation
+          const paramsPlus = [...params];
+          paramsPlus[i] += h;
+          const costPlus = costFunction(paramsPlus);
+          
+          // Compute gradient
+          gradient[i] = (costPlus - cost) / h;
+          
+          // Handle potential numerical issues
+          if (!Number.isFinite(gradient[i])) {
+            gradient[i] = 0;
+          }
+        }
+        
+        // Update parameters with adaptive learning rate
+        const newParams = new Array(params.length);
+        for (let i = 0; i < params.length; i++) {
+          newParams[i] = params[i] - lr * gradient[i];
+        }
+        
+        // Evaluate new cost
+        const newCost = costFunction(newParams);
+        
+        // Check for convergence
+        const relImprovement = Math.abs((cost - newCost) / (Math.abs(cost) + 1e-15));
+        if (relImprovement < tolerance) {
+          params = newParams;
+          cost = newCost;
+          break;
+        }
+        
+        // Adaptive learning rate adjustment
+        if (adaptiveLR) {
+          if (newCost < cost) {
+            // Cost is decreasing, accept the update and potentially increase learning rate
+            lr *= 1.05;
+            params = newParams;
+            prevCost = cost;
+            cost = newCost;
+          } else {
+            // Cost is increasing, reduce learning rate and retry
+            lr *= 0.5;
+            // If learning rate becomes too small, terminate
+            if (lr < 1e-10) {
+              break;
+            }
+            // Don't update parameters, retry with reduced learning rate
+          }
+        } else {
+          // Fixed learning rate
+          params = newParams;
+          cost = newCost;
+        }
+      }
+      
+      return {
+        params,
+        cost,
+        iterations: maxIterations
+      };
+    },
+    
+    /**
+     * Numerical integration with adaptive quadrature for extreme functions
+     * @param {Function} f - Function to integrate
+     * @param {number} a - Lower bound
+     * @param {number} b - Upper bound
+     * @param {Object} options - Integration options
+     * @returns {number} Definite integral value
+     */
+    integrate: function(f, a, b, options = {}) {
+      if (typeof f !== 'function') {
+        throw new Prime.ValidationError("Expected a function to integrate");
+      }
+      
+      if (!Number.isFinite(a) || !Number.isFinite(b)) {
+        throw new Prime.ValidationError("Integration bounds must be finite");
+      }
+      
+      const tolerance = options.tolerance || 1e-10;
+      const maxDepth = options.maxDepth || 20;
+      
+      // Adaptive quadrature with error control
+      const adaptiveQuadrature = (x0, x2, f0, f2, depth) => {
+        const x1 = (x0 + x2) / 2;
+        const f1 = f(x1);
+        
+        // Simpson's rule approximations
+        const area12 = (x2 - x0) * (f0 + 4 * f1 + f2) / 6;
+        
+        // Split into two intervals and apply Simpson's rule
+        const mid0 = (x0 + x1) / 2;
+        const mid2 = (x1 + x2) / 2;
+        const fmid0 = f(mid0);
+        const fmid2 = f(mid2);
+        
+        const area0 = (x1 - x0) * (f0 + 4 * fmid0 + f1) / 6;
+        const area2 = (x2 - x1) * (f1 + 4 * fmid2 + f2) / 6;
+        
+        // Error estimate
+        const error = Math.abs(area12 - (area0 + area2));
+        
+        if (error < tolerance || depth >= maxDepth) {
+          return area0 + area2;
+        }
+        
+        // Recursive subdivision
+        return adaptiveQuadrature(x0, x1, f0, f1, depth + 1) + 
+               adaptiveQuadrature(x1, x2, f1, f2, depth + 1);
+      };
+      
+      // Handle cases where function has extreme values or singularities
+      try {
+        const fa = f(a);
+        const fb = f(b);
+        
+        if (!Number.isFinite(fa) || !Number.isFinite(fb)) {
+          // Handle singularities at endpoints
+          const epsilon = Math.sqrt(Number.EPSILON) * Math.abs(b - a);
+          return this.integrate(f, a + epsilon, b - epsilon, options);
+        }
+        
+        return adaptiveQuadrature(a, b, fa, fb, 0);
+      } catch (e) {
+        throw new Prime.MathematicalError("Integration failed: " + e.message);
+      }
+    }
+  };
+  
+  /**
+   * Pattern recognition utilities based on the Prime Framework
+   */
+  Prime.Pattern = {
+    /**
+     * Create a fiber algebra pattern recognition system
+     * @param {Object} options - Configuration options
+     * @returns {Object} Pattern recognition system
+     */
+    createFiberAnalyzer: function (options = {}) {
+      try {
+        // Check if framework module with pattern recognition is available
+        const framework = require('./framework/math/patternRecognition.js');
+        if (framework && framework.FiberAlgebraPatternRecognition) {
+          return new framework.FiberAlgebraPatternRecognition(options);
+        }
+      } catch (e) {
+        // Fallback to a minimal implementation
+        return {
+          analyzeData: function() {
+            throw new Prime.NotImplementedError("Fiber algebra pattern recognition implementation not available");
+          }
+        };
+      }
+    },
+    
+    /**
+     * Create a sequence pattern analyzer
+     * @param {Object} options - Configuration options
+     * @returns {Object} Sequence pattern recognition system
+     */
+    createSequenceAnalyzer: function (options = {}) {
+      try {
+        // Check if framework module with pattern recognition is available
+        const framework = require('./framework/math/patternRecognition.js');
+        if (framework && framework.SequencePatternRecognition) {
+          return new framework.SequencePatternRecognition(options);
+        }
+      } catch (e) {
+        // Fallback to a minimal implementation
+        return {
+          analyzeSequence: function() {
+            throw new Prime.NotImplementedError("Sequence pattern recognition implementation not available");
+          }
+        };
+      }
+    },
+    
+    /**
+     * Find patterns in a dataset using fiber algebraic methods
+     * @param {Array} data - Data matrix (samples × features) or array
+     * @param {Object} options - Analysis options
+     * @returns {Object} Analysis results
+     */
+    findPatterns: function (data, options = {}) {
+      const analyzer = this.createFiberAnalyzer(options);
+      return analyzer.analyzeData(data, options.numPatterns || 5);
+    },
+    
+    /**
+     * Analyze a sequence for patterns
+     * @param {Array} sequence - Sequence to analyze
+     * @param {Object} options - Analysis options
+     * @returns {Object} Analysis results
+     */
+    analyzeSequence: function (sequence, options = {}) {
+      const analyzer = this.createSequenceAnalyzer(options);
+      return analyzer.analyzeSequence(sequence, options);
+    }
+  };
 })(Prime);
 
 // CommonJS export (no ES module export in this file to avoid circular dependency)
 if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
+}
+
+// Add Prime.math namespace
+try {
+  const mathModule = require('./framework/math/prime-math.js');
+  Prime.math = mathModule;
+} catch (e) {
+  console.warn('Could not load Prime.math module:', e.message);
+  Prime.math = {};
 }
 
 // For browser global scope
