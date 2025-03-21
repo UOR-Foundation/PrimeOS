@@ -10,8 +10,9 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "jest --config jest.config.js --testPathIgnorePatterns=tests/integration-tests.js,tests/extreme-conditions-tests.js",
+    "test": "jest --config jest.config.js --testPathIgnorePatterns=tests/integration-tests.js,tests/extreme-conditions-tests.js,tests/uor-verification-tests.js",
     "test:extreme": "jest --config jest.config.js tests/extreme-conditions-tests.js",
+    "test:uor": "jest --config jest.config.js tests/uor-verification-tests.js",
     "test:integration": "node tests/integration-tests.js",
     "test:browser": "node run-browser-tests.js",
     "test:all": "npm test && npm run test:integration && npm run test:browser",

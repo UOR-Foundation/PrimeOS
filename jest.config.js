@@ -7,6 +7,12 @@ module.exports = {
     testMatch: [
       '**/tests/*-tests.js'
     ],
+    testPathIgnorePatterns: [
+      '/node_modules/',
+      'tests/integration-tests.js',
+      'tests/extreme-conditions-tests.js',
+      'tests/uor-verification-tests.js'
+    ],
     collectCoverage: true,
     coverageReporters: [
       'lcov',
