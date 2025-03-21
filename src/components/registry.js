@@ -12,8 +12,7 @@ require('../coherence.js');
 require('../framework/index.js');
 require('./base.js');
 
-(function(Prime) {
-
+(function (Prime) {
   /**
    * Component Registry for tracking and managing components
    */
@@ -28,15 +27,19 @@ require('./base.js');
      * @param {Object} component - Component to register
      * @returns {boolean} Success
      */
-    register: function(component) {
+    register: function (component) {
       if (!component || !component.meta || !component.meta.id) {
-        throw new Prime.ValidationError('Component must have a meta.id property');
+        throw new Prime.ValidationError(
+          'Component must have a meta.id property',
+        );
       }
 
       const id = component.meta.id;
 
       if (this.components.has(id)) {
-        throw new Prime.InvalidOperationError(`Component with ID ${id} is already registered`);
+        throw new Prime.InvalidOperationError(
+          `Component with ID ${id} is already registered`,
+        );
       }
 
       this.components.set(id, component);
@@ -52,8 +55,10 @@ require('./base.js');
      * @param {Object|string} component - Component or component ID
      * @returns {boolean} Success
      */
-    unregister: function(component) {
-      const id = Prime.Utils.isString(component) ? component : component.meta.id;
+    unregister: function (component) {
+      const id = Prime.Utils.isString(component)
+        ? component
+        : component.meta.id;
 
       if (!this.components.has(id)) {
         return false;
@@ -63,7 +68,9 @@ require('./base.js');
       this.components.delete(id);
 
       // Publish unregistration event
-      Prime.EventBus.publish('component:unregistered', { component: removedComponent });
+      Prime.EventBus.publish('component:unregistered', {
+        component: removedComponent,
+      });
 
       return true;
     },
@@ -73,7 +80,7 @@ require('./base.js');
      * @param {string} id - Component ID
      * @returns {Object|undefined} Component
      */
-    get: function(id) {
+    get: function (id) {
       return this.components.get(id);
     },
 
@@ -82,8 +89,10 @@ require('./base.js');
      * @param {Object|string} component - Component or component ID
      * @returns {boolean} True if component is registered
      */
-    has: function(component) {
-      const id = Prime.Utils.isString(component) ? component : component.meta.id;
+    has: function (component) {
+      const id = Prime.Utils.isString(component)
+        ? component
+        : component.meta.id;
       return this.components.has(id);
     },
 
@@ -91,7 +100,7 @@ require('./base.js');
      * Get all registered components
      * @returns {Array} All components
      */
-    getAll: function() {
+    getAll: function () {
       return Array.from(this.components.values());
     },
 
@@ -100,7 +109,7 @@ require('./base.js');
      * @param {Function} predicate - Filter function
      * @returns {Array} Matching components
      */
-    find: function(predicate) {
+    find: function (predicate) {
       return this.getAll().filter(predicate);
     },
 
@@ -108,7 +117,7 @@ require('./base.js');
      * Count registered components
      * @returns {number} Component count
      */
-    count: function() {
+    count: function () {
       return this.components.size;
     },
 
@@ -116,11 +125,11 @@ require('./base.js');
      * Clear all registered components
      * @returns {number} Number of components cleared
      */
-    clear: function() {
+    clear: function () {
       const count = this.components.size;
       this.components.clear();
       return count;
-    }
+    },
   };
 
   // Export ComponentRegistry to Prime
@@ -128,7 +137,6 @@ require('./base.js');
 
   // Publish component module loaded event
   Prime.EventBus.publish('module:loaded', { name: 'component-registry' });
-
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)

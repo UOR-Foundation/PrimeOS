@@ -4,8 +4,8 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
+const Prime = require("../../core.js");
+const MathUtils = require("../math");
 
 /**
  * Observation Model - Handles data retrieval and monitoring
@@ -16,19 +16,19 @@ const ObservationModel = {
    * @param {Object} config - Configuration object
    * @returns {Object} Observation model
    */
-  create: function(config = {}) {
+  create: function (config = {}) {
     return {
-      type: 'observation',
+      type: "observation",
       sources: config.sources || [],
       filters: config.filters || [],
-      name: config.name || 'ObservationModel',
+      name: config.name || "ObservationModel",
 
       /**
        * Resolve a reference to an object
        * @param {Object|string} reference - Reference to resolve
        * @returns {*} Resolved object
        */
-      resolve: function(reference) {
+      resolve: function (reference) {
         // Handle UOR references
         if (Prime.UOR && Prime.UOR.isReference(reference)) {
           // This is a placeholder - in a real implementation, we would
@@ -37,9 +37,9 @@ const ObservationModel = {
         }
 
         // Handle string identifiers
-        if (typeof reference === 'string') {
+        if (typeof reference === "string") {
           // Look for a source with this identifier
-          const source = this.sources.find(s => s.id === reference);
+          const source = this.sources.find((s) => s.id === reference);
 
           if (source) {
             return source.data;
@@ -59,7 +59,7 @@ const ObservationModel = {
        * @param {boolean} [options.descending] - Whether to sort in descending order
        * @returns {Object} Fetch results with data and metadata
        */
-      fetch: function(query, options = {}) {
+      fetch: function (query, options = {}) {
         // Validate inputs
         if (!query) {
           return {
@@ -70,8 +70,8 @@ const ObservationModel = {
               filtered: 0,
               limit: options.limit || null,
               offset: options.offset || 0,
-              truncated: false
-            }
+              truncated: false,
+            },
           };
         }
 
@@ -84,19 +84,19 @@ const ObservationModel = {
           truncated: false,
           executionTime: Date.now(),
           sortingError: null,
-          filterErrors: []
+          filterErrors: [],
         };
 
         // Create a type-safe query function
         const createQueryMatcher = (query) => {
           // If query is already a function, return it
-          if (typeof query === 'function') {
+          if (typeof query === "function") {
             return query;
           }
 
           // Create a matcher function for object queries
           return (item) => {
-            if (!item || typeof item !== 'object') {
+            if (!item || typeof item !== "object") {
               return false;
             }
 
@@ -117,15 +117,22 @@ const ObservationModel = {
 
               // Handle regular expressions
               if (query[key] instanceof RegExp) {
-                if (typeof item[key] !== 'string' || !query[key].test(item[key])) {
+                if (
+                  typeof item[key] !== "string" ||
+                  !query[key].test(item[key])
+                ) {
                   return false;
                 }
                 continue;
               }
 
               // Handle nested objects recursively
-              if (typeof query[key] === 'object' && query[key] !== null &&
-                  typeof item[key] === 'object' && item[key] !== null) {
+              if (
+                typeof query[key] === "object" &&
+                query[key] !== null &&
+                typeof item[key] === "object" &&
+                item[key] !== null
+              ) {
                 const nestedMatcher = createQueryMatcher(query[key]);
                 if (!nestedMatcher(item[key])) {
                   return false;
@@ -157,17 +164,19 @@ const ObservationModel = {
 
             try {
               // Use native query if available
-              if (typeof source.query === 'function') {
+              if (typeof source.query === "function") {
                 const sourceResults = source.query(query);
 
                 if (Array.isArray(sourceResults)) {
                   const resultCount = sourceResults.length;
                   meta.sourceCounts[source.id] = resultCount;
                   meta.total += resultCount;
-                  candidates = candidates.concat(sourceResults.map(item => ({
-                    item,
-                    source: source.id
-                  })));
+                  candidates = candidates.concat(
+                    sourceResults.map((item) => ({
+                      item,
+                      source: source.id,
+                    })),
+                  );
                 }
               }
               // Otherwise, filter the source data if it's an array
@@ -186,7 +195,10 @@ const ObservationModel = {
                   filtered.push(...matchingItems);
 
                   // Early exit for queries with a limit to optimize performance
-                  if (options.limit && candidates.length + filtered.length >= options.limit) {
+                  if (
+                    options.limit &&
+                    candidates.length + filtered.length >= options.limit
+                  ) {
                     meta.truncated = true;
                     break;
                   }
@@ -197,10 +209,12 @@ const ObservationModel = {
                 meta.total += sourceLength;
                 meta.filtered += resultCount;
 
-                candidates = candidates.concat(filtered.map(item => ({
-                  item,
-                  source: source.id
-                })));
+                candidates = candidates.concat(
+                  filtered.map((item) => ({
+                    item,
+                    source: source.id,
+                  })),
+                );
               }
             } catch (error) {
               // Log error but continue with other sources for robustness
@@ -212,9 +226,9 @@ const ObservationModel = {
             }
           }
         } catch (error) {
-          Prime.Logger.error('Unexpected error in fetch:', error);
-          throw new Prime.InvalidOperationError('Error fetching data', {
-            context: { error: error.message }
+          Prime.Logger.error("Unexpected error in fetch:", error);
+          throw new Prime.InvalidOperationError("Error fetching data", {
+            context: { error: error.message },
           });
         }
 
@@ -250,50 +264,67 @@ const ObservationModel = {
               }
 
               // Handle NaN values similarly to null/undefined
-              if (typeof valueA === 'number' && isNaN(valueA)) {
+              if (typeof valueA === "number" && isNaN(valueA)) {
                 return options.descending ? -1 : 1;
               }
-              if (typeof valueB === 'number' && isNaN(valueB)) {
+              if (typeof valueB === "number" && isNaN(valueB)) {
                 return options.descending ? 1 : -1;
               }
 
               // Type-specific stable comparisons
-              if (typeof valueA === 'string' && typeof valueB === 'string') {
+              if (typeof valueA === "string" && typeof valueB === "string") {
                 return sortMultiplier * valueA.localeCompare(valueB);
-              } else if (typeof valueA === 'number' && typeof valueB === 'number') {
+              } else if (
+                typeof valueA === "number" &&
+                typeof valueB === "number"
+              ) {
                 // Handle special cases in floating point comparisons
-                if (Math.abs(valueA - valueB) < MathUtils.CONSTANTS.EPSILON_GENERAL) {
+                if (
+                  Math.abs(valueA - valueB) <
+                  MathUtils.CONSTANTS.EPSILON_GENERAL
+                ) {
                   return 0; // Consider nearly equal values as equal
                 }
                 return sortMultiplier * (valueA - valueB);
               } else if (valueA instanceof Date && valueB instanceof Date) {
                 return sortMultiplier * (valueA.getTime() - valueB.getTime());
-              } else if (typeof valueA === 'boolean' && typeof valueB === 'boolean') {
-                return sortMultiplier * (valueA === valueB ? 0 : (valueA ? 1 : -1));
+              } else if (
+                typeof valueA === "boolean" &&
+                typeof valueB === "boolean"
+              ) {
+                return (
+                  sortMultiplier * (valueA === valueB ? 0 : valueA ? 1 : -1)
+                );
               } else {
                 // Convert to string for default comparison
-                return sortMultiplier * String(valueA).localeCompare(String(valueB));
+                return (
+                  sortMultiplier * String(valueA).localeCompare(String(valueB))
+                );
               }
             });
           } catch (error) {
-            Prime.Logger.warn(`Sorting error: ${error.message}. Results will be returned unsorted.`);
+            Prime.Logger.warn(
+              `Sorting error: ${error.message}. Results will be returned unsorted.`,
+            );
             meta.sortingError = error.message;
           }
         }
 
         // Apply filters in sequence
-        let results = candidates.map(c => c.item);
+        let results = candidates.map((c) => c.item);
 
         for (const filter of this.filters) {
           try {
-            if (typeof filter === 'function') {
+            if (typeof filter === "function") {
               results = filter(results, query);
-            } else if (filter && typeof filter.apply === 'function') {
+            } else if (filter && typeof filter.apply === "function") {
               results = filter.apply(results, query);
             }
 
             if (!Array.isArray(results)) {
-              Prime.Logger.error(`Filter returned non-array result: ${typeof results}`);
+              Prime.Logger.error(
+                `Filter returned non-array result: ${typeof results}`,
+              );
               results = [];
               break;
             }
@@ -309,16 +340,21 @@ const ObservationModel = {
         // Apply pagination with bounds checking
         if (options.offset || options.limit) {
           const offset = Math.max(0, options.offset || 0);
-          
+
           // Ensure offset is valid
           if (offset < results.length) {
-            results = results.slice(offset, options.limit ? offset + options.limit : undefined);
+            results = results.slice(
+              offset,
+              options.limit ? offset + options.limit : undefined,
+            );
           } else {
             results = [];
           }
 
           // Update truncation status
-          meta.truncated = meta.truncated || (totalResults > (offset + (options.limit || totalResults)));
+          meta.truncated =
+            meta.truncated ||
+            totalResults > offset + (options.limit || totalResults);
         }
 
         // Complete the metadata
@@ -334,8 +370,8 @@ const ObservationModel = {
             meta: {
               ...meta,
               limit: options.limit || null,
-              offset: options.offset || 0
-            }
+              offset: options.offset || 0,
+            },
           };
         }
       },
@@ -346,17 +382,22 @@ const ObservationModel = {
        * @param {Object} options - Observation options
        * @returns {Object} Subscription object
        */
-      observe: function(sourceId, options = {}) {
-        const source = this.sources.find(s => s.id === sourceId);
+      observe: function (sourceId, options = {}) {
+        const source = this.sources.find((s) => s.id === sourceId);
 
         if (!source) {
-          throw new Prime.InvalidOperationError(`Source ${sourceId} not found`, {
-            context: { availableSources: this.sources.map(s => s.id) }
-          });
+          throw new Prime.InvalidOperationError(
+            `Source ${sourceId} not found`,
+            {
+              context: { availableSources: this.sources.map((s) => s.id) },
+            },
+          );
         }
 
-        if (typeof source.subscribe !== 'function') {
-          throw new Prime.InvalidOperationError(`Source ${sourceId} does not support subscription`);
+        if (typeof source.subscribe !== "function") {
+          throw new Prime.InvalidOperationError(
+            `Source ${sourceId} does not support subscription`,
+          );
         }
 
         return source.subscribe(options);
@@ -367,9 +408,9 @@ const ObservationModel = {
        * @param {Object} source - Data source to add
        * @returns {Object} Updated observation model
        */
-      addSource: function(source) {
+      addSource: function (source) {
         if (!source.id) {
-          throw new Prime.ValidationError('Source must have an id property');
+          throw new Prime.ValidationError("Source must have an id property");
         }
 
         this.sources.push(source);
@@ -381,7 +422,7 @@ const ObservationModel = {
        * @param {Function|Object} filter - Filter to add
        * @returns {Object} Updated observation model
        */
-      addFilter: function(filter) {
+      addFilter: function (filter) {
         this.filters.push(filter);
         return this;
       },
@@ -391,12 +432,12 @@ const ObservationModel = {
        * @param {Object} base0 - Base 0 components
        * @returns {Object} Connected observation model
        */
-      connectToBase0: function(base0) {
+      connectToBase0: function (base0) {
         this._base0 = base0;
         return this;
-      }
+      },
     };
-  }
+  },
 };
 
 module.exports = ObservationModel;

@@ -12,8 +12,7 @@ require('../coherence.js');
 require('../framework/index.js');
 require('./base.js');
 
-(function(Prime) {
-
+(function (Prime) {
   /**
    * Enhanced rendering system with cross-platform support
    */
@@ -31,7 +30,7 @@ require('./base.js');
       interactive: false,
       dimensions: [300, 300],
       animate: false,
-      theme: 'light'
+      theme: 'light',
     },
 
     /**
@@ -41,7 +40,7 @@ require('./base.js');
      * @param {Object} options - Rendering options
      * @returns {Element} Updated element
      */
-    toDOM: function(object, element, options = {}) {
+    toDOM: function (object, element, options = {}) {
       if (!element) {
         throw new Prime.ValidationError('DOM element is required');
       }
@@ -56,9 +55,17 @@ require('./base.js');
           if (typeof object.invariant.render === 'function') {
             return object.invariant.render.call(object, element, mergedOptions);
           } else if (typeof object.invariant.renderDOM === 'function') {
-            return object.invariant.renderDOM.call(object, element, mergedOptions);
+            return object.invariant.renderDOM.call(
+              object,
+              element,
+              mergedOptions,
+            );
           } else if (typeof object.invariant.renderToDOM === 'function') {
-            return object.invariant.renderToDOM.call(object, element, mergedOptions);
+            return object.invariant.renderToDOM.call(
+              object,
+              element,
+              mergedOptions,
+            );
           } else if (typeof object.render === 'function') {
             return object.render(element, mergedOptions);
           }
@@ -78,7 +85,11 @@ require('./base.js');
       }
 
       // Handle different object types
-      if (Prime.Clifford && Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(object)) {
+      if (
+        Prime.Clifford &&
+        Prime.Clifford.isMultivector &&
+        Prime.Clifford.isMultivector(object)
+      ) {
         return this._renderMultivector(object, element, mergedOptions);
       }
 
@@ -109,7 +120,7 @@ require('./base.js');
      * @param {Object} options - Rendering options
      * @returns {CanvasRenderingContext2D} Updated context
      */
-    toCanvas: function(object, ctx, options = {}) {
+    toCanvas: function (object, ctx, options = {}) {
       if (!ctx) {
         throw new Prime.ValidationError('Canvas context is required');
       }
@@ -118,8 +129,10 @@ require('./base.js');
       const mergedOptions = { ...this.defaultOptions, ...options };
 
       // Set up dimensions
-      const width = mergedOptions.dimensions[0] || (ctx.canvas ? ctx.canvas.width : 300);
-      const height = mergedOptions.dimensions[1] || (ctx.canvas ? ctx.canvas.height : 150);
+      const width =
+        mergedOptions.dimensions[0] || (ctx.canvas ? ctx.canvas.width : 300);
+      const height =
+        mergedOptions.dimensions[1] || (ctx.canvas ? ctx.canvas.height : 150);
 
       // Clear canvas if method exists
       if (ctx.clearRect) {
@@ -131,12 +144,23 @@ require('./base.js');
         try {
           // Check for various rendering method names
           if (typeof object.invariant.renderCanvas === 'function') {
-            return object.invariant.renderCanvas.call(object, ctx, mergedOptions);
+            return object.invariant.renderCanvas.call(
+              object,
+              ctx,
+              mergedOptions,
+            );
           } else if (typeof object.invariant.renderToCanvas === 'function') {
-            return object.invariant.renderToCanvas.call(object, ctx, mergedOptions);
+            return object.invariant.renderToCanvas.call(
+              object,
+              ctx,
+              mergedOptions,
+            );
           } else if (typeof object.renderCanvas === 'function') {
             return object.renderCanvas(ctx, mergedOptions);
-          } else if (typeof object.invariant.render === 'function' && mergedOptions.target === 'canvas') {
+          } else if (
+            typeof object.invariant.render === 'function' &&
+            mergedOptions.target === 'canvas'
+          ) {
             return object.invariant.render.call(object, ctx, mergedOptions);
           }
         } catch (error) {
@@ -155,7 +179,11 @@ require('./base.js');
       }
 
       // Handle different object types
-      if (Prime.Clifford && Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(object)) {
+      if (
+        Prime.Clifford &&
+        Prime.Clifford.isMultivector &&
+        Prime.Clifford.isMultivector(object)
+      ) {
         return this._renderMultivectorCanvas(object, ctx, mergedOptions);
       }
 
@@ -163,7 +191,11 @@ require('./base.js');
         return this._renderArrayCanvas(object, ctx, mergedOptions);
       }
 
-      if (Prime.Lie && Prime.Lie.isGroupElement && Prime.Lie.isGroupElement(object)) {
+      if (
+        Prime.Lie &&
+        Prime.Lie.isGroupElement &&
+        Prime.Lie.isGroupElement(object)
+      ) {
         return this._renderTransformationCanvas(object, ctx, mergedOptions);
       }
 
@@ -182,7 +214,7 @@ require('./base.js');
      * @param {Object} options - Rendering options
      * @returns {WebGLRenderingContext} Updated context
      */
-    toWebGL: function(object, gl, options = {}) {
+    toWebGL: function (object, gl, options = {}) {
       if (!gl) {
         throw new Prime.ValidationError('WebGL context is required');
       }
@@ -195,7 +227,12 @@ require('./base.js');
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       // If object is a component, use its renderer if available
-      if (object && object.meta && object.invariant && object.invariant.renderWebGL) {
+      if (
+        object &&
+        object.meta &&
+        object.invariant &&
+        object.invariant.renderWebGL
+      ) {
         return object.invariant.renderWebGL(gl, mergedOptions);
       }
 
@@ -208,13 +245,17 @@ require('./base.js');
       }
 
       // Handle different object types
-      if (Prime.Clifford && Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(object)) {
+      if (
+        Prime.Clifford &&
+        Prime.Clifford.isMultivector &&
+        Prime.Clifford.isMultivector(object)
+      ) {
         return this._renderMultivectorWebGL(object, gl, mergedOptions);
       }
 
       // Fallback - do nothing and return the context
       Prime.Logger.warn('No WebGL renderer available for object', {
-        objectType
+        objectType,
       });
 
       return gl;
@@ -226,12 +267,17 @@ require('./base.js');
      * @param {Object} options - Rendering options
      * @returns {string} SVG markup
      */
-    toSVG: function(object, options = {}) {
+    toSVG: function (object, options = {}) {
       // Merge options with defaults
       const mergedOptions = { ...this.defaultOptions, ...options };
 
       // If object is a component, use its renderer if available
-      if (object && object.meta && object.invariant && object.invariant.renderSVG) {
+      if (
+        object &&
+        object.meta &&
+        object.invariant &&
+        object.invariant.renderSVG
+      ) {
         return object.invariant.renderSVG(mergedOptions);
       }
 
@@ -244,7 +290,11 @@ require('./base.js');
       }
 
       // Handle different object types
-      if (Prime.Clifford && Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(object)) {
+      if (
+        Prime.Clifford &&
+        Prime.Clifford.isMultivector &&
+        Prime.Clifford.isMultivector(object)
+      ) {
         return this._renderMultivectorSVG(object, mergedOptions);
       }
 
@@ -269,7 +319,7 @@ require('./base.js');
      * @param {Function} rendererFn - Renderer function
      * @returns {boolean} Success
      */
-    registerRenderer: function(targetType, objectType, rendererFn) {
+    registerRenderer: function (targetType, objectType, rendererFn) {
       if (!Prime.Utils.isString(targetType)) {
         throw new Prime.ValidationError('Target type must be a string');
       }
@@ -293,80 +343,82 @@ require('./base.js');
      * @param {Object} options - Rendering options
      * @returns {Array} Array of updated elements
      */
-    batchRender: function(components, elements, options = {}) {
+    batchRender: function (components, elements, options = {}) {
       if (!Array.isArray(components)) {
         throw new Prime.ValidationError('Components must be an array');
       }
-      
+
       if (!Array.isArray(elements)) {
         throw new Prime.ValidationError('Elements must be an array');
       }
-      
+
       if (components.length !== elements.length) {
-        throw new Prime.ValidationError('Components and elements arrays must have the same length');
+        throw new Prime.ValidationError(
+          'Components and elements arrays must have the same length',
+        );
       }
-      
+
       // Merge options with defaults
       const mergedOptions = { ...this.defaultOptions, ...options };
-      
+
       // Render each component in parallel
       const results = [];
       for (let i = 0; i < components.length; i++) {
         results.push(this.toDOM(components[i], elements[i], mergedOptions));
       }
-      
+
       return results;
     },
-    
+
     /**
      * Enable or disable rendering caching
      * @param {boolean} enable - Whether to enable caching
      * @returns {boolean} Caching status
      */
-    enableCaching: function(enable) {
+    enableCaching: function (enable) {
       this._cacheEnabled = enable === true;
-      
+
       // Clear cache when disabling
       if (!this._cacheEnabled) {
         this._clearCache();
       }
-      
+
       return this._cacheEnabled;
     },
-    
+
     /**
      * Check if caching is enabled
      * @returns {boolean} Whether caching is enabled
      */
-    isCachingEnabled: function() {
+    isCachingEnabled: function () {
       return this._cacheEnabled === true;
     },
-    
+
     /**
      * Clear the render cache
      * @private
      */
-    _clearCache: function() {
+    _clearCache: function () {
       this._renderCache = new Map();
     },
-    
+
     /**
      * Initialize cache if not already done
      * @private
      */
-    _initCache: function() {
+    _initCache: function () {
       if (!this._renderCache) {
         this._renderCache = new Map();
       }
     },
-    
+
     /**
      * Create animation frames
      * @param {Function} renderFn - Render function
      * @param {Object} options - Animation options
      * @returns {Object} Animation controller
      */
-    animate: function(renderFn, options = {}) {
+    animate: function (renderFn, options = {}) {
       if (!Prime.Utils.isFunction(renderFn)) {
         throw new Prime.ValidationError('Render function is required');
       }
@@ -374,9 +426,9 @@ require('./base.js');
       const mergedOptions = {
         duration: options.duration || 1000,
         fps: options.fps || 60,
-        easing: options.easing || (t => t),
+        easing: options.easing || ((t) => t),
         onComplete: options.onComplete || (() => {}),
-        onFrame: options.onFrame || (() => {})
+        onFrame: options.onFrame || (() => {}),
       };
 
       let startTime = null;
@@ -384,7 +436,7 @@ require('./base.js');
       let isRunning = false;
 
       const controller = {
-        start: function() {
+        start: function () {
           if (isRunning) return;
 
           isRunning = true;
@@ -413,7 +465,7 @@ require('./base.js');
           return this;
         },
 
-        stop: function() {
+        stop: function () {
           if (!isRunning) return;
 
           if (animationId) {
@@ -425,15 +477,15 @@ require('./base.js');
           return this;
         },
 
-        isRunning: function() {
+        isRunning: function () {
           return isRunning;
         },
 
-        restart: function() {
+        restart: function () {
           this.stop();
           this.start();
           return this;
-        }
+        },
       };
 
       return controller;
@@ -445,7 +497,7 @@ require('./base.js');
      * @param {*} object - Object to render
      * @returns {string} Object type
      */
-    _getObjectType: function(object) {
+    _getObjectType: function (object) {
       if (object === null) return 'null';
       if (object === undefined) return 'undefined';
 
@@ -455,11 +507,19 @@ require('./base.js');
       }
 
       // Check for specialized types
-      if (Prime.Clifford && Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(object)) {
+      if (
+        Prime.Clifford &&
+        Prime.Clifford.isMultivector &&
+        Prime.Clifford.isMultivector(object)
+      ) {
         return 'multivector';
       }
 
-      if (Prime.Lie && Prime.Lie.isGroupElement && Prime.Lie.isGroupElement(object)) {
+      if (
+        Prime.Lie &&
+        Prime.Lie.isGroupElement &&
+        Prime.Lie.isGroupElement(object)
+      ) {
         return 'lieGroupElement';
       }
 
@@ -475,8 +535,10 @@ require('./base.js');
       if (object instanceof Set) return 'set';
       if (object instanceof Promise) return 'promise';
       if (object instanceof Error) return 'error';
-      if (typeof HTMLElement !== 'undefined' && object instanceof HTMLElement) return 'htmlElement';
-      if (typeof SVGElement !== 'undefined' && object instanceof SVGElement) return 'svgElement';
+      if (typeof HTMLElement !== 'undefined' && object instanceof HTMLElement)
+        return 'htmlElement';
+      if (typeof SVGElement !== 'undefined' && object instanceof SVGElement)
+        return 'svgElement';
 
       // Primitive types
       if (typeof object === 'string') return 'string';
@@ -491,22 +553,22 @@ require('./base.js');
     // Implementations for rendering specific object types
     // These are stubs - in a real implementation, they would be more detailed
 
-    _renderMultivector: function(multivector, element, options) {
+    _renderMultivector: function (multivector, element, options) {
       element.textContent = `Multivector: ${JSON.stringify(multivector)}`;
       return element;
     },
 
-    _renderMultivectorCanvas: function(multivector, ctx, options) {
+    _renderMultivectorCanvas: function (multivector, ctx, options) {
       ctx.fillText(`Multivector: ${JSON.stringify(multivector)}`, 10, 20);
       return ctx;
     },
 
-    _renderMultivectorWebGL: function(multivector, gl, options) {
+    _renderMultivectorWebGL: function (multivector, gl, options) {
       // WebGL rendering would be complex - this is a placeholder
       return gl;
     },
 
-    _renderMultivectorSVG: function(multivector, options) {
+    _renderMultivectorSVG: function (multivector, options) {
       const width = options.dimensions[0] || 300;
       const height = options.dimensions[1] || 150;
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
@@ -514,7 +576,7 @@ require('./base.js');
       </svg>`;
     },
 
-    _renderArray: function(array, element, options) {
+    _renderArray: function (array, element, options) {
       if (options.mode === 'table') {
         const table = document.createElement('table');
         const tbody = document.createElement('tbody');
@@ -542,12 +604,12 @@ require('./base.js');
       return element;
     },
 
-    _renderArrayCanvas: function(array, ctx, options) {
+    _renderArrayCanvas: function (array, ctx, options) {
       ctx.fillText(JSON.stringify(array), 10, 20);
       return ctx;
     },
 
-    _renderArraySVG: function(array, options) {
+    _renderArraySVG: function (array, options) {
       const width = options.dimensions[0] || 300;
       const height = options.dimensions[1] || 150;
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
@@ -555,12 +617,12 @@ require('./base.js');
       </svg>`;
     },
 
-    _renderTransformationCanvas: function(transformation, ctx, options) {
+    _renderTransformationCanvas: function (transformation, ctx, options) {
       ctx.fillText(`Transformation: ${JSON.stringify(transformation)}`, 10, 20);
       return ctx;
     },
 
-    _renderObject: function(object, element, options) {
+    _renderObject: function (object, element, options) {
       if (options.mode === 'table') {
         const table = document.createElement('table');
         const tbody = document.createElement('tbody');
@@ -586,7 +648,7 @@ require('./base.js');
       }
 
       return element;
-    }
+    },
   };
 
   // Export render to Prime
@@ -594,7 +656,6 @@ require('./base.js');
 
   // Publish component module loaded event
   Prime.EventBus.publish('module:loaded', { name: 'component-rendering' });
-
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)

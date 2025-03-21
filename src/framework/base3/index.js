@@ -1,19 +1,19 @@
 /**
  * Base3 - Application Layer
- * 
- * This module provides the core functionality for user-space applications, 
+ *
+ * This module provides the core functionality for user-space applications,
  * including application lifecycle management, state management, UI components,
  * and interaction handlers.
  */
 
-const Prime = require('../../core');
+const Prime = require("../../core");
 const { Utils } = Prime;
 
 // Import internal modules
-const createApplication = require('./application');
-const createComponent = require('./component');
-const createFramework = require('./framework');
-const connectToBase2 = require('./connect');
+const createApplication = require("./application");
+const createComponent = require("./component");
+const createFramework = require("./framework");
+const connectToBase2 = require("./connect");
 
 /**
  * Initializes the Base3 application layer
@@ -27,27 +27,27 @@ function initialize(config = {}) {
      * @param {Object} options - Application options
      * @returns {Object} Application instance
      */
-    createApplication: function(options) {
+    createApplication: function (options) {
       return createApplication(options);
     },
-    
+
     /**
      * Create a new component
      * @param {Object} options - Component options
      * @returns {Object} Component instance
      */
-    createComponent: function(options) {
+    createComponent: function (options) {
       return createComponent(options);
     },
-    
+
     /**
      * Create framework utilities
      * @param {Object} options - Framework options
      * @returns {Object} Framework utilities
      */
-    createFramework: function(options) {
+    createFramework: function (options) {
       return createFramework(options);
-    }
+    },
   };
 }
 

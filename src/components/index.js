@@ -20,7 +20,7 @@ require('./rendering.js');
 require('./performance.js');
 require('./documentation.js');
 
-(function(Prime) {
+(function (Prime) {
   // Ensure Prime.Components namespace exists
   Prime.Components = Prime.Components || {};
 
@@ -35,7 +35,7 @@ require('./documentation.js');
     'template',
     'rendering',
     'performance',
-    'documentation'
+    'documentation',
   ];
 
   // Publish component system loaded event

@@ -1,5 +1,5 @@
 {
-  "name": "primeos",
+  "name": "@uor-foundation/primeos",
   "version": "1.0.0",
   "description": "A neural network-based operating system built on the Prime Framework with mathematical coherence principles",
   "main": "dist/primeos.js",
@@ -72,6 +72,7 @@
     "rollup": "^3.26.3"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
   }
 }

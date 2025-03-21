@@ -1,6 +1,6 @@
 /**
  * Base3 - Connection to Base2
- * 
+ *
  * This module connects the Application Layer (Base3) to the Kernel (Base2).
  * It provides:
  * - Application Layer integration with Base2 resources
@@ -8,12 +8,12 @@
  * - Resource binding and access control
  */
 
-const Prime = require('../../core');
+const Prime = require("../../core");
 const { Utils } = Prime;
 // Import Base3 modules directly to avoid circular imports
-const createApplication = require('./application');
-const createComponent = require('./component');
-const createFramework = require('./framework');
+const createApplication = require("./application");
+const createComponent = require("./component");
+const createFramework = require("./framework");
 
 /**
  * Connect Base3 (Application) to Base2 (Kernel)
@@ -22,29 +22,34 @@ const createFramework = require('./framework');
  */
 function connectToBase2(base2) {
   // Basic validation
-  if (!base2 || !base2.systemManager || !base2.resourceClient || !base2.applicationManager) {
-    throw new Prime.ValidationError('Invalid Base2 components', {
-      context: { base2 }
+  if (
+    !base2 ||
+    !base2.systemManager ||
+    !base2.resourceClient ||
+    !base2.applicationManager
+  ) {
+    throw new Prime.ValidationError("Invalid Base2 components", {
+      context: { base2 },
     });
   }
 
   // Create Base3 components directly
   const base3 = {
-    createApplication: function(options) {
+    createApplication: function (options) {
       return createApplication(options);
     },
-    
-    createComponent: function(options) {
+
+    createComponent: function (options) {
       return createComponent(options);
     },
-    
-    createFramework: function(options) {
+
+    createFramework: function (options) {
       return createFramework(options);
-    }
+    },
   };
 
   // Create application wrapper with resource access
-  const createApplicationWithResources = function(options) {
+  const createApplicationWithResources = function (options) {
     // Ensure application has an ID
     if (!options.id) {
       options.id = `app-${Utils.uuid().substring(0, 8)}`;
@@ -55,40 +60,48 @@ function connectToBase2(base2) {
 
     // Set up kernel connection
     app._kernel = base2;
-    
+
     // Set up kernel actions
     app._kernelActions = {
       // Resource actions
-      startModel: (model, modelOptions) => base2.resourceClient.startModel(model, modelOptions),
-      stopModel: (model, modelOptions) => base2.resourceClient.stopModel(model, modelOptions),
+      startModel: (model, modelOptions) =>
+        base2.resourceClient.startModel(model, modelOptions),
+      stopModel: (model, modelOptions) =>
+        base2.resourceClient.stopModel(model, modelOptions),
       getModel: (modelId) => base2.resourceClient.getModel(modelId),
-      runModel: (model, input, runOptions) => base2.resourceClient.runModel(model, input, runOptions),
-      
+      runModel: (model, input, runOptions) =>
+        base2.resourceClient.runModel(model, input, runOptions),
+
       // Application actions
       loadBundle: (bundle) => base2.applicationManager.loadBundle(bundle),
-      unloadBundle: (bundleId) => base2.applicationManager.unloadBundle(bundleId),
+      unloadBundle: (bundleId) =>
+        base2.applicationManager.unloadBundle(bundleId),
       getBundle: (bundleId) => base2.applicationManager.getBundle(bundleId),
-      
+
       // System actions
-      allocateResource: (type, config) => base2.systemManager.allocateResource(type, config),
+      allocateResource: (type, config) =>
+        base2.systemManager.allocateResource(type, config),
       freeResource: (address) => base2.systemManager.freeResource(address),
-      getResourceUsage: () => base2.systemManager.getResourceUsage()
+      getResourceUsage: () => base2.systemManager.getResourceUsage(),
     };
 
     // Enhance with resource access methods
-    app.allocateMemory = function(size, allocOptions = {}) {
+    app.allocateMemory = function (size, allocOptions = {}) {
       // Require syscall permissions
-      if (!options.permissions || !options.permissions.includes('memory')) {
-        throw new Prime.SecurityError('Application does not have memory allocation permission', {
-          context: { appId: app.id, permissions: options.permissions }
-        });
+      if (!options.permissions || !options.permissions.includes("memory")) {
+        throw new Prime.SecurityError(
+          "Application does not have memory allocation permission",
+          {
+            context: { appId: app.id, permissions: options.permissions },
+          },
+        );
       }
 
       // Add application context to allocation
       const enhancedOptions = {
         ...allocOptions,
         processId: app.id,
-        purpose: allocOptions.purpose || 'application'
+        purpose: allocOptions.purpose || "application",
       };
 
       // Use system manager to allocate memory
@@ -96,12 +109,15 @@ function connectToBase2(base2) {
     };
 
     // Add syscall capability
-    app.syscall = function(name, ...args) {
+    app.syscall = function (name, ...args) {
       // Validate syscall permissions
-      if (!options.permissions || !options.permissions.includes('syscall')) {
-        throw new Prime.SecurityError('Application does not have syscall permission', {
-          context: { appId: app.id, permissions: options.permissions }
-        });
+      if (!options.permissions || !options.permissions.includes("syscall")) {
+        throw new Prime.SecurityError(
+          "Application does not have syscall permission",
+          {
+            context: { appId: app.id, permissions: options.permissions },
+          },
+        );
       }
 
       // Add application context to syscall
@@ -109,20 +125,27 @@ function connectToBase2(base2) {
     };
 
     // Add resource client access
-    app.getResourceClient = function() {
+    app.getResourceClient = function () {
       // Validate resource access permissions
-      if (!options.permissions || !options.permissions.includes('resources')) {
-        throw new Prime.SecurityError('Application does not have resource access permission', {
-          context: { appId: app.id, permissions: options.permissions }
-        });
+      if (!options.permissions || !options.permissions.includes("resources")) {
+        throw new Prime.SecurityError(
+          "Application does not have resource access permission",
+          {
+            context: { appId: app.id, permissions: options.permissions },
+          },
+        );
       }
 
       // Return the resource client with application context
       return {
-        startModel: (model) => base2.resourceClient.startModel(model, { appId: app.id }),
-        stopModel: (modelId) => base2.resourceClient.stopModel(modelId, { appId: app.id }),
-        getModel: (modelId) => base2.resourceClient.getModel(modelId, { appId: app.id }),
-        queryModels: (query) => base2.resourceClient.queryModels(query, { appId: app.id })
+        startModel: (model) =>
+          base2.resourceClient.startModel(model, { appId: app.id }),
+        stopModel: (modelId) =>
+          base2.resourceClient.stopModel(modelId, { appId: app.id }),
+        getModel: (modelId) =>
+          base2.resourceClient.getModel(modelId, { appId: app.id }),
+        queryModels: (query) =>
+          base2.resourceClient.queryModels(query, { appId: app.id }),
       };
     };
 
@@ -130,17 +153,19 @@ function connectToBase2(base2) {
   };
 
   // Create component with resource access
-  const createComponentWithResources = function(options) {
+  const createComponentWithResources = function (options) {
     // Create the base component
     const component = base3.createComponent(options);
 
     // Attach resource utilities if component has appropriate permissions
-    if (options.permissions && options.permissions.includes('resources')) {
-      component.bindResource = function(resourceId) {
+    if (options.permissions && options.permissions.includes("resources")) {
+      component.bindResource = function (resourceId) {
         // Retrieve the resource
         const resource = base2.resourceClient.getResource(resourceId);
         if (!resource) {
-          throw new Prime.InvalidOperationError(`Resource ${resourceId} not found`);
+          throw new Prime.InvalidOperationError(
+            `Resource ${resourceId} not found`,
+          );
         }
 
         // Bind resource to component
@@ -150,9 +175,14 @@ function connectToBase2(base2) {
         return true;
       };
 
-      component.getResource = function(resourceId) {
-        if (!component._boundResources || !component._boundResources.has(resourceId)) {
-          throw new Prime.InvalidOperationError(`Resource ${resourceId} not bound to component`);
+      component.getResource = function (resourceId) {
+        if (
+          !component._boundResources ||
+          !component._boundResources.has(resourceId)
+        ) {
+          throw new Prime.InvalidOperationError(
+            `Resource ${resourceId} not bound to component`,
+          );
         }
 
         return component._boundResources.get(resourceId);
@@ -165,46 +195,60 @@ function connectToBase2(base2) {
   // Return enhanced Base3 with Base2 integration
   return {
     ...base3,
-    
+
     // Override with enhanced versions
     createApplication: createApplicationWithResources,
     createComponent: createComponentWithResources,
 
     // Add direct system access methods
-    connectToSystem: function(application) {
+    connectToSystem: function (application) {
       // Security check
-      if (!application.permissions || !application.permissions.includes('system')) {
-        throw new Prime.SecurityError('Application does not have system access permission', {
-          context: { appId: application.id, permissions: application.permissions }
-        });
+      if (
+        !application.permissions ||
+        !application.permissions.includes("system")
+      ) {
+        throw new Prime.SecurityError(
+          "Application does not have system access permission",
+          {
+            context: {
+              appId: application.id,
+              permissions: application.permissions,
+            },
+          },
+        );
       }
 
       // Connect the application to system manager with restricted access
       application.system = {
         getMemoryStats: () => base2.systemManager.getMemoryStats(),
         getPerfMetrics: () => base2.systemManager.getPerformanceMetrics(),
-        getResourceStats: () => base2.resourceClient.getResourceStats()
+        getResourceStats: () => base2.resourceClient.getResourceStats(),
       };
 
       return true;
     },
 
     // Base2 integration helper methods
-    registerWithKernel: function(component) {
+    registerWithKernel: function (component) {
       return base2.registerComponent(component);
     },
-    
-    createBundle: function(bundleConfig) {
+
+    createBundle: function (bundleConfig) {
       // Validation
-      if (!bundleConfig || !bundleConfig.id || !bundleConfig.name || !bundleConfig.version) {
-        throw new Prime.ValidationError('Invalid bundle configuration', {
-          context: { bundleConfig, required: ['id', 'name', 'version'] }
+      if (
+        !bundleConfig ||
+        !bundleConfig.id ||
+        !bundleConfig.name ||
+        !bundleConfig.version
+      ) {
+        throw new Prime.ValidationError("Invalid bundle configuration", {
+          context: { bundleConfig, required: ["id", "name", "version"] },
         });
       }
-      
+
       // Register bundle with application manager
       return base2.applicationManager.loadBundle(bundleConfig);
-    }
+    },
   };
 }
 

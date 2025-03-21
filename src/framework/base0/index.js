@@ -5,8 +5,8 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
+const Prime = require("../../core.js");
+const MathUtils = require("../math");
 
 /**
  * Base 0: Neural Network Specification
@@ -18,20 +18,23 @@ const Base0 = {
    * @param {Object} config - Configuration object
    * @returns {Object} Embedding model
    */
-  createEmbeddingModel: function(config = {}) {
+  createEmbeddingModel: function (config = {}) {
     return {
-      type: 'embedding',
+      type: "embedding",
       dimensions: config.dimensions || 128,
-      metric: config.metric || 'euclidean',
-      name: config.name || 'EmbeddingModel',
+      metric: config.metric || "euclidean",
+      name: config.name || "EmbeddingModel",
 
       /**
        * Embed data into the vector space
        * @param {*} data - Data to embed
        * @returns {Array} Embedding vector
        */
-      embed: function(data) {
-        if (config.embedFunction && typeof config.embedFunction === 'function') {
+      embed: function (data) {
+        if (
+          config.embedFunction &&
+          typeof config.embedFunction === "function"
+        ) {
           return config.embedFunction(data);
         }
 
@@ -45,61 +48,73 @@ const Base0 = {
        * @param {Array} b - Second embedding
        * @returns {number} Distance
        */
-      distance: function(a, b) {
+      distance: function (a, b) {
         // Validate inputs
         if (!Prime.Utils.isArray(a) || !Prime.Utils.isArray(b)) {
-          throw new Prime.ValidationError('Embeddings must be arrays', {
+          throw new Prime.ValidationError("Embeddings must be arrays", {
             context: {
               aType: typeof a,
               bType: typeof b,
               aIsArray: Prime.Utils.isArray(a),
-              bIsArray: Prime.Utils.isArray(b)
-            }
+              bIsArray: Prime.Utils.isArray(b),
+            },
           });
         }
 
         // Check for NaN or Infinity values in input vectors
         const hasInvalidValue = (arr) => {
-          return arr.some(val => !Number.isFinite(val));
+          return arr.some((val) => !Number.isFinite(val));
         };
 
         if (hasInvalidValue(a) || hasInvalidValue(b)) {
-          throw new Prime.ValidationError('Embeddings contain NaN or Infinity values', {
-            context: {
-              hasNaN: a.some(Number.isNaN) || b.some(Number.isNaN),
-              hasInfinity: a.some(val => val === Infinity || val === -Infinity) ||
-                           b.some(val => val === Infinity || val === -Infinity)
-            }
-          });
+          throw new Prime.ValidationError(
+            "Embeddings contain NaN or Infinity values",
+            {
+              context: {
+                hasNaN: a.some(Number.isNaN) || b.some(Number.isNaN),
+                hasInfinity:
+                  a.some((val) => val === Infinity || val === -Infinity) ||
+                  b.some((val) => val === Infinity || val === -Infinity),
+              },
+            },
+          );
         }
 
         // Use the appropriate distance calculation based on the metric
         let distanceResult;
-        
+
         switch (this.metric) {
-          case 'euclidean':
+          case "euclidean":
             distanceResult = MathUtils.vector.distance(a, b);
             return distanceResult.distance;
-            
-          case 'cosine':
+
+          case "cosine":
             distanceResult = MathUtils.vector.cosineSimilarity(a, b);
             return distanceResult.distance;
-            
-          case 'manhattan':
+
+          case "manhattan":
             distanceResult = MathUtils.vector.manhattanDistance(a, b);
             return distanceResult.distance;
-            
-          case 'chebyshev':
+
+          case "chebyshev":
             distanceResult = MathUtils.vector.chebyshevDistance(a, b);
             return distanceResult.distance;
-            
+
           default:
-            throw new Prime.InvalidOperationError(`Metric ${this.metric} not implemented`, {
-              context: {
-                availableMetrics: ['euclidean', 'cosine', 'manhattan', 'chebyshev'],
-                providedMetric: this.metric
-              }
-            });
+            throw new Prime.InvalidOperationError(
+              `Metric ${this.metric} not implemented`,
+              {
+                context: {
+                  availableMetrics: [
+                    "euclidean",
+                    "cosine",
+                    "manhattan",
+                    "chebyshev",
+                  ],
+                  providedMetric: this.metric,
+                },
+              },
+            );
         }
       },
 
@@ -108,9 +123,9 @@ const Base0 = {
        * @param {Object} reference - UOR reference
        * @returns {Object} UOR object
        */
-      toUOR: function(reference) {
+      toUOR: function (reference) {
         if (!Prime.UOR || !Prime.UOR.isReference(reference)) {
-          throw new Prime.ValidationError('Invalid UOR reference');
+          throw new Prime.ValidationError("Invalid UOR reference");
         }
 
         return reference.createObject(this);
@@ -121,10 +136,10 @@ const Base0 = {
        * @param {Object} components - Other Base 0 components
        * @returns {Object} Connected embedding model
        */
-      connectToComponents: function(components) {
+      connectToComponents: function (components) {
         this._components = components;
         return this;
-      }
+      },
     };
   },
 
@@ -133,26 +148,26 @@ const Base0 = {
    * @param {Object} config - Configuration object
    * @returns {Object} Logic model
    */
-  createLogicModel: function(config = {}) {
+  createLogicModel: function (config = {}) {
     return {
-      type: 'logic',
+      type: "logic",
       rules: config.rules || [],
       constraints: config.constraints || [],
-      name: config.name || 'LogicModel',
+      name: config.name || "LogicModel",
 
       /**
        * Apply logic rules to data
        * @param {*} data - Data to process
        * @returns {*} Processed data
        */
-      apply: function(data) {
+      apply: function (data) {
         let result = data;
 
         // Apply each rule in sequence
         for (const rule of this.rules) {
-          if (typeof rule === 'function') {
+          if (typeof rule === "function") {
             result = rule(result);
-          } else if (rule && typeof rule.apply === 'function') {
+          } else if (rule && typeof rule.apply === "function") {
             result = rule.apply(result);
           }
         }
@@ -165,14 +180,14 @@ const Base0 = {
        * @param {*} data - Data to validate
        * @returns {boolean} True if data is valid
        */
-      validate: function(data) {
+      validate: function (data) {
         // Check all constraints
         for (const constraint of this.constraints) {
-          if (typeof constraint === 'function') {
+          if (typeof constraint === "function") {
             if (!constraint(data)) {
               return false;
             }
-          } else if (constraint && typeof constraint.check === 'function') {
+          } else if (constraint && typeof constraint.check === "function") {
             if (!constraint.check(data)) {
               return false;
             }
@@ -187,7 +202,7 @@ const Base0 = {
        * @param {Function|Object} rule - Rule to add
        * @returns {Object} Updated logic model
        */
-      addRule: function(rule) {
+      addRule: function (rule) {
         this.rules.push(rule);
         return this;
       },
@@ -197,7 +212,7 @@ const Base0 = {
        * @param {Function|Object} constraint - Constraint to add
        * @returns {Object} Updated logic model
        */
-      addConstraint: function(constraint) {
+      addConstraint: function (constraint) {
         this.constraints.push(constraint);
         return this;
       },
@@ -207,9 +222,9 @@ const Base0 = {
        * @param {Object} reference - UOR reference
        * @returns {Object} UOR object
        */
-      toUOR: function(reference) {
+      toUOR: function (reference) {
         if (!Prime.UOR || !Prime.UOR.isReference(reference)) {
-          throw new Prime.ValidationError('Invalid UOR reference');
+          throw new Prime.ValidationError("Invalid UOR reference");
         }
 
         return reference.createObject(this);
@@ -220,10 +235,10 @@ const Base0 = {
        * @param {Object} components - Other Base 0 components
        * @returns {Object} Connected logic model
        */
-      connectToComponents: function(components) {
+      connectToComponents: function (components) {
         this._components = components;
         return this;
-      }
+      },
     };
   },
 
@@ -232,12 +247,12 @@ const Base0 = {
    * @param {Object} config - Configuration object
    * @returns {Object} Representation model
    */
-  createRepresentationModel: function(config = {}) {
+  createRepresentationModel: function (config = {}) {
     return {
-      type: 'representation',
+      type: "representation",
       transformations: config.transformations || [],
       formats: config.formats || {},
-      name: config.name || 'RepresentationModel',
+      name: config.name || "RepresentationModel",
 
       /**
        * Apply a transformation to data
@@ -245,24 +260,33 @@ const Base0 = {
        * @param {string} transformation - Transformation name
        * @returns {*} Transformed data
        */
-      transform: function(data, transformation) {
-        const transform = this.transformations.find(t => t.name === transformation);
+      transform: function (data, transformation) {
+        const transform = this.transformations.find(
+          (t) => t.name === transformation,
+        );
 
         if (!transform) {
-          throw new Prime.InvalidOperationError(`Transformation ${transformation} not found`, {
-            context: {
-              availableTransformations: this.transformations.map(t => t.name)
-            }
-          });
+          throw new Prime.InvalidOperationError(
+            `Transformation ${transformation} not found`,
+            {
+              context: {
+                availableTransformations: this.transformations.map(
+                  (t) => t.name,
+                ),
+              },
+            },
+          );
         }
 
-        if (typeof transform.apply === 'function') {
+        if (typeof transform.apply === "function") {
           return transform.apply(data);
-        } else if (typeof transform === 'function') {
+        } else if (typeof transform === "function") {
           return transform(data);
         }
 
-        throw new Prime.InvalidOperationError(`Invalid transformation ${transformation}`);
+        throw new Prime.InvalidOperationError(
+          `Invalid transformation ${transformation}`,
+        );
       },
 
       /**
@@ -271,18 +295,18 @@ const Base0 = {
        * @param {string} format - Target format
        * @returns {*} Converted data
        */
-      represent: function(data, format) {
+      represent: function (data, format) {
         if (!this.formats[format]) {
           throw new Prime.InvalidOperationError(`Format ${format} not found`, {
-            context: { availableFormats: Object.keys(this.formats) }
+            context: { availableFormats: Object.keys(this.formats) },
           });
         }
 
         const formatter = this.formats[format];
 
-        if (typeof formatter === 'function') {
+        if (typeof formatter === "function") {
           return formatter(data);
-        } else if (formatter && typeof formatter.format === 'function') {
+        } else if (formatter && typeof formatter.format === "function") {
           return formatter.format(data);
         }
 
@@ -294,9 +318,11 @@ const Base0 = {
        * @param {Object|Function} transformation - Transformation to add
        * @returns {Object} Updated representation model
        */
-      addTransformation: function(transformation) {
-        if (!transformation.name && typeof transformation !== 'function') {
-          throw new Prime.ValidationError('Transformation must have a name property or be a function');
+      addTransformation: function (transformation) {
+        if (!transformation.name && typeof transformation !== "function") {
+          throw new Prime.ValidationError(
+            "Transformation must have a name property or be a function",
+          );
         }
 
         this.transformations.push(transformation);
@@ -309,7 +335,7 @@ const Base0 = {
        * @param {Function|Object} formatter - Format handler
        * @returns {Object} Updated representation model
        */
-      addFormat: function(name, formatter) {
+      addFormat: function (name, formatter) {
         this.formats[name] = formatter;
         return this;
       },
@@ -319,9 +345,9 @@ const Base0 = {
        * @param {Object} reference - UOR reference
        * @returns {Object} UOR object
        */
-      toUOR: function(reference) {
+      toUOR: function (reference) {
         if (!Prime.UOR || !Prime.UOR.isReference(reference)) {
-          throw new Prime.ValidationError('Invalid UOR reference');
+          throw new Prime.ValidationError("Invalid UOR reference");
         }
 
         return reference.createObject(this);
@@ -332,10 +358,10 @@ const Base0 = {
        * @param {Object} components - Other Base 0 components
        * @returns {Object} Connected representation model
        */
-      connectToComponents: function(components) {
+      connectToComponents: function (components) {
         this._components = components;
         return this;
-      }
+      },
     };
   },
 
@@ -344,11 +370,11 @@ const Base0 = {
    * @param {Object} config - Configuration object
    * @returns {Object} Processor
    */
-  createProcessor: function(config = {}) {
+  createProcessor: function (config = {}) {
     return {
-      type: 'processor',
+      type: "processor",
       operations: config.operations || [],
-      name: config.name || 'Processor',
+      name: config.name || "Processor",
 
       /**
        * Process data with an operation
@@ -356,18 +382,23 @@ const Base0 = {
        * @param {string} operation - Operation name
        * @returns {*} Processed data
        */
-      process: function(data, operation) {
-        const op = this.operations.find(o => o.name === operation);
+      process: function (data, operation) {
+        const op = this.operations.find((o) => o.name === operation);
 
         if (!op) {
-          throw new Prime.InvalidOperationError(`Operation ${operation} not found`, {
-            context: { availableOperations: this.operations.map(o => o.name) }
-          });
+          throw new Prime.InvalidOperationError(
+            `Operation ${operation} not found`,
+            {
+              context: {
+                availableOperations: this.operations.map((o) => o.name),
+              },
+            },
+          );
         }
 
-        if (typeof op.apply === 'function') {
+        if (typeof op.apply === "function") {
           return op.apply(data);
-        } else if (typeof op === 'function') {
+        } else if (typeof op === "function") {
           return op(data);
         }
 
@@ -380,7 +411,7 @@ const Base0 = {
        * @param {string} op2 - Second operation
        * @returns {Function} Composed operation
        */
-      compose: function(op1, op2) {
+      compose: function (op1, op2) {
         return (data) => this.process(this.process(data, op1), op2);
       },
 
@@ -389,9 +420,11 @@ const Base0 = {
        * @param {Object|Function} operation - Operation to add
        * @returns {Object} Updated processor
        */
-      addOperation: function(operation) {
-        if (!operation.name && typeof operation !== 'function') {
-          throw new Prime.ValidationError('Operation must have a name property or be a function');
+      addOperation: function (operation) {
+        if (!operation.name && typeof operation !== "function") {
+          throw new Prime.ValidationError(
+            "Operation must have a name property or be a function",
+          );
         }
 
         this.operations.push(operation);
@@ -403,9 +436,9 @@ const Base0 = {
        * @param {Object} reference - UOR reference
        * @returns {Object} UOR object
        */
-      toUOR: function(reference) {
+      toUOR: function (reference) {
         if (!Prime.UOR || !Prime.UOR.isReference(reference)) {
-          throw new Prime.ValidationError('Invalid UOR reference');
+          throw new Prime.ValidationError("Invalid UOR reference");
         }
 
         return reference.createObject(this);
@@ -416,10 +449,10 @@ const Base0 = {
        * @param {Object} components - Other Base 0 components
        * @returns {Object} Connected processor
        */
-      connectToComponents: function(components) {
+      connectToComponents: function (components) {
         this._components = components;
         return this;
-      }
+      },
     };
   },
 
@@ -428,11 +461,13 @@ const Base0 = {
    * @param {Object} config - Configuration object
    * @returns {Object} Base 0 components
    */
-  createBase0Components: function(config = {}) {
+  createBase0Components: function (config = {}) {
     // Create components
     const embedding = this.createEmbeddingModel(config.embedding || {});
     const logic = this.createLogicModel(config.logic || {});
-    const representation = this.createRepresentationModel(config.representation || {});
+    const representation = this.createRepresentationModel(
+      config.representation || {},
+    );
     const processor = this.createProcessor(config.processor || {});
 
     // Connect components to each other
@@ -451,9 +486,9 @@ const Base0 = {
    * @param {Object} components - Base 0 components
    * @returns {Object} Connected components
    */
-  connectToCoherence: function(components) {
+  connectToCoherence: function (components) {
     if (!Prime.coherence) {
-      Prime.Logger.warn('Coherence system not available');
+      Prime.Logger.warn("Coherence system not available");
       return components;
     }
 
@@ -463,7 +498,7 @@ const Base0 = {
     }
 
     return components;
-  }
+  },
 };
 
 module.exports = Base0;

@@ -11,8 +11,7 @@ require('../mathematics.js');
 require('../coherence.js');
 require('../framework/index.js');
 
-(function(Prime) {
-
+(function (Prime) {
   /**
    * Enhanced component creation with proper lifecycle management
    * @param {Object} config - Component configuration
@@ -69,10 +68,13 @@ require('../framework/index.js');
          * Initialize component
          * @returns {boolean} Success
          */
-        initialize: function() {
+        initialize: function () {
           try {
             // Run user-provided initializer if available
-            if (component.invariant.initialize && typeof component.invariant.initialize === 'function') {
+            if (
+              component.invariant.initialize &&
+              typeof component.invariant.initialize === 'function'
+            ) {
               component.invariant.initialize.call(component);
             }
 
@@ -92,10 +94,13 @@ require('../framework/index.js');
 
             return true;
           } catch (error) {
-            Prime.Logger.error(`Failed to initialize component ${component.meta.id}`, {
-              error: error.message,
-              stack: error.stack
-            });
+            Prime.Logger.error(
+              `Failed to initialize component ${component.meta.id}`,
+              {
+                error: error.message,
+                stack: error.stack,
+              },
+            );
 
             return false;
           }
@@ -106,7 +111,7 @@ require('../framework/index.js');
          * @param {Object} parent - Parent component or container
          * @returns {boolean} Success
          */
-        mount: function(parent) {
+        mount: function (parent) {
           if (!component.meta.initialized) {
             this.initialize();
           }
@@ -121,7 +126,10 @@ require('../framework/index.js');
             }
 
             // Run user-provided mount handler if available
-            if (component.invariant.mount && typeof component.invariant.mount === 'function') {
+            if (
+              component.invariant.mount &&
+              typeof component.invariant.mount === 'function'
+            ) {
               component.invariant.mount.call(component, parent);
             }
 
@@ -133,10 +141,13 @@ require('../framework/index.js');
 
             return true;
           } catch (error) {
-            Prime.Logger.error(`Failed to mount component ${component.meta.id}`, {
-              error: error.message,
-              stack: error.stack
-            });
+            Prime.Logger.error(
+              `Failed to mount component ${component.meta.id}`,
+              {
+                error: error.message,
+                stack: error.stack,
+              },
+            );
 
             return false;
           }
@@ -147,7 +158,7 @@ require('../framework/index.js');
          * @param {Object} newState - New state
          * @returns {boolean} Success
          */
-        update: function(newState) {
+        update: function (newState) {
           try {
             // Calculate previous state for comparison
             const prevState = Prime.Utils.deepClone(component.variant);
@@ -156,29 +167,35 @@ require('../framework/index.js');
             component.setState(newState);
 
             // Run user-provided update handler if available
-            if (component.invariant.update && typeof component.invariant.update === 'function') {
+            if (
+              component.invariant.update &&
+              typeof component.invariant.update === 'function'
+            ) {
               component.invariant.update.call(component, newState, prevState);
             }
 
             // Trigger update event
             component.emit('update', {
               newState,
-              prevState
+              prevState,
             });
 
             // Update event in global bus
             Prime.EventBus.publish('component:updated', {
               component,
               newState,
-              prevState
+              prevState,
             });
 
             return true;
           } catch (error) {
-            Prime.Logger.error(`Failed to update component ${component.meta.id}`, {
-              error: error.message,
-              stack: error.stack
-            });
+            Prime.Logger.error(
+              `Failed to update component ${component.meta.id}`,
+              {
+                error: error.message,
+                stack: error.stack,
+              },
+            );
 
             return false;
           }
@@ -188,10 +205,13 @@ require('../framework/index.js');
          * Unmount component
          * @returns {boolean} Success
          */
-        unmount: function() {
+        unmount: function () {
           try {
             // Run user-provided unmount handler if available
-            if (component.invariant.unmount && typeof component.invariant.unmount === 'function') {
+            if (
+              component.invariant.unmount &&
+              typeof component.invariant.unmount === 'function'
+            ) {
               component.invariant.unmount.call(component);
             }
 
@@ -226,10 +246,13 @@ require('../framework/index.js');
 
             return true;
           } catch (error) {
-            Prime.Logger.error(`Failed to unmount component ${component.meta.id}`, {
-              error: error.message,
-              stack: error.stack
-            });
+            Prime.Logger.error(
+              `Failed to unmount component ${component.meta.id}`,
+              {
+                error: error.message,
+                stack: error.stack,
+              },
+            );
 
             return false;
           }
@@ -239,7 +262,7 @@ require('../framework/index.js');
          * Destroy component and clean up resources
          * @returns {boolean} Success
          */
-        destroy: function() {
+        destroy: function () {
           try {
             // Unmount if mounted
             if (component.meta.mounted) {
@@ -247,7 +270,10 @@ require('../framework/index.js');
             }
 
             // Run user-provided destroy handler if available
-            if (component.invariant.destroy && typeof component.invariant.destroy === 'function') {
+            if (
+              component.invariant.destroy &&
+              typeof component.invariant.destroy === 'function'
+            ) {
               component.invariant.destroy.call(component);
             }
 
@@ -264,14 +290,17 @@ require('../framework/index.js');
 
             return true;
           } catch (error) {
-            Prime.Logger.error(`Failed to destroy component ${component.meta.id}`, {
-              error: error.message,
-              stack: error.stack
-            });
+            Prime.Logger.error(
+              `Failed to destroy component ${component.meta.id}`,
+              {
+                error: error.message,
+                stack: error.stack,
+              },
+            );
 
             return false;
           }
-        }
+        },
       },
 
       /**
@@ -279,13 +308,16 @@ require('../framework/index.js');
        * @param {Object} newState - New state to apply
        * @returns {Object} Updated component
        */
-      setState: function(newState) {
+      setState: function (newState) {
         if (!newState) {
           return this;
         }
 
         // Check if using coherence constraints
-        if (this.invariant.constraints && this.invariant.constraints.length > 0) {
+        if (
+          this.invariant.constraints &&
+          this.invariant.constraints.length > 0
+        ) {
           const constraints = this.invariant.constraints;
           const proposed = { ...this.variant, ...newState };
 
@@ -297,15 +329,18 @@ require('../framework/index.js');
                   `State update violates hard constraint "${constraint.name}"`,
                   constraint,
                   1.0,
-                  { object: proposed }
+                  { object: proposed },
                 );
               }
 
               // For soft constraints, we'll just log a warning
-              Prime.Logger.warn(`State update violates soft constraint "${constraint.name}"`, {
-                component: this.meta.id,
-                constraint: constraint.name
-              });
+              Prime.Logger.warn(
+                `State update violates soft constraint "${constraint.name}"`,
+                {
+                  component: this.meta.id,
+                  constraint: constraint.name,
+                },
+              );
             }
           }
         }
@@ -320,7 +355,7 @@ require('../framework/index.js');
        * Get component state
        * @returns {Object} Component state
        */
-      getState: function() {
+      getState: function () {
         return Prime.Utils.deepClone(this.variant);
       },
 
@@ -330,7 +365,7 @@ require('../framework/index.js');
        * @param {Function} callback - Event callback
        * @returns {Function} Unsubscribe function
        */
-      on: function(event, callback) {
+      on: function (event, callback) {
         if (!Prime.Utils.isString(event)) {
           throw new Prime.ValidationError('Event name must be a string');
         }
@@ -363,7 +398,7 @@ require('../framework/index.js');
        * @param {Function} callback - Event callback
        * @returns {boolean} Success
        */
-      off: function(event, callback) {
+      off: function (event, callback) {
         if (!this._listeners[event]) {
           return false;
         }
@@ -384,7 +419,7 @@ require('../framework/index.js');
        * @param {Object} [data={}] - Event data
        * @returns {boolean} Success
        */
-      emit: function(event, data = {}) {
+      emit: function (event, data = {}) {
         if (!this._listeners[event]) {
           return false;
         }
@@ -399,7 +434,7 @@ require('../framework/index.js');
             Prime.Logger.error(`Error in event handler for ${event}`, {
               error: error.message,
               stack: error.stack,
-              component: this.meta.id
+              component: this.meta.id,
             });
           }
         }
@@ -412,7 +447,7 @@ require('../framework/index.js');
        * @param {Object} child - Child component
        * @returns {Object} Child component
        */
-      addChild: function(child) {
+      addChild: function (child) {
         if (!child || !child.lifecycle) {
           throw new Prime.ValidationError('Child must be a valid component');
         }
@@ -428,12 +463,12 @@ require('../framework/index.js');
        * @param {Object|string} child - Child component or ID
        * @returns {boolean} Success
        */
-      removeChild: function(child) {
+      removeChild: function (child) {
         let childComponent;
 
         if (Prime.Utils.isString(child)) {
           // Find child by ID
-          childComponent = this._children.find(c => c.meta.id === child);
+          childComponent = this._children.find((c) => c.meta.id === child);
         } else {
           childComponent = child;
         }
@@ -452,9 +487,9 @@ require('../framework/index.js');
        * @param {boolean} [deep=false] - Search deeply through component tree
        * @returns {Object|null} Found component or null
        */
-      findChild: function(id, deep = false) {
+      findChild: function (id, deep = false) {
         // Direct children search
-        const directChild = this._children.find(c => c.meta.id === id);
+        const directChild = this._children.find((c) => c.meta.id === id);
 
         if (directChild) {
           return directChild;
@@ -478,7 +513,7 @@ require('../framework/index.js');
        * Get all children
        * @returns {Array} Child components
        */
-      getChildren: function() {
+      getChildren: function () {
         return [...this._children];
       },
 
@@ -486,7 +521,7 @@ require('../framework/index.js');
        * Get parent component
        * @returns {Object|null} Parent component
        */
-      getParent: function() {
+      getParent: function () {
         return this._parent;
       },
 
@@ -494,9 +529,12 @@ require('../framework/index.js');
        * Calculate coherence norm
        * @returns {number} Coherence norm
        */
-      coherenceNorm: function() {
+      coherenceNorm: function () {
         // If there are constraints, calculate coherence based on them
-        if (this.invariant.constraints && this.invariant.constraints.length > 0) {
+        if (
+          this.invariant.constraints &&
+          this.invariant.constraints.length > 0
+        ) {
           let normSquared = 0;
 
           for (const constraint of this.invariant.constraints) {
@@ -523,7 +561,7 @@ require('../framework/index.js');
        * @param {number} [tolerance=1e-6] - Tolerance for coherence check
        * @returns {boolean} True if component is coherent
        */
-      isCoherent: function(tolerance = 1e-6) {
+      isCoherent: function (tolerance = 1e-6) {
         return this.coherenceNorm() <= tolerance;
       },
 
@@ -532,11 +570,11 @@ require('../framework/index.js');
        * @param {Object} [overrides={}] - Configuration overrides
        * @returns {Object} Cloned component
        */
-      clone: function(overrides = {}) {
+      clone: function (overrides = {}) {
         const config = {
           meta: { ...this.meta, id: undefined }, // Generate new ID
           invariant: this.invariant,
-          variant: this.variant
+          variant: this.variant,
         };
 
         // Apply overrides
@@ -555,7 +593,7 @@ require('../framework/index.js');
        * Convert component to string
        * @returns {string} String representation
        */
-      toString: function() {
+      toString: function () {
         return `Component(${this.meta.id})`;
       },
 
@@ -563,18 +601,18 @@ require('../framework/index.js');
        * Serialize component to JSON
        * @returns {Object} Serialized component
        */
-      toJSON: function() {
+      toJSON: function () {
         return {
           meta: this.meta,
-          variant: this.variant
+          variant: this.variant,
         };
-      }
+      },
     };
 
     // Create the invocable interface from invariant methods
     for (const key in config.invariant) {
       if (Prime.Utils.isFunction(config.invariant[key])) {
-        component.invocable[key] = function(...args) {
+        component.invocable[key] = function (...args) {
           return config.invariant[key].apply(component, args);
         };
       }
@@ -588,7 +626,6 @@ require('../framework/index.js');
 
   // Publish component module loaded event
   Prime.EventBus.publish('module:loaded', { name: 'component-base' });
-
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)

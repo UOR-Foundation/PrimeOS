@@ -33,7 +33,7 @@ if (!Prime.ResourceExhaustionError) {
  * @param {Object} config - Framework configuration
  * @returns {Object} Prime Framework instance
  */
-const createPrimeFramework = function(config = {}) {
+const createPrimeFramework = function (config = {}) {
   // Create and connect all components
 
   // Base 0: Neural Network Specification
@@ -65,7 +65,7 @@ const createPrimeFramework = function(config = {}) {
      * Get global coherence of the framework
      * @returns {number} Global coherence norm
      */
-    getCoherence: function() {
+    getCoherence: function () {
       if (Prime.coherence && Prime.coherence.systemCoherence) {
         return Prime.coherence.systemCoherence.calculateGlobalCoherence();
       }
@@ -77,7 +77,7 @@ const createPrimeFramework = function(config = {}) {
      * @param {Object} options - Optimization options
      * @returns {number} Optimized coherence norm
      */
-    optimizeCoherence: function(options = {}) {
+    optimizeCoherence: function (options = {}) {
       if (Prime.coherence && Prime.coherence.systemCoherence) {
         return Prime.coherence.systemCoherence.optimizeGlobal(options);
       }
@@ -89,35 +89,35 @@ const createPrimeFramework = function(config = {}) {
      * @param {Object} config - Application configuration
      * @returns {Object} Application
      */
-    createApplication: function(config) {
+    createApplication: function (config) {
       // Give the app a default ID if not provided
       if (!config.id) {
         config.id = `app-${Prime.Utils.uuid().substring(0, 8)}`;
       }
-      
+
       // Ensure behavior exists
       if (!config.behavior) {
         config.behavior = {};
       }
-      
+
       // Set default actions
       if (!config.behavior.actions) {
         config.behavior.actions = {};
       }
-      
+
       // Set default initialState
       if (!config.behavior.initialState) {
         config.behavior.initialState = {};
       }
-      
+
       // Create the application through Base3
       const app = base3.createApplication(config);
-      
+
       // Register with coherence system if available
       if (Prime.coherence && Prime.coherence.systemCoherence) {
         Prime.coherence.systemCoherence.register(app);
       }
-      
+
       return app;
     },
 
@@ -127,7 +127,7 @@ const createPrimeFramework = function(config = {}) {
      * @param {Object} options - Application options
      * @returns {Object} Running application
      */
-    startApplicationFromBundle: function(bundleId, options = {}) {
+    startApplicationFromBundle: function (bundleId, options = {}) {
       return base2.applicationManager.startApplication(bundleId, options);
     },
 
@@ -136,7 +136,7 @@ const createPrimeFramework = function(config = {}) {
      * @param {string} appId - Application identifier
      * @returns {boolean} Success
      */
-    stopApplication: function(appId) {
+    stopApplication: function (appId) {
       return base2.applicationManager.stopApplication(appId);
     },
 
@@ -145,7 +145,7 @@ const createPrimeFramework = function(config = {}) {
      * @param {Object} syscall - Syscall to register
      * @returns {boolean} Success
      */
-    registerSyscall: function(syscall) {
+    registerSyscall: function (syscall) {
       Base2.registerSyscalls([syscall]);
       return true;
     },
@@ -156,11 +156,11 @@ const createPrimeFramework = function(config = {}) {
      * @param  {...any} args - Syscall arguments
      * @returns {*} Syscall result
      */
-    syscall: function(name, ...args) {
+    syscall: function (name, ...args) {
       return Base2.syscall(name, ...args);
-    }
+    },
   };
-  
+
   return framework;
 };
 

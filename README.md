@@ -29,14 +29,24 @@ PrimeOS is organized into four hierarchical bases:
 
 ## Installation
 
+### From npm (once published)
 ```bash
 npm install primeos
+```
+
+### From GitHub Packages
+```bash
+# Add this to your .npmrc
+@uor-foundation:registry=https://npm.pkg.github.com
+
+# Then install
+npm install @uor-foundation/primeos
 ```
 
 ## Usage
 
 ```javascript
-import Prime from 'primeos';
+import Prime from '@uor-foundation/primeos';
 
 // Create a Prime Framework instance
 const framework = Prime.createPrimeFramework();

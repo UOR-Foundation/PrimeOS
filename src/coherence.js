@@ -5,13 +5,11 @@
  */
 
 // Import core Prime using CommonJS to avoid circular dependency
-const Prime = require('./core.js');
+const Prime = require("./core.js");
 // Ensure mathematics is loaded
-require('./mathematics.js');
+require("./mathematics.js");
 
-(function(Prime) {
-
-
+(function (Prime) {
   /**
    * Enhanced coherence system with proper mathematical foundation
    */
@@ -24,7 +22,7 @@ require('./mathematics.js');
      * @returns {*} Inner product result
      * @throws {InvalidOperationError} If inner product cannot be computed
      */
-    innerProduct: function(a, b, options = {}) {
+    innerProduct: function (a, b, options = {}) {
       // Handle multivectors (Clifford algebra elements)
       if (Prime.Clifford.isMultivector(a) && Prime.Clifford.isMultivector(b)) {
         // Get the appropriate inner product based on the Clifford algebra
@@ -39,17 +37,23 @@ require('./mathematics.js');
           // Check for invalid values
           for (let i = 0; i < aVec.length; i++) {
             if (!Number.isFinite(aVec[i])) {
-              throw new Prime.ValidationError('Input vector contains NaN or Infinity', {
-                context: { index: i, value: aVec[i] }
-              });
+              throw new Prime.ValidationError(
+                "Input vector contains NaN or Infinity",
+                {
+                  context: { index: i, value: aVec[i] },
+                },
+              );
             }
           }
 
           for (let i = 0; i < bVec.length; i++) {
             if (!Number.isFinite(bVec[i])) {
-              throw new Prime.ValidationError('Input vector contains NaN or Infinity', {
-                context: { index: i, value: bVec[i] }
-              });
+              throw new Prime.ValidationError(
+                "Input vector contains NaN or Infinity",
+                {
+                  context: { index: i, value: bVec[i] },
+                },
+              );
             }
           }
 
@@ -65,12 +69,14 @@ require('./mathematics.js');
             const product = aVec[i] * bVec[i];
             const y = product - compensation;
             const t = dotProduct + y;
-            compensation = (t - dotProduct) - y;
+            compensation = t - dotProduct - y;
             dotProduct = t;
           }
 
           // Create a scalar multivector with the dot product
-          const result = new Prime.Clifford.create({ dimension: Math.max(aVec.length, bVec.length) }).scalar(dotProduct);
+          const result = new Prime.Clifford.create({
+            dimension: Math.max(aVec.length, bVec.length),
+          }).scalar(dotProduct);
           return result;
         }
 
@@ -89,18 +95,25 @@ require('./mathematics.js');
 
         // Check for invalid values
         const hasInvalidValue = (arr) => {
-          return arr.some(val => !Number.isFinite(val));
+          return arr.some((val) => !Number.isFinite(val));
         };
 
         if (hasInvalidValue(a) || hasInvalidValue(b)) {
-          throw new Prime.ValidationError('Input arrays contain NaN or Infinity values', {
-            context: {
-              aHasNaN: a.some(Number.isNaN),
-              bHasNaN: b.some(Number.isNaN),
-              aHasInfinity: a.some(val => val === Infinity || val === -Infinity),
-              bHasInfinity: b.some(val => val === Infinity || val === -Infinity)
-            }
-          });
+          throw new Prime.ValidationError(
+            "Input arrays contain NaN or Infinity values",
+            {
+              context: {
+                aHasNaN: a.some(Number.isNaN),
+                bHasNaN: b.some(Number.isNaN),
+                aHasInfinity: a.some(
+                  (val) => val === Infinity || val === -Infinity,
+                ),
+                bHasInfinity: b.some(
+                  (val) => val === Infinity || val === -Infinity,
+                ),
+              },
+            },
+          );
         }
 
         // For stability, pad shorter array with zeros instead of throwing error
@@ -110,26 +123,38 @@ require('./mathematics.js');
         if (a.length !== b.length) {
           const maxLength = Math.max(a.length, b.length);
           if (options.strictLength === true) {
-            throw new Prime.ValidationError('Arrays must have the same length for inner product', {
-              context: { aLength: a.length, bLength: b.length }
-            });
+            throw new Prime.ValidationError(
+              "Arrays must have the same length for inner product",
+              {
+                context: { aLength: a.length, bLength: b.length },
+              },
+            );
           } else {
             // Pad arrays with zeros for numerical stability
-            paddedA = a.length < maxLength ? [...a, ...Array(maxLength - a.length).fill(0)] : a;
-            paddedB = b.length < maxLength ? [...b, ...Array(maxLength - b.length).fill(0)] : b;
+            paddedA =
+              a.length < maxLength
+                ? [...a, ...Array(maxLength - a.length).fill(0)]
+                : a;
+            paddedB =
+              b.length < maxLength
+                ? [...b, ...Array(maxLength - b.length).fill(0)]
+                : b;
 
             // Log warning about padding
-            Prime.Logger.warn('Arrays of different lengths used in inner product - padding shorter array with zeros', {
-              aLength: a.length,
-              bLength: b.length,
-              padding: Math.abs(a.length - b.length)
-            });
+            Prime.Logger.warn(
+              "Arrays of different lengths used in inner product - padding shorter array with zeros",
+              {
+                aLength: a.length,
+                bLength: b.length,
+                padding: Math.abs(a.length - b.length),
+              },
+            );
           }
         }
 
-        const metric = options.metric || 'euclidean';
+        const metric = options.metric || "euclidean";
 
-        if (metric === 'euclidean') {
+        if (metric === "euclidean") {
           // Use Kahan summation for improved accuracy
           let sum = 0;
           let compensation = 0; // For compensated summation
@@ -138,23 +163,31 @@ require('./mathematics.js');
             const product = paddedA[i] * paddedB[i];
             const y = product - compensation;
             const t = sum + y;
-            compensation = (t - sum) - y;
+            compensation = t - sum - y;
             sum = t;
           }
 
           return sum;
-        } else if (metric === 'weighted') {
+        } else if (metric === "weighted") {
           const weights = options.weights || Array(paddedA.length).fill(1);
 
           // Validate weights
           if (weights.length < paddedA.length) {
-            throw new Prime.ValidationError('Weights array must be at least as long as the vectors', {
-              context: { weightsLength: weights.length, vectorLength: paddedA.length }
-            });
+            throw new Prime.ValidationError(
+              "Weights array must be at least as long as the vectors",
+              {
+                context: {
+                  weightsLength: weights.length,
+                  vectorLength: paddedA.length,
+                },
+              },
+            );
           }
 
           if (hasInvalidValue(weights)) {
-            throw new Prime.ValidationError('Weights array contains NaN or Infinity values');
+            throw new Prime.ValidationError(
+              "Weights array contains NaN or Infinity values",
+            );
           }
 
           // Use Kahan summation for weighted dot product
@@ -165,12 +198,12 @@ require('./mathematics.js');
             const product = paddedA[i] * paddedB[i] * weights[i];
             const y = product - compensation;
             const t = sum + y;
-            compensation = (t - sum) - y;
+            compensation = t - sum - y;
             sum = t;
           }
 
           return sum;
-        } else if (metric === 'cosine') {
+        } else if (metric === "cosine") {
           // Calculate dot product with Kahan summation
           let dotProduct = 0;
           let dotCompensation = 0;
@@ -186,21 +219,21 @@ require('./mathematics.js');
             const product = paddedA[i] * paddedB[i];
             const dotY = product - dotCompensation;
             const dotT = dotProduct + dotY;
-            dotCompensation = (dotT - dotProduct) - dotY;
+            dotCompensation = dotT - dotProduct - dotY;
             dotProduct = dotT;
 
             // Norm A calculation
             const aSquared = paddedA[i] * paddedA[i];
             const aY = aSquared - normACompensation;
             const aT = normASquared + aY;
-            normACompensation = (aT - normASquared) - aY;
+            normACompensation = aT - normASquared - aY;
             normASquared = aT;
 
             // Norm B calculation
             const bSquared = paddedB[i] * paddedB[i];
             const bY = bSquared - normBCompensation;
             const bT = normBSquared + bY;
-            normBCompensation = (bT - normBSquared) - bY;
+            normBCompensation = bT - normBSquared - bY;
             normBSquared = bT;
           }
 
@@ -219,7 +252,7 @@ require('./mathematics.js');
           // Ensure result is in valid range [-1, 1]
           const rawSimilarity = dotProduct / (normA * normB);
           return Math.max(-1, Math.min(1, rawSimilarity));
-        } else if (metric === 'manhattan') {
+        } else if (metric === "manhattan") {
           // Manhattan distance-based similarity
           let sum = 0;
           let compensation = 0;
@@ -228,7 +261,7 @@ require('./mathematics.js');
             const product = Math.abs(paddedA[i] - paddedB[i]);
             const y = product - compensation;
             const t = sum + y;
-            compensation = (t - sum) - y;
+            compensation = t - sum - y;
             sum = t;
           }
 
@@ -236,16 +269,24 @@ require('./mathematics.js');
         }
 
         // If we reach here, the metric is not supported
-        throw new Prime.InvalidOperationError(`Metric "${metric}" not supported for inner product`, {
-          context: {
-            supportedMetrics: ['euclidean', 'weighted', 'cosine', 'manhattan'],
-            requested: metric
-          }
-        });
+        throw new Prime.InvalidOperationError(
+          `Metric "${metric}" not supported for inner product`,
+          {
+            context: {
+              supportedMetrics: [
+                "euclidean",
+                "weighted",
+                "cosine",
+                "manhattan",
+              ],
+              requested: metric,
+            },
+          },
+        );
       }
 
       // Handle custom objects with their own innerProduct method
-      if (a && typeof a.innerProduct === 'function') {
+      if (a && typeof a.innerProduct === "function") {
         return a.innerProduct(b, options);
       }
 
@@ -258,9 +299,12 @@ require('./mathematics.js');
             const bProjected = b.projectTo(a.reference);
             return this.innerProduct(a.value, bProjected.value, options);
           } catch (error) {
-            throw new Prime.InvalidOperationError('Cannot compute inner product for objects with incompatible references', {
-              context: { error: error.message }
-            });
+            throw new Prime.InvalidOperationError(
+              "Cannot compute inner product for objects with incompatible references",
+              {
+                context: { error: error.message },
+              },
+            );
           }
         }
 
@@ -268,14 +312,17 @@ require('./mathematics.js');
         return this.innerProduct(a.value, b.value, options);
       }
 
-      throw new Prime.InvalidOperationError('Cannot compute inner product for the given objects', {
-        context: {
-          aType: typeof a,
-          bType: typeof b,
-          aIsArray: Prime.Utils.isArray(a),
-          bIsArray: Prime.Utils.isArray(b)
-        }
-      });
+      throw new Prime.InvalidOperationError(
+        "Cannot compute inner product for the given objects",
+        {
+          context: {
+            aType: typeof a,
+            bType: typeof b,
+            aIsArray: Prime.Utils.isArray(a),
+            bIsArray: Prime.Utils.isArray(b),
+          },
+        },
+      );
     },
 
     /**
@@ -285,72 +332,90 @@ require('./mathematics.js');
      * @returns {number} Coherence norm
      * @throws {InvalidOperationError} If norm cannot be computed
      */
-    norm: function(obj, options = {}) {
+    norm: function (obj, options = {}) {
       // Handle null or undefined
       if (obj == null) {
         return 0;
       }
-      
+
       // Handle objects with custom norm method
-      if (typeof obj === 'object' && typeof obj.norm === 'function') {
+      if (typeof obj === "object" && typeof obj.norm === "function") {
         return obj.norm();
       }
-      
+
       // Handle plain objects (like {x: 5, y: 10})
-      if (typeof obj === 'object' && !Prime.Utils.isArray(obj) && 
-          !(Prime.Clifford && Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(obj))) {
+      if (
+        typeof obj === "object" &&
+        !Prime.Utils.isArray(obj) &&
+        !(
+          Prime.Clifford &&
+          Prime.Clifford.isMultivector &&
+          Prime.Clifford.isMultivector(obj)
+        )
+      ) {
         // Extract numeric values
-        const values = Object.values(obj).filter(val => typeof val === 'number');
+        const values = Object.values(obj).filter(
+          (val) => typeof val === "number",
+        );
         if (values.length > 0) {
           // Use euclidean norm of the values
           let sumSquared = 0;
           let compensation = 0;
-          
+
           for (const val of values) {
             const squared = val * val;
             const y = squared - compensation;
             const t = sumSquared + y;
-            compensation = (t - sumSquared) - y;
+            compensation = t - sumSquared - y;
             sumSquared = t;
           }
-          
+
           return Math.sqrt(Math.max(0, sumSquared));
         }
         return 0;
       }
-      
-      // Handle multivectors
-      if (Prime.Clifford && Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(obj)) {
-        const normType = options.normType || 'coherence';
 
-        if (normType === 'coherence') {
+      // Handle multivectors
+      if (
+        Prime.Clifford &&
+        Prime.Clifford.isMultivector &&
+        Prime.Clifford.isMultivector(obj)
+      ) {
+        const normType = options.normType || "coherence";
+
+        if (normType === "coherence") {
           // For coherence norm, we use a specific form that measures
           // the "self-consistency" of the multivector
-          if (typeof obj.coherenceNorm === 'function') {
+          if (typeof obj.coherenceNorm === "function") {
             return obj.coherenceNorm();
           }
 
           // Default to Euclidean norm if coherenceNorm is not available
           return obj.norm();
-        } else if (normType === 'euclidean') {
+        } else if (normType === "euclidean") {
           return obj.norm();
         }
       }
 
       // Handle arrays (vectors)
       if (Prime.Utils.isArray(obj)) {
-        const normType = options.normType || 'euclidean';
+        const normType = options.normType || "euclidean";
         // Validate the array for NaN or Infinity values
-        if (obj.some(val => !Number.isFinite(val))) {
-          throw new Prime.ValidationError('Array contains NaN or Infinity values', {
-            context: {
-              hasNaN: obj.some(Number.isNaN),
-              hasInfinity: obj.some(val => val === Infinity || val === -Infinity)
-            }
-          });
+        if (obj.some((val) => !Number.isFinite(val))) {
+          throw new Prime.ValidationError(
+            "Array contains NaN or Infinity values",
+            {
+              context: {
+                hasNaN: obj.some(Number.isNaN),
+                hasInfinity: obj.some(
+                  (val) => val === Infinity || val === -Infinity,
+                ),
+              },
+            },
+          );
         }
 
-        if (normType === 'euclidean') {
+        if (normType === "euclidean") {
           // Use Kahan summation for numerical stability
           let sumSquared = 0;
           let compensation = 0;
@@ -359,12 +424,12 @@ require('./mathematics.js');
             const squared = obj[i] * obj[i];
             const y = squared - compensation;
             const t = sumSquared + y;
-            compensation = (t - sumSquared) - y;
+            compensation = t - sumSquared - y;
             sumSquared = t;
           }
 
           return Math.sqrt(Math.max(0, sumSquared)); // Ensure non-negative due to potential floating-point errors
-        } else if (normType === 'manhattan') {
+        } else if (normType === "manhattan") {
           // Use Kahan summation for numerical stability
           let sum = 0;
           let compensation = 0;
@@ -373,12 +438,12 @@ require('./mathematics.js');
             const absVal = Math.abs(obj[i]);
             const y = absVal - compensation;
             const t = sum + y;
-            compensation = (t - sum) - y;
+            compensation = t - sum - y;
             sum = t;
           }
 
           return sum;
-        } else if (normType === 'max') {
+        } else if (normType === "max") {
           // Find maximum absolute value
           let maxVal = 0;
           for (let i = 0; i < obj.length; i++) {
@@ -388,12 +453,14 @@ require('./mathematics.js');
             }
           }
           return maxVal;
-        } else if (normType === 'weighted') {
+        } else if (normType === "weighted") {
           const weights = options.weights || Array(obj.length).fill(1);
 
           // Validate weights
-          if (weights.some(w => !Number.isFinite(w))) {
-            throw new Prime.ValidationError('Weights contain NaN or Infinity values');
+          if (weights.some((w) => !Number.isFinite(w))) {
+            throw new Prime.ValidationError(
+              "Weights contain NaN or Infinity values",
+            );
           }
 
           // Use Kahan summation for numerical stability
@@ -405,7 +472,7 @@ require('./mathematics.js');
             const weightedSquared = obj[i] * obj[i] * weight;
             const y = weightedSquared - compensation;
             const t = sumSquared + y;
-            compensation = (t - sumSquared) - y;
+            compensation = t - sumSquared - y;
             sumSquared = t;
           }
 
@@ -414,12 +481,12 @@ require('./mathematics.js');
       }
 
       // Handle objects with their own norm method
-      if (obj && typeof obj.norm === 'function') {
+      if (obj && typeof obj.norm === "function") {
         return obj.norm(options);
       }
 
       // Handle objects with their own coherenceNorm method
-      if (obj && typeof obj.coherenceNorm === 'function') {
+      if (obj && typeof obj.coherenceNorm === "function") {
         return obj.coherenceNorm(options);
       }
 
@@ -443,12 +510,15 @@ require('./mathematics.js');
         return Math.sqrt(sumSquaredViolations);
       }
 
-      throw new Prime.InvalidOperationError('Cannot compute coherence norm for the given object', {
-        context: {
-          objType: typeof obj,
-          isArray: Prime.Utils.isArray(obj)
-        }
-      });
+      throw new Prime.InvalidOperationError(
+        "Cannot compute coherence norm for the given object",
+        {
+          context: {
+            objType: typeof obj,
+            isArray: Prime.Utils.isArray(obj),
+          },
+        },
+      );
     },
 
     /**
@@ -457,12 +527,14 @@ require('./mathematics.js');
      * @param {number} [tolerance=1e-6] - Tolerance for coherence check
      * @returns {boolean} True if object is coherent
      */
-    isCoherent: function(obj, tolerance = 1e-6) {
+    isCoherent: function (obj, tolerance = 1e-6) {
       try {
         const norm = this.norm(obj);
         return norm <= tolerance;
       } catch (error) {
-        Prime.Logger.warn('Failed to check coherence:', { error: error.message });
+        Prime.Logger.warn("Failed to check coherence:", {
+          error: error.message,
+        });
         return false;
       }
     },
@@ -473,12 +545,12 @@ require('./mathematics.js');
      * @param {Object} [constraints={}] - Optimization constraints
      * @returns {*} Optimized object
      */
-    optimize: function(obj, constraints = {}) {
+    optimize: function (obj, constraints = {}) {
       // Extract optimization parameters
       const maxIterations = constraints.maxIterations || 100;
       const learningRate = constraints.learningRate || 0.01;
       const tolerance = constraints.tolerance || 1e-6;
-      const method = constraints.method || 'gradient';
+      const method = constraints.method || "gradient";
 
       // Clone the object to avoid modifying the original
       let current = Prime.Utils.deepClone(obj);
@@ -489,15 +561,17 @@ require('./mathematics.js');
         iterations: 0,
         finalNorm: null,
         converged: false,
-        path: []
+        path: [],
       };
 
       // Allow injection of custom gradient computation and update functions
-      const computeGradient = constraints._computeGradient || this._computeGradient.bind(this);
-      const updateSolution = constraints._updateSolution || this._updateSolution.bind(this);
+      const computeGradient =
+        constraints._computeGradient || this._computeGradient.bind(this);
+      const updateSolution =
+        constraints._updateSolution || this._updateSolution.bind(this);
 
       // Select optimization method
-      if (method === 'gradient') {
+      if (method === "gradient") {
         // Gradient descent optimization
         for (let i = 0; i < maxIterations; i++) {
           progress.iterations++;
@@ -516,10 +590,10 @@ require('./mathematics.js');
           // Update current solution by moving against the gradient
           current = updateSolution(current, gradient, learningRate);
         }
-      } else if (method === 'genetic') {
+      } else if (method === "genetic") {
         // Genetic algorithm optimization
         current = this._geneticOptimization(current, constraints);
-      } else if (method === 'annealing') {
+      } else if (method === "annealing") {
         // Simulated annealing optimization
         current = this._simulatedAnnealing(current, constraints);
       }
@@ -541,20 +615,23 @@ require('./mathematics.js');
      * @param {Object} [options={}] - Constraint options
      * @returns {Object} Constraint object
      */
-    createConstraint: function(predicate, options = {}) {
+    createConstraint: function (predicate, options = {}) {
       if (!Prime.Utils.isFunction(predicate)) {
-        throw new Prime.ValidationError('Constraint predicate must be a function', {
-          context: { providedType: typeof predicate }
-        });
+        throw new Prime.ValidationError(
+          "Constraint predicate must be a function",
+          {
+            context: { providedType: typeof predicate },
+          },
+        );
       }
 
       return {
         check: predicate,
         weight: options.weight || 1,
-        name: options.name || predicate.name || 'anonymous constraint',
-        description: options.description || '',
-        type: options.type || 'hard', // 'hard' or 'soft' constraint
-        repair: options.repair || null // Optional function to repair violations
+        name: options.name || predicate.name || "anonymous constraint",
+        description: options.description || "",
+        type: options.type || "hard", // 'hard' or 'soft' constraint
+        repair: options.repair || null, // Optional function to repair violations
       };
     },
 
@@ -564,22 +641,25 @@ require('./mathematics.js');
      * @returns {*} Repaired object
      * @throws {InvalidOperationError} If violation cannot be repaired
      */
-    repairViolation: function(error) {
+    repairViolation: function (error) {
       if (!(error instanceof Prime.CoherenceViolationError)) {
-        throw new Prime.InvalidOperationError('Can only repair coherence violations', {
-          context: { errorType: error.constructor.name }
-        });
+        throw new Prime.InvalidOperationError(
+          "Can only repair coherence violations",
+          {
+            context: { errorType: error.constructor.name },
+          },
+        );
       }
 
       // Check if the constraint has a repair function
-      if (error.constraint && typeof error.constraint.repair === 'function') {
+      if (error.constraint && typeof error.constraint.repair === "function") {
         return error.constraint.repair(error.object);
       }
 
       // Try to apply generic repair strategies
       if (error.object && Prime.Utils.isObject(error.object)) {
         // If the object has a repair method, use it
-        if (typeof error.object.repair === 'function') {
+        if (typeof error.object.repair === "function") {
           return error.object.repair(error.constraint);
         }
 
@@ -587,16 +667,19 @@ require('./mathematics.js');
         return this.optimize(error.object, {
           constraints: [error.constraint],
           maxIterations: 50,
-          tolerance: 1e-8
+          tolerance: 1e-8,
         });
       }
 
-      throw new Prime.InvalidOperationError('Cannot repair coherence violation', {
-        context: {
-          constraint: error.constraint.name,
-          magnitude: error.magnitude
-        }
-      });
+      throw new Prime.InvalidOperationError(
+        "Cannot repair coherence violation",
+        {
+          context: {
+            constraint: error.constraint.name,
+            magnitude: error.magnitude,
+          },
+        },
+      );
     },
 
     /**
@@ -605,11 +688,11 @@ require('./mathematics.js');
      * @param {Array} [constraints=[]] - Coherence constraints
      * @returns {Object} Constrained state object
      */
-    createState: function(initialValue, constraints = []) {
+    createState: function (initialValue, constraints = []) {
       // Validate constraints
       if (!Prime.Utils.isArray(constraints)) {
-        throw new Prime.ValidationError('Constraints must be an array', {
-          context: { providedType: typeof constraints }
+        throw new Prime.ValidationError("Constraints must be an array", {
+          context: { providedType: typeof constraints },
         });
       }
 
@@ -619,17 +702,19 @@ require('./mathematics.js');
       // Check all constraints on the initial value
       for (const constraint of constraints) {
         if (!constraint.check(initialClone)) {
-          if (constraint.type === 'hard') {
+          if (constraint.type === "hard") {
             throw new Prime.CoherenceViolationError(
               `Initial state violates hard constraint "${constraint.name}"`,
               constraint,
               1.0,
-              { object: initialClone }
+              { object: initialClone },
             );
           }
 
           // For soft constraints, we'll just log a warning
-          Prime.Logger.warn(`Initial state violates soft constraint "${constraint.name}"`);
+          Prime.Logger.warn(
+            `Initial state violates soft constraint "${constraint.name}"`,
+          );
         }
       }
 
@@ -637,10 +722,14 @@ require('./mathematics.js');
       return {
         // Getters and setters for the value
         _value: initialClone,
-        get value() { return Prime.Utils.deepClone(this._value); },
+        get value() {
+          return Prime.Utils.deepClone(this._value);
+        },
         set value(newValue) {
           // This setter is intentionally empty - use update() to change values
-          Prime.Logger.warn('Cannot directly set value. Use update() method instead.');
+          Prime.Logger.warn(
+            "Cannot directly set value. Use update() method instead.",
+          );
         },
 
         // Store constraints
@@ -652,31 +741,35 @@ require('./mathematics.js');
          * @returns {Object} Updated state object
          * @throws {CoherenceViolationError} If update violates constraints
          */
-        update: function(newValue) {
+        update: function (newValue) {
           // Allow update to be a function that transforms the current value
           const updateValue = Prime.Utils.isFunction(newValue)
             ? newValue(this._value)
             : newValue;
 
           // Create the proposed new state
-          const proposed = Prime.Utils.isObject(this._value) && Prime.Utils.isObject(updateValue)
-            ? { ...this._value, ...updateValue }
-            : updateValue;
+          const proposed =
+            Prime.Utils.isObject(this._value) &&
+            Prime.Utils.isObject(updateValue)
+              ? { ...this._value, ...updateValue }
+              : updateValue;
 
           // Check all constraints
           for (const constraint of this.constraints) {
             if (!constraint.check(proposed)) {
-              if (constraint.type === 'hard') {
+              if (constraint.type === "hard") {
                 throw new Prime.CoherenceViolationError(
                   `Update violates hard constraint "${constraint.name}"`,
                   constraint,
                   1.0,
-                  { object: proposed }
+                  { object: proposed },
                 );
               }
 
               // For soft constraints, we'll just log a warning but continue
-              Prime.Logger.warn(`Update violates soft constraint "${constraint.name}"`);
+              Prime.Logger.warn(
+                `Update violates soft constraint "${constraint.name}"`,
+              );
             }
           }
 
@@ -684,10 +777,10 @@ require('./mathematics.js');
           this._value = proposed;
 
           // Publish state update event
-          Prime.EventBus.publish('state:updated', {
+          Prime.EventBus.publish("state:updated", {
             previous: this._value,
             current: proposed,
-            coherenceNorm: this.coherenceNorm()
+            coherenceNorm: this.coherenceNorm(),
           });
 
           return this;
@@ -697,7 +790,7 @@ require('./mathematics.js');
          * Calculate coherence norm of the current state
          * @returns {number} Coherence norm
          */
-        coherenceNorm: function() {
+        coherenceNorm: function () {
           // Compute how well the current state satisfies all constraints
           let normSquared = 0;
 
@@ -717,7 +810,7 @@ require('./mathematics.js');
          * @param {Object} constraint - Constraint to add
          * @returns {Object} Updated state object
          */
-        addConstraint: function(constraint) {
+        addConstraint: function (constraint) {
           this.constraints.push(constraint);
           return this;
         },
@@ -727,12 +820,13 @@ require('./mathematics.js');
          * @param {Object|string} constraint - Constraint or constraint name to remove
          * @returns {Object} Updated state object
          */
-        removeConstraint: function(constraint) {
-          const constraintName = typeof constraint === 'string'
-            ? constraint
-            : constraint.name;
+        removeConstraint: function (constraint) {
+          const constraintName =
+            typeof constraint === "string" ? constraint : constraint.name;
 
-          this.constraints = this.constraints.filter(c => c.name !== constraintName);
+          this.constraints = this.constraints.filter(
+            (c) => c.name !== constraintName,
+          );
           return this;
         },
 
@@ -741,7 +835,7 @@ require('./mathematics.js');
          * @param {number} [tolerance=1e-6] - Tolerance for coherence check
          * @returns {boolean} True if state is coherent
          */
-        isCoherent: function(tolerance = 1e-6) {
+        isCoherent: function (tolerance = 1e-6) {
           return this.coherenceNorm() <= tolerance;
         },
 
@@ -749,10 +843,10 @@ require('./mathematics.js');
          * Reset the state to its initial value
          * @returns {Object} Reset state object
          */
-        reset: function() {
+        reset: function () {
           this._value = Prime.Utils.deepClone(initialClone);
           return this;
-        }
+        },
       };
     },
 
@@ -762,14 +856,14 @@ require('./mathematics.js');
      * @param {Object} [options={}] - Optimization options
      * @returns {Function} Optimized function
      */
-    optimizable: function(fn, options = {}) {
+    optimizable: function (fn, options = {}) {
       if (!Prime.Utils.isFunction(fn)) {
-        throw new Prime.ValidationError('Expected a function', {
-          context: { providedType: typeof fn }
+        throw new Prime.ValidationError("Expected a function", {
+          context: { providedType: typeof fn },
         });
       }
 
-      return function(...args) {
+      return function (...args) {
         // Execute the original function
         const result = fn.apply(this, args);
 
@@ -783,7 +877,7 @@ require('./mathematics.js');
      * @param {*} result - Optimization result
      * @returns {Object} Optimization statistics
      */
-    getOptimizationStats: function(result) {
+    getOptimizationStats: function (result) {
       if (result && result._optimizationInfo) {
         return result._optimizationInfo;
       }
@@ -793,7 +887,7 @@ require('./mathematics.js');
         iterations: 0,
         finalNorm: null,
         converged: false,
-        path: []
+        path: [],
       };
     },
 
@@ -810,11 +904,11 @@ require('./mathematics.js');
        * @param {number} [weight=1] - Component weight
        * @returns {Function} Unregister function
        */
-      register: function(component, weight = 1) {
+      register: function (component, weight = 1) {
         this.components.push({
           component,
           weight,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
 
         // Return a function to unregister this component
@@ -826,18 +920,24 @@ require('./mathematics.js');
        * @param {Object} component - Component to unregister
        * @returns {boolean} Success
        */
-      unregister: function(component) {
+      unregister: function (component) {
         const initialLength = this.components.length;
-        this.components = this.components.filter(item => {
+        this.components = this.components.filter((item) => {
           // Check for reference equality first for performance
           if (item.component === component) return false;
-          
+
           // For objects with similar structure, do deeper comparison
-          if (typeof component === 'object' && component !== null &&
-              typeof item.component === 'object' && item.component !== null) {
+          if (
+            typeof component === "object" &&
+            component !== null &&
+            typeof item.component === "object" &&
+            item.component !== null
+          ) {
             // Check value property which is used in the test
-            if (component.value !== undefined && 
-                component.value === item.component.value) {
+            if (
+              component.value !== undefined &&
+              component.value === item.component.value
+            ) {
               return false;
             }
           }
@@ -851,21 +951,23 @@ require('./mathematics.js');
        * @param {Object} [options={}] - Calculation options
        * @returns {number} Global coherence norm
        */
-      calculateGlobalCoherence: function(options = {}) {
+      calculateGlobalCoherence: function (options = {}) {
         if (this.components.length === 0) {
           return 0;
         }
 
         // Validate components before calculation
-        const validComponents = this.components.filter(item => {
+        const validComponents = this.components.filter((item) => {
           try {
-            const isValid = item && item.component &&
-                        (typeof Coherence.norm(item.component) === 'number');
+            const isValid =
+              item &&
+              item.component &&
+              typeof Coherence.norm(item.component) === "number";
             return isValid;
           } catch (error) {
             Prime.Logger.warn(`Filtering invalid component:`, {
               error: error.message,
-              component: item?.component
+              component: item?.component,
             });
             return false;
           }
@@ -876,10 +978,10 @@ require('./mathematics.js');
         }
 
         // Determine calculation method
-        const method = options.method || 'weighted_rms'; // Default to weighted RMS
+        const method = options.method || "weighted_rms"; // Default to weighted RMS
 
         // Option 1: Weighted RMS (root mean square)
-        if (method === 'weighted_rms') {
+        if (method === "weighted_rms") {
           let sumSquaredWeightedNorms = 0;
           let sumWeights = 0;
           let compensation = 0; // For Kahan summation
@@ -892,7 +994,7 @@ require('./mathematics.js');
               if (!Number.isFinite(norm)) {
                 Prime.Logger.warn(`Component has invalid norm value:`, {
                   norm,
-                  component
+                  component,
                 });
                 continue;
               }
@@ -901,23 +1003,25 @@ require('./mathematics.js');
               const weightedNormSquared = weight * weight * norm * norm;
               const y = weightedNormSquared - compensation;
               const t = sumSquaredWeightedNorms + y;
-              compensation = (t - sumSquaredWeightedNorms) - y;
+              compensation = t - sumSquaredWeightedNorms - y;
               sumSquaredWeightedNorms = t;
 
               sumWeights += weight;
             } catch (error) {
               Prime.Logger.warn(`Failed to calculate norm for component:`, {
                 error: error.message,
-                component
+                component,
               });
             }
           }
 
           // Normalize by the sum of weights
-          return sumWeights === 0 ? 0 : Math.sqrt(sumSquaredWeightedNorms) / sumWeights;
+          return sumWeights === 0
+            ? 0
+            : Math.sqrt(sumSquaredWeightedNorms) / sumWeights;
         }
         // Option 2: Maximum weighted incoherence
-        else if (method === 'max_weighted') {
+        else if (method === "max_weighted") {
           let maxWeightedNorm = 0;
 
           for (const { component, weight } of validComponents) {
@@ -932,7 +1036,7 @@ require('./mathematics.js');
             } catch (error) {
               Prime.Logger.warn(`Failed to calculate norm for component:`, {
                 error: error.message,
-                component
+                component,
               });
             }
           }
@@ -940,7 +1044,7 @@ require('./mathematics.js');
           return maxWeightedNorm;
         }
         // Option 3: Geometric mean of norms
-        else if (method === 'geometric_mean') {
+        else if (method === "geometric_mean") {
           let productNorms = 1;
           let count = 0;
 
@@ -955,17 +1059,19 @@ require('./mathematics.js');
             } catch (error) {
               Prime.Logger.warn(`Failed to calculate norm for component:`, {
                 error: error.message,
-                component
+                component,
               });
             }
           }
 
-          return count === 0 ? 0 : Math.pow(productNorms, 1/count);
+          return count === 0 ? 0 : Math.pow(productNorms, 1 / count);
         }
         // Default to standard weighted RMS
         else {
-          Prime.Logger.warn(`Unknown global coherence method: ${method}, using weighted_rms`);
-          return this.calculateGlobalCoherence({ method: 'weighted_rms' });
+          Prime.Logger.warn(
+            `Unknown global coherence method: ${method}, using weighted_rms`,
+          );
+          return this.calculateGlobalCoherence({ method: "weighted_rms" });
         }
       },
 
@@ -974,7 +1080,7 @@ require('./mathematics.js');
        * @param {Object} [options={}] - Optimization options
        * @returns {number} Optimized global coherence norm
        */
-      optimizeGlobal: function(options = {}) {
+      optimizeGlobal: function (options = {}) {
         const iterations = options.iterations || 10;
         const components = [...this.components];
 
@@ -987,12 +1093,12 @@ require('./mathematics.js');
             try {
               Coherence.optimize(component, {
                 maxIterations: options.componentIterations || 10,
-                tolerance: options.tolerance || 1e-6
+                tolerance: options.tolerance || 1e-6,
               });
             } catch (error) {
               Prime.Logger.warn(`Failed to optimize component:`, {
                 error: error.message,
-                component
+                component,
               });
             }
           }
@@ -1006,16 +1112,16 @@ require('./mathematics.js');
        * @param {number} [threshold=0.1] - Coherence threshold
        * @returns {Array} Array of incoherent components
        */
-      getIncoherentComponents: function(threshold = 0.1) {
+      getIncoherentComponents: function (threshold = 0.1) {
         return this.components
-          .map(item => ({
+          .map((item) => ({
             component: item.component,
             weight: item.weight,
-            norm: Coherence.norm(item.component)
+            norm: Coherence.norm(item.component),
           }))
-          .filter(item => item.norm > threshold)
+          .filter((item) => item.norm > threshold)
           .sort((a, b) => b.norm - a.norm); // Sort by descending norm
-      }
+      },
     },
 
     /**
@@ -1025,7 +1131,7 @@ require('./mathematics.js');
      * @param {Object} [options={}] - Gradient computation options
      * @returns {*} Gradient
      */
-    _computeGradient: function(obj, options = {}) {
+    _computeGradient: function (obj, options = {}) {
       // Constants for numerical stability
       const epsilon = options.epsilon || 1e-8;
       const delta = options.delta || 1e-6;
@@ -1039,7 +1145,10 @@ require('./mathematics.js');
           baseNorm = this.norm(obj);
         } catch (error) {
           // If norm calculation fails, return zero gradient
-          Prime.Logger.warn('Norm calculation failed in gradient computation:', { error: error.message });
+          Prime.Logger.warn(
+            "Norm calculation failed in gradient computation:",
+            { error: error.message },
+          );
           return Array(obj.length).fill(0);
         }
 
@@ -1078,10 +1187,14 @@ require('./mathematics.js');
 
               // Seventh-order central difference formula based on Fornberg's method
               // Coefficients derived from Taylor series expansion
-              gradient[i] = (
-                -negNorm3 + 9*negNorm2 - 45*negNorm1 +
-                45*posNorm1 - 9*posNorm2 + posNorm3
-              ) / (60 * delta);
+              gradient[i] =
+                (-negNorm3 +
+                  9 * negNorm2 -
+                  45 * negNorm1 +
+                  45 * posNorm1 -
+                  9 * posNorm2 +
+                  posNorm3) /
+                (60 * delta);
 
               // Apply Richardson extrapolation to further improve accuracy
               // by combining different step sizes
@@ -1098,11 +1211,14 @@ require('./mathematics.js');
                 const negNorm1Half = this.norm(negPerturbed1Half);
 
                 // First-order approximation with half step
-                const gradHalf = (posNorm1Half - negNorm1Half) / (2 * halfDelta);
+                const gradHalf =
+                  (posNorm1Half - negNorm1Half) / (2 * halfDelta);
 
                 // Richardson extrapolation (eliminates leading error term)
-                const richardsonFactor = 4/3; // For first-order central difference
-                gradient[i] = richardsonFactor * gradHalf - (richardsonFactor - 1) * gradient[i];
+                const richardsonFactor = 4 / 3; // For first-order central difference
+                gradient[i] =
+                  richardsonFactor * gradHalf -
+                  (richardsonFactor - 1) * gradient[i];
               }
             } else {
               // First-order central difference method (faster)
@@ -1134,13 +1250,18 @@ require('./mathematics.js');
             }
           } catch (error) {
             // If any computation fails, use zero for this component
-            Prime.Logger.warn(`Gradient computation failed for component ${i}:`, { error: error.message });
+            Prime.Logger.warn(
+              `Gradient computation failed for component ${i}:`,
+              { error: error.message },
+            );
             gradient[i] = 0;
           }
         }
 
         // Normalize the gradient if it's very large to prevent overshooting
-        const gradientMagnitude = Math.sqrt(gradient.reduce((sum, val) => sum + val * val, 0));
+        const gradientMagnitude = Math.sqrt(
+          gradient.reduce((sum, val) => sum + val * val, 0),
+        );
         if (gradientMagnitude > 1e3) {
           // Scale down large gradients to prevent instability
           const scaleFactor = 1e3 / gradientMagnitude;
@@ -1153,11 +1274,13 @@ require('./mathematics.js');
       }
 
       // For objects with their own gradient method
-      if (obj && typeof obj.gradient === 'function') {
+      if (obj && typeof obj.gradient === "function") {
         try {
           return obj.gradient(options);
         } catch (error) {
-          Prime.Logger.warn('Object gradient method failed:', { error: error.message });
+          Prime.Logger.warn("Object gradient method failed:", {
+            error: error.message,
+          });
           // Return default zero gradient on failure
           return obj.constructor ? new obj.constructor() : {};
         }
@@ -1197,7 +1320,9 @@ require('./mathematics.js');
 
           return result;
         } catch (error) {
-          Prime.Logger.warn('Multivector gradient computation failed:', { error: error.message });
+          Prime.Logger.warn("Multivector gradient computation failed:", {
+            error: error.message,
+          });
           return obj.scale(0); // Return zero multivector on failure
         }
       }
@@ -1208,7 +1333,9 @@ require('./mathematics.js');
           const valueGradient = this._computeGradient(obj.value, options);
           return { reference: obj.reference, value: valueGradient };
         } catch (error) {
-          Prime.Logger.warn('UOR object gradient computation failed:', { error: error.message });
+          Prime.Logger.warn("UOR object gradient computation failed:", {
+            error: error.message,
+          });
           return { reference: obj.reference, value: obj.value };
         }
       }
@@ -1218,7 +1345,7 @@ require('./mathematics.js');
         // Create a zero object with the same structure
         const result = {};
         for (const key in obj) {
-          if (typeof obj[key] === 'number') {
+          if (typeof obj[key] === "number") {
             result[key] = 0;
           } else if (Prime.Utils.isArray(obj[key])) {
             result[key] = Array(obj[key].length).fill(0);
@@ -1243,19 +1370,22 @@ require('./mathematics.js');
      * @param {number} learningRate - Learning rate
      * @returns {*} Updated solution
      */
-    _updateSolution: function(current, gradient, learningRate) {
+    _updateSolution: function (current, gradient, learningRate) {
       // For arrays, move against the gradient
       if (Prime.Utils.isArray(current) && Prime.Utils.isArray(gradient)) {
         return current.map((val, i) => val - learningRate * gradient[i]);
       }
 
       // For multivectors
-      if (Prime.Clifford.isMultivector(current) && Prime.Clifford.isMultivector(gradient)) {
+      if (
+        Prime.Clifford.isMultivector(current) &&
+        Prime.Clifford.isMultivector(gradient)
+      ) {
         return current.subtract(gradient.scale(learningRate));
       }
 
       // For objects with their own update method
-      if (current && typeof current.update === 'function') {
+      if (current && typeof current.update === "function") {
         return current.update(gradient, learningRate);
       }
 
@@ -1270,12 +1400,15 @@ require('./mathematics.js');
      * @param {Object} options - Optimization options
      * @returns {*} Optimized solution
      */
-    _geneticOptimization: function(initial, options) {
+    _geneticOptimization: function (initial, options) {
       // Only arrays are supported for now
       if (!Prime.Utils.isArray(initial)) {
-        Prime.Logger.warn('Genetic optimization currently only supports arrays', {
-          providedType: typeof initial
-        });
+        Prime.Logger.warn(
+          "Genetic optimization currently only supports arrays",
+          {
+            providedType: typeof initial,
+          },
+        );
         return initial;
       }
 
@@ -1300,10 +1433,11 @@ require('./mathematics.js');
         // Perturb each dimension randomly
         for (let j = 0; j < individual.length; j++) {
           // Apply larger perturbations at the beginning
-          const perturbScale = Math.max(0.1, 1 - (i / populationSize));
+          const perturbScale = Math.max(0.1, 1 - i / populationSize);
 
           // Generate perturbation scaled by the value or a default
-          const scale = Math.abs(individual[j]) > 1e-6 ? Math.abs(individual[j]) : 1.0;
+          const scale =
+            Math.abs(individual[j]) > 1e-6 ? Math.abs(individual[j]) : 1.0;
           individual[j] += scale * perturbScale * (Math.random() * 2 - 1);
         }
 
@@ -1334,7 +1468,7 @@ require('./mathematics.js');
           const idx = Math.floor(Math.random() * population.length);
           tournament.push({
             individual: population[idx],
-            fitness: populationFitness[idx]
+            fitness: populationFitness[idx],
           });
         }
 
@@ -1342,7 +1476,9 @@ require('./mathematics.js');
         tournament.sort((a, b) => b.fitness - a.fitness);
 
         // Return the winner (with probability based on rank)
-        const rank = Math.floor(Math.random() * tournamentSize * selectionPressure) % tournamentSize;
+        const rank =
+          Math.floor(Math.random() * tournamentSize * selectionPressure) %
+          tournamentSize;
         return tournament[rank].individual;
       };
 
@@ -1354,11 +1490,11 @@ require('./mathematics.js');
         }
 
         // Choose crossover point(s)
-        const crossoverType = Math.random() < 0.5 ? 'single' : 'uniform';
+        const crossoverType = Math.random() < 0.5 ? "single" : "uniform";
         const child1 = new Array(parent1.length);
         const child2 = new Array(parent2.length);
 
-        if (crossoverType === 'single') {
+        if (crossoverType === "single") {
           // Single-point crossover
           const point = Math.floor(Math.random() * (parent1.length - 1)) + 1;
 
@@ -1395,7 +1531,8 @@ require('./mathematics.js');
           // Apply mutation with decreasing probability
           if (Math.random() < mutationRate) {
             // Adaptive mutation rate based on progress
-            const mutationScale = Math.abs(result[i]) > 1e-6 ? Math.abs(result[i]) * 0.1 : 0.01;
+            const mutationScale =
+              Math.abs(result[i]) > 1e-6 ? Math.abs(result[i]) * 0.1 : 0.01;
             result[i] += mutationScale * (Math.random() * 2 - 1);
           }
         }
@@ -1440,7 +1577,8 @@ require('./mathematics.js');
         const nextGeneration = [];
 
         // Elitism: keep best individuals
-        const sortedIndices = populationFitness.map((f, i) => i)
+        const sortedIndices = populationFitness
+          .map((f, i) => i)
           .sort((a, b) => populationFitness[b] - populationFitness[a]);
 
         for (let i = 0; i < elitism; i++) {
@@ -1481,12 +1619,15 @@ require('./mathematics.js');
      * @param {Object} options - Optimization options
      * @returns {*} Optimized solution
      */
-    _simulatedAnnealing: function(initial, options) {
+    _simulatedAnnealing: function (initial, options) {
       // Only arrays are supported for now
       if (!Prime.Utils.isArray(initial)) {
-        Prime.Logger.warn('Simulated annealing currently only supports arrays', {
-          providedType: typeof initial
-        });
+        Prime.Logger.warn(
+          "Simulated annealing currently only supports arrays",
+          {
+            providedType: typeof initial,
+          },
+        );
         return initial;
       }
 
@@ -1504,28 +1645,37 @@ require('./mathematics.js');
 
       // Enhanced constraints handling
       const constraints = options.constraints || [];
-      const applyConstraints = solution => {
+      const applyConstraints = (solution) => {
         let constrainedSolution = solution.slice();
 
         // Apply domain constraints if provided
         if (constraints.length > 0) {
           for (let i = 0; i < constrainedSolution.length; i++) {
             // Find constraints applicable to this dimension
-            const dimensionConstraints = constraints.filter(c =>
-              c.dimension === undefined || c.dimension === i
+            const dimensionConstraints = constraints.filter(
+              (c) => c.dimension === undefined || c.dimension === i,
             );
 
             // Apply each constraint
             for (const constraint of dimensionConstraints) {
-              if (constraint.type === 'bounds') {
+              if (constraint.type === "bounds") {
                 // Bounded value constraint
-                if (constraint.min !== undefined && constrainedSolution[i] < constraint.min) {
+                if (
+                  constraint.min !== undefined &&
+                  constrainedSolution[i] < constraint.min
+                ) {
                   constrainedSolution[i] = constraint.min;
                 }
-                if (constraint.max !== undefined && constrainedSolution[i] > constraint.max) {
+                if (
+                  constraint.max !== undefined &&
+                  constrainedSolution[i] > constraint.max
+                ) {
                   constrainedSolution[i] = constraint.max;
                 }
-              } else if (constraint.type === 'function' && typeof constraint.apply === 'function') {
+              } else if (
+                constraint.type === "function" &&
+                typeof constraint.apply === "function"
+              ) {
                 // Custom constraint function
                 constrainedSolution = constraint.apply(constrainedSolution);
               }
@@ -1549,22 +1699,33 @@ require('./mathematics.js');
           let penaltyTerm = 0;
           if (constraints.length > 0) {
             for (let i = 0; i < constrainedSolution.length; i++) {
-              const dimensionConstraints = constraints.filter(c =>
-                c.dimension === undefined || c.dimension === i
+              const dimensionConstraints = constraints.filter(
+                (c) => c.dimension === undefined || c.dimension === i,
               );
 
               for (const constraint of dimensionConstraints) {
-                if (constraint.type === 'bounds') {
+                if (constraint.type === "bounds") {
                   // Penalty for bounds violations
-                  if (constraint.min !== undefined && solution[i] < constraint.min) {
+                  if (
+                    constraint.min !== undefined &&
+                    solution[i] < constraint.min
+                  ) {
                     const violation = constraint.min - solution[i];
-                    penaltyTerm += violation * violation * (constraint.weight || 100);
+                    penaltyTerm +=
+                      violation * violation * (constraint.weight || 100);
                   }
-                  if (constraint.max !== undefined && solution[i] > constraint.max) {
+                  if (
+                    constraint.max !== undefined &&
+                    solution[i] > constraint.max
+                  ) {
                     const violation = solution[i] - constraint.max;
-                    penaltyTerm += violation * violation * (constraint.weight || 100);
+                    penaltyTerm +=
+                      violation * violation * (constraint.weight || 100);
                   }
-                } else if (constraint.type === 'function' && typeof constraint.penalty === 'function') {
+                } else if (
+                  constraint.type === "function" &&
+                  typeof constraint.penalty === "function"
+                ) {
                   penaltyTerm += constraint.penalty(solution);
                 }
               }
@@ -1573,7 +1734,9 @@ require('./mathematics.js');
 
           return norm + penaltyTerm;
         } catch (error) {
-          Prime.Logger.warn('Energy calculation failed', { error: error.message });
+          Prime.Logger.warn("Energy calculation failed", {
+            error: error.message,
+          });
           return Infinity; // Invalid solutions get highest energy
         }
       };
@@ -1588,10 +1751,14 @@ require('./mathematics.js');
         const temperatureRatio = temperature / initialTemperature;
 
         // Scale the number of dimensions to modify based on temperature
-        let dimensions = Math.max(1, Math.round(temperatureRatio * current.length));
+        let dimensions = Math.max(
+          1,
+          Math.round(temperatureRatio * current.length),
+        );
 
         // Add randomization factor to prevent getting stuck in patterns
-        if (Math.random() < 0.2) { // 20% chance of randomizing dimension count
+        if (Math.random() < 0.2) {
+          // 20% chance of randomizing dimension count
           dimensions = 1 + Math.floor(Math.random() * current.length);
         }
 
@@ -1602,14 +1769,16 @@ require('./mathematics.js');
         // Try to use gradient information if available for smart dimension selection
         let gradientInfo = null;
         try {
-          gradientInfo = this._computeGradient(current, { useSecondOrder: false });
+          gradientInfo = this._computeGradient(current, {
+            useSecondOrder: false,
+          });
         } catch (error) {
           // Gradient computation failed, will use random selection
         }
 
         if (gradientInfo && Prime.Utils.isArray(gradientInfo)) {
           // Create weights based on gradient magnitudes (focus on high-gradient dimensions)
-          const weights = gradientInfo.map(g => Math.abs(g));
+          const weights = gradientInfo.map((g) => Math.abs(g));
           const totalWeight = weights.reduce((sum, w) => sum + w, 0);
 
           // Use roulette wheel selection for dimensions based on gradient
@@ -1640,7 +1809,8 @@ require('./mathematics.js');
         // Modify selected dimensions with temperature-adaptive step sizes
         for (const index of dimensionIndices) {
           // Scale perturbation by temperature and current value
-          const scale = Math.abs(current[index]) > 1e-6 ? Math.abs(current[index]) : 0.1;
+          const scale =
+            Math.abs(current[index]) > 1e-6 ? Math.abs(current[index]) : 0.1;
 
           // Use Cauchy distribution for high temperature (allows larger jumps)
           // and Gaussian distribution for low temperature (more focused search)
@@ -1655,7 +1825,8 @@ require('./mathematics.js');
             // Box-Muller transform
             const u1 = Math.random();
             const u2 = Math.random();
-            const gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+            const gaussian =
+              Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
             perturbation = scale * temperatureRatio * gaussian * 0.3;
           }
 
@@ -1688,13 +1859,21 @@ require('./mathematics.js');
       // let acceptedMoves = 0; // Not used in this implementation
 
       // Main simulated annealing loop with multiple moves per temperature
-      for (let iteration = 0; iteration < maxIterations && temperature > minTemperature; iteration++) {
+      for (
+        let iteration = 0;
+        iteration < maxIterations && temperature > minTemperature;
+        iteration++
+      ) {
         // Perform multiple steps at each temperature to approach equilibrium
         let acceptedAtThisTemp = 0;
 
         for (let step = 0; step < equilibriumSteps; step++) {
           // Generate and evaluate a neighbor solution
-          const neighborSolution = generateNeighbor(currentSolution, temperature, iteration);
+          const neighborSolution = generateNeighbor(
+            currentSolution,
+            temperature,
+            iteration,
+          );
           const neighborEnergy = calculateEnergy(neighborSolution);
 
           // Calculate energy difference
@@ -1709,7 +1888,9 @@ require('./mathematics.js');
           } else {
             // Accept worse solutions with a temperature-dependent probability
             // This uses the proper Metropolis criterion with Boltzmann factor
-            const acceptanceProbability = Math.exp(-deltaE / (boltzmannConstant * temperature));
+            const acceptanceProbability = Math.exp(
+              -deltaE / (boltzmannConstant * temperature),
+            );
             acceptNeighbor = Math.random() < acceptanceProbability;
           }
 
@@ -1738,12 +1919,24 @@ require('./mathematics.js');
         energyHistory.push(currentEnergy);
 
         // Periodic reheating to escape deep local minima
-        if (reheatingSchedule && iteration > 0 && iteration % reheatingPeriod === 0) {
+        if (
+          reheatingSchedule &&
+          iteration > 0 &&
+          iteration % reheatingPeriod === 0
+        ) {
           // Reheat if we're getting stuck (low acceptance ratio)
-          if (acceptanceRatio < 0.1 && noImprovementCount > reheatingPeriod / 2) {
-            temperature = Math.max(temperature, initialTemperature * reheatingFactor);
-            Prime.Logger.info('Reheating annealing process', {
-              iteration, temperature, acceptanceRatio
+          if (
+            acceptanceRatio < 0.1 &&
+            noImprovementCount > reheatingPeriod / 2
+          ) {
+            temperature = Math.max(
+              temperature,
+              initialTemperature * reheatingFactor,
+            );
+            Prime.Logger.info("Reheating annealing process", {
+              iteration,
+              temperature,
+              acceptanceRatio,
             });
             noImprovementCount = 0;
           }
@@ -1761,7 +1954,10 @@ require('./mathematics.js');
         }
 
         // Keep cooling rate in reasonable bounds
-        adaptiveCoolingRate = Math.max(0.8, Math.min(0.999, adaptiveCoolingRate));
+        adaptiveCoolingRate = Math.max(
+          0.8,
+          Math.min(0.999, adaptiveCoolingRate),
+        );
 
         // Cool the system
         temperature *= adaptiveCoolingRate;
@@ -1773,13 +1969,19 @@ require('./mathematics.js');
           // const stable = true; // Unused variable
           const latestEnergy = recentEnergies[recentEnergies.length - 1];
           const energyVariation = recentEnergies.reduce(
-            (max, e) => Math.max(max, Math.abs(e - latestEnergy)), 0
+            (max, e) => Math.max(max, Math.abs(e - latestEnergy)),
+            0,
           );
 
           // If energy variation is very small and temperature is low, terminate
-          if (energyVariation < 1e-8 && temperature < initialTemperature * 0.01) {
-            Prime.Logger.info('Early stopping: energy stabilized', {
-              iteration, energyVariation, temperature
+          if (
+            energyVariation < 1e-8 &&
+            temperature < initialTemperature * 0.01
+          ) {
+            Prime.Logger.info("Early stopping: energy stabilized", {
+              iteration,
+              energyVariation,
+              temperature,
             });
             break;
           }
@@ -1800,7 +2002,7 @@ require('./mathematics.js');
 
             // Update using gradient descent
             const newSolution = localSolution.map(
-              (val, idx) => val - learningRate * gradient[idx]
+              (val, idx) => val - learningRate * gradient[idx],
             );
 
             // Apply constraints
@@ -1817,7 +2019,9 @@ require('./mathematics.js');
               break;
             }
           } catch (error) {
-            Prime.Logger.warn('Final local optimization failed', { error: error.message });
+            Prime.Logger.warn("Final local optimization failed", {
+              error: error.message,
+            });
             break;
           }
         }
@@ -1825,7 +2029,7 @@ require('./mathematics.js');
 
       // Return the best solution found
       return bestSolution;
-    }
+    },
   };
 
   /**
@@ -1848,12 +2052,19 @@ require('./mathematics.js');
       this.fiber = fiber;
 
       // Validate the fiber if it's a Clifford algebra
-      if (fiber && Prime.Clifford.isAlgebra && Prime.Clifford.isAlgebra(fiber)) {
+      if (
+        fiber &&
+        Prime.Clifford.isAlgebra &&
+        Prime.Clifford.isAlgebra(fiber)
+      ) {
         // Fiber is valid
-      } else if (fiber && typeof fiber !== 'object') {
-        throw new Prime.ValidationError('Fiber must be a valid algebraic structure', {
-          context: { fiberType: typeof fiber }
-        });
+      } else if (fiber && typeof fiber !== "object") {
+        throw new Prime.ValidationError(
+          "Fiber must be a valid algebraic structure",
+          {
+            context: { fiberType: typeof fiber },
+          },
+        );
       }
     }
 
@@ -1873,8 +2084,8 @@ require('./mathematics.js');
      */
     createSection(valueFunction) {
       if (!Prime.Utils.isFunction(valueFunction)) {
-        throw new Prime.ValidationError('Value function must be a function', {
-          context: { providedType: typeof valueFunction }
+        throw new Prime.ValidationError("Value function must be a function", {
+          context: { providedType: typeof valueFunction },
         });
       }
 
@@ -1883,7 +2094,7 @@ require('./mathematics.js');
         valueAt: (point) => {
           const value = valueFunction(point);
           return this.createObject(value);
-        }
+        },
       };
     }
 
@@ -1912,11 +2123,16 @@ require('./mathematics.js');
       }
 
       // Check fiber compatibility
-      if (Prime.Clifford.isAlgebra && Prime.Clifford.isAlgebra(this.fiber) &&
-          Prime.Clifford.isAlgebra(other.fiber)) {
+      if (
+        Prime.Clifford.isAlgebra &&
+        Prime.Clifford.isAlgebra(this.fiber) &&
+        Prime.Clifford.isAlgebra(other.fiber)
+      ) {
         // For Clifford algebras, check dimension and signature
-        return this.fiber.dimension === other.fiber.dimension &&
-               this.fiber.signature.every((v, i) => v === other.fiber.signature[i]);
+        return (
+          this.fiber.dimension === other.fiber.dimension &&
+          this.fiber.signature.every((v, i) => v === other.fiber.signature[i])
+        );
       }
 
       // Default to reference equality for other fiber types
@@ -1943,8 +2159,8 @@ require('./mathematics.js');
      */
     constructor(reference, value) {
       if (!(reference instanceof UORReference)) {
-        throw new Prime.ValidationError('Reference must be a UORReference', {
-          context: { providedType: typeof reference }
+        throw new Prime.ValidationError("Reference must be a UORReference", {
+          context: { providedType: typeof reference },
         });
       }
 
@@ -1960,24 +2176,33 @@ require('./mathematics.js');
      */
     transform(transformation) {
       // Check for function transformation first
-      if (typeof transformation === 'function') {
+      if (typeof transformation === "function") {
         try {
           // Apply function transformation
           const transformed = transformation(this.value);
           return new UORObject(this.reference, transformed);
         } catch (error) {
-          throw new Prime.InvalidOperationError('Cannot apply function transformation', {
-            context: {
-              error: error.message,
-              valueType: typeof this.value
-            }
-          });
+          throw new Prime.InvalidOperationError(
+            "Cannot apply function transformation",
+            {
+              context: {
+                error: error.message,
+                valueType: typeof this.value,
+              },
+            },
+          );
         }
       }
-      
+
       // Apply to multivector
-      if (Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(this.value)) {
-        if (Prime.Lie.isGroupElement && Prime.Lie.isGroupElement(transformation)) {
+      if (
+        Prime.Clifford.isMultivector &&
+        Prime.Clifford.isMultivector(this.value)
+      ) {
+        if (
+          Prime.Lie.isGroupElement &&
+          Prime.Lie.isGroupElement(transformation)
+        ) {
           // Apply Lie group transformation to multivector
           const transformed = transformation.apply(this.value);
           return new UORObject(this.reference, transformed);
@@ -1994,7 +2219,10 @@ require('./mathematics.js');
 
       // Apply to array
       if (Prime.Utils.isArray(this.value)) {
-        if (Prime.Lie.isGroupElement && Prime.Lie.isGroupElement(transformation)) {
+        if (
+          Prime.Lie.isGroupElement &&
+          Prime.Lie.isGroupElement(transformation)
+        ) {
           // Apply Lie group transformation to array
           const transformed = transformation.apply(this.value);
           return new UORObject(this.reference, transformed);
@@ -2009,18 +2237,21 @@ require('./mathematics.js');
       }
 
       // Apply custom transformations
-      if (this.value && typeof this.value.transform === 'function') {
+      if (this.value && typeof this.value.transform === "function") {
         // Use object's own transform method
         const transformed = this.value.transform(transformation);
         return new UORObject(this.reference, transformed);
       }
 
-      throw new Prime.InvalidOperationError('Cannot apply transformation to this object', {
-        context: {
-          valueType: typeof this.value,
-          transformationType: typeof transformation
-        }
-      });
+      throw new Prime.InvalidOperationError(
+        "Cannot apply transformation to this object",
+        {
+          context: {
+            valueType: typeof this.value,
+            transformationType: typeof transformation,
+          },
+        },
+      );
     }
 
     /**
@@ -2039,19 +2270,25 @@ require('./mathematics.js');
      */
     projectTo(newReference) {
       if (!(newReference instanceof UORReference)) {
-        throw new Prime.ValidationError('New reference must be a UORReference', {
-          context: { providedType: typeof newReference }
-        });
+        throw new Prime.ValidationError(
+          "New reference must be a UORReference",
+          {
+            context: { providedType: typeof newReference },
+          },
+        );
       }
 
       // Check if references are compatible
       if (!this.reference.isCompatibleWith(newReference)) {
-        throw new Prime.InvalidOperationError('References are not compatible for projection', {
-          context: {
-            sourceReference: this.reference.toString(),
-            targetReference: newReference.toString()
-          }
-        });
+        throw new Prime.InvalidOperationError(
+          "References are not compatible for projection",
+          {
+            context: {
+              sourceReference: this.reference.toString(),
+              targetReference: newReference.toString(),
+            },
+          },
+        );
       }
 
       // If references are already equal, return this object
@@ -2066,29 +2303,47 @@ require('./mathematics.js');
         const targetPoint = newReference.point;
 
         // Check if a connection is available on the manifold
-        const connection = this.reference.manifold && this.reference.manifold.connection;
+        const connection =
+          this.reference.manifold && this.reference.manifold.connection;
 
         // For Clifford multivectors, apply proper parallel transport
-        if (Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(this.value)) {
+        if (
+          Prime.Clifford.isMultivector &&
+          Prime.Clifford.isMultivector(this.value)
+        ) {
           // If a connection is available, use it for parallel transport
-          if (connection && typeof connection.transport === 'function') {
+          if (connection && typeof connection.transport === "function") {
             try {
               // Use the connection's transport function
-              const transportedValue = connection.transport(this.value, sourcePoint, targetPoint);
+              const transportedValue = connection.transport(
+                this.value,
+                sourcePoint,
+                targetPoint,
+              );
               return new UORObject(newReference, transportedValue);
             } catch (error) {
-              Prime.Logger.warn('Connection transport failed, falling back to matrix transport', {
-                error: error.message
-              });
+              Prime.Logger.warn(
+                "Connection transport failed, falling back to matrix transport",
+                {
+                  error: error.message,
+                },
+              );
               // Fall through to matrix transport
             }
           }
 
           // If no connection or connection failed, try matrix-based transport
-          if (this.reference.manifold && typeof this.reference.manifold.getTransportMatrix === 'function') {
+          if (
+            this.reference.manifold &&
+            typeof this.reference.manifold.getTransportMatrix === "function"
+          ) {
             try {
               // Get transport matrix between the points
-              const transportMatrix = this.reference.manifold.getTransportMatrix(sourcePoint, targetPoint);
+              const transportMatrix =
+                this.reference.manifold.getTransportMatrix(
+                  sourcePoint,
+                  targetPoint,
+                );
 
               if (transportMatrix) {
                 // Apply the transport matrix to the multivector
@@ -2105,7 +2360,7 @@ require('./mathematics.js');
                     const product = transportMatrix[i][j] * valueArray[j];
                     const y = product - comp;
                     const t = sum + y;
-                    comp = (t - sum) - y;
+                    comp = t - sum - y;
                     sum = t;
                   }
 
@@ -2117,19 +2372,28 @@ require('./mathematics.js');
                 return new UORObject(newReference, transportedValue);
               }
             } catch (error) {
-              Prime.Logger.warn('Matrix transport failed, falling back to Lie transport', {
-                error: error.message
-              });
+              Prime.Logger.warn(
+                "Matrix transport failed, falling back to Lie transport",
+                {
+                  error: error.message,
+                },
+              );
               // Fall through to Lie group transport
             }
           }
 
           // If matrix transport fails, try Lie group transport for vectors
-          if (this.value.isVector && this.reference.fiber &&
-              typeof this.reference.fiber.getTransportOperator === 'function') {
+          if (
+            this.value.isVector &&
+            this.reference.fiber &&
+            typeof this.reference.fiber.getTransportOperator === "function"
+          ) {
             try {
               // Get Lie group transport operator
-              const transportOp = this.reference.fiber.getTransportOperator(sourcePoint, targetPoint);
+              const transportOp = this.reference.fiber.getTransportOperator(
+                sourcePoint,
+                targetPoint,
+              );
 
               if (transportOp) {
                 // Apply the transport operator
@@ -2137,19 +2401,28 @@ require('./mathematics.js');
                 return new UORObject(newReference, transportedValue);
               }
             } catch (error) {
-              Prime.Logger.warn('Lie transport failed, falling back to fallback mechanism', {
-                error: error.message
-              });
+              Prime.Logger.warn(
+                "Lie transport failed, falling back to fallback mechanism",
+                {
+                  error: error.message,
+                },
+              );
               // Fall through to the fallback
             }
           }
 
           // Fallback: attempt to use a numerical approximation of parallel transport
           // Calculate a geodesic between the points and transport along it
-          if (this.reference.manifold && typeof this.reference.manifold.computeGeodesic === 'function') {
+          if (
+            this.reference.manifold &&
+            typeof this.reference.manifold.computeGeodesic === "function"
+          ) {
             try {
               // Get a discrete geodesic path
-              const geodesic = this.reference.manifold.computeGeodesic(sourcePoint, targetPoint);
+              const geodesic = this.reference.manifold.computeGeodesic(
+                sourcePoint,
+                targetPoint,
+              );
 
               if (geodesic && geodesic.length > 1) {
                 // Step-by-step transport along the geodesic
@@ -2171,7 +2444,9 @@ require('./mathematics.js');
                 return new UORObject(newReference, currentValue);
               }
             } catch (error) {
-              Prime.Logger.warn('Geodesic transport failed', { error: error.message });
+              Prime.Logger.warn("Geodesic transport failed", {
+                error: error.message,
+              });
               // Fall through to default transport
             }
           }
@@ -2180,26 +2455,43 @@ require('./mathematics.js');
         // For arrays (vectors), apply proper parallel transport
         if (Prime.Utils.isArray(this.value)) {
           // If a connection is available, use it for parallel transport
-          if (connection && typeof connection.transport === 'function') {
+          if (connection && typeof connection.transport === "function") {
             try {
               // Use the connection's transport function
-              const transportedValue = connection.transport(this.value, sourcePoint, targetPoint);
+              const transportedValue = connection.transport(
+                this.value,
+                sourcePoint,
+                targetPoint,
+              );
               return new UORObject(newReference, transportedValue);
             } catch (error) {
-              Prime.Logger.warn('Connection transport failed for array, falling back to matrix transport', {
-                error: error.message
-              });
+              Prime.Logger.warn(
+                "Connection transport failed for array, falling back to matrix transport",
+                {
+                  error: error.message,
+                },
+              );
               // Fall through to matrix transport
             }
           }
 
           // Try matrix-based transport for arrays
-          if (this.reference.manifold && typeof this.reference.manifold.getTransportMatrix === 'function') {
+          if (
+            this.reference.manifold &&
+            typeof this.reference.manifold.getTransportMatrix === "function"
+          ) {
             try {
               // Get transport matrix between the points
-              const transportMatrix = this.reference.manifold.getTransportMatrix(sourcePoint, targetPoint);
+              const transportMatrix =
+                this.reference.manifold.getTransportMatrix(
+                  sourcePoint,
+                  targetPoint,
+                );
 
-              if (transportMatrix && transportMatrix.length === this.value.length) {
+              if (
+                transportMatrix &&
+                transportMatrix.length === this.value.length
+              ) {
                 // Apply the transport matrix using Kahan summation
                 const result = [];
 
@@ -2212,7 +2504,7 @@ require('./mathematics.js');
                     const product = transportMatrix[i][j] * this.value[j];
                     const y = product - compensation;
                     const t = sum + y;
-                    compensation = (t - sum) - y;
+                    compensation = t - sum - y;
                     sum = t;
                   }
 
@@ -2222,7 +2514,9 @@ require('./mathematics.js');
                 return new UORObject(newReference, result);
               }
             } catch (error) {
-              Prime.Logger.warn('Matrix transport failed for array', { error: error.message });
+              Prime.Logger.warn("Matrix transport failed for array", {
+                error: error.message,
+              });
               // Fall through to default transport
             }
           }
@@ -2241,9 +2535,10 @@ require('./mathematics.js');
      * @returns {string} String representation
      */
     toString() {
-      const valueString = typeof this.value.toString === 'function'
-        ? this.value.toString()
-        : `[${typeof this.value}]`;
+      const valueString =
+        typeof this.value.toString === "function"
+          ? this.value.toString()
+          : `[${typeof this.value}]`;
 
       return `UORObject(${this.reference.toString()}, ${valueString})`;
     }
@@ -2264,12 +2559,19 @@ require('./mathematics.js');
       this.connection = config.connection || null;
 
       // Validate the fiber
-      if (this.fiber && Prime.Clifford.isAlgebra && Prime.Clifford.isAlgebra(this.fiber)) {
+      if (
+        this.fiber &&
+        Prime.Clifford.isAlgebra &&
+        Prime.Clifford.isAlgebra(this.fiber)
+      ) {
         // Fiber is a valid Clifford algebra
-      } else if (this.fiber && typeof this.fiber !== 'object') {
-        throw new Prime.ValidationError('Fiber must be a valid algebraic structure', {
-          context: { fiberType: typeof this.fiber }
-        });
+      } else if (this.fiber && typeof this.fiber !== "object") {
+        throw new Prime.ValidationError(
+          "Fiber must be a valid algebraic structure",
+          {
+            context: { fiberType: typeof this.fiber },
+          },
+        );
       }
     }
 
@@ -2289,8 +2591,8 @@ require('./mathematics.js');
      */
     createSection(valueFunction) {
       if (!Prime.Utils.isFunction(valueFunction)) {
-        throw new Prime.ValidationError('Value function must be a function', {
-          context: { providedType: typeof valueFunction }
+        throw new Prime.ValidationError("Value function must be a function", {
+          context: { providedType: typeof valueFunction },
         });
       }
 
@@ -2300,7 +2602,7 @@ require('./mathematics.js');
           const reference = this.createReference(point);
           const value = valueFunction(point);
           return reference.createObject(value);
-        }
+        },
       };
     }
 
@@ -2313,30 +2615,38 @@ require('./mathematics.js');
      */
     parallelTransport(section, curve, options = {}) {
       if (!Prime.Utils.isArray(curve) || curve.length < 2) {
-        throw new Prime.ValidationError('Curve must be an array with at least two points', {
-          context: {
-            curveType: typeof curve,
-            curveLength: curve ? curve.length : null
-          }
-        });
+        throw new Prime.ValidationError(
+          "Curve must be an array with at least two points",
+          {
+            context: {
+              curveType: typeof curve,
+              curveLength: curve ? curve.length : null,
+            },
+          },
+        );
       }
 
       // Use connection if available
-      if (this.connection && typeof this.connection.transport === 'function') {
+      if (this.connection && typeof this.connection.transport === "function") {
         return this.connection.transport(section, curve, options);
       }
 
       // For manifolds with connection coefficients (Christoffel symbols)
-      if (this.baseManifold && typeof this.baseManifold.getConnectionCoefficients === 'function') {
+      if (
+        this.baseManifold &&
+        typeof this.baseManifold.getConnectionCoefficients === "function"
+      ) {
         try {
           // Integrate parallel transport equations along the curve
           const startPoint = curve[0];
           const startVector = section.valueAt(startPoint).value;
 
           // Only process if startVector is an array or multivector
-          if (Prime.Utils.isArray(startVector) ||
-              (Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(startVector))) {
-
+          if (
+            Prime.Utils.isArray(startVector) ||
+            (Prime.Clifford.isMultivector &&
+              Prime.Clifford.isMultivector(startVector))
+          ) {
             // Initialize transported vector with the starting vector
             let transportedVector;
             if (Prime.Utils.isArray(startVector)) {
@@ -2347,11 +2657,12 @@ require('./mathematics.js');
 
             // Step along the curve and solve parallel transport equations
             for (let i = 1; i < curve.length; i++) {
-              const point1 = curve[i-1];
+              const point1 = curve[i - 1];
               const point2 = curve[i];
 
               // Get connection coefficients at the midpoint (or first point as an approximation)
-              const connectionCoefficients = this.baseManifold.getConnectionCoefficients(point1);
+              const connectionCoefficients =
+                this.baseManifold.getConnectionCoefficients(point1);
 
               if (connectionCoefficients) {
                 // Calculate tangent vector (direction of the curve)
@@ -2361,7 +2672,9 @@ require('./mathematics.js');
                 }
 
                 // Normalize the tangent vector if needed
-                const tangentNorm = Math.sqrt(tangent.reduce((sum, val) => sum + val * val, 0));
+                const tangentNorm = Math.sqrt(
+                  tangent.reduce((sum, val) => sum + val * val, 0),
+                );
                 if (tangentNorm > 0) {
                   for (let j = 0; j < tangent.length; j++) {
                     tangent[j] /= tangentNorm;
@@ -2381,15 +2694,21 @@ require('./mathematics.js');
                     for (let k = 0; k < transportedVector.length; k++) {
                       for (let l = 0; l < tangent.length; l++) {
                         // Get the connection coefficient Γ^j_kl
-                        const gamma = connectionCoefficients[j] &&
-                                     connectionCoefficients[j][k] &&
-                                     connectionCoefficients[j][k][l] || 0;
+                        const gamma =
+                          (connectionCoefficients[j] &&
+                            connectionCoefficients[j][k] &&
+                            connectionCoefficients[j][k][l]) ||
+                          0;
 
                         // Apply the correction term with Kahan summation for stability
-                        const term = -gamma * transportedVector[k] * tangent[l] * tangentNorm;
+                        const term =
+                          -gamma *
+                          transportedVector[k] *
+                          tangent[l] *
+                          tangentNorm;
                         const y = term - compensation;
                         const t = correction + y;
-                        compensation = (t - correction) - y;
+                        compensation = t - correction - y;
                         correction = t;
                       }
                     }
@@ -2398,7 +2717,10 @@ require('./mathematics.js');
                   }
 
                   transportedVector = updatedVector;
-                } else if (Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(transportedVector)) {
+                } else if (
+                  Prime.Clifford.isMultivector &&
+                  Prime.Clifford.isMultivector(transportedVector)
+                ) {
                   // For multivectors, convert to array and back to handle Clifford algebra elements
                   const vectorArray = transportedVector.toArray();
                   const updatedArray = vectorArray.slice();
@@ -2411,14 +2733,17 @@ require('./mathematics.js');
 
                     for (let k = 0; k < vectorArray.length; k++) {
                       for (let l = 0; l < tangent.length; l++) {
-                        const gamma = connectionCoefficients[j] &&
-                                     connectionCoefficients[j][k] &&
-                                     connectionCoefficients[j][k][l] || 0;
+                        const gamma =
+                          (connectionCoefficients[j] &&
+                            connectionCoefficients[j][k] &&
+                            connectionCoefficients[j][k][l]) ||
+                          0;
 
-                        const term = -gamma * vectorArray[k] * tangent[l] * tangentNorm;
+                        const term =
+                          -gamma * vectorArray[k] * tangent[l] * tangentNorm;
                         const y = term - compensation;
                         const t = correction + y;
-                        compensation = (t - correction) - y;
+                        compensation = t - correction - y;
                         correction = t;
                       }
                     }
@@ -2427,7 +2752,8 @@ require('./mathematics.js');
                   }
 
                   // Convert back to a multivector
-                  transportedVector = transportedVector.algebra.vector(updatedArray);
+                  transportedVector =
+                    transportedVector.algebra.vector(updatedArray);
                 }
               }
             }
@@ -2444,21 +2770,29 @@ require('./mathematics.js');
                   return reference.createObject(finalValue);
                 }
                 return section.valueAt(point);
-              }
+              },
             };
           }
         } catch (error) {
-          Prime.Logger.warn('Advanced parallel transport failed:', { error: error.message });
+          Prime.Logger.warn("Advanced parallel transport failed:", {
+            error: error.message,
+          });
           // Fall through to matrix-based transport
         }
       }
 
       // Matrix-based transport as a fallback
-      if (this.baseManifold && typeof this.baseManifold.getTransportMatrix === 'function') {
+      if (
+        this.baseManifold &&
+        typeof this.baseManifold.getTransportMatrix === "function"
+      ) {
         try {
           const startPoint = curve[0];
           const endPoint = curve[curve.length - 1];
-          const transportMatrix = this.baseManifold.getTransportMatrix(startPoint, endPoint);
+          const transportMatrix = this.baseManifold.getTransportMatrix(
+            startPoint,
+            endPoint,
+          );
 
           if (transportMatrix) {
             return {
@@ -2480,13 +2814,16 @@ require('./mathematics.js');
                         const product = transportMatrix[i][j] * startValue[j];
                         const y = product - compensation;
                         const t = sum + y;
-                        compensation = (t - sum) - y;
+                        compensation = t - sum - y;
                         sum = t;
                       }
 
                       transportedValue.push(sum);
                     }
-                  } else if (Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(startValue)) {
+                  } else if (
+                    Prime.Clifford.isMultivector &&
+                    Prime.Clifford.isMultivector(startValue)
+                  ) {
                     // For multivectors, convert to array and back
                     const startArray = startValue.toArray();
                     const resultArray = [];
@@ -2499,7 +2836,7 @@ require('./mathematics.js');
                         const product = transportMatrix[i][j] * startArray[j];
                         const y = product - compensation;
                         const t = sum + y;
-                        compensation = (t - sum) - y;
+                        compensation = t - sum - y;
                         sum = t;
                       }
 
@@ -2517,11 +2854,13 @@ require('./mathematics.js');
                 }
 
                 return section.valueAt(point);
-              }
+              },
             };
           }
         } catch (error) {
-          Prime.Logger.warn('Matrix transport failed:', { error: error.message });
+          Prime.Logger.warn("Matrix transport failed:", {
+            error: error.message,
+          });
           // Fall through to default implementation
         }
       }
@@ -2539,7 +2878,7 @@ require('./mathematics.js');
             return reference.createObject(Prime.Utils.deepClone(startValue));
           }
           return section.valueAt(point);
-        }
+        },
       };
     }
 
@@ -2552,21 +2891,24 @@ require('./mathematics.js');
      */
     covariantDerivative(section, vector, options = {}) {
       // Validate inputs
-      if (!section || typeof section.valueAt !== 'function') {
-        throw new Prime.ValidationError('Section must have a valueAt method');
+      if (!section || typeof section.valueAt !== "function") {
+        throw new Prime.ValidationError("Section must have a valueAt method");
       }
 
       if (!Prime.Utils.isArray(vector)) {
-        throw new Prime.ValidationError('Vector must be an array');
+        throw new Prime.ValidationError("Vector must be an array");
       }
 
       // Use connection if available
-      if (this.connection && typeof this.connection.derivative === 'function') {
+      if (this.connection && typeof this.connection.derivative === "function") {
         return this.connection.derivative(section, vector, options);
       }
 
       // For manifolds with connection coefficients
-      if (this.baseManifold && typeof this.baseManifold.getConnectionCoefficients === 'function') {
+      if (
+        this.baseManifold &&
+        typeof this.baseManifold.getConnectionCoefficients === "function"
+      ) {
         // We'll implement a proper covariant derivative using the connection coefficients
         return {
           bundle: this,
@@ -2582,7 +2924,8 @@ require('./mathematics.js');
               // Calculate directional derivative based on the section value type
               if (Prime.Utils.isArray(sectionValue)) {
                 // For array values (vector fields)
-                const connectionCoefficients = this.baseManifold.getConnectionCoefficients(point);
+                const connectionCoefficients =
+                  this.baseManifold.getConnectionCoefficients(point);
 
                 // Initialize the result array
                 directionalDerivative = Array(sectionValue.length).fill(0);
@@ -2612,11 +2955,12 @@ require('./mathematics.js');
                     const backwardValue = section.valueAt(backwardPoint).value;
 
                     // Central difference formula with Kahan summation
-                    const partialDerivative = (forwardValue[i] - backwardValue[i]) / (2 * h);
+                    const partialDerivative =
+                      (forwardValue[i] - backwardValue[i]) / (2 * h);
                     const term = vector[j] * partialDerivative;
                     const y = term - compensation;
                     const t = partialSum + y;
-                    compensation = (t - partialSum) - y;
+                    compensation = t - partialSum - y;
                     partialSum = t;
                   }
 
@@ -2631,14 +2975,16 @@ require('./mathematics.js');
                     // Sum over connection coefficient terms
                     for (let j = 0; j < sectionValue.length; j++) {
                       for (let k = 0; k < vector.length; k++) {
-                        const gamma = connectionCoefficients[i] &&
-                                      connectionCoefficients[i][j] &&
-                                      connectionCoefficients[i][j][k] || 0;
+                        const gamma =
+                          (connectionCoefficients[i] &&
+                            connectionCoefficients[i][j] &&
+                            connectionCoefficients[i][j][k]) ||
+                          0;
 
                         const term = gamma * sectionValue[j] * vector[k];
                         const y = term - connectionComp;
                         const t = connectionSum + y;
-                        connectionComp = (t - connectionSum) - y;
+                        connectionComp = t - connectionSum - y;
                         connectionSum = t;
                       }
                     }
@@ -2649,12 +2995,16 @@ require('./mathematics.js');
                 }
 
                 return reference.createObject(directionalDerivative);
-              } else if (Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(sectionValue)) {
+              } else if (
+                Prime.Clifford.isMultivector &&
+                Prime.Clifford.isMultivector(sectionValue)
+              ) {
                 // For multivector fields
                 // This is a simplified implementation
                 // Convert to array, compute covariant derivative components, and convert back
                 const valueArray = sectionValue.toArray();
-                const connectionCoefficients = this.baseManifold.getConnectionCoefficients(point);
+                const connectionCoefficients =
+                  this.baseManifold.getConnectionCoefficients(point);
                 const derivativeArray = Array(valueArray.length).fill(0);
 
                 // Same procedure as for arrays
@@ -2672,14 +3022,19 @@ require('./mathematics.js');
                     forwardPoint[j] += h;
                     backwardPoint[j] -= h;
 
-                    const forwardArray = section.valueAt(forwardPoint).value.toArray();
-                    const backwardArray = section.valueAt(backwardPoint).value.toArray();
+                    const forwardArray = section
+                      .valueAt(forwardPoint)
+                      .value.toArray();
+                    const backwardArray = section
+                      .valueAt(backwardPoint)
+                      .value.toArray();
 
-                    const partialDerivative = (forwardArray[i] - backwardArray[i]) / (2 * h);
+                    const partialDerivative =
+                      (forwardArray[i] - backwardArray[i]) / (2 * h);
                     const term = vector[j] * partialDerivative;
                     const y = term - compensation;
                     const t = partialSum + y;
-                    compensation = (t - partialSum) - y;
+                    compensation = t - partialSum - y;
                     partialSum = t;
                   }
 
@@ -2691,14 +3046,16 @@ require('./mathematics.js');
 
                     for (let j = 0; j < valueArray.length; j++) {
                       for (let k = 0; k < vector.length; k++) {
-                        const gamma = connectionCoefficients[i] &&
-                                      connectionCoefficients[i][j] &&
-                                      connectionCoefficients[i][j][k] || 0;
+                        const gamma =
+                          (connectionCoefficients[i] &&
+                            connectionCoefficients[i][j] &&
+                            connectionCoefficients[i][j][k]) ||
+                          0;
 
                         const term = gamma * valueArray[j] * vector[k];
                         const y = term - connectionComp;
                         const t = connectionSum + y;
-                        connectionComp = (t - connectionSum) - y;
+                        connectionComp = t - connectionSum - y;
                         connectionSum = t;
                       }
                     }
@@ -2708,18 +3065,24 @@ require('./mathematics.js');
                 }
 
                 // Convert back to a multivector
-                directionalDerivative = sectionValue.algebra.vector(derivativeArray);
+                directionalDerivative =
+                  sectionValue.algebra.vector(derivativeArray);
                 return reference.createObject(directionalDerivative);
               }
 
               // For other types, we'll return a zero value as fallback
               return this._createZeroObject(reference, sectionValue);
             } catch (error) {
-              Prime.Logger.warn('Covariant derivative calculation failed:', { error: error.message });
+              Prime.Logger.warn("Covariant derivative calculation failed:", {
+                error: error.message,
+              });
               const reference = this.createReference(point);
-              return this._createZeroObject(reference, section.valueAt(point).value);
+              return this._createZeroObject(
+                reference,
+                section.valueAt(point).value,
+              );
             }
-          }
+          },
         };
       }
 
@@ -2728,8 +3091,11 @@ require('./mathematics.js');
         bundle: this,
         valueAt: (point) => {
           const reference = this.createReference(point);
-          return this._createZeroObject(reference, section.valueAt(point).value);
-        }
+          return this._createZeroObject(
+            reference,
+            section.valueAt(point).value,
+          );
+        },
       };
     }
 
@@ -2746,7 +3112,10 @@ require('./mathematics.js');
         return reference.createObject(this.fiber.scalar(0));
       }
 
-      if (Prime.Clifford.isMultivector && Prime.Clifford.isMultivector(templateValue)) {
+      if (
+        Prime.Clifford.isMultivector &&
+        Prime.Clifford.isMultivector(templateValue)
+      ) {
         return reference.createObject(templateValue.scale(0));
       }
 
@@ -2770,7 +3139,7 @@ require('./mathematics.js');
       }
 
       // Use connection's own method if available
-      if (typeof this.connection.isFlat === 'function') {
+      if (typeof this.connection.isFlat === "function") {
         return this.connection.isFlat();
       }
 
@@ -2797,12 +3166,8 @@ require('./mathematics.js');
      * @param {Object} config - Configuration object
      * @returns {UORReference} New UOR reference
      */
-    createReference: function(config) {
-      return new UORReference(
-        config.manifold,
-        config.point,
-        config.fiber
-      );
+    createReference: function (config) {
+      return new UORReference(config.manifold, config.point, config.fiber);
     },
 
     /**
@@ -2810,7 +3175,7 @@ require('./mathematics.js');
      * @param {Object} config - Configuration object
      * @returns {UORFiberBundle} New UOR fiber bundle
      */
-    createFiberBundle: function(config) {
+    createFiberBundle: function (config) {
       return new UORFiberBundle(config);
     },
 
@@ -2819,7 +3184,7 @@ require('./mathematics.js');
      * @param {*} obj - Object to check
      * @returns {boolean} True if obj is a UOR reference
      */
-    isReference: function(obj) {
+    isReference: function (obj) {
       return obj instanceof UORReference;
     },
 
@@ -2828,7 +3193,7 @@ require('./mathematics.js');
      * @param {*} obj - Object to check
      * @returns {boolean} True if obj is a UOR object
      */
-    isObject: function(obj) {
+    isObject: function (obj) {
       return obj instanceof UORObject;
     },
 
@@ -2837,19 +3202,18 @@ require('./mathematics.js');
      * @param {*} obj - Object to check
      * @returns {boolean} True if obj is a UOR fiber bundle
      */
-    isFiberBundle: function(obj) {
+    isFiberBundle: function (obj) {
       return obj instanceof UORFiberBundle;
-    }
+    },
   };
-
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.Prime = Prime;
 }

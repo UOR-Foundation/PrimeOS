@@ -1,0 +1,28 @@
+# Development files
+node_modules/
+coverage/
+.github/
+tests/
+*.test.js
+*.spec.js
+
+# Build files
+.eslintrc.js
+.prettierrc
+babel.config.js
+jest.config.js
+rollup.config.js
+run-browser-tests.js
+jsdoc.config.json
+
+# Documentation source
+docs/
+*.md
+!README.md
+!LICENSE
+
+# Miscellaneous
+.vscode/
+.idea/
+.DS_Store
+*.log

@@ -12,24 +12,23 @@ require('../coherence.js');
 require('../framework/index.js');
 require('./base.js');
 
-(function(Prime) {
-
+(function (Prime) {
   /**
    * Framework structure documentation generator
    */
-  const generateDocumentation = function(options = {}) {
+  const generateDocumentation = function (options = {}) {
     const docOptions = {
       format: options.format || 'markdown',
       includePrivate: options.includePrivate === true,
       includeInternal: options.includeInternal === true,
-      depth: options.depth || Infinity
+      depth: options.depth || Infinity,
     };
 
     /**
      * Generate documentation for Prime object
      * @returns {string} Generated documentation
      */
-    const generatePrimeDocumentation = function() {
+    const generatePrimeDocumentation = function () {
       if (docOptions.format === 'markdown') {
         return generateMarkdownDocumentation();
       } else if (docOptions.format === 'html') {
@@ -38,14 +37,16 @@ require('./base.js');
         return generateJsonDocumentation();
       }
 
-      throw new Prime.ValidationError(`Unsupported documentation format: ${docOptions.format}`);
+      throw new Prime.ValidationError(
+        `Unsupported documentation format: ${docOptions.format}`,
+      );
     };
 
     /**
      * Generate Markdown documentation
      * @returns {string} Markdown documentation
      */
-    const generateMarkdownDocumentation = function() {
+    const generateMarkdownDocumentation = function () {
       let md = `# PrimeOS JavaScript Library Documentation\n\n`;
 
       // Add version
@@ -269,7 +270,7 @@ require('./base.js');
      * Generate HTML documentation
      * @returns {string} HTML documentation
      */
-    const generateHtmlDocumentation = function() {
+    const generateHtmlDocumentation = function () {
       // This is a simplified placeholder
       const md = generateMarkdownDocumentation();
 
@@ -308,41 +309,47 @@ require('./base.js');
      * Generate JSON documentation
      * @returns {Object} JSON documentation
      */
-    const generateJsonDocumentation = function() {
+    const generateJsonDocumentation = function () {
       // This is a simplified placeholder
       // In a full implementation, this would generate a detailed JSON representation
 
       return {
         name: 'PrimeOS JavaScript Library',
         version: Prime.version,
-        description: 'The PrimeOS JavaScript Library provides a robust implementation of the Prime Framework in JavaScript.',
+        description:
+          'The PrimeOS JavaScript Library provides a robust implementation of the Prime Framework in JavaScript.',
         modules: [
           {
             name: 'Core',
             description: 'Core utilities and structures',
-            exports: ['Utils', 'EventBus', 'Logger']
+            exports: ['Utils', 'EventBus', 'Logger'],
           },
           {
             name: 'Components',
             description: 'Component system',
-            exports: ['createComponent', 'ComponentRegistry', 'ComponentFactory', 'ComponentTemplate']
+            exports: [
+              'createComponent',
+              'ComponentRegistry',
+              'ComponentFactory',
+              'ComponentTemplate',
+            ],
           },
           {
             name: 'Framework',
             description: 'Four-tier framework architecture',
-            exports: ['Base0', 'Base1', 'Base2', 'Base3']
+            exports: ['Base0', 'Base1', 'Base2', 'Base3'],
           },
           {
             name: 'Rendering',
             description: 'Rendering system',
-            exports: ['render']
+            exports: ['render'],
           },
           {
             name: 'Performance',
             description: 'Performance tools',
-            exports: ['performance']
-          }
-        ]
+            exports: ['performance'],
+          },
+        ],
       };
     };
 
@@ -355,7 +362,6 @@ require('./base.js');
 
   // Publish component module loaded event
   Prime.EventBus.publish('module:loaded', { name: 'component-documentation' });
-
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)

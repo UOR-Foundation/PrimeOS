@@ -13,8 +13,7 @@ require('../framework/index.js');
 require('./base.js');
 require('./factory.js');
 
-(function(Prime) {
-
+(function (Prime) {
   /**
    * Component Template for creating reusable component templates
    */
@@ -28,9 +27,11 @@ require('./factory.js');
       this.validators = [];
 
       // Add name validation by default
-      this.addValidator(config => {
+      this.addValidator((config) => {
         if (!config.meta || !config.meta.name) {
-          throw new Prime.ValidationError('Component must have a meta.name property');
+          throw new Prime.ValidationError(
+            'Component must have a meta.name property',
+          );
         }
         return true;
       });
@@ -74,7 +75,7 @@ require('./factory.js');
      * @returns {Array} New components
      */
     createBatch(configs) {
-      return configs.map(config => this.create(config));
+      return configs.map((config) => this.create(config));
     }
 
     /**
@@ -83,7 +84,9 @@ require('./factory.js');
      * @returns {ComponentTemplate} New template
      */
     extend(extension) {
-      const extendedTemplate = new ComponentTemplate(this._mergeConfigs(this.template, extension));
+      const extendedTemplate = new ComponentTemplate(
+        this._mergeConfigs(this.template, extension),
+      );
 
       // Copy validators
       for (const validator of this.validators) {
@@ -104,7 +107,9 @@ require('./factory.js');
       }
 
       // Register with component factory
-      Prime.ComponentFactory.register(typeName, config => this.create(config));
+      Prime.ComponentFactory.register(typeName, (config) =>
+        this.create(config),
+      );
 
       return this;
     }
@@ -143,7 +148,6 @@ require('./factory.js');
 
   // Publish component module loaded event
   Prime.EventBus.publish('module:loaded', { name: 'component-template' });
-
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)

@@ -12,8 +12,7 @@ require('../coherence.js');
 require('../framework/index.js');
 require('./base.js');
 
-(function(Prime) {
-
+(function (Prime) {
   /**
    * Component Factory for creating specialized components
    */
@@ -29,7 +28,7 @@ require('./base.js');
      * @param {Function} factory - Factory function
      * @returns {boolean} Success
      */
-    register: function(type, factory) {
+    register: function (type, factory) {
       if (!Prime.Utils.isString(type)) {
         throw new Prime.ValidationError('Type must be a string');
       }
@@ -49,9 +48,11 @@ require('./base.js');
      * @returns {Object} New component
      * @throws {InvalidOperationError} If type is not registered
      */
-    create: function(type, config = {}) {
+    create: function (type, config = {}) {
       if (!this.types.has(type)) {
-        throw new Prime.InvalidOperationError(`Component type ${type} is not registered`);
+        throw new Prime.InvalidOperationError(
+          `Component type ${type} is not registered`,
+        );
       }
 
       const factory = this.types.get(type);
@@ -63,7 +64,7 @@ require('./base.js');
      * @param {string} type - Component type name
      * @returns {boolean} True if type is registered
      */
-    hasType: function(type) {
+    hasType: function (type) {
       return this.types.has(type);
     },
 
@@ -71,7 +72,7 @@ require('./base.js');
      * Get all registered component types
      * @returns {Array} Registered type names
      */
-    getTypes: function() {
+    getTypes: function () {
       return Array.from(this.types.keys());
     },
 
@@ -80,54 +81,56 @@ require('./base.js');
      * @param {string} type - Component type name
      * @returns {boolean} Success
      */
-    unregister: function(type) {
+    unregister: function (type) {
       return this.types.delete(type);
-    }
+    },
   };
 
   // Register common component types
-  ComponentFactory.register('container', config => {
+  ComponentFactory.register('container', (config) => {
     const defaults = {
       meta: {
         name: 'Container',
-        type: 'container'
+        type: 'container',
       },
       invariant: {
         // Container-specific methods
-        addComponent: function(component) {
+        addComponent: function (component) {
           return this.addChild(component);
         },
-        removeComponent: function(component) {
+        removeComponent: function (component) {
           return this.removeChild(component);
         },
-        getComponents: function() {
+        getComponents: function () {
           return this.getChildren();
-        }
+        },
       },
       variant: {
-        layout: 'default'
-      }
+        layout: 'default',
+      },
     };
 
-    return Prime.createComponent(Prime.Utils.deepClone({...defaults, ...config}));
+    return Prime.createComponent(
+      Prime.Utils.deepClone({ ...defaults, ...config }),
+    );
   });
 
-  ComponentFactory.register('data', config => {
+  ComponentFactory.register('data', (config) => {
     const defaults = {
       meta: {
         name: 'DataComponent',
-        type: 'data'
+        type: 'data',
       },
       invariant: {
         // Data component specific methods
-        getData: function() {
+        getData: function () {
           return this.variant.data;
         },
-        setData: function(data) {
+        setData: function (data) {
           this.lifecycle.update({ data });
           return true;
         },
-        transform: function(transformFn) {
+        transform: function (transformFn) {
           if (!Prime.Utils.isFunction(transformFn)) {
             throw new Prime.ValidationError('Transform must be a function');
           }
@@ -137,46 +140,51 @@ require('./base.js');
 
           this.lifecycle.update({ data: newData });
           return true;
-        }
+        },
       },
       variant: {
-        data: null
-      }
+        data: null,
+      },
     };
 
-    return Prime.createComponent(Prime.Utils.deepClone({...defaults, ...config}));
+    return Prime.createComponent(
+      Prime.Utils.deepClone({ ...defaults, ...config }),
+    );
   });
 
-  ComponentFactory.register('stateful', config => {
+  ComponentFactory.register('stateful', (config) => {
     const defaults = {
       meta: {
         name: 'StatefulComponent',
-        type: 'stateful'
+        type: 'stateful',
       },
       invariant: {
         // Stateful component specific methods
-        getState: function() {
+        getState: function () {
           return this.variant.state;
         },
-        setState: function(state) {
+        setState: function (state) {
           const newState = { ...this.variant.state, ...state };
           this.lifecycle.update({ state: newState });
           return true;
         },
-        resetState: function() {
+        resetState: function () {
           this.lifecycle.update({ state: this.variant.initialState });
           return true;
-        }
+        },
       },
       variant: {
         initialState: {},
-        state: {}
-      }
+        state: {},
+      },
     };
 
     // Ensure initialState is copied to state
-    const merged = Prime.Utils.deepClone({...defaults, ...config});
-    if (!merged.variant.state || Object.keys(merged.variant.state).length === 0) {
+    const merged = Prime.Utils.deepClone({ ...defaults, ...config });
+    if (
+      !merged.variant.state ||
+      Object.keys(merged.variant.state).length === 0
+    ) {
       merged.variant.state = Prime.Utils.deepClone(merged.variant.initialState);
     }
 
@@ -188,7 +196,6 @@ require('./base.js');
 
   // Publish component module loaded event
   Prime.EventBus.publish('module:loaded', { name: 'component-factory' });
-
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)

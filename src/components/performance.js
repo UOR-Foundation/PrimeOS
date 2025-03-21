@@ -12,8 +12,7 @@ require('../coherence.js');
 require('../framework/index.js');
 require('./base.js');
 
-(function(Prime) {
-
+(function (Prime) {
   /**
    * Performance optimization and benchmarking
    */
@@ -28,7 +27,7 @@ require('./base.js');
       precision: 'double',
       optimizationLevel: 'balanced',
       preferredRenderer: 'auto',
-      logPerformance: false
+      logPerformance: false,
     },
 
     /**
@@ -46,7 +45,7 @@ require('./base.js');
      * @param {Object} options - Performance options
      * @returns {Object} Updated configuration
      */
-    configure: function(options) {
+    configure: function (options) {
       if (!options) {
         return this.config;
       }
@@ -67,7 +66,7 @@ require('./base.js');
      * @param {Object} options - Benchmark options
      * @returns {Object} Benchmark results
      */
-    benchmark: async function(operation, options = {}) {
+    benchmark: async function (operation, options = {}) {
       if (!Prime.Utils.isFunction(operation)) {
         throw new Prime.ValidationError('Operation must be a function');
       }
@@ -87,7 +86,7 @@ require('./base.js');
         } catch (error) {
           Prime.Logger.warn(`Error during warmup iteration ${i}`, {
             error: error.message,
-            stack: error.stack
+            stack: error.stack,
           });
         }
       }
@@ -103,7 +102,7 @@ require('./base.js');
         } catch (error) {
           Prime.Logger.warn(`Error during benchmark iteration ${i}`, {
             error: error.message,
-            stack: error.stack
+            stack: error.stack,
           });
 
           // Add a high timing value to indicate error
@@ -112,12 +111,13 @@ require('./base.js');
       }
 
       // Calculate statistics
-      const validTimings = timings.filter(t => t !== Number.MAX_SAFE_INTEGER);
+      const validTimings = timings.filter((t) => t !== Number.MAX_SAFE_INTEGER);
       const sum = validTimings.reduce((a, b) => a + b, 0);
       const mean = sum / validTimings.length;
 
-      const squaredDifferences = validTimings.map(t => Math.pow(t - mean, 2));
-      const variance = squaredDifferences.reduce((a, b) => a + b, 0) / validTimings.length;
+      const squaredDifferences = validTimings.map((t) => Math.pow(t - mean, 2));
+      const variance =
+        squaredDifferences.reduce((a, b) => a + b, 0) / validTimings.length;
       const stdDev = Math.sqrt(variance);
 
       // Calculate percentiles
@@ -141,7 +141,7 @@ require('./base.js');
         total: sum,
         // Always include samples array, but limit its size if not explicitly requested
         samples: options.keepTimings ? validTimings : validTimings.slice(0, 10),
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Save to history
@@ -150,7 +150,7 @@ require('./base.js');
         mean,
         median,
         stdDev,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Prune history if needed
@@ -172,7 +172,7 @@ require('./base.js');
      * @param {Object} options - Benchmark options
      * @returns {Object} Comparison results
      */
-    compare: async function(operations, options = {}) {
+    compare: async function (operations, options = {}) {
       if (!Prime.Utils.isArray(operations)) {
         throw new Prime.ValidationError('Operations must be an array');
       }
@@ -182,7 +182,7 @@ require('./base.js');
         if (Prime.Utils.isFunction(op)) {
           return {
             name: op.name || `Operation ${index + 1}`,
-            fn: op
+            fn: op,
           };
         }
         return op;
@@ -195,7 +195,7 @@ require('./base.js');
         const result = await this.benchmark(op.fn, {
           ...options,
           name: op.name,
-          args: op.args
+          args: op.args,
         });
 
         results.push(result);
@@ -206,16 +206,16 @@ require('./base.js');
       const fastest = sorted[0];
 
       // Add relative speed
-      const withRelative = results.map(result => ({
+      const withRelative = results.map((result) => ({
         ...result,
-        relative: result.mean / fastest.mean
+        relative: result.mean / fastest.mean,
       }));
 
       return {
         results: withRelative,
         fastest: fastest.name,
         slowest: sorted[sorted.length - 1].name,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
     },
 
@@ -225,7 +225,7 @@ require('./base.js');
      * @param {Object} options - Optimization options
      * @returns {Function} Optimized function
      */
-    optimize: function(fn, options = {}) {
+    optimize: function (fn, options = {}) {
       if (!Prime.Utils.isFunction(fn)) {
         throw new Prime.ValidationError('Function is required');
       }
@@ -233,10 +233,11 @@ require('./base.js');
       const mergedOptions = {
         memoize: options.memoize !== false,
         memoizeLimit: options.memoizeLimit || this.config.memoizationLimit,
-        async: options.async !== false && fn.constructor.name === 'AsyncFunction',
+        async:
+          options.async !== false && fn.constructor.name === 'AsyncFunction',
         monitor: options.monitor !== false,
         validateInput: options.validateInput,
-        validateOutput: options.validateOutput
+        validateOutput: options.validateOutput,
       };
 
       // Start with the original function
@@ -245,7 +246,7 @@ require('./base.js');
       // Add input validation if provided
       if (mergedOptions.validateInput) {
         const originalFn = optimized;
-        optimized = function(...args) {
+        optimized = function (...args) {
           if (!mergedOptions.validateInput(...args)) {
             throw new Prime.ValidationError('Input validation failed');
           }
@@ -256,7 +257,7 @@ require('./base.js');
       // Add output validation if provided
       if (mergedOptions.validateOutput) {
         const originalFn = optimized;
-        optimized = function(...args) {
+        optimized = function (...args) {
           const result = originalFn.apply(this, args);
 
           if (!mergedOptions.validateOutput(result, ...args)) {
@@ -270,7 +271,7 @@ require('./base.js');
       // Add memoization if requested
       if (mergedOptions.memoize) {
         optimized = Prime.Utils.memoize(optimized, {
-          maxSize: mergedOptions.memoizeLimit
+          maxSize: mergedOptions.memoizeLimit,
         });
       }
 
@@ -280,7 +281,7 @@ require('./base.js');
         const monitoredFn = optimized;
 
         if (mergedOptions.async) {
-          optimized = async function(...args) {
+          optimized = async function (...args) {
             const start = performance.now ? performance.now() : Date.now();
 
             try {
@@ -298,7 +299,7 @@ require('./base.js');
             }
           };
         } else {
-          optimized = function(...args) {
+          optimized = function (...args) {
             const start = performance.now ? performance.now() : Date.now();
 
             try {
@@ -320,14 +321,14 @@ require('./base.js');
 
       return optimized;
     },
-    
+
     /**
      * Create an async function optimized for performance
      * @param {Function} fn - Async function to optimize
      * @param {Object} options - Optimization options
      * @returns {Function} Optimized async function
      */
-    optimizeAsync: function(fn, options = {}) {
+    optimizeAsync: function (fn, options = {}) {
       if (!Prime.Utils.isFunction(fn)) {
         throw new Prime.ValidationError('Function is required');
       }
@@ -338,7 +339,7 @@ require('./base.js');
         memoize: options.memoize !== false,
         cacheTime: options.cacheTime || 5000, // Default cache time: 5 seconds
         validateInput: options.validateInput,
-        validateOutput: options.validateOutput
+        validateOutput: options.validateOutput,
       };
 
       // Create cache for async results
@@ -346,9 +347,12 @@ require('./base.js');
       const cacheTimers = new Map();
 
       // Core optimized function
-      const optimized = async function(...args) {
+      const optimized = async function (...args) {
         // Input validation
-        if (mergedOptions.validateInput && !mergedOptions.validateInput(...args)) {
+        if (
+          mergedOptions.validateInput &&
+          !mergedOptions.validateInput(...args)
+        ) {
           throw new Prime.ValidationError('Input validation failed');
         }
 
@@ -368,64 +372,79 @@ require('./base.js');
 
         // Monitor execution time
         const start = performance.now ? performance.now() : Date.now();
-        
+
         try {
           // Execute the function
           const result = await fn.apply(this, args);
-          
+
           // Output validation
-          if (mergedOptions.validateOutput && !mergedOptions.validateOutput(result, ...args)) {
+          if (
+            mergedOptions.validateOutput &&
+            !mergedOptions.validateOutput(result, ...args)
+          ) {
             throw new Prime.ValidationError('Output validation failed');
           }
-          
+
           // Record execution time
           const end = performance.now ? performance.now() : Date.now();
-          performance._recordExecution(fn.name || 'anonymous-async', end - start);
-          
+          performance._recordExecution(
+            fn.name || 'anonymous-async',
+            end - start,
+          );
+
           // Cache the result if memoization is enabled
           if (mergedOptions.memoize) {
             cache.set(cacheKey, result);
-            
+
             // Set up cache expiration
             if (cacheTimers.has(cacheKey)) {
               clearTimeout(cacheTimers.get(cacheKey));
             }
-            
-            cacheTimers.set(cacheKey, setTimeout(() => {
-              cache.delete(cacheKey);
-              cacheTimers.delete(cacheKey);
-            }, mergedOptions.cacheTime));
+
+            cacheTimers.set(
+              cacheKey,
+              setTimeout(() => {
+                cache.delete(cacheKey);
+                cacheTimers.delete(cacheKey);
+              }, mergedOptions.cacheTime),
+            );
           }
-          
+
           return result;
         } catch (error) {
           // Record failed execution
           const end = performance.now ? performance.now() : Date.now();
-          performance._recordExecution(fn.name || 'anonymous-async', end - start, error);
+          performance._recordExecution(
+            fn.name || 'anonymous-async',
+            end - start,
+            error,
+          );
           throw error;
         }
       };
 
       // Add methods to control the cache
-      optimized.clearCache = function() {
+      optimized.clearCache = function () {
         cache.clear();
-        
+
         // Clear all timeouts
         for (const timer of cacheTimers.values()) {
           clearTimeout(timer);
         }
         cacheTimers.clear();
-        
+
         return true;
       };
-      
-      optimized.getCacheSize = function() {
+
+      optimized.getCacheSize = function () {
         return cache.size;
       };
-      
-      optimized.setCacheTime = function(ms) {
+
+      optimized.setCacheTime = function (ms) {
         if (typeof ms !== 'number' || ms < 0) {
-          throw new Prime.ValidationError('Cache time must be a positive number');
+          throw new Prime.ValidationError(
+            'Cache time must be a positive number',
+          );
         }
         mergedOptions.cacheTime = ms;
         return true;
@@ -439,17 +458,17 @@ require('./base.js');
      * @param {string} [name] - Function name filter
      * @returns {Object} Performance statistics
      */
-    getStatistics: function(name) {
+    getStatistics: function (name) {
       if (name) {
         // Filter history by name
-        const filtered = this._history.filter(entry => entry.name === name);
+        const filtered = this._history.filter((entry) => entry.name === name);
 
         if (filtered.length === 0) {
           return {
             name,
             calls: 0,
             totalTime: 0,
-            averageTime: 0
+            averageTime: 0,
           };
         }
 
@@ -461,7 +480,7 @@ require('./base.js');
           calls: filtered.length,
           totalTime,
           averageTime: totalTime / filtered.length,
-          history: filtered
+          history: filtered,
         };
       }
 
@@ -473,7 +492,7 @@ require('./base.js');
           stats[entry.name] = {
             calls: 0,
             totalTime: 0,
-            history: []
+            history: [],
           };
         }
 
@@ -494,7 +513,7 @@ require('./base.js');
      * Clear performance history
      * @returns {number} Number of entries cleared
      */
-    clearHistory: function() {
+    clearHistory: function () {
       const count = this._history.length;
       this._history = [];
       return count;
@@ -504,38 +523,42 @@ require('./base.js');
      * Check if WebAssembly is supported
      * @returns {boolean} True if WebAssembly is supported
      */
-    isWebAssemblySupported: function() {
-      return typeof WebAssembly === 'object' &&
-             typeof WebAssembly.compile === 'function';
+    isWebAssemblySupported: function () {
+      return (
+        typeof WebAssembly === 'object' &&
+        typeof WebAssembly.compile === 'function'
+      );
     },
 
     /**
      * Check if Web Workers are supported
      * @returns {boolean} True if Web Workers are supported
      */
-    isWorkersSupported: function() {
+    isWorkersSupported: function () {
       return typeof Worker === 'function';
     },
-    
+
     /**
      * Run a function in a Web Worker thread
      * @param {Function} fn - Function to run
      * @param {Array} args - Arguments to pass to the function
      * @returns {Promise} Promise that resolves with the result
      */
-    runInWorker: function(fn, args = []) {
+    runInWorker: function (fn, args = []) {
       if (!this.isWorkersSupported()) {
-        throw new Prime.InvalidOperationError('Web Workers are not supported in this environment');
+        throw new Prime.InvalidOperationError(
+          'Web Workers are not supported in this environment',
+        );
       }
-      
+
       if (!Prime.Utils.isFunction(fn)) {
         throw new Prime.ValidationError('Function is required');
       }
-      
+
       return new Promise((resolve, reject) => {
         // Convert function to string
         const fnString = fn.toString();
-        
+
         // Create a worker script as a blob
         const workerScript = `
           self.onmessage = function(e) {
@@ -562,18 +585,20 @@ require('./base.js');
             }
           };
         `;
-        
+
         // Create the worker
-        const blob = new Blob([workerScript], { type: 'application/javascript' });
+        const blob = new Blob([workerScript], {
+          type: 'application/javascript',
+        });
         const workerUrl = URL.createObjectURL(blob);
         const worker = new Worker(workerUrl);
-        
+
         // Set up event handlers
-        worker.onmessage = function(e) {
+        worker.onmessage = function (e) {
           // Clean up
           worker.terminate();
           URL.revokeObjectURL(workerUrl);
-          
+
           if (e.data.status === 'success') {
             resolve(e.data.result);
           } else {
@@ -583,20 +608,20 @@ require('./base.js');
             reject(error);
           }
         };
-        
-        worker.onerror = function(error) {
+
+        worker.onerror = function (error) {
           // Clean up
           worker.terminate();
           URL.revokeObjectURL(workerUrl);
-          
+
           reject(new Error(`Worker error: ${error.message}`));
         };
-        
+
         // Start the worker with the provided arguments
         worker.postMessage(args);
       });
     },
-    
+
     /**
      * Throttle a function to limit execution frequency
      * @param {Function} fn - Function to throttle
@@ -604,11 +629,11 @@ require('./base.js');
      * @param {Object} options - Throttle options
      * @returns {Function} Throttled function
      */
-    throttle: function(fn, wait, options = {}) {
+    throttle: function (fn, wait, options = {}) {
       // Use the core Utils throttle method
       return Prime.Utils.throttle(fn, wait, options);
     },
-    
+
     /**
      * Debounce a function to delay execution until input stops
      * @param {Function} fn - Function to debounce
@@ -616,7 +641,7 @@ require('./base.js');
      * @param {Object} options - Debounce options
      * @returns {Function} Debounced function
      */
-    debounce: function(fn, wait, options = {}) {
+    debounce: function (fn, wait, options = {}) {
       // Use the core Utils debounce method
       return Prime.Utils.debounce(fn, wait, options);
     },
@@ -625,7 +650,7 @@ require('./base.js');
      * Prune the memoization cache
      * @private
      */
-    _pruneCache: function() {
+    _pruneCache: function () {
       // Implementation would depend on the memoization system
       // This is a placeholder for now
     },
@@ -637,21 +662,24 @@ require('./base.js');
      * @param {number} time - Execution time
      * @param {Error} [error] - Error if execution failed
      */
-    _recordExecution: function(name, time, error) {
+    _recordExecution: function (name, time, error) {
       const key = `${name}:${Date.now()}`;
 
       this._cache.set(key, {
         name,
         time,
         error: error ? error.message : undefined,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Prune cache if needed
       if (this._cache.size > this.config.memoizationLimit) {
         // Remove oldest entries
         const entries = Array.from(this._cache.entries());
-        const oldest = entries.slice(0, entries.length - this.config.memoizationLimit);
+        const oldest = entries.slice(
+          0,
+          entries.length - this.config.memoizationLimit,
+        );
 
         for (const [key] of oldest) {
           this._cache.delete(key);
@@ -666,12 +694,12 @@ require('./base.js');
      * @param {number} percentile - Percentile to calculate
      * @returns {number} Percentile value
      */
-    _calculatePercentile: function(sorted, percentile) {
+    _calculatePercentile: function (sorted, percentile) {
       if (sorted.length === 0) return 0;
 
       const index = Math.ceil((percentile / 100) * sorted.length) - 1;
       return sorted[Math.min(index, sorted.length - 1)];
-    }
+    },
   };
 
   // Export performance to Prime
@@ -679,7 +707,6 @@ require('./base.js');
 
   // Publish component module loaded event
   Prime.EventBus.publish('module:loaded', { name: 'component-performance' });
-
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)

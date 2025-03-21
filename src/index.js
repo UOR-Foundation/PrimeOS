@@ -5,13 +5,13 @@
  */
 
 // Import core Prime and ensure all modules are loaded in correct order
-const Prime = require('./core.js');
-require('./mathematics.js');
-require('./coherence.js');
-require('./framework/index.js');
+const Prime = require("./core.js");
+require("./mathematics.js");
+require("./coherence.js");
+require("./framework/index.js");
 
 // Import refactored component system
-require('./components/index.js');
+require("./components/index.js");
 
 // Initialize framework as a top-level property
 Prime.framework = Prime.createPrimeFramework();
