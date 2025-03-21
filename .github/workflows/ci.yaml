@@ -64,11 +64,17 @@ jobs:
     - name: Build
       run: npm run build:prod
     
-    - name: Publish to GitHub Packages
+    - name: Version and Publish to GitHub Packages
       # Uses registry-url and NODE_AUTH_TOKEN to authenticate
       run: |
         echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
         echo "@uor-foundation:registry=https://npm.pkg.github.com" >> .npmrc
+        
+        # Version is in format 1.0.0, we need to add the timestamp to make it unique
+        DATE_VERSION=$(date +%Y%m%d%H%M%S)
+        npm version prerelease --preid="build$DATE_VERSION" --no-git-tag-version
+        
+        # Now publish with the new version
         npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

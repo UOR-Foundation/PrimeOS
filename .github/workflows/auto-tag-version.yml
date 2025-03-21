@@ -39,8 +39,11 @@ jobs:
         id: new_version
         run: |
           CURRENT_VERSION="${{ steps.current_version.outputs.current_version }}"
+          # Extract base version (remove any prerelease info)
+          BASE_VERSION=$(echo "$CURRENT_VERSION" | cut -d'-' -f1)
+          
           # Split version into major, minor, patch components
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
           
           # Increment minor version and reset patch to 0
           NEW_MINOR=$((MINOR + 1))
