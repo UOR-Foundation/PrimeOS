@@ -1,844 +1,582 @@
 /**
- * PrimeOS JavaScript Library - Framework
- * Base 0: Coherence Validator
- * Enhanced validation primitives for system coherence
+ * Coherence Validator for the Prime Framework
+ * Enhanced version with formal UOR (Universal Object Reference) constraints
  */
 
-// Import core
-const Prime = require("../../core.js");
-const Coherence = require("../../coherence.js");
-
-// Import manifold implementation
-const { Manifold, ManifoldSpace } = require("./manifold.js");
+// Import core if available
+let Prime;
+try {
+  Prime = require("../../core.js");
+} catch (e) {
+  // Handle case where core isn't available yet
+  Prime = {};
+}
 
 /**
- * CoherenceValidator - Enhanced validation system for mathematical coherence
- * Provides validation primitives for ensuring system-wide coherence
+ * CoherenceValidator implements formal coherence checking for mathematical operations
+ * Based on UOR framework principles with constraint satisfaction verification
  */
 class CoherenceValidator {
   /**
    * Create a new coherence validator
+   * 
    * @param {Object} options - Configuration options
-   * @param {number} options.defaultThreshold - Default coherence threshold (0-1)
-   * @param {boolean} options.strictValidation - Whether to use strict validation
-   * @param {Object} options.coherenceEngine - Reference to system coherence engine
+   * @param {boolean} options.strictMode - Whether to enforce strict coherence (default: false)
+   * @param {number} options.toleranceLevel - Numerical tolerance for coherence checks (default: 1e-10)
+   * @param {boolean} options.enforceUorConstraints - Whether to enforce UOR constraints (default: true)
    */
   constructor(options = {}) {
-    this.defaultThreshold = options.defaultThreshold || 0.8;
-    this.strictValidation = options.strictValidation || false;
-    this.coherenceEngine =
-      options.coherenceEngine ||
-      (Prime.coherence ? Prime.coherence.systemCoherence : null);
-
-    // Track validation results
-    this._validationResults = [];
+    this.strictMode = options.strictMode || false;
+    this.toleranceLevel = options.toleranceLevel || 1e-10;
+    this.enforceUorConstraints = options.enforceUorConstraints !== false;
+    this.validators = {};
+    this.constraintRegistry = new Map();
+    this.coherenceNorms = new Map();
+    
+    // Performance tracking
     this._validationStats = {
-      validationsRun: 0,
-      validationsPassed: 0,
-      validationsFailed: 0,
-      averageCoherence: 1.0,
+      totalChecks: 0,
+      passedChecks: 0,
+      failedChecks: 0,
+      totalTime: 0
     };
-
-    // Validation rules registry
-    this._validationRules = new Map();
-
-    // Register built-in validation rules
-    this._registerBuiltInRules();
   }
-
+  
   /**
-   * Register a validation rule
-   * @param {string} ruleName - Unique rule identifier
-   * @param {Function} ruleFn - Validation function
-   * @param {string} description - Rule description
-   * @returns {CoherenceValidator} This validator for chaining
+   * Register a coherence constraint for a specific domain
+   * 
+   * @param {string} domain - Domain for the constraint (e.g., 'numeric', 'algebraic', 'geometric')
+   * @param {Object} constraint - Constraint object
+   * @param {Function} constraint.validator - Function that checks if a value satisfies the constraint
+   * @param {string} constraint.name - Human-readable name for the constraint
+   * @param {number} constraint.priority - Priority level (higher values = higher priority)
+   * @returns {string} Constraint ID
    */
-  registerRule(ruleName, ruleFn, description = "") {
-    if (typeof ruleFn !== "function") {
-      throw new Prime.ValidationError("Rule must be a function");
+  registerConstraint(domain, constraint) {
+    if (!constraint || typeof constraint.validator !== 'function') {
+      throw new Error('Constraint must have a validator function');
     }
-
-    this._validationRules.set(ruleName, {
-      name: ruleName,
-      fn: ruleFn,
-      description,
-      usageCount: 0,
-      passRate: 1.0,
+    
+    // Generate a unique ID for this constraint
+    const id = `${domain}_${constraint.name || 'constraint'}_${Date.now()}`;
+    
+    // Ensure domain exists in registry
+    if (!this.constraintRegistry.has(domain)) {
+      this.constraintRegistry.set(domain, new Map());
+    }
+    
+    // Store the constraint
+    this.constraintRegistry.get(domain).set(id, {
+      validator: constraint.validator,
+      name: constraint.name || id,
+      priority: constraint.priority || 0,
+      domain
     });
-
-    return this;
+    
+    return id;
   }
-
+  
   /**
-   * Validate a manifold for coherence
-   * @param {Manifold} manifold - Manifold to validate
-   * @param {Object} options - Validation options
-   * @param {number} options.threshold - Coherence threshold
-   * @param {Array} options.rules - Specific rules to apply
-   * @returns {Object} Validation result
+   * Remove a registered constraint
+   * 
+   * @param {string} id - Constraint ID
+   * @returns {boolean} Whether the constraint was successfully removed
    */
-  validateManifold(manifold, options = {}) {
-    if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError("Expected a Manifold instance");
-    }
-
-    const threshold = options.threshold || this.defaultThreshold;
-    const rulesToApply =
-      options.rules ||
-      Array.from(this._validationRules.keys()).filter((rule) =>
-        rule.startsWith("manifold:"),
-      );
-
-    // Initialize validation result
-    const validationResult = {
-      valid: true,
-      coherence: 1.0,
-      threshold,
-      errors: [],
-      warnings: [],
-      ruleResults: [],
-    };
-
-    // Apply each rule
-    for (const ruleName of rulesToApply) {
-      const rule = this._validationRules.get(ruleName);
-
-      if (!rule) {
-        validationResult.warnings.push(`Rule '${ruleName}' not found`);
-        continue;
+  removeConstraint(id) {
+    for (const [domain, constraints] of this.constraintRegistry.entries()) {
+      if (constraints.has(id)) {
+        constraints.delete(id);
+        return true;
       }
-
+    }
+    return false;
+  }
+  
+  /**
+   * Register a custom validator function for a specific type
+   * 
+   * @param {string} type - Type to validate (e.g., 'number', 'array', 'matrix')
+   * @param {Function} validator - Validation function
+   */
+  registerValidator(type, validator) {
+    if (typeof validator !== 'function') {
+      throw new Error('Validator must be a function');
+    }
+    this.validators[type] = validator;
+  }
+  
+  /**
+   * Define a coherence norm for a specific domain
+   * 
+   * @param {string} domain - Domain for the norm
+   * @param {Function} normFn - Function to compute the coherence norm
+   */
+  defineCoherenceNorm(domain, normFn) {
+    if (typeof normFn !== 'function') {
+      throw new Error('Coherence norm must be a function');
+    }
+    this.coherenceNorms.set(domain, normFn);
+  }
+  
+  /**
+   * Validate a mathematical operation according to UOR constraints
+   * 
+   * @param {string} domain - Domain for validation (e.g., 'numeric', 'algebraic')
+   * @param {*} value - Value to validate
+   * @param {Object} context - Additional context for validation
+   * @returns {Object} Validation result with coherence measure
+   */
+  validate(domain, value, context = {}) {
+    const startTime = Date.now();
+    this._validationStats.totalChecks++;
+    
+    // Get constraints for this domain
+    const domainConstraints = this.constraintRegistry.get(domain);
+    
+    if (!domainConstraints || domainConstraints.size === 0) {
+      // No registered constraints for this domain
+      this._validationStats.passedChecks++;
+      
+      const endTime = Date.now();
+      this._validationStats.totalTime += (endTime - startTime);
+      
+      return {
+        valid: true,
+        coherence: 1.0,
+        message: 'No constraints defined for this domain'
+      };
+    }
+    
+    // Sort constraints by priority (descending)
+    const sortedConstraints = Array.from(domainConstraints.values())
+      .sort((a, b) => b.priority - a.priority);
+    
+    // Track constraint satisfaction
+    const results = [];
+    let allSatisfied = true;
+    
+    // Execute constraints in priority order
+    for (const constraint of sortedConstraints) {
       try {
-        // Apply the rule
-        const ruleResult = rule.fn(manifold, options);
-        rule.usageCount++;
-
-        // Record rule result
-        validationResult.ruleResults.push({
-          rule: ruleName,
-          passed: ruleResult.valid,
-          score: ruleResult.score,
-          message: ruleResult.message,
+        const satisfied = constraint.validator(value, context);
+        
+        results.push({
+          name: constraint.name,
+          satisfied,
+          priority: constraint.priority
         });
-
-        // Update rule pass rate
-        const passCount = rule.passRate * rule.usageCount;
-        rule.passRate =
-          (passCount + (ruleResult.valid ? 1 : 0)) / (rule.usageCount + 1);
-
-        // Check if rule failed
-        if (!ruleResult.valid) {
-          validationResult.valid = false;
-          validationResult.errors.push({
-            rule: ruleName,
-            message: ruleResult.message,
-            context: ruleResult.context,
-          });
-        }
-
-        // Add warnings
-        if (ruleResult.warnings && ruleResult.warnings.length > 0) {
-          validationResult.warnings.push(
-            ...ruleResult.warnings.map((w) => ({
-              rule: ruleName,
-              message: w.message,
-              context: w.context,
-            })),
-          );
-        }
-      } catch (error) {
-        validationResult.valid = false;
-        validationResult.errors.push({
-          rule: ruleName,
-          message: `Rule execution error: ${error.message}`,
-          error,
-        });
-      }
-    }
-
-    // Calculate overall coherence score
-    if (validationResult.ruleResults.length > 0) {
-      const totalScore = validationResult.ruleResults.reduce(
-        (sum, result) => sum + (result.score || 0),
-        0,
-      );
-      validationResult.coherence =
-        totalScore / validationResult.ruleResults.length;
-    }
-
-    // Check against threshold
-    validationResult.valid =
-      validationResult.valid && validationResult.coherence >= threshold;
-
-    // Update validation stats
-    this._validationStats.validationsRun++;
-    if (validationResult.valid) {
-      this._validationStats.validationsPassed++;
-    } else {
-      this._validationStats.validationsFailed++;
-    }
-
-    // Update average coherence
-    const totalCoherence =
-      this._validationStats.averageCoherence *
-        (this._validationStats.validationsRun - 1) +
-      validationResult.coherence;
-    this._validationStats.averageCoherence =
-      totalCoherence / this._validationStats.validationsRun;
-
-    // Store result
-    this._validationResults.push({
-      type: "manifold",
-      target: manifold.getId(),
-      result: validationResult,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Limit history size
-    if (this._validationResults.length > 100) {
-      this._validationResults.shift();
-    }
-
-    return validationResult;
-  }
-
-  /**
-   * Validate a relationship between manifolds
-   * @param {Manifold} source - Source manifold
-   * @param {Manifold} target - Target manifold
-   * @param {string} relationType - Type of relationship
-   * @param {Object} options - Validation options
-   * @returns {Object} Validation result
-   */
-  validateRelationship(source, target, relationType, options = {}) {
-    if (!(source instanceof Manifold) || !(target instanceof Manifold)) {
-      throw new Prime.ValidationError(
-        "Source and target must be Manifold instances",
-      );
-    }
-
-    if (!relationType) {
-      throw new Prime.ValidationError("Relationship type is required");
-    }
-
-    const threshold = options.threshold || this.defaultThreshold;
-    const rulesToApply =
-      options.rules ||
-      Array.from(this._validationRules.keys()).filter((rule) =>
-        rule.startsWith("relation:"),
-      );
-
-    // Initialize validation result
-    const validationResult = {
-      valid: true,
-      coherence: 1.0,
-      threshold,
-      errors: [],
-      warnings: [],
-      ruleResults: [],
-    };
-
-    // Apply each rule
-    for (const ruleName of rulesToApply) {
-      const rule = this._validationRules.get(ruleName);
-
-      if (!rule) {
-        validationResult.warnings.push(`Rule '${ruleName}' not found`);
-        continue;
-      }
-
-      try {
-        // Apply the rule
-        const ruleResult = rule.fn(source, target, relationType, options);
-        rule.usageCount++;
-
-        // Record rule result
-        validationResult.ruleResults.push({
-          rule: ruleName,
-          passed: ruleResult.valid,
-          score: ruleResult.score,
-          message: ruleResult.message,
-        });
-
-        // Update rule pass rate
-        const passCount = rule.passRate * rule.usageCount;
-        rule.passRate =
-          (passCount + (ruleResult.valid ? 1 : 0)) / (rule.usageCount + 1);
-
-        // Check if rule failed
-        if (!ruleResult.valid) {
-          validationResult.valid = false;
-          validationResult.errors.push({
-            rule: ruleName,
-            message: ruleResult.message,
-            context: ruleResult.context,
-          });
-        }
-
-        // Add warnings
-        if (ruleResult.warnings && ruleResult.warnings.length > 0) {
-          validationResult.warnings.push(
-            ...ruleResult.warnings.map((w) => ({
-              rule: ruleName,
-              message: w.message,
-              context: w.context,
-            })),
-          );
-        }
-      } catch (error) {
-        validationResult.valid = false;
-        validationResult.errors.push({
-          rule: ruleName,
-          message: `Rule execution error: ${error.message}`,
-          error,
-        });
-      }
-    }
-
-    // Calculate overall coherence score
-    if (validationResult.ruleResults.length > 0) {
-      const totalScore = validationResult.ruleResults.reduce(
-        (sum, result) => sum + (result.score || 0),
-        0,
-      );
-      validationResult.coherence =
-        totalScore / validationResult.ruleResults.length;
-    }
-
-    // Check against threshold
-    validationResult.valid =
-      validationResult.valid && validationResult.coherence >= threshold;
-
-    // Update validation stats
-    this._validationStats.validationsRun++;
-    if (validationResult.valid) {
-      this._validationStats.validationsPassed++;
-    } else {
-      this._validationStats.validationsFailed++;
-    }
-
-    // Update average coherence
-    const totalCoherence =
-      this._validationStats.averageCoherence *
-        (this._validationStats.validationsRun - 1) +
-      validationResult.coherence;
-    this._validationStats.averageCoherence =
-      totalCoherence / this._validationStats.validationsRun;
-
-    // Store result
-    this._validationResults.push({
-      type: "relationship",
-      source: source.getId(),
-      target: target.getId(),
-      relationType,
-      result: validationResult,
-      timestamp: new Date().toISOString(),
-    });
-
-    return validationResult;
-  }
-
-  /**
-   * Validate a manifold space
-   * @param {ManifoldSpace} space - Space to validate
-   * @param {Object} options - Validation options
-   * @returns {Object} Validation result
-   */
-  validateSpace(space, options = {}) {
-    if (!(space instanceof ManifoldSpace)) {
-      throw new Prime.ValidationError("Expected a ManifoldSpace instance");
-    }
-
-    const threshold = options.threshold || this.defaultThreshold;
-    const rulesToApply =
-      options.rules ||
-      Array.from(this._validationRules.keys()).filter((rule) =>
-        rule.startsWith("space:"),
-      );
-
-    // Initialize validation result
-    const validationResult = {
-      valid: true,
-      coherence: 1.0,
-      threshold,
-      errors: [],
-      warnings: [],
-      ruleResults: [],
-    };
-
-    // Apply each rule
-    for (const ruleName of rulesToApply) {
-      const rule = this._validationRules.get(ruleName);
-
-      if (!rule) {
-        validationResult.warnings.push(`Rule '${ruleName}' not found`);
-        continue;
-      }
-
-      try {
-        // Apply the rule
-        const ruleResult = rule.fn(space, options);
-        rule.usageCount++;
-
-        // Record rule result
-        validationResult.ruleResults.push({
-          rule: ruleName,
-          passed: ruleResult.valid,
-          score: ruleResult.score,
-          message: ruleResult.message,
-        });
-
-        // Update rule pass rate
-        const passCount = rule.passRate * rule.usageCount;
-        rule.passRate =
-          (passCount + (ruleResult.valid ? 1 : 0)) / (rule.usageCount + 1);
-
-        // Check if rule failed
-        if (!ruleResult.valid) {
-          validationResult.valid = false;
-          validationResult.errors.push({
-            rule: ruleName,
-            message: ruleResult.message,
-            context: ruleResult.context,
-          });
-        }
-
-        // Add warnings
-        if (ruleResult.warnings && ruleResult.warnings.length > 0) {
-          validationResult.warnings.push(
-            ...ruleResult.warnings.map((w) => ({
-              rule: ruleName,
-              message: w.message,
-              context: w.context,
-            })),
-          );
-        }
-      } catch (error) {
-        validationResult.valid = false;
-        validationResult.errors.push({
-          rule: ruleName,
-          message: `Rule execution error: ${error.message}`,
-          error,
-        });
-      }
-    }
-
-    // Calculate overall coherence score
-    if (validationResult.ruleResults.length > 0) {
-      const totalScore = validationResult.ruleResults.reduce(
-        (sum, result) => sum + (result.score || 0),
-        0,
-      );
-      validationResult.coherence =
-        totalScore / validationResult.ruleResults.length;
-    }
-
-    // Check against threshold
-    validationResult.valid =
-      validationResult.valid && validationResult.coherence >= threshold;
-
-    // Update validation stats
-    this._validationStats.validationsRun++;
-    if (validationResult.valid) {
-      this._validationStats.validationsPassed++;
-    } else {
-      this._validationStats.validationsFailed++;
-    }
-
-    // Update average coherence
-    const totalCoherence =
-      this._validationStats.averageCoherence *
-        (this._validationStats.validationsRun - 1) +
-      validationResult.coherence;
-    this._validationStats.averageCoherence =
-      totalCoherence / this._validationStats.validationsRun;
-
-    // Store result
-    this._validationResults.push({
-      type: "space",
-      target: space.id,
-      result: validationResult,
-      timestamp: new Date().toISOString(),
-    });
-
-    return validationResult;
-  }
-
-  /**
-   * Validate a complex system of manifolds and spaces
-   * @param {Object} system - System to validate
-   * @param {Array} system.manifolds - Manifolds in the system
-   * @param {Array} system.spaces - Spaces in the system
-   * @param {Array} system.relationships - Relationships in the system
-   * @param {Object} options - Validation options
-   * @returns {Object} Validation result
-   */
-  validateSystem(system, options = {}) {
-    if (!system || !system.manifolds) {
-      throw new Prime.ValidationError("System must contain manifolds");
-    }
-
-    const threshold = options.threshold || this.defaultThreshold;
-
-    // Initialize validation result
-    const validationResult = {
-      valid: true,
-      coherence: 1.0,
-      threshold,
-      errors: [],
-      warnings: [],
-      manifoldResults: [],
-      spaceResults: [],
-      relationshipResults: [],
-    };
-
-    // Validate manifolds
-    for (const manifold of system.manifolds) {
-      const manifoldResult = this.validateManifold(manifold, options);
-      validationResult.manifoldResults.push({
-        manifold: manifold.getId(),
-        result: manifoldResult,
-      });
-
-      if (!manifoldResult.valid) {
-        validationResult.valid = false;
-        validationResult.errors.push({
-          type: "manifold",
-          target: manifold.getId(),
-          errors: manifoldResult.errors,
-        });
-      }
-
-      if (manifoldResult.warnings && manifoldResult.warnings.length > 0) {
-        validationResult.warnings.push({
-          type: "manifold",
-          target: manifold.getId(),
-          warnings: manifoldResult.warnings,
-        });
-      }
-    }
-
-    // Validate spaces
-    if (system.spaces) {
-      for (const space of system.spaces) {
-        const spaceResult = this.validateSpace(space, options);
-        validationResult.spaceResults.push({
-          space: space.id,
-          result: spaceResult,
-        });
-
-        if (!spaceResult.valid) {
-          validationResult.valid = false;
-          validationResult.errors.push({
-            type: "space",
-            target: space.id,
-            errors: spaceResult.errors,
-          });
-        }
-
-        if (spaceResult.warnings && spaceResult.warnings.length > 0) {
-          validationResult.warnings.push({
-            type: "space",
-            target: space.id,
-            warnings: spaceResult.warnings,
-          });
-        }
-      }
-    }
-
-    // Validate relationships
-    if (system.relationships) {
-      for (const relationship of system.relationships) {
-        const { source, target, type } = relationship;
-
-        const relationshipResult = this.validateRelationship(
-          source,
-          target,
-          type,
-          options,
-        );
-
-        validationResult.relationshipResults.push({
-          source: source.getId(),
-          target: target.getId(),
-          type,
-          result: relationshipResult,
-        });
-
-        if (!relationshipResult.valid) {
-          validationResult.valid = false;
-          validationResult.errors.push({
-            type: "relationship",
-            source: source.getId(),
-            target: target.getId(),
-            relationType: type,
-            errors: relationshipResult.errors,
-          });
-        }
-
-        if (
-          relationshipResult.warnings &&
-          relationshipResult.warnings.length > 0
-        ) {
-          validationResult.warnings.push({
-            type: "relationship",
-            source: source.getId(),
-            target: target.getId(),
-            relationType: type,
-            warnings: relationshipResult.warnings,
-          });
-        }
-      }
-    }
-
-    // Calculate system coherence
-    const manifoldCoherences = validationResult.manifoldResults.map(
-      (r) => r.result.coherence,
-    );
-    const spaceCoherences = validationResult.spaceResults.map(
-      (r) => r.result.coherence,
-    );
-    const relationshipCoherences = validationResult.relationshipResults.map(
-      (r) => r.result.coherence,
-    );
-
-    const allCoherences = [
-      ...manifoldCoherences,
-      ...spaceCoherences,
-      ...relationshipCoherences,
-    ];
-
-    if (allCoherences.length > 0) {
-      const totalCoherence = allCoherences.reduce(
-        (sum, score) => sum + score,
-        0,
-      );
-      validationResult.coherence = totalCoherence / allCoherences.length;
-    }
-
-    // Check against threshold
-    validationResult.valid =
-      validationResult.valid && validationResult.coherence >= threshold;
-
-    return validationResult;
-  }
-
-  /**
-   * Get validation statistics
-   * @returns {Object} Validation statistics
-   */
-  getValidationStats() {
-    return { ...this._validationStats };
-  }
-
-  /**
-   * Get recent validation results
-   * @param {number} limit - Maximum number of results to return
-   * @returns {Array} Recent validation results
-   */
-  getRecentValidations(limit = 10) {
-    return this._validationResults.slice(-limit);
-  }
-
-  /**
-   * Get information about registered rules
-   * @returns {Array} Rule information
-   */
-  getRuleInfo() {
-    return Array.from(this._validationRules.entries()).map(([name, rule]) => ({
-      name,
-      description: rule.description,
-      usageCount: rule.usageCount,
-      passRate: rule.passRate,
-    }));
-  }
-
-  /**
-   * Register built-in validation rules
-   * @private
-   */
-  _registerBuiltInRules() {
-    // Manifold structure validation
-    this.registerRule(
-      "manifold:structure",
-      (manifold) => {
-        const hasMeta = manifold.meta && Object.keys(manifold.meta).length > 0;
-        const hasInvariant =
-          manifold.invariant && Object.keys(manifold.invariant).length > 0;
-
-        const valid = hasMeta;
-        const warnings = [];
-
-        if (!hasInvariant) {
-          warnings.push({
-            message: "Manifold has no invariant properties",
-            context: { manifoldId: manifold.getId() },
-          });
-        }
-
-        return {
-          valid,
-          score: valid ? 1.0 : 0.5,
-          message: valid
-            ? "Manifold has valid structure"
-            : "Manifold missing required structure",
-          warnings,
-          context: {
-            hasMeta,
-            hasInvariant,
-          },
-        };
-      },
-      "Validates the basic structure of a manifold (meta, invariant, variant)",
-    );
-
-    // Manifold depth validation
-    this.registerRule(
-      "manifold:depth",
-      (manifold) => {
-        const valid = typeof manifold.depth === "number" && manifold.depth >= 0;
-
-        return {
-          valid,
-          score: valid ? 1.0 : 0.7,
-          message: valid
-            ? "Manifold has valid depth"
-            : "Manifold has invalid depth",
-          context: { depth: manifold.depth },
-        };
-      },
-      "Validates that a manifold has a valid depth value",
-    );
-
-    // Manifold coherence validation
-    this.registerRule(
-      "manifold:coherence",
-      (manifold) => {
-        const coherenceScore = manifold.getCoherenceScore();
-        const valid = coherenceScore >= manifold._coherenceThreshold;
-
-        return {
-          valid,
-          score: coherenceScore,
-          message: valid
-            ? `Manifold coherence score (${coherenceScore.toFixed(2)}) is above threshold`
-            : `Manifold coherence score (${coherenceScore.toFixed(2)}) is below threshold`,
-          context: {
-            coherenceScore,
-            threshold: manifold._coherenceThreshold,
-          },
-        };
-      },
-      "Validates that a manifold meets its coherence threshold",
-    );
-
-    // Relationship depth validation
-    this.registerRule(
-      "relation:depth",
-      (source, target, relationType) => {
-        // Validate based on relationship type and depth
-        const sourceDepth = source.getDepth();
-        const targetDepth = target.getDepth();
-
-        let valid = true;
-        let message = "Relationship depths are valid";
-
-        // For parent-child relationships, child should have higher depth
-        if (relationType === "parent" && sourceDepth >= targetDepth) {
-          valid = false;
-          message = "Parent manifold should have lower depth than child";
-        }
-
-        // For peer relationships, depths should be similar
-        if (
-          relationType === "peer" &&
-          Math.abs(sourceDepth - targetDepth) > 1
-        ) {
-          valid = false;
-          message = "Peer manifolds should have similar depths";
-        }
-
-        return {
-          valid,
-          score: valid ? 1.0 : 0.5,
-          message,
-          context: {
-            sourceDepth,
-            targetDepth,
-            relationType,
-          },
-        };
-      },
-      "Validates the depth relationship between connected manifolds",
-    );
-
-    // Space dimensionality validation
-    this.registerRule(
-      "space:dimension",
-      (space) => {
-        const valid =
-          typeof space.dimension === "number" && space.dimension >= 0;
-
-        return {
-          valid,
-          score: valid ? 1.0 : 0.8,
-          message: valid
-            ? "Space has valid dimension"
-            : "Space has invalid dimension",
-          context: { dimension: space.dimension },
-        };
-      },
-      "Validates that a space has a valid dimension",
-    );
-
-    // Space coherence validation
-    this.registerRule(
-      "space:coherence",
-      (space) => {
-        const manifolds = space.getManifolds();
-
-        // Empty space is valid
-        if (manifolds.length === 0) {
-          return {
-            valid: true,
-            score: 1.0,
-            message: "Space is empty and coherent",
-            context: { manifoldCount: 0 },
-          };
-        }
-
-        // Check coherence between all manifolds in the space
-        let totalCoherence = 0;
-        let pairCount = 0;
-
-        for (let i = 0; i < manifolds.length; i++) {
-          for (let j = i + 1; j < manifolds.length; j++) {
-            const coherence = manifolds[i].checkCoherenceWith(manifolds[j]);
-            totalCoherence += coherence.score;
-            pairCount++;
+        
+        if (!satisfied) {
+          allSatisfied = false;
+          
+          // In strict mode, fail on first violated constraint
+          if (this.strictMode) {
+            break;
           }
         }
-
-        const averageCoherence =
-          pairCount > 0 ? totalCoherence / pairCount : 1.0;
-        const valid = averageCoherence >= 0.7; // 0.7 is threshold for space coherence
-
+      } catch (error) {
+        results.push({
+          name: constraint.name,
+          satisfied: false,
+          priority: constraint.priority,
+          error: error.message
+        });
+        
+        allSatisfied = false;
+        if (this.strictMode) {
+          break;
+        }
+      }
+    }
+    
+    // Compute coherence score based on constraint satisfaction
+    let coherence = 0;
+    
+    // If we have a registered coherence norm for this domain, use it
+    if (this.coherenceNorms.has(domain)) {
+      try {
+        coherence = this.coherenceNorms.get(domain)(results, value, context);
+      } catch (e) {
+        // Fallback to simple coherence calculation on error
+        coherence = this._computeSimpleCoherence(results);
+      }
+    } else {
+      // Otherwise, use a simple coherence measure
+      coherence = this._computeSimpleCoherence(results);
+    }
+    
+    // Track statistics
+    if (allSatisfied) {
+      this._validationStats.passedChecks++;
+    } else {
+      this._validationStats.failedChecks++;
+    }
+    
+    const endTime = Date.now();
+    this._validationStats.totalTime += (endTime - startTime);
+    
+    // Return validation result
+    return {
+      valid: allSatisfied,
+      coherence,
+      constraintResults: results,
+      message: allSatisfied ? 'All constraints satisfied' : 'Some constraints violated'
+    };
+  }
+  
+  /**
+   * Compute a simple coherence measure based on constraint satisfaction
+   * 
+   * @private
+   * @param {Array} results - Constraint validation results
+   * @returns {number} Coherence measure between 0 and 1
+   */
+  _computeSimpleCoherence(results) {
+    if (results.length === 0) return 1.0;
+    
+    // Weight results by priority
+    const totalPriority = results.reduce((sum, r) => sum + r.priority, 0);
+    
+    if (totalPriority === 0) {
+      // Equal weighting if no priorities specified
+      return results.filter(r => r.satisfied).length / results.length;
+    }
+    
+    // Weight by priority
+    let weightedSum = 0;
+    for (const result of results) {
+      weightedSum += (result.satisfied ? 1 : 0) * (result.priority / totalPriority);
+    }
+    
+    return weightedSum;
+  }
+  
+  /**
+   * Get validation performance statistics
+   * 
+   * @returns {Object} Validation statistics
+   */
+  getStats() {
+    const successRate = this._validationStats.totalChecks > 0 
+      ? this._validationStats.passedChecks / this._validationStats.totalChecks 
+      : 0;
+    
+    return {
+      ...this._validationStats,
+      successRate,
+      averageTime: this._validationStats.totalChecks > 0 
+        ? this._validationStats.totalTime / this._validationStats.totalChecks 
+        : 0
+    };
+  }
+  
+  /**
+   * Reset validation statistics
+   */
+  resetStats() {
+    this._validationStats = {
+      totalChecks: 0,
+      passedChecks: 0,
+      failedChecks: 0,
+      totalTime: 0
+    };
+  }
+  
+  /**
+   * Validate a value with UOR formal constraints
+   * 
+   * @param {*} value - Value to validate
+   * @param {string} type - Expected type of value
+   * @param {Object} constraints - Additional UOR constraints
+   * @returns {Object} Validation result
+   */
+  validateWithUorConstraints(value, type, constraints = {}) {
+    if (!this.enforceUorConstraints) {
+      return { valid: true, coherence: 1.0 };
+    }
+    
+    // Basic type validation
+    const typeValid = this._validateType(value, type);
+    
+    if (!typeValid) {
+      return {
+        valid: false,
+        coherence: 0,
+        message: `Value is not of expected type ${type}`
+      };
+    }
+    
+    // Specific validators for different types
+    let domainValid = true;
+    let domainCoherence = 1.0;
+    
+    // Choose appropriate validator based on type
+    switch (type) {
+      case 'number':
+        return this.validate('numeric', value, constraints);
+      case 'array':
+      case 'vector':
+        return this.validate('vectorSpace', value, constraints);
+      case 'matrix':
+        return this.validate('matrixAlgebra', value, constraints);
+      case 'function':
+        return this.validate('functional', value, constraints);
+      case 'tensor':
+        return this.validate('tensorAlgebra', value, constraints);
+      default:
+        // Use custom validator if registered
+        if (this.validators[type]) {
+          try {
+            const result = this.validators[type](value, constraints);
+            return {
+              valid: result.valid !== false,
+              coherence: result.coherence || (result.valid !== false ? 1.0 : 0.0),
+              message: result.message || `Validated ${type} value`
+            };
+          } catch (e) {
+            return {
+              valid: false,
+              coherence: 0,
+              message: `Error in custom validator: ${e.message}`
+            };
+          }
+        }
+        
+        // Default behavior for unknown types
         return {
-          valid,
-          score: averageCoherence,
-          message: valid
-            ? `Space manifolds are coherent (${averageCoherence.toFixed(2)})`
-            : `Space manifolds lack coherence (${averageCoherence.toFixed(2)})`,
-          context: {
-            manifoldCount: manifolds.length,
-            averageCoherence,
-            threshold: 0.7,
-          },
+          valid: true,
+          coherence: 1.0,
+          message: `No specific validation for type ${type}`
         };
-      },
-      "Validates the coherence of manifolds within a space",
-    );
+    }
+  }
+  
+  /**
+   * Validate type of a value
+   * 
+   * @private
+   * @param {*} value - Value to check
+   * @param {string} expectedType - Expected type
+   * @returns {boolean} Whether the value matches the expected type
+   */
+  _validateType(value, expectedType) {
+    switch (expectedType) {
+      case 'number':
+        return typeof value === 'number' && !isNaN(value);
+      case 'string':
+        return typeof value === 'string';
+      case 'boolean':
+        return typeof value === 'boolean';
+      case 'function':
+        return typeof value === 'function';
+      case 'object':
+        return value !== null && typeof value === 'object' && !Array.isArray(value);
+      case 'array':
+      case 'vector':
+        return Array.isArray(value);
+      case 'matrix':
+        return Array.isArray(value) && value.every(row => Array.isArray(row));
+      case 'tensor':
+        // Recursive check for multi-dimensional arrays
+        const checkTensor = (arr, depth = 0) => {
+          if (depth > 0 && !Array.isArray(arr)) return true;
+          if (depth === 0 && !Array.isArray(arr)) return false;
+          if (arr.length === 0) return true;
+          const allArrays = arr.every(item => Array.isArray(item));
+          return allArrays && arr.every(subArr => checkTensor(subArr, depth + 1));
+        };
+        return checkTensor(value);
+      default:
+        // For custom types, check against registered validators
+        if (this.validators[expectedType]) {
+          try {
+            return this.validators[expectedType](value).valid !== false;
+          } catch (e) {
+            return false;
+          }
+        }
+        // Default fallback
+        return true;
+    }
   }
 }
 
-module.exports = CoherenceValidator;
+/**
+ * Class for validating the coherence of mathematical operations
+ * Simplified version for basic coherence checks
+ */
+class MathematicalCoherenceValidator {
+  /**
+   * Create a new mathematical coherence validator
+   * 
+   * @param {Object} options - Configuration options
+   */
+  constructor(options = {}) {
+    this.numericalTolerance = options.numericalTolerance || 1e-10;
+    this.validator = new CoherenceValidator({
+      strictMode: options.strictMode,
+      toleranceLevel: this.numericalTolerance,
+      enforceUorConstraints: options.enforceUorConstraints
+    });
+    
+    // Register built-in constraints
+    this._registerBuiltInConstraints();
+  }
+  
+  /**
+   * Register built-in mathematical constraints
+   * 
+   * @private
+   */
+  _registerBuiltInConstraints() {
+    // Numeric domain constraints
+    this.validator.registerConstraint('numeric', {
+      name: 'finiteness',
+      validator: (value) => Number.isFinite(value),
+      priority: 10
+    });
+    
+    this.validator.registerConstraint('numeric', {
+      name: 'non_nan',
+      validator: (value) => !Number.isNaN(value),
+      priority: 10
+    });
+    
+    // Vector space constraints
+    this.validator.registerConstraint('vectorSpace', {
+      name: 'array_elements',
+      validator: (value) => Array.isArray(value) && value.every(item => typeof item === 'number'),
+      priority: 8
+    });
+    
+    this.validator.registerConstraint('vectorSpace', {
+      name: 'finite_elements',
+      validator: (value) => Array.isArray(value) && value.every(item => Number.isFinite(item)),
+      priority: 7
+    });
+    
+    // Matrix algebra constraints
+    this.validator.registerConstraint('matrixAlgebra', {
+      name: 'matrix_structure',
+      validator: (value) => {
+        if (!Array.isArray(value) || value.length === 0) return false;
+        if (!value.every(row => Array.isArray(row))) return false;
+        
+        // Check that all rows have the same length
+        const rowLength = value[0].length;
+        return value.every(row => row.length === rowLength);
+      },
+      priority: 9
+    });
+    
+    this.validator.registerConstraint('matrixAlgebra', {
+      name: 'matrix_elements',
+      validator: (value) => {
+        if (!Array.isArray(value)) return false;
+        return value.every(row => 
+          Array.isArray(row) && row.every(item => typeof item === 'number' && Number.isFinite(item))
+        );
+      },
+      priority: 8
+    });
+    
+    // Define coherence norms
+    this.validator.defineCoherenceNorm('numeric', (results) => {
+      // For numeric values, coherence is binary - either fully coherent or not
+      return results.every(r => r.satisfied) ? 1.0 : 0.0;
+    });
+    
+    this.validator.defineCoherenceNorm('vectorSpace', (results, value) => {
+      // For vectors, consider partial coherence based on the proportion of valid elements
+      if (!Array.isArray(value)) return 0.0;
+      
+      // If fundamental constraints are violated, coherence is 0
+      if (!results.find(r => r.name === 'array_elements')?.satisfied) {
+        return 0.0;
+      }
+      
+      // Count finite elements
+      const finiteCount = value.filter(v => Number.isFinite(v)).length;
+      return value.length > 0 ? finiteCount / value.length : 0.0;
+    });
+    
+    this.validator.defineCoherenceNorm('matrixAlgebra', (results, value) => {
+      // For matrices, consider structure and element validity
+      if (!results.find(r => r.name === 'matrix_structure')?.satisfied) {
+        return 0.0;
+      }
+      
+      // Count valid elements
+      let validCount = 0;
+      let totalCount = 0;
+      
+      for (const row of value) {
+        for (const element of row) {
+          totalCount++;
+          if (typeof element === 'number' && Number.isFinite(element)) {
+            validCount++;
+          }
+        }
+      }
+      
+      return totalCount > 0 ? validCount / totalCount : 0.0;
+    });
+  }
+  
+  /**
+   * Validate a numeric operation
+   * 
+   * @param {number} value - Result to validate
+   * @param {Object} context - Additional context
+   * @returns {Object} Validation result
+   */
+  validateNumeric(value, context = {}) {
+    return this.validator.validate('numeric', value, context);
+  }
+  
+  /**
+   * Validate a vector operation
+   * 
+   * @param {Array} vector - Vector to validate
+   * @param {Object} context - Additional context
+   * @returns {Object} Validation result
+   */
+  validateVector(vector, context = {}) {
+    return this.validator.validate('vectorSpace', vector, context);
+  }
+  
+  /**
+   * Validate a matrix operation
+   * 
+   * @param {Array} matrix - Matrix to validate
+   * @param {Object} context - Additional context
+   * @returns {Object} Validation result
+   */
+  validateMatrix(matrix, context = {}) {
+    return this.validator.validate('matrixAlgebra', matrix, context);
+  }
+  
+  /**
+   * Get validation statistics
+   * 
+   * @returns {Object} Validation statistics
+   */
+  getStats() {
+    return this.validator.getStats();
+  }
+  
+  /**
+   * Get the underlying CoherenceValidator
+   * 
+   * @returns {CoherenceValidator} The underlying validator
+   */
+  getValidator() {
+    return this.validator;
+  }
+}
+
+// Export the module
+module.exports = {
+  CoherenceValidator,
+  MathematicalCoherenceValidator
+};

@@ -77,5 +77,8 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
     "access": "public"
+  },
+  "dependencies": {
+    "@uor-foundation/primeos": "github:UOR-Foundation/PrimeOS"
   }
 }

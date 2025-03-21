@@ -9,6 +9,7 @@ A neural network-based operating system built on the Prime Framework, representi
 - **Functional Interface**: Pure functions and immutable data structures used throughout the system
 - **Neural Computation**: All components implemented as neural network models
 - **Resource Optimization**: Intelligent allocation based on coherence requirements
+- **Extreme Condition Handling**: Robust numerical computations for demanding scientific applications (e.g., RNA folding)
 
 ## Mathematical Foundation
 
@@ -32,6 +33,11 @@ PrimeOS is organized into four hierarchical bases:
 ### From npm (once published)
 ```bash
 npm install primeos
+```
+
+### Directly from GitHub
+```bash
+npm install UOR-Foundation/PrimeOS
 ```
 
 ### From GitHub Packages

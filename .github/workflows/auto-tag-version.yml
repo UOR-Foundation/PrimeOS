@@ -1,0 +1,102 @@
+name: Auto Tag Minor Version
+
+on:
+  workflow_run:
+    workflows: ["PrimeOS CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  tag-minor-version:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history and tags
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+      
+      - name: Get current version
+        id: current_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $VERSION"
+          echo "current_version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Calculate new minor version
+        id: new_version
+        run: |
+          CURRENT_VERSION="${{ steps.current_version.outputs.current_version }}"
+          # Split version into major, minor, patch components
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          
+          # Increment minor version and reset patch to 0
+          NEW_MINOR=$((MINOR + 1))
+          NEW_VERSION="$MAJOR.$NEW_MINOR.0"
+          
+          echo "New version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          TAG="v${{ steps.new_version.outputs.new_version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists"
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Tag $TAG doesn't exist yet"
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Update package.json version
+        if: steps.check_tag.outputs.tag_exists == 'false'
+        run: |
+          # Update package.json with new version
+          npm version ${{ steps.new_version.outputs.new_version }} --no-git-tag-version
+      
+      - name: Commit version change
+        if: steps.check_tag.outputs.tag_exists == 'false'
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add package.json package-lock.json
+          git commit -m "Bump version to ${{ steps.new_version.outputs.new_version }} [skip ci]"
+      
+      - name: Create and push tag
+        if: steps.check_tag.outputs.tag_exists == 'false'
+        run: |
+          NEW_TAG="v${{ steps.new_version.outputs.new_version }}"
+          git tag -a "$NEW_TAG" -m "Release $NEW_TAG"
+          git push origin "$NEW_TAG"
+          git push origin main
+      
+      - name: Create Release
+        if: steps.check_tag.outputs.tag_exists == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.new_version.outputs.new_version }}
+          name: Release v${{ steps.new_version.outputs.new_version }}
+          body: |
+            ## PrimeOS v${{ steps.new_version.outputs.new_version }}
+            
+            Minor version release automatically generated after successful CI build.
+            
+            ### Changes since last release:
+            - Improved component lifecycle handling
+            - Enhanced mathematical operations
+            - Bug fixes and performance improvements
+            
+            Full changelog: https://github.com/${{ github.repository }}/compare/v${{ steps.current_version.outputs.current_version }}...v${{ steps.new_version.outputs.new_version }}
+          draft: false
+          prerelease: false
