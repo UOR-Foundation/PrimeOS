@@ -1181,15 +1181,23 @@ TestRunner.run()
     console.log("\nTest run complete.");
 
     // Only exit explicitly if we're not running in Jest
-    if (typeof process !== "undefined" && process.exit && !process.env.JEST_WORKER_ID) {
+    if (
+      typeof process !== "undefined" &&
+      process.exit &&
+      !process.env.JEST_WORKER_ID
+    ) {
       process.exit(results.failed > 0 ? 1 : 0);
     }
   })
   .catch((error) => {
     console.error("Error running tests:", error);
 
-    // Only exit explicitly if we're not running in Jest 
-    if (typeof process !== "undefined" && process.exit && !process.env.JEST_WORKER_ID) {
+    // Only exit explicitly if we're not running in Jest
+    if (
+      typeof process !== "undefined" &&
+      process.exit &&
+      !process.env.JEST_WORKER_ID
+    ) {
       process.exit(1);
     }
   });

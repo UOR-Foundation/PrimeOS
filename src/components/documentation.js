@@ -5,12 +5,12 @@
  */
 
 // Import Prime using CommonJS to avoid circular dependency
-const Prime = require('../core.js');
+const Prime = require("../core.js");
 // Ensure all modules are loaded in correct order
-require('../mathematics.js');
-require('../coherence.js');
-require('../framework/index.js');
-require('./base.js');
+require("../mathematics.js");
+require("../coherence.js");
+require("../framework/index.js");
+require("./base.js");
 
 (function (Prime) {
   /**
@@ -18,7 +18,7 @@ require('./base.js');
    */
   const generateDocumentation = function (options = {}) {
     const docOptions = {
-      format: options.format || 'markdown',
+      format: options.format || "markdown",
       includePrivate: options.includePrivate === true,
       includeInternal: options.includeInternal === true,
       depth: options.depth || Infinity,
@@ -29,11 +29,11 @@ require('./base.js');
      * @returns {string} Generated documentation
      */
     const generatePrimeDocumentation = function () {
-      if (docOptions.format === 'markdown') {
+      if (docOptions.format === "markdown") {
         return generateMarkdownDocumentation();
-      } else if (docOptions.format === 'html') {
+      } else if (docOptions.format === "html") {
         return generateHtmlDocumentation();
-      } else if (docOptions.format === 'json') {
+      } else if (docOptions.format === "json") {
         return generateJsonDocumentation();
       }
 
@@ -276,14 +276,14 @@ require('./base.js');
 
       // Very basic markdown to HTML converter
       const html = md
-        .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
-        .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
-        .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/`(.*?)`/g, '<code>$1</code>')
-        .replace(/```(\w*)\n([\s\S]*?)\n```/g, '<pre><code>$2</code></pre>');
+        .replace(/^# (.*?)$/gm, "<h1>$1</h1>")
+        .replace(/^## (.*?)$/gm, "<h2>$1</h2>")
+        .replace(/^### (.*?)$/gm, "<h3>$1</h3>")
+        .replace(/\n\n/g, "</p><p>")
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.*?)\*/g, "<em>$1</em>")
+        .replace(/`(.*?)`/g, "<code>$1</code>")
+        .replace(/```(\w*)\n([\s\S]*?)\n```/g, "<pre><code>$2</code></pre>");
 
       return `<!DOCTYPE html>
       <html>
@@ -314,40 +314,40 @@ require('./base.js');
       // In a full implementation, this would generate a detailed JSON representation
 
       return {
-        name: 'PrimeOS JavaScript Library',
+        name: "PrimeOS JavaScript Library",
         version: Prime.version,
         description:
-          'The PrimeOS JavaScript Library provides a robust implementation of the Prime Framework in JavaScript.',
+          "The PrimeOS JavaScript Library provides a robust implementation of the Prime Framework in JavaScript.",
         modules: [
           {
-            name: 'Core',
-            description: 'Core utilities and structures',
-            exports: ['Utils', 'EventBus', 'Logger'],
+            name: "Core",
+            description: "Core utilities and structures",
+            exports: ["Utils", "EventBus", "Logger"],
           },
           {
-            name: 'Components',
-            description: 'Component system',
+            name: "Components",
+            description: "Component system",
             exports: [
-              'createComponent',
-              'ComponentRegistry',
-              'ComponentFactory',
-              'ComponentTemplate',
+              "createComponent",
+              "ComponentRegistry",
+              "ComponentFactory",
+              "ComponentTemplate",
             ],
           },
           {
-            name: 'Framework',
-            description: 'Four-tier framework architecture',
-            exports: ['Base0', 'Base1', 'Base2', 'Base3'],
+            name: "Framework",
+            description: "Four-tier framework architecture",
+            exports: ["Base0", "Base1", "Base2", "Base3"],
           },
           {
-            name: 'Rendering',
-            description: 'Rendering system',
-            exports: ['render'],
+            name: "Rendering",
+            description: "Rendering system",
+            exports: ["render"],
           },
           {
-            name: 'Performance',
-            description: 'Performance tools',
-            exports: ['performance'],
+            name: "Performance",
+            description: "Performance tools",
+            exports: ["performance"],
           },
         ],
       };
@@ -361,15 +361,15 @@ require('./base.js');
   Prime.generateDocumentation = generateDocumentation;
 
   // Publish component module loaded event
-  Prime.EventBus.publish('module:loaded', { name: 'component-documentation' });
+  Prime.EventBus.publish("module:loaded", { name: "component-documentation" });
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.Prime = Prime;
 }

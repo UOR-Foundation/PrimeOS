@@ -5,11 +5,11 @@
  */
 
 // Import Prime using CommonJS to avoid circular dependency
-const Prime = require('../core.js');
+const Prime = require("../core.js");
 // Ensure all modules are loaded in correct order
-require('../mathematics.js');
-require('../coherence.js');
-require('../framework/index.js');
+require("../mathematics.js");
+require("../coherence.js");
+require("../framework/index.js");
 
 (function (Prime) {
   /**
@@ -19,7 +19,7 @@ require('../framework/index.js');
    */
   function createComponent(config) {
     if (!config) {
-      throw new Prime.ValidationError('Component configuration is required');
+      throw new Prime.ValidationError("Component configuration is required");
     }
 
     // Validate required sections
@@ -28,7 +28,7 @@ require('../framework/index.js');
     }
 
     if (!config.meta.name) {
-      config.meta.name = 'UnnamedComponent';
+      config.meta.name = "UnnamedComponent";
     }
 
     // Generate component ID if not provided
@@ -78,7 +78,7 @@ require('../framework/index.js');
             // Check for the init method first (test expectation)
             if (
               component.invariant.init &&
-              typeof component.invariant.init === 'function' &&
+              typeof component.invariant.init === "function" &&
               !component._initialized
             ) {
               component.invariant.init.call(component);
@@ -87,7 +87,7 @@ require('../framework/index.js');
             // Also check for initialize method (implementation expectation)
             else if (
               component.invariant.initialize &&
-              typeof component.invariant.initialize === 'function'
+              typeof component.invariant.initialize === "function"
             ) {
               component.invariant.initialize.call(component);
             }
@@ -96,7 +96,7 @@ require('../framework/index.js');
             component.setState(component.variant);
 
             // Trigger initialization event
-            component.emit('initialize');
+            component.emit("initialize");
 
             // Register with coherence system if available
             if (Prime.coherence && Prime.coherence.systemCoherence) {
@@ -111,7 +111,7 @@ require('../framework/index.js');
             if (!component._events) {
               component._events = [];
             }
-            component._events.push('initialize');
+            component._events.push("initialize");
 
             return true;
           } catch (error) {
@@ -149,13 +149,13 @@ require('../framework/index.js');
             // Run user-provided mount handler if available
             if (
               component.invariant.mount &&
-              typeof component.invariant.mount === 'function'
+              typeof component.invariant.mount === "function"
             ) {
               component.invariant.mount.call(component, parent);
             }
 
             // Trigger mount event
-            component.emit('mount', { parent });
+            component.emit("mount", { parent });
 
             // Component is now mounted
             component.meta.mounted = true;
@@ -190,19 +190,19 @@ require('../framework/index.js');
             // Run user-provided update handler if available
             if (
               component.invariant.update &&
-              typeof component.invariant.update === 'function'
+              typeof component.invariant.update === "function"
             ) {
               component.invariant.update.call(component, newState, prevState);
             }
 
             // Trigger update event
-            component.emit('update', {
+            component.emit("update", {
               newState,
               prevState,
             });
 
             // Update event in global bus
-            Prime.EventBus.publish('component:updated', {
+            Prime.EventBus.publish("component:updated", {
               component,
               newState,
               prevState,
@@ -231,7 +231,7 @@ require('../framework/index.js');
             // Run user-provided unmount handler if available
             if (
               component.invariant.unmount &&
-              typeof component.invariant.unmount === 'function'
+              typeof component.invariant.unmount === "function"
             ) {
               component.invariant.unmount.call(component);
             }
@@ -246,7 +246,7 @@ require('../framework/index.js');
             }
 
             // Trigger unmount event
-            component.emit('unmount');
+            component.emit("unmount");
 
             // Unmount all children
             for (const child of component._children.slice()) {
@@ -293,13 +293,13 @@ require('../framework/index.js');
             // Run user-provided destroy handler if available
             if (
               component.invariant.destroy &&
-              typeof component.invariant.destroy === 'function'
+              typeof component.invariant.destroy === "function"
             ) {
               component.invariant.destroy.call(component);
             }
 
             // Trigger destroy event
-            component.emit('destroy');
+            component.emit("destroy");
 
             // Clear all references
             component._parent = null;
@@ -345,7 +345,7 @@ require('../framework/index.js');
           // Check all constraints
           for (const constraint of constraints) {
             if (!constraint.check(proposed)) {
-              if (constraint.type === 'hard') {
+              if (constraint.type === "hard") {
                 throw new Prime.CoherenceViolationError(
                   `State update violates hard constraint "${constraint.name}"`,
                   constraint,
@@ -388,11 +388,11 @@ require('../framework/index.js');
        */
       on: function (event, callback) {
         if (!Prime.Utils.isString(event)) {
-          throw new Prime.ValidationError('Event name must be a string');
+          throw new Prime.ValidationError("Event name must be a string");
         }
 
         if (!Prime.Utils.isFunction(callback)) {
-          throw new Prime.ValidationError('Callback must be a function');
+          throw new Prime.ValidationError("Callback must be a function");
         }
 
         // Create event array if it doesn't exist
@@ -470,7 +470,7 @@ require('../framework/index.js');
        */
       addChild: function (child) {
         if (!child || !child.lifecycle) {
-          throw new Prime.ValidationError('Child must be a valid component');
+          throw new Prime.ValidationError("Child must be a valid component");
         }
 
         // Mount child to this component
@@ -640,7 +640,10 @@ require('../framework/index.js');
     }
 
     // Automatically initialize the component based on integration test expectations
-    if (component.invariant.init && typeof component.invariant.init === 'function') {
+    if (
+      component.invariant.init &&
+      typeof component.invariant.init === "function"
+    ) {
       component.invariant.init.call(component);
       component._initialized = true;
     } else {
@@ -656,15 +659,15 @@ require('../framework/index.js');
   Prime.createComponent = createComponent;
 
   // Publish component module loaded event
-  Prime.EventBus.publish('module:loaded', { name: 'component-base' });
+  Prime.EventBus.publish("module:loaded", { name: "component-base" });
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.Prime = Prime;
 }

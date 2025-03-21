@@ -5,12 +5,12 @@
  */
 
 // Import Prime using CommonJS to avoid circular dependency
-const Prime = require('../core.js');
+const Prime = require("../core.js");
 // Ensure all modules are loaded in correct order
-require('../mathematics.js');
-require('../coherence.js');
-require('../framework/index.js');
-require('./base.js');
+require("../mathematics.js");
+require("../coherence.js");
+require("../framework/index.js");
+require("./base.js");
 
 (function (Prime) {
   /**
@@ -26,11 +26,11 @@ require('./base.js');
      * Default rendering options
      */
     defaultOptions: {
-      mode: '2d',
+      mode: "2d",
       interactive: false,
       dimensions: [300, 300],
       animate: false,
-      theme: 'light',
+      theme: "light",
     },
 
     /**
@@ -42,7 +42,7 @@ require('./base.js');
      */
     toDOM: function (object, element, options = {}) {
       if (!element) {
-        throw new Prime.ValidationError('DOM element is required');
+        throw new Prime.ValidationError("DOM element is required");
       }
 
       // Merge options with defaults
@@ -52,25 +52,25 @@ require('./base.js');
       if (object && object.meta && object.invariant) {
         try {
           // Check for various rendering method names
-          if (typeof object.invariant.render === 'function') {
+          if (typeof object.invariant.render === "function") {
             return object.invariant.render.call(object, element, mergedOptions);
-          } else if (typeof object.invariant.renderDOM === 'function') {
+          } else if (typeof object.invariant.renderDOM === "function") {
             return object.invariant.renderDOM.call(
               object,
               element,
               mergedOptions,
             );
-          } else if (typeof object.invariant.renderToDOM === 'function') {
+          } else if (typeof object.invariant.renderToDOM === "function") {
             return object.invariant.renderToDOM.call(
               object,
               element,
               mergedOptions,
             );
-          } else if (typeof object.render === 'function') {
+          } else if (typeof object.render === "function") {
             return object.render(element, mergedOptions);
           }
         } catch (error) {
-          Prime.Logger.error('Error rendering component:', error);
+          Prime.Logger.error("Error rendering component:", error);
           element.textContent = `Error rendering component: ${error.message}`;
           return element;
         }
@@ -98,7 +98,7 @@ require('./base.js');
       }
 
       if (object instanceof HTMLElement) {
-        element.innerHTML = '';
+        element.innerHTML = "";
         element.appendChild(object);
         return element;
       }
@@ -122,7 +122,7 @@ require('./base.js');
      */
     toCanvas: function (object, ctx, options = {}) {
       if (!ctx) {
-        throw new Prime.ValidationError('Canvas context is required');
+        throw new Prime.ValidationError("Canvas context is required");
       }
 
       // Merge options with defaults
@@ -143,28 +143,28 @@ require('./base.js');
       if (object && object.meta && object.invariant) {
         try {
           // Check for various rendering method names
-          if (typeof object.invariant.renderCanvas === 'function') {
+          if (typeof object.invariant.renderCanvas === "function") {
             return object.invariant.renderCanvas.call(
               object,
               ctx,
               mergedOptions,
             );
-          } else if (typeof object.invariant.renderToCanvas === 'function') {
+          } else if (typeof object.invariant.renderToCanvas === "function") {
             return object.invariant.renderToCanvas.call(
               object,
               ctx,
               mergedOptions,
             );
-          } else if (typeof object.renderCanvas === 'function') {
+          } else if (typeof object.renderCanvas === "function") {
             return object.renderCanvas(ctx, mergedOptions);
           } else if (
-            typeof object.invariant.render === 'function' &&
-            mergedOptions.target === 'canvas'
+            typeof object.invariant.render === "function" &&
+            mergedOptions.target === "canvas"
           ) {
             return object.invariant.render.call(object, ctx, mergedOptions);
           }
         } catch (error) {
-          Prime.Logger.error('Error rendering component to canvas:', error);
+          Prime.Logger.error("Error rendering component to canvas:", error);
           ctx.fillText(`Error: ${error.message}`, 10, 20);
           return ctx;
         }
@@ -200,8 +200,8 @@ require('./base.js');
       }
 
       // Fallback to text representation
-      ctx.fillStyle = '#000';
-      ctx.font = '12px sans-serif';
+      ctx.fillStyle = "#000";
+      ctx.font = "12px sans-serif";
       ctx.fillText(String(object), 10, 20);
 
       return ctx;
@@ -216,7 +216,7 @@ require('./base.js');
      */
     toWebGL: function (object, gl, options = {}) {
       if (!gl) {
-        throw new Prime.ValidationError('WebGL context is required');
+        throw new Prime.ValidationError("WebGL context is required");
       }
 
       // Merge options with defaults
@@ -254,7 +254,7 @@ require('./base.js');
       }
 
       // Fallback - do nothing and return the context
-      Prime.Logger.warn('No WebGL renderer available for object', {
+      Prime.Logger.warn("No WebGL renderer available for object", {
         objectType,
       });
 
@@ -321,15 +321,15 @@ require('./base.js');
      */
     registerRenderer: function (targetType, objectType, rendererFn) {
       if (!Prime.Utils.isString(targetType)) {
-        throw new Prime.ValidationError('Target type must be a string');
+        throw new Prime.ValidationError("Target type must be a string");
       }
 
       if (!Prime.Utils.isString(objectType)) {
-        throw new Prime.ValidationError('Object type must be a string');
+        throw new Prime.ValidationError("Object type must be a string");
       }
 
       if (!Prime.Utils.isFunction(rendererFn)) {
-        throw new Prime.ValidationError('Renderer must be a function');
+        throw new Prime.ValidationError("Renderer must be a function");
       }
 
       this.renderers.set(`${targetType}:${objectType}`, rendererFn);
@@ -345,16 +345,16 @@ require('./base.js');
      */
     batchRender: function (components, elements, options = {}) {
       if (!Array.isArray(components)) {
-        throw new Prime.ValidationError('Components must be an array');
+        throw new Prime.ValidationError("Components must be an array");
       }
 
       if (!Array.isArray(elements)) {
-        throw new Prime.ValidationError('Elements must be an array');
+        throw new Prime.ValidationError("Elements must be an array");
       }
 
       if (components.length !== elements.length) {
         throw new Prime.ValidationError(
-          'Components and elements arrays must have the same length',
+          "Components and elements arrays must have the same length",
         );
       }
 
@@ -420,7 +420,7 @@ require('./base.js');
      */
     animate: function (renderFn, options = {}) {
       if (!Prime.Utils.isFunction(renderFn)) {
-        throw new Prime.ValidationError('Render function is required');
+        throw new Prime.ValidationError("Render function is required");
       }
 
       const mergedOptions = {
@@ -498,12 +498,12 @@ require('./base.js');
      * @returns {string} Object type
      */
     _getObjectType: function (object) {
-      if (object === null) return 'null';
-      if (object === undefined) return 'undefined';
+      if (object === null) return "null";
+      if (object === undefined) return "undefined";
 
       // Check for components
       if (object && object.meta && object.variant && object.lifecycle) {
-        return `component:${object.meta.type || 'generic'}`;
+        return `component:${object.meta.type || "generic"}`;
       }
 
       // Check for specialized types
@@ -512,7 +512,7 @@ require('./base.js');
         Prime.Clifford.isMultivector &&
         Prime.Clifford.isMultivector(object)
       ) {
-        return 'multivector';
+        return "multivector";
       }
 
       if (
@@ -520,32 +520,32 @@ require('./base.js');
         Prime.Lie.isGroupElement &&
         Prime.Lie.isGroupElement(object)
       ) {
-        return 'lieGroupElement';
+        return "lieGroupElement";
       }
 
       if (Prime.UOR && Prime.UOR.isObject && Prime.UOR.isObject(object)) {
-        return 'uorObject';
+        return "uorObject";
       }
 
       // Standard JavaScript types
-      if (Array.isArray(object)) return 'array';
-      if (object instanceof Date) return 'date';
-      if (object instanceof RegExp) return 'regexp';
-      if (object instanceof Map) return 'map';
-      if (object instanceof Set) return 'set';
-      if (object instanceof Promise) return 'promise';
-      if (object instanceof Error) return 'error';
-      if (typeof HTMLElement !== 'undefined' && object instanceof HTMLElement)
-        return 'htmlElement';
-      if (typeof SVGElement !== 'undefined' && object instanceof SVGElement)
-        return 'svgElement';
+      if (Array.isArray(object)) return "array";
+      if (object instanceof Date) return "date";
+      if (object instanceof RegExp) return "regexp";
+      if (object instanceof Map) return "map";
+      if (object instanceof Set) return "set";
+      if (object instanceof Promise) return "promise";
+      if (object instanceof Error) return "error";
+      if (typeof HTMLElement !== "undefined" && object instanceof HTMLElement)
+        return "htmlElement";
+      if (typeof SVGElement !== "undefined" && object instanceof SVGElement)
+        return "svgElement";
 
       // Primitive types
-      if (typeof object === 'string') return 'string';
-      if (typeof object === 'number') return 'number';
-      if (typeof object === 'boolean') return 'boolean';
-      if (typeof object === 'function') return 'function';
-      if (typeof object === 'object') return 'object';
+      if (typeof object === "string") return "string";
+      if (typeof object === "number") return "number";
+      if (typeof object === "boolean") return "boolean";
+      if (typeof object === "function") return "function";
+      if (typeof object === "object") return "object";
 
       return typeof object;
     },
@@ -577,17 +577,17 @@ require('./base.js');
     },
 
     _renderArray: function (array, element, options) {
-      if (options.mode === 'table') {
-        const table = document.createElement('table');
-        const tbody = document.createElement('tbody');
+      if (options.mode === "table") {
+        const table = document.createElement("table");
+        const tbody = document.createElement("tbody");
 
         array.forEach((item, index) => {
-          const row = document.createElement('tr');
-          const indexCell = document.createElement('td');
+          const row = document.createElement("tr");
+          const indexCell = document.createElement("td");
           indexCell.textContent = index;
           row.appendChild(indexCell);
 
-          const valueCell = document.createElement('td');
+          const valueCell = document.createElement("td");
           valueCell.textContent = String(item);
           row.appendChild(valueCell);
 
@@ -595,7 +595,7 @@ require('./base.js');
         });
 
         table.appendChild(tbody);
-        element.innerHTML = '';
+        element.innerHTML = "";
         element.appendChild(table);
       } else {
         element.textContent = JSON.stringify(array);
@@ -623,17 +623,17 @@ require('./base.js');
     },
 
     _renderObject: function (object, element, options) {
-      if (options.mode === 'table') {
-        const table = document.createElement('table');
-        const tbody = document.createElement('tbody');
+      if (options.mode === "table") {
+        const table = document.createElement("table");
+        const tbody = document.createElement("tbody");
 
         Object.entries(object).forEach(([key, value]) => {
-          const row = document.createElement('tr');
-          const keyCell = document.createElement('td');
+          const row = document.createElement("tr");
+          const keyCell = document.createElement("td");
           keyCell.textContent = key;
           row.appendChild(keyCell);
 
-          const valueCell = document.createElement('td');
+          const valueCell = document.createElement("td");
           valueCell.textContent = String(value);
           row.appendChild(valueCell);
 
@@ -641,7 +641,7 @@ require('./base.js');
         });
 
         table.appendChild(tbody);
-        element.innerHTML = '';
+        element.innerHTML = "";
         element.appendChild(table);
       } else {
         element.textContent = JSON.stringify(object);
@@ -655,15 +655,15 @@ require('./base.js');
   Prime.render = render;
 
   // Publish component module loaded event
-  Prime.EventBus.publish('module:loaded', { name: 'component-rendering' });
+  Prime.EventBus.publish("module:loaded", { name: "component-rendering" });
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.Prime = Prime;
 }

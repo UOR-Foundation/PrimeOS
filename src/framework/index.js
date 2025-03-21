@@ -5,24 +5,24 @@
  */
 
 // Import Prime using CommonJS to avoid circular dependency
-const Prime = require('../core.js');
+const Prime = require("../core.js");
 // Ensure mathematics and coherence modules are loaded
-require('../mathematics.js');
-require('../coherence.js');
+require("../mathematics.js");
+require("../coherence.js");
 
 // Import framework components
-const Base0 = require('./base0');
-const Base1 = require('./base1');
-const Base2 = require('./base2');
-const Base3 = require('./base3');
-const MathUtils = require('./math');
+const Base0 = require("./base0");
+const Base1 = require("./base1");
+const Base2 = require("./base2");
+const Base3 = require("./base3");
+const MathUtils = require("./math");
 
 // Add compatibility error classes if they don't exist yet
 if (!Prime.ResourceExhaustionError) {
   Prime.ResourceExhaustionError = class ResourceExhaustionError extends Error {
     constructor(message, context) {
       super(message);
-      this.name = 'ResourceExhaustionError';
+      this.name = "ResourceExhaustionError";
       this.context = context;
     }
   };
@@ -173,11 +173,11 @@ Prime.MathUtils = MathUtils;
 Prime.createPrimeFramework = createPrimeFramework;
 
 // CommonJS export (no ES module export to avoid circular dependency)
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.Prime = Prime;
 }

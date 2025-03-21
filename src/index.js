@@ -4,13 +4,25 @@
  * Version 1.0.0
  */
 
-// Import core Prime and ensure all modules are loaded in correct order
-const Prime = require("./core.js");
-require("./mathematics.js");
+// Import refactored core Prime
+const Prime = require("./core");
+
+// Import refactored math module
+require("./math");
+
+// Import neural module
+require("./neural");
+
+// Import consciousness module
+require("./consciousness");
+
+// Import distributed computation module
+require("./distributed");
+
+// Import legacy modules
+// These will be refactored in future phases
 require("./coherence.js");
 require("./framework/index.js");
-
-// Import refactored component system
 require("./components/index.js");
 
 // Initialize framework as a top-level property
@@ -22,6 +34,14 @@ module.exports = Prime;
 // Also provide named exports
 module.exports.Utils = Prime.Utils;
 module.exports.EventBus = Prime.EventBus;
+module.exports.EventBusClass = Prime.EventBusClass;
+module.exports.Logger = Prime.Logger;
+module.exports.Math = Prime.Math;
+module.exports.Neural = Prime.Neural;
+module.exports.Consciousness = Prime.Consciousness;
+module.exports.Distributed = Prime.Distributed;
+
+// Legacy exports
 module.exports.ModuleLogger = Prime.ModuleLogger;
 module.exports.Clifford = Prime.Clifford;
 module.exports.Lie = Prime.Lie;
