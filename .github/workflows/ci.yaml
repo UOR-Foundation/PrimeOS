@@ -53,6 +53,7 @@ jobs:
         node-version: '18.x'
         registry-url: 'https://npm.pkg.github.com'
         scope: '@uor-foundation'
+        always-auth: true
     
     - name: Install dependencies
       run: npm ci
@@ -65,6 +66,9 @@ jobs:
     
     - name: Publish to GitHub Packages
       # Uses registry-url and NODE_AUTH_TOKEN to authenticate
-      run: npm publish
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+        echo "@uor-foundation:registry=https://npm.pkg.github.com" >> .npmrc
+        npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
