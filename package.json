@@ -6,6 +6,9 @@
   "module": "dist/primeos.esm.js",
   "browser": "dist/primeos.min.js",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "test": "jest --config jest.config.js --testPathIgnorePatterns=tests/integration-tests.js",
     "test:integration": "node tests/integration-tests.js",
