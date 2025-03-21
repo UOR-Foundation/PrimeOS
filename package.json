@@ -7,10 +7,10 @@
   "browser": "dist/primeos.min.js",
   "type": "commonjs",
   "scripts": {
-    "test": "jest --config jest.config.js",
+    "test": "jest --config jest.config.js --testPathIgnorePatterns=tests/integration-tests.js",
     "test:integration": "node tests/integration-tests.js",
     "test:browser": "node run-browser-tests.js",
-    "test:all": "npm test && npm run test:browser",
+    "test:all": "npm test && npm run test:integration && npm run test:browser",
     "build": "rollup -c",
     "build:dev": "rollup -c --environment BUILD:development",
     "build:prod": "rollup -c --environment BUILD:production",

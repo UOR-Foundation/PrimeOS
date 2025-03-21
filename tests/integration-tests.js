@@ -1180,16 +1180,16 @@ TestRunner.run()
     // Allow visualization of complete test run
     console.log("\nTest run complete.");
 
-    // Exit with proper code if in Node.js environment
-    if (typeof process !== "undefined" && process.exit) {
+    // Only exit explicitly if we're not running in Jest
+    if (typeof process !== "undefined" && process.exit && !process.env.JEST_WORKER_ID) {
       process.exit(results.failed > 0 ? 1 : 0);
     }
   })
   .catch((error) => {
     console.error("Error running tests:", error);
 
-    // Exit with error code if in Node.js environment
-    if (typeof process !== "undefined" && process.exit) {
+    // Only exit explicitly if we're not running in Jest 
+    if (typeof process !== "undefined" && process.exit && !process.env.JEST_WORKER_ID) {
       process.exit(1);
     }
   });
