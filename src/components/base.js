@@ -51,7 +51,7 @@ require('../framework/index.js');
 
       // Variant: dynamic data and state
       variant: Prime.Utils.deepClone(config.variant || {}),
-      
+
       // For compatibility with integration tests
       _initialized: false,
       _events: [],
