@@ -1,6 +1,6 @@
 {
   "name": "@uor-foundation/primeos",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A neural network-based operating system built on the Prime Framework with mathematical coherence principles",
   "main": "dist/primeos.js",
   "module": "dist/primeos.esm.js",
