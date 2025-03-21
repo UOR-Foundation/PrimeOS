@@ -95,26 +95,43 @@ Comprehensive documentation is available in the [primeos-spec.md](./primeos-spec
 
 ## Testing
 
-PrimeOS has a comprehensive testing suite that includes:
+PrimeOS has a comprehensive testing suite with tiered strategies for various environments:
 
-1. **Unit Tests**: Using Jest for individual modules
-2. **Integration Tests**: Testing cross-module functionality
-3. **Browser Tests**: Testing in a browser environment using Puppeteer
+### Test Categories
 
-Run tests with:
+1. **CI-Safe Tests**: Core modules that run in CI environments
+   - Core tests (core functionality)
+   - Mathematics tests (mathematical operations)
+   - Framework tests (framework components)
+   - Coherence tests (coherence validation)
+
+2. **Memory-Intensive Tests**: Require significant RAM (8GB+)
+   - Extreme condition tests (numerical stability)
+   - UOR verification tests (universal object references)
+   - Integration tests (cross-module functionality)
+
+3. **Browser Tests**: Testing in browser environments
+   - Uses Puppeteer to launch a headless browser
+   - Validates browser-specific functionality
+
+### Running Tests
 
 ```bash
-# Run Jest unit tests
-npm test
+# Run CI-safe tests (used in CI/CD pipelines and publishing)
+npm run test:ci
 
-# Run browser tests
-npm run test:browser
+# Run individual test categories
+npm test                # Standard tests (excludes memory-intensive tests)
+npm run test:extreme    # Extreme condition tests (high memory usage)
+npm run test:uor        # UOR verification tests (high memory usage)
+npm run test:integration # Integration tests
+npm run test:browser    # Browser environment tests
 
-# Run all tests
+# Run complete test suite (all tests)
 npm run test:all
 ```
 
-The browser tests use Puppeteer to launch a headless browser and run tests against the actual browser environment, ensuring that the library works correctly in both Node.js and browser contexts.
+See [KNOWN-ISSUES.md](./KNOWN-ISSUES.md) for more details on the testing strategy and known limitations.
 
 ## License
 

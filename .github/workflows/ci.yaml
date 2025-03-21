@@ -33,7 +33,7 @@ jobs:
       run: npm run lint
     
     - name: Run tests (excluding memory-intensive tests)
-      run: npx jest --config jest.config.js "tests/core-tests.js|tests/mathematics-tests.js|tests/framework-tests.js|tests/coherence-tests.js"
+      run: npm run test:ci
 
   publish:
     needs: test
@@ -57,7 +57,7 @@ jobs:
       run: npm ci
     
     - name: Test (excluding memory-intensive tests)
-      run: npx jest --config jest.config.js "tests/core-tests.js|tests/mathematics-tests.js|tests/framework-tests.js|tests/coherence-tests.js"
+      run: npm run test:ci
     
     - name: Build
       run: npm run build:prod

@@ -28,20 +28,38 @@ The new extreme condition handling has the following limitations:
    - Extreme condition tests should be validated with domain-specific libraries for production use
    - Memory consumption can be significant for large simulations
    - **IMPORTANT**: Current extreme condition tests require significant memory (8GB+) to run completely
-   - Extreme condition tests and UOR verification tests are skipped in CI due to memory constraints
+   - Extreme condition tests, UOR verification tests, and integration tests are excluded from CI workflows
+   - CI workflow uses `npm run test:ci` which only runs core, mathematics, framework, and coherence tests
 
 4. **Test Coverage:**
    - Not all extreme conditions are covered by automated tests yet
    - Users should validate results from ExtremePrecision module in their specific domains
    - Corner cases should be manually verified for critical applications
 
-To run the high-memory tests locally (requires 8GB+ RAM):
-```bash
-# Run extreme condition tests
-npm run test:extreme
-# or
-node run-extreme-tests.js
+## Testing Strategy
 
-# Run UOR verification tests
-npm run test:uor
-```
+Due to memory constraints in CI environments, we've implemented a tiered testing approach:
+
+1. **CI-safe tests** - Run in CI/CD pipelines and before publishing
+   ```bash
+   npm run test:ci  # Runs core, mathematics, framework, and coherence tests
+   ```
+
+2. **High-memory tests** - Should be run locally (requires 8GB+ RAM):
+   ```bash
+   # Run extreme condition tests
+   npm run test:extreme
+   
+   # Run UOR verification tests
+   npm run test:uor
+   
+   # Run integration tests
+   npm run test:integration
+   ```
+
+3. **Complete test suite** - Run all tests when preparing for major releases:
+   ```bash
+   npm run test:all  # Runs all test suites including browser tests
+   ```
+
+CI/CD pipeline is configured to use the `test:ci` script to prevent out-of-memory errors during automated builds and deployments.
