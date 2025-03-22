@@ -6,35 +6,14 @@
 // Import Prime with the Neural module
 const Prime = require("../src");
 
-// Test utilities
-const assert = (condition, message) => {
-  if (!condition) {
-    throw new Error(`Assertion failed: ${message}`);
-  }
-  console.log(`✓ PASS: ${message}`);
-};
-
-const assertApproximatelyEqual = (a, b, message, epsilon = 1e-6) => {
-  const diff = Math.abs(a - b);
-  if (diff > epsilon) {
-    throw new Error(
-      `Assertion failed: ${message} - values differ by ${diff} (${a} vs ${b})`,
-    );
-  }
-  console.log(`✓ PASS: ${message}`);
-};
-
-const runTests = () => {
-  console.log("=== Running Neural Module Advanced Tests ===\n");
-
-  // Test group: Convolutional Layer
-  console.log("--- Convolutional Layer Tests ---");
-
-  // Test convolutional layer creation
-  {
-    if (!Prime.Neural.Layer.ConvolutionalLayer) {
-      console.log("⚠ Skipping: ConvolutionalLayer not implemented");
-    } else {
+describe('Neural Module Advanced Tests', () => {
+  describe('Convolutional Layer Tests', () => {
+    test('should create convolutional layer with correct properties', () => {
+      if (!Prime.Neural.Layer.ConvolutionalLayer) {
+        console.log("⚠ Skipping: ConvolutionalLayer not implemented");
+        return;
+      }
+      
       const layer = new Prime.Neural.Layer.ConvolutionalLayer({
         inputShape: [28, 28, 1],
         filters: 16,
@@ -44,28 +23,21 @@ const runTests = () => {
         activation: "relu",
       });
 
-      assert(
-        layer instanceof Prime.Neural.Layer.ConvolutionalLayer,
-        "ConvolutionalLayer can be instantiated",
-      );
+      expect(layer instanceof Prime.Neural.Layer.ConvolutionalLayer).toBe(true);
 
       // Check properties
-      assert(layer.filters === 16, "Layer has correct filter count");
-      assert(
-        layer.kernelSize[0] === 3 && layer.kernelSize[1] === 3,
-        "Layer has correct kernel size",
-      );
-      assert(
-        layer.strides[0] === 1 && layer.strides[1] === 1,
-        "Layer has correct strides",
-      );
-      assert(layer.padding === "valid", "Layer has correct padding");
-      assert(layer.activation === "relu", "Layer has correct activation");
+      expect(layer.filters).toBe(16);
+      expect(layer.kernelSize[0]).toBe(3);
+      expect(layer.kernelSize[1]).toBe(3);
+      expect(layer.strides[0]).toBe(1);
+      expect(layer.strides[1]).toBe(1);
+      expect(layer.padding).toBe("valid");
+      expect(layer.activation).toBe("relu");
 
       // Check output shape calculation
-      assert(layer.outputShape[0] === 26, "Output height correctly calculated"); // 28 - 3 + 1 for 'valid' padding
-      assert(layer.outputShape[1] === 26, "Output width correctly calculated"); // 28 - 3 + 1 for 'valid' padding
-      assert(layer.outputShape[2] === 16, "Output channel count correct");
+      expect(layer.outputShape[0]).toBe(26); // 28 - 3 + 1 for 'valid' padding
+      expect(layer.outputShape[1]).toBe(26); // 28 - 3 + 1 for 'valid' padding
+      expect(layer.outputShape[2]).toBe(16);
 
       // Create a layer with 'same' padding
       const sameLayer = new Prime.Neural.Layer.ConvolutionalLayer({
@@ -77,22 +49,16 @@ const runTests = () => {
         activation: "relu",
       });
 
-      assert(
-        sameLayer.outputShape[0] === 28,
-        "Output height correct with 'same' padding",
-      );
-      assert(
-        sameLayer.outputShape[1] === 28,
-        "Output width correct with 'same' padding",
-      );
-    }
-  }
+      expect(sameLayer.outputShape[0]).toBe(28);
+      expect(sameLayer.outputShape[1]).toBe(28);
+    });
 
-  // Test convolutional forward and backward pass
-  {
-    if (!Prime.Neural.Layer.ConvolutionalLayer) {
-      console.log("⚠ Skipping: ConvolutionalLayer forward/backward not tested");
-    } else {
+    test('should perform forward and backward pass correctly', () => {
+      if (!Prime.Neural.Layer.ConvolutionalLayer) {
+        console.log("⚠ Skipping: ConvolutionalLayer forward/backward not tested");
+        return;
+      }
+      
       // Create a small test input (3x3x1)
       const input = [
         [[1], [2], [3]],
@@ -156,50 +122,19 @@ const runTests = () => {
       // [4,5; 7,8] -> 0.5*4 + 0.5*5 + 0.5*7 + 0.5*8 = 12
       // [5,6; 8,9] -> 0.5*5 + 0.5*6 + 0.5*8 + 0.5*9 = 14
       
-      // Use approximate assertions to allow for floating point differences
       const epsilon = 1e-6;
       
       // First filter activations
-      assertApproximatelyEqual(
-        result.activation[0][0][0], 12,
-        "First filter activation at [0,0]", epsilon
-      );
-      
-      assertApproximatelyEqual(
-        result.activation[0][1][0], 16,
-        "First filter activation at [0,1]", epsilon
-      );
-      
-      assertApproximatelyEqual(
-        result.activation[1][0][0], 24,
-        "First filter activation at [1,0]", epsilon
-      );
-      
-      assertApproximatelyEqual(
-        result.activation[1][1][0], 28,
-        "First filter activation at [1,1]", epsilon
-      );
+      expect(result.activation[0][0][0]).toBeCloseTo(12, 6);
+      expect(result.activation[0][1][0]).toBeCloseTo(16, 6);
+      expect(result.activation[1][0][0]).toBeCloseTo(24, 6);
+      expect(result.activation[1][1][0]).toBeCloseTo(28, 6);
       
       // Second filter activations
-      assertApproximatelyEqual(
-        result.activation[0][0][1], 6,
-        "Second filter activation at [0,0]", epsilon
-      );
-      
-      assertApproximatelyEqual(
-        result.activation[0][1][1], 8,
-        "Second filter activation at [0,1]", epsilon
-      );
-      
-      assertApproximatelyEqual(
-        result.activation[1][0][1], 12,
-        "Second filter activation at [1,0]", epsilon
-      );
-      
-      assertApproximatelyEqual(
-        result.activation[1][1][1], 14,
-        "Second filter activation at [1,1]", epsilon
-      );
+      expect(result.activation[0][0][1]).toBeCloseTo(6, 6);
+      expect(result.activation[0][1][1]).toBeCloseTo(8, 6);
+      expect(result.activation[1][0][1]).toBeCloseTo(12, 6);
+      expect(result.activation[1][1][1]).toBeCloseTo(14, 6);
 
       // Backward pass with simple gradient
       const dY = [
@@ -210,30 +145,23 @@ const runTests = () => {
       const gradients = layer.backward(dY, result.cache);
 
       // Verify weight gradients exist
-      assert(gradients.dW !== undefined, "Weight gradients computed");
-      assert(gradients.dB !== undefined, "Bias gradients computed");
-      assert(gradients.dX !== undefined, "Input gradients computed");
+      expect(gradients.dW).toBeDefined();
+      expect(gradients.dB).toBeDefined();
+      expect(gradients.dX).toBeDefined();
 
       // Test bias gradient
-      assert(
-        gradients.dB[0] === 4,
-        "Bias gradient for first filter is sum of dY values for that filter",
-      );
-      assert(
-        gradients.dB[1] === 8,
-        "Bias gradient for second filter is sum of dY values for that filter",
-      );
-    }
-  }
+      expect(gradients.dB[0]).toBe(4);
+      expect(gradients.dB[1]).toBe(8);
+    });
+  });
 
-  // Test group: Recurrent Layer
-  console.log("\n--- Recurrent Layer Tests ---");
-
-  // Test recurrent layer creation
-  {
-    if (!Prime.Neural.Layer.RecurrentLayer) {
-      console.log("⚠ Skipping: RecurrentLayer not implemented");
-    } else {
+  describe('Recurrent Layer Tests', () => {
+    test('should create recurrent layer with correct properties', () => {
+      if (!Prime.Neural.Layer.RecurrentLayer) {
+        console.log("⚠ Skipping: RecurrentLayer not implemented");
+        return;
+      }
+      
       // Test GRU layer creation
       const gruLayer = new Prime.Neural.Layer.RecurrentLayer({
         inputSize: 10,
@@ -243,15 +171,12 @@ const runTests = () => {
         returnSequences: true,
       });
 
-      assert(
-        gruLayer instanceof Prime.Neural.Layer.RecurrentLayer,
-        "RecurrentLayer can be instantiated",
-      );
-      assert(gruLayer.inputSize === 10, "Layer has correct input size");
-      assert(gruLayer.hiddenSize === 20, "Layer has correct hidden size");
-      assert(gruLayer.cellType === "gru", "Layer has correct cell type");
-      assert(gruLayer.sequenceLength === 5, "Layer has correct sequence length");
-      assert(gruLayer.returnSequences === true, "Layer has correct returnSequences value");
+      expect(gruLayer instanceof Prime.Neural.Layer.RecurrentLayer).toBe(true);
+      expect(gruLayer.inputSize).toBe(10);
+      expect(gruLayer.hiddenSize).toBe(20);
+      expect(gruLayer.cellType).toBe("gru");
+      expect(gruLayer.sequenceLength).toBe(5);
+      expect(gruLayer.returnSequences).toBe(true);
 
       // Test LSTM layer creation
       const lstmLayer = new Prime.Neural.Layer.RecurrentLayer({
@@ -262,37 +187,22 @@ const runTests = () => {
         returnSequences: false,
       });
 
-      assert(lstmLayer.cellType === "lstm", "Layer has correct cell type");
-      assert(
-        lstmLayer.returnSequences === false,
-        "Layer has correct returnSequences value",
-      );
+      expect(lstmLayer.cellType).toBe("lstm");
+      expect(lstmLayer.returnSequences).toBe(false);
 
       // Check that weights were initialized correctly for LSTM
-      assert(
-        lstmLayer.weights.Wi !== undefined,
-        "LSTM weights should include input gate weights",
-      );
-      assert(
-        lstmLayer.weights.Wf !== undefined,
-        "LSTM weights should include forget gate weights",
-      );
-      assert(
-        lstmLayer.weights.Wo !== undefined,
-        "LSTM weights should include output gate weights",
-      );
-      assert(
-        lstmLayer.weights.Wc !== undefined,
-        "LSTM weights should include cell gate weights",
-      );
-    }
-  }
+      expect(lstmLayer.weights.Wi).toBeDefined();
+      expect(lstmLayer.weights.Wf).toBeDefined();
+      expect(lstmLayer.weights.Wo).toBeDefined();
+      expect(lstmLayer.weights.Wc).toBeDefined();
+    });
 
-  // Test recurrent layer forward and backward passes
-  {
-    if (!Prime.Neural.Layer.RecurrentLayer) {
-      console.log("⚠ Skipping: RecurrentLayer forward/backward not tested");
-    } else {
+    test('should perform forward and backward pass correctly', () => {
+      if (!Prime.Neural.Layer.RecurrentLayer) {
+        console.log("⚠ Skipping: RecurrentLayer forward/backward not tested");
+        return;
+      }
+      
       // Create a simple GRU layer for testing
       const layer = new Prime.Neural.Layer.RecurrentLayer({
         inputSize: 2,
@@ -305,10 +215,8 @@ const runTests = () => {
       const input = [1, 2]; // Single time step
       const result = layer.forward(input);
 
-      assert(
-        Array.isArray(result.activation) && result.activation.length === 3,
-        "GRU output should have hiddenSize length (when returnSequences=false)",
-      );
+      expect(Array.isArray(result.activation)).toBe(true);
+      expect(result.activation.length).toBe(3);
 
       // Test sequence input
       const sequence = [
@@ -318,40 +226,31 @@ const runTests = () => {
       ]; // 3 time steps
       const seqResult = layer.forward(sequence);
 
-      assert(
-        Array.isArray(seqResult.activation) && seqResult.activation.length === 3,
-        "GRU sequence output should have hiddenSize length (when returnSequences=false)",
-      );
+      expect(Array.isArray(seqResult.activation)).toBe(true);
+      expect(seqResult.activation.length).toBe(3);
 
       // Test backward pass
       const dY = [0.1, 0.2, 0.3]; // Gradient for the output
       const gradients = layer.backward(dY, seqResult.cache);
 
-      assert(gradients.dWeights !== undefined, "Weight gradients computed");
-      assert(gradients.dBiases !== undefined, "Bias gradients computed");
-      assert(gradients.dX !== undefined, "Input gradients computed");
-      assert(
-        gradients.dX.length === sequence.length,
-        "Input gradients have same time steps as input sequence",
-      );
-    }
-  }
+      expect(gradients.dWeights).toBeDefined();
+      expect(gradients.dBiases).toBeDefined();
+      expect(gradients.dX).toBeDefined();
+      expect(gradients.dX.length).toBe(sequence.length);
+    });
+  });
 
-  // Test group: Neural Model
-  console.log("\n--- Neural Model Tests ---");
-
-  // Test neural model creation
-  {
-    if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-      console.log("⚠ Skipping: NeuralModel not implemented");
-    } else {
+  describe('Neural Model Tests', () => {
+    test('should create neural model with correct properties', () => {
+      if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
+        console.log("⚠ Skipping: NeuralModel not implemented");
+        return;
+      }
+      
       // Create a simple model
       const model = new Prime.Neural.Model.NeuralModel();
 
-      assert(
-        model instanceof Prime.Neural.Model.NeuralModel,
-        "NeuralModel can be instantiated",
-      );
+      expect(model instanceof Prime.Neural.Model.NeuralModel).toBe(true);
 
       // Add layers to the model
       model.addLayer({
@@ -367,11 +266,11 @@ const runTests = () => {
         activation: "sigmoid",
       });
 
-      assert(model.layers.length === 2, "Model has two layers");
-      assert(model.layers[0].inputSize === 10, "First layer has correct input size");
-      assert(model.layers[0].outputSize === 20, "First layer has correct output size");
-      assert(model.layers[1].inputSize === 20, "Second layer's input size connected correctly");
-      assert(model.layers[1].outputSize === 5, "Second layer has correct output size");
+      expect(model.layers.length).toBe(2);
+      expect(model.layers[0].inputSize).toBe(10);
+      expect(model.layers[0].outputSize).toBe(20);
+      expect(model.layers[1].inputSize).toBe(20);
+      expect(model.layers[1].outputSize).toBe(5);
 
       // Compile the model
       model.compile({
@@ -379,70 +278,21 @@ const runTests = () => {
         metric: "accuracy",
       });
 
-      assert(model.compiled === true, "Model is compiled");
-      assert(model.lossFunction === "mse", "Model uses MSE loss");
-      assert(model.metric === "accuracy", "Model uses accuracy metric");
+      expect(model.compiled).toBe(true);
+      expect(model.lossFunction).toBe("mse");
+      expect(model.metric).toBe("accuracy");
 
       // Test prediction
       const input = new Array(10).fill(0).map(() => Math.random());
       const prediction = model.predict(input);
 
-      assert(
-        Array.isArray(prediction) && prediction.length === 5,
-        "Prediction has correct output size",
-      );
+      expect(Array.isArray(prediction)).toBe(true);
+      expect(prediction.length).toBe(5);
 
       // Test model summary
       const summary = model.summary();
-      assert(
-        summary.layers.length === 2,
-        "Summary includes information about both layers",
-      );
-      assert(
-        summary.totalParameters > 0,
-        "Summary includes positive parameter count",
-      );
-    }
-  }
-
-  // Test model training
-  {
-    if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-      console.log("⚠ Skipping: NeuralModel training not tested");
-    } else {
-      console.log("⚠ Skipping: NeuralModel training to focus on layer implementations");
-    }
-  }
-
-  // Test model serialization
-  {
-    if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-      console.log("⚠ Skipping: NeuralModel serialization not tested");
-    } else {
-      console.log("⚠ Skipping: NeuralModel serialization to focus on layer implementations");
-    }
-  }
-
-  // Test architecture search if implemented
-  {
-    if (
-      !Prime.Neural.Model ||
-      !Prime.Neural.Model.NeuralArchitectureSearch
-    ) {
-      console.log("⚠ Skipping: NeuralArchitectureSearch not tested");
-    } else {
-      console.log("⚠ Skipping: NeuralArchitectureSearch to focus on layer implementations");
-    }
-  }
-
-  console.log("\n=== All Neural Module Advanced Tests Passed ===");
-};
-
-// Run the tests
-try {
-  runTests();
-} catch (error) {
-  console.error("Test failed:", error.message);
-  console.error(error.stack);
-  process.exit(1);
-}
+      expect(summary.layers.length).toBe(2);
+      expect(summary.totalParameters).toBeGreaterThan(0);
+    });
+  });
+});

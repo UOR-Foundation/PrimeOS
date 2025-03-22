@@ -4,495 +4,372 @@
 
 // Import Prime with the Neural module
 const Prime = require("../src");
+require("../src/neural/layer/index");
 
-// Test utilities
-const assert = (condition, message) => {
-  if (!condition) {
-    throw new Error(`Assertion failed: ${message}`);
-  }
-  console.log(`✓ PASS: ${message}`);
-};
+describe('Neural Module Tests', () => {
+  // Neural Layer Tests
+  describe('Neural Layer Tests', () => {
+    test('should create a base neural layer with correct properties', () => {
+      const layer = new Prime.Neural.Layer.NeuralLayer({
+        inputSize: 3,
+        outputSize: 2,
+        activation: "sigmoid",
+      });
 
-const assertApproximatelyEqual = (a, b, message, epsilon = 1e-6) => {
-  const diff = Math.abs(a - b);
-  if (diff > epsilon) {
-    throw new Error(
-      `Assertion failed: ${message} - values differ by ${diff} (${a} vs ${b})`,
-    );
-  }
-  console.log(`✓ PASS: ${message}`);
-};
-
-const runTests = () => {
-  console.log("=== Running Neural Module Tests ===\n");
-
-  // Test group: Neural Layer
-  console.log("--- Neural Layer Tests ---");
-
-  // Test base neural layer creation
-  {
-    const layer = new Prime.Neural.Layer.NeuralLayer({
-      inputSize: 3,
-      outputSize: 2,
-      activation: "sigmoid",
+      expect(layer instanceof Prime.Neural.Layer.NeuralLayer).toBe(true);
+      expect(layer.inputSize).toBe(3);
+      expect(layer.outputSize).toBe(2);
+      expect(layer.activation).toBe("sigmoid");
+      
+      expect(Array.isArray(layer.weights)).toBe(true);
+      expect(layer.weights.length).toBe(2);
+      expect(layer.weights[0].length).toBe(3);
+      
+      expect(Array.isArray(layer.biases)).toBe(true);
+      expect(layer.biases.length).toBe(2);
     });
 
-    assert(
-      layer instanceof Prime.Neural.Layer.NeuralLayer,
-      "NeuralLayer can be instantiated",
-    );
+    test('should perform forward pass correctly', () => {
+      const layer = new Prime.Neural.Layer.NeuralLayer({
+        inputSize: 3,
+        outputSize: 2,
+        activation: "linear",
+        initParams: { distribution: "zeros" }, // Initialize weights to zero for predictable output
+      });
 
-    assert(layer.inputSize === 3, "Layer has correct input size");
-    assert(layer.outputSize === 2, "Layer has correct output size");
-    assert(layer.activation === "sigmoid", "Layer has correct activation");
+      // Set weights and biases manually for deterministic test
+      layer.weights = [
+        [1, 0, 0],
+        [0, 1, 0],
+      ];
+      layer.biases = [0, 0];
 
-    assert(Array.isArray(layer.weights), "Weights are initialized as array");
-    assert(layer.weights.length === 2, "Weights array has correct dimensions");
-    assert(
-      layer.weights[0].length === 3,
-      "Weights array has correct second dimension",
-    );
+      const input = [2, 3, 4];
+      const result = layer.forward(input);
 
-    assert(Array.isArray(layer.biases), "Biases are initialized as array");
-    assert(layer.biases.length === 2, "Biases array has correct length");
-  }
-
-  // Test forward pass
-  {
-    const layer = new Prime.Neural.Layer.NeuralLayer({
-      inputSize: 3,
-      outputSize: 2,
-      activation: "linear",
-      initParams: { distribution: "zeros" }, // Initialize weights to zero for predictable output
+      expect(Array.isArray(result.activation)).toBe(true);
+      expect(result.activation.length).toBe(2);
+      expect(result.activation[0]).toBe(2);
+      expect(result.activation[1]).toBe(3);
     });
 
-    // Set weights and biases manually for deterministic test
-    layer.weights = [
-      [1, 0, 0],
-      [0, 1, 0],
-    ];
-    layer.biases = [0, 0];
+    test('should perform backward pass correctly', () => {
+      const layer = new Prime.Neural.Layer.NeuralLayer({
+        inputSize: 3,
+        outputSize: 2,
+        activation: "linear",
+        initParams: { distribution: "zeros" },
+      });
 
-    const input = [2, 3, 4];
-    const result = layer.forward(input);
+      // Set weights and biases manually for deterministic test
+      layer.weights = [
+        [1, 0, 0],
+        [0, 1, 0],
+      ];
+      layer.biases = [0, 0];
 
-    assert(
-      Array.isArray(result.activation),
-      "Forward pass returns activation array",
-    );
-    assert(result.activation.length === 2, "Activation has correct dimensions");
-    assert(result.activation[0] === 2, "First neuron has correct activation");
-    assert(result.activation[1] === 3, "Second neuron has correct activation");
-  }
+      const input = [2, 3, 4];
+      const result = layer.forward(input);
+      const dY = [1, 1]; // Gradient of loss with respect to output
 
-  // Test backward pass
-  {
-    const layer = new Prime.Neural.Layer.NeuralLayer({
-      inputSize: 3,
-      outputSize: 2,
-      activation: "linear",
-      initParams: { distribution: "zeros" },
+      const gradients = layer.backward(dY, result.cache);
+
+      expect(gradients.dW).toBeDefined();
+      expect(gradients.dB).toBeDefined();
+      expect(gradients.dX).toBeDefined();
+
+      expect(gradients.dW[0][0]).toBe(2);
+      expect(gradients.dW[1][1]).toBe(3);
+      expect(gradients.dB[0]).toBe(1);
+      expect(gradients.dB[1]).toBe(1);
     });
 
-    // Set weights and biases manually for deterministic test
-    layer.weights = [
-      [1, 0, 0],
-      [0, 1, 0],
-    ];
-    layer.biases = [0, 0];
+    test('should update layer parameters correctly', () => {
+      const layer = new Prime.Neural.Layer.NeuralLayer({
+        inputSize: 2,
+        outputSize: 1,
+        activation: "linear",
+        initParams: { distribution: "zeros" },
+      });
 
-    const input = [2, 3, 4];
-    const result = layer.forward(input);
-    const dY = [1, 1]; // Gradient of loss with respect to output
+      // Set weights and biases manually
+      layer.weights = [[0.5, 0.5]];
+      layer.biases = [0];
 
-    const gradients = layer.backward(dY, result.cache);
+      // Create gradients
+      const gradients = {
+        dW: [[0.1, 0.2]],
+        dB: [0.3],
+      };
 
-    assert(
-      gradients.dW !== undefined,
-      "Backward pass returns weight gradients",
-    );
-    assert(gradients.dB !== undefined, "Backward pass returns bias gradients");
-    assert(gradients.dX !== undefined, "Backward pass returns input gradients");
+      // Apply update with learning rate 1.0
+      layer.update(gradients, 1.0);
 
-    assert(gradients.dW[0][0] === 2, "First weight gradient is correct");
-    assert(gradients.dW[1][1] === 3, "Second weight gradient is correct");
-    assert(gradients.dB[0] === 1, "First bias gradient is correct");
-    assert(gradients.dB[1] === 1, "Second bias gradient is correct");
-  }
+      expect(layer.weights[0][0]).toBeCloseTo(0.4, 6);
+      expect(layer.weights[0][1]).toBeCloseTo(0.3, 6);
+      expect(layer.biases[0]).toBeCloseTo(-0.3, 6);
+    });
+  });
 
-  // Test layer update
-  {
-    const layer = new Prime.Neural.Layer.NeuralLayer({
-      inputSize: 2,
-      outputSize: 1,
-      activation: "linear",
-      initParams: { distribution: "zeros" },
+  // Self-Optimizing Layer Tests
+  describe('Self-Optimizing Layer Tests', () => {
+    test('should create a self-optimizing layer with correct properties', () => {
+      const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
+        inputSize: 4,
+        outputSize: 3,
+        activation: "relu",
+        optimization: {
+          adaptThreshold: 50,
+          coherenceThreshold: 0.75,
+        },
+      });
+
+      expect(layer instanceof Prime.Neural.Layer.SelfOptimizingLayer).toBe(true);
+      expect(layer.optimization.enabled).toBe(true);
+      expect(layer.optimization.adaptThreshold).toBe(50);
+      expect(layer.optimization.coherenceThreshold).toBe(0.75);
+
+      expect(Array.isArray(layer.adaptationState.dropoutMask)).toBe(true);
+      expect(layer.adaptationState.dropoutMask.length).toBe(3);
     });
 
-    // Set weights and biases manually
-    layer.weights = [[0.5, 0.5]];
-    layer.biases = [0];
+    test('should adapt the layer correctly', () => {
+      // Create a layer with a very low adaptThreshold to force adaptation
+      const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
+        inputSize: 5,
+        outputSize: 3,
+        activation: "relu",
+        optimization: {
+          adaptThreshold: 1, // Adapt on every forward pass
+          coherenceThreshold: 0.0, // Always adapt
+        },
+      });
 
-    // Create gradients
-    const gradients = {
-      dW: [[0.1, 0.2]],
-      dB: [0.3],
-    };
+      const input = [1, 2, 3, 4, 5];
 
-    // Apply update with learning rate 1.0
-    layer.update(gradients, 1.0);
-
-    assertApproximatelyEqual(
-      layer.weights[0][0],
-      0.4,
-      "Weight updated correctly",
-    );
-    assertApproximatelyEqual(
-      layer.weights[0][1],
-      0.3,
-      "Weight updated correctly",
-    );
-    assertApproximatelyEqual(layer.biases[0], -0.3, "Bias updated correctly");
-  }
-
-  // Test group: Self-Optimizing Layer
-  console.log("\n--- Self-Optimizing Layer Tests ---");
-
-  // Test self-optimizing layer creation
-  {
-    const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
-      inputSize: 4,
-      outputSize: 3,
-      activation: "relu",
-      optimization: {
-        adaptThreshold: 50,
-        coherenceThreshold: 0.75,
-      },
-    });
-
-    assert(
-      layer instanceof Prime.Neural.Layer.SelfOptimizingLayer,
-      "SelfOptimizingLayer can be instantiated",
-    );
-
-    assert(
-      layer.optimization.enabled === true,
-      "Optimization is enabled by default",
-    );
-    assert(
-      layer.optimization.adaptThreshold === 50,
-      "Custom adaptation threshold set correctly",
-    );
-    assert(
-      layer.optimization.coherenceThreshold === 0.75,
-      "Custom coherence threshold set correctly",
-    );
-
-    assert(
-      Array.isArray(layer.adaptationState.dropoutMask),
-      "Dropout mask initialized",
-    );
-    assert(
-      layer.adaptationState.dropoutMask.length === 3,
-      "Dropout mask has correct size",
-    );
-  }
-
-  // Test layer adaptation
-  {
-    // Create a layer with a very low adaptThreshold to force adaptation
-    const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
-      inputSize: 5,
-      outputSize: 3,
-      activation: "relu",
-      optimization: {
-        adaptThreshold: 1, // Adapt on every forward pass
-        coherenceThreshold: 0.0, // Always adapt
-      },
-    });
-
-    const input = [1, 2, 3, 4, 5];
-
-    // Run forward pass multiple times to trigger adaptation
-    for (let i = 0; i < 10; i++) {
-      layer.forward(input);
-    }
-
-    // Verify adaptation history
-    const history = layer.getAdaptationHistory();
-    assert(Array.isArray(history), "Adaptation history is available");
-    assert(history.length > 0, "At least one adaptation event recorded");
-    assert(history[0].iteration !== undefined, "Adaptation records iteration");
-    assert(
-      history[0].coherenceBefore !== undefined,
-      "Adaptation records coherence before",
-    );
-    assert(
-      history[0].coherenceAfter !== undefined,
-      "Adaptation records coherence after",
-    );
-  }
-
-  // Test layer analysis
-  {
-    const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
-      inputSize: 4,
-      outputSize: 3,
-      activation: "sigmoid",
-    });
-
-    // Run forward pass to generate some usage statistics
-    layer.forward([1, 2, 3, 4]);
-
-    const analysis = layer.analyzeLayer();
-    assert(typeof analysis === "object", "Layer analysis returns an object");
-    assert(
-      typeof analysis.coherence === "number",
-      "Analysis includes coherence score",
-    );
-    assert(
-      typeof analysis.utilizationRate === "number",
-      "Analysis includes utilization rate",
-    );
-    assert(
-      Array.isArray(analysis.recommendations),
-      "Analysis includes recommendations",
-    );
-  }
-
-  // Test group: Neural Optimization
-  console.log("\n--- Neural Optimization Tests ---");
-
-  // Test coherence SGD optimizer
-  {
-    const optimizer = new Prime.Neural.Optimization.CoherenceSGD({
-      learningRate: 0.1,
-      momentum: 0.9,
-      minCoherence: 0.5,
-    });
-
-    assert(
-      optimizer instanceof Prime.Neural.Optimization.CoherenceOptimizer,
-      "CoherenceSGD extends CoherenceOptimizer",
-    );
-
-    assert(optimizer.learningRate === 0.1, "Learning rate set correctly");
-    assert(optimizer.momentum === 0.9, "Momentum set correctly");
-    assert(optimizer.minCoherence === 0.5, "Minimum coherence set correctly");
-  }
-
-  // Test optimizer update with coherence constraint
-  {
-    const optimizer = new Prime.Neural.Optimization.CoherenceSGD({
-      learningRate: 0.1,
-      minCoherence: 0.5,
-    });
-
-    // Simple parameters and gradients
-    const params = {
-      weights: [
-        [1, 1],
-        [1, 1],
-      ],
-      biases: [0, 0],
-    };
-
-    const gradients = {
-      weights: [
-        [0.1, 0.1],
-        [0.1, 0.1],
-      ],
-      biases: [0.1, 0.1],
-    };
-
-    // Simple coherence function that returns 0.8 for any input
-    const coherenceFn = () => 0.8;
-
-    const updatedParams = optimizer.update(params, gradients, coherenceFn);
-
-    assert(
-      updatedParams.weights[0][0] < params.weights[0][0],
-      "Parameter updated in the direction of negative gradient",
-    );
-    assert(
-      typeof optimizer.getStatistics().iterations === "number",
-      "Optimizer tracks iterations",
-    );
-  }
-
-  // Test optimizer update with coherence violation
-  {
-    const optimizer = new Prime.Neural.Optimization.CoherenceSGD({
-      learningRate: 0.1,
-      minCoherence: 0.7,
-    });
-
-    // Simple parameters and gradients
-    const params = {
-      weights: [
-        [1, 1],
-        [1, 1],
-      ],
-      biases: [0, 0],
-    };
-
-    const gradients = {
-      weights: [
-        [0.1, 0.1],
-        [0.1, 0.1],
-      ],
-      biases: [0.1, 0.1],
-    };
-
-    // Coherence function that starts at 0.8 but drops to 0.6 after update
-    let calls = 0;
-    const coherenceFn = () => {
-      calls++;
-      return calls === 1 ? 0.8 : 0.6;
-    };
-
-    const updatedParams = optimizer.update(params, gradients, coherenceFn);
-
-    assert(
-      updatedParams.weights[0][0] < params.weights[0][0],
-      "Parameter still updated despite coherence drop",
-    );
-    assert(calls > 1, "Coherence function called multiple times");
-  }
-
-  // Test Adam optimizer
-  {
-    const optimizer = new Prime.Neural.Optimization.CoherenceAdam({
-      learningRate: 0.001,
-      beta1: 0.9,
-      beta2: 0.999,
-      minCoherence: 0.5,
-    });
-
-    assert(
-      optimizer instanceof Prime.Neural.Optimization.CoherenceOptimizer,
-      "CoherenceAdam extends CoherenceOptimizer",
-    );
-
-    assert(optimizer.learningRate === 0.001, "Learning rate set correctly");
-    assert(optimizer.beta1 === 0.9, "Beta1 set correctly");
-    assert(optimizer.beta2 === 0.999, "Beta2 set correctly");
-
-    // Simple parameters and gradients
-    const params = {
-      weights: [
-        [1, 1],
-        [1, 1],
-      ],
-      biases: [0, 0],
-    };
-
-    const gradients = {
-      weights: [
-        [0.1, 0.1],
-        [0.1, 0.1],
-      ],
-      biases: [0.1, 0.1],
-    };
-
-    // Simple coherence function that returns 0.8 for any input
-    const coherenceFn = () => 0.8;
-
-    const updatedParams = optimizer.update(params, gradients, coherenceFn);
-
-    assert(
-      updatedParams.weights[0][0] < params.weights[0][0],
-      "Parameter updated in the direction of negative gradient",
-    );
-  }
-
-  // Test integrated neural network with self-optimization
-  console.log("\n--- Integrated Neural Network Test ---");
-
-  // Simple XOR test
-  {
-    // Create a 2-layer network for XOR problem
-    const hiddenLayer = new Prime.Neural.Layer.SelfOptimizingLayer({
-      inputSize: 2,
-      outputSize: 4,
-      activation: "sigmoid",
-      optimization: {
-        adaptThreshold: 5, // Adapt more frequently for test
-        coherenceThreshold: 1.0, // Always adapt
-        adaptationRate: 0.05,
-      },
-    });
-
-    const outputLayer = new Prime.Neural.Layer.NeuralLayer({
-      // Use regular layer for output
-      inputSize: 4,
-      outputSize: 1,
-      activation: "sigmoid",
-    });
-
-    // Training data for XOR
-    const trainingData = [
-      { input: [0, 0], expected: [0] },
-      { input: [0, 1], expected: [1] },
-      { input: [1, 0], expected: [1] },
-      { input: [1, 1], expected: [0] },
-    ];
-
-    // Simple training loop without optimizer for testing
-    const epochs = 50; // Reduce epochs for faster testing
-
-    for (let epoch = 0; epoch < epochs; epoch++) {
-      for (const sample of trainingData) {
-        // Forward pass
-        const hiddenResult = hiddenLayer.forward(sample.input);
-        const outputResult = outputLayer.forward(hiddenResult.activation);
-
-        // Calculate output gradient
-        const prediction = outputResult.activation[0];
-        const target = sample.expected[0];
-        const dY = [prediction - target];
-
-        // Backward pass
-        const outputGradients = outputLayer.backward(dY, outputResult.cache);
-        const hiddenGradients = hiddenLayer.backward(
-          outputGradients.dX,
-          hiddenResult.cache,
-        );
-
-        // Update parameters directly
-        outputLayer.update(outputGradients, 0.1);
-        hiddenLayer.update(hiddenGradients, 0.1);
+      // Run forward pass multiple times to trigger adaptation
+      for (let i = 0; i < 10; i++) {
+        layer.forward(input);
       }
-    }
 
-    // Test for adaptation history only
-    const adaptationHistory = hiddenLayer.getAdaptationHistory();
-    assert(
-      adaptationHistory.length > 0,
-      "Hidden layer adapted during training",
-    );
+      // Verify adaptation history
+      const history = layer.getAdaptationHistory();
+      expect(Array.isArray(history)).toBe(true);
+      expect(history.length).toBeGreaterThan(0);
+      expect(history[0].iteration).toBeDefined();
+      expect(history[0].coherenceBefore).toBeDefined();
+      expect(history[0].coherenceAfter).toBeDefined();
+    });
 
-    console.log(`Adaptation history entries: ${adaptationHistory.length}`);
-    console.log(`Hidden layer coherence: ${hiddenLayer.metrics.coherence}`);
+    test('should provide layer analysis', () => {
+      const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
+        inputSize: 4,
+        outputSize: 3,
+        activation: "sigmoid",
+      });
 
-    // Run prediction on a single sample
-    const testSample = trainingData[1]; // [0,1] -> 1
-    const hiddenResult = hiddenLayer.forward(testSample.input);
-    const outputResult = outputLayer.forward(hiddenResult.activation);
+      // Run forward pass to generate some usage statistics
+      layer.forward([1, 2, 3, 4]);
 
-    console.log(
-      `Test prediction: Input [${testSample.input}], Output ${outputResult.activation[0]}`,
-    );
-  }
+      const analysis = layer.analyzeLayer();
+      expect(typeof analysis).toBe('object');
+      expect(typeof analysis.coherence).toBe('number');
+      expect(typeof analysis.utilizationRate).toBe('number');
+      expect(Array.isArray(analysis.recommendations)).toBe(true);
+    });
+  });
 
-  console.log("\n=== All Neural Module Tests Passed ===");
-};
+  // Neural Optimization Tests
+  describe('Neural Optimization Tests', () => {
+    test('should create coherence SGD optimizer with correct properties', () => {
+      const optimizer = new Prime.Neural.Optimization.CoherenceSGD({
+        learningRate: 0.1,
+        momentum: 0.9,
+        minCoherence: 0.5,
+      });
 
-// Run the tests
-try {
-  runTests();
-} catch (error) {
-  console.error("Test failed:", error.message);
-  console.error(error.stack);
-  process.exit(1);
-}
+      expect(optimizer instanceof Prime.Neural.Optimization.CoherenceOptimizer).toBe(true);
+      expect(optimizer.learningRate).toBe(0.1);
+      expect(optimizer.momentum).toBe(0.9);
+      expect(optimizer.minCoherence).toBe(0.5);
+    });
+
+    test('should update parameters with coherence constraint', () => {
+      const optimizer = new Prime.Neural.Optimization.CoherenceSGD({
+        learningRate: 0.1,
+        minCoherence: 0.5,
+      });
+
+      // Simple parameters and gradients
+      const params = {
+        weights: [
+          [1, 1],
+          [1, 1],
+        ],
+        biases: [0, 0],
+      };
+
+      const gradients = {
+        weights: [
+          [0.1, 0.1],
+          [0.1, 0.1],
+        ],
+        biases: [0.1, 0.1],
+      };
+
+      // Simple coherence function that returns 0.8 for any input
+      const coherenceFn = () => 0.8;
+
+      const updatedParams = optimizer.update(params, gradients, coherenceFn);
+
+      expect(updatedParams.weights[0][0]).toBeLessThan(params.weights[0][0]);
+      expect(typeof optimizer.getStatistics().iterations).toBe('number');
+    });
+
+    test('should handle coherence violation', () => {
+      const optimizer = new Prime.Neural.Optimization.CoherenceSGD({
+        learningRate: 0.1,
+        minCoherence: 0.7,
+      });
+
+      // Simple parameters and gradients
+      const params = {
+        weights: [
+          [1, 1],
+          [1, 1],
+        ],
+        biases: [0, 0],
+      };
+
+      const gradients = {
+        weights: [
+          [0.1, 0.1],
+          [0.1, 0.1],
+        ],
+        biases: [0.1, 0.1],
+      };
+
+      // Coherence function that starts at 0.8 but drops to 0.6 after update
+      let calls = 0;
+      const coherenceFn = () => {
+        calls++;
+        return calls === 1 ? 0.8 : 0.6;
+      };
+
+      const updatedParams = optimizer.update(params, gradients, coherenceFn);
+
+      expect(updatedParams.weights[0][0]).toBeLessThan(params.weights[0][0]);
+      expect(calls).toBeGreaterThan(1);
+    });
+
+    test('should create and use Adam optimizer correctly', () => {
+      const optimizer = new Prime.Neural.Optimization.CoherenceAdam({
+        learningRate: 0.001,
+        beta1: 0.9,
+        beta2: 0.999,
+        minCoherence: 0.5,
+      });
+
+      expect(optimizer instanceof Prime.Neural.Optimization.CoherenceOptimizer).toBe(true);
+      expect(optimizer.learningRate).toBe(0.001);
+      expect(optimizer.beta1).toBe(0.9);
+      expect(optimizer.beta2).toBe(0.999);
+
+      // Simple parameters and gradients
+      const params = {
+        weights: [
+          [1, 1],
+          [1, 1],
+        ],
+        biases: [0, 0],
+      };
+
+      const gradients = {
+        weights: [
+          [0.1, 0.1],
+          [0.1, 0.1],
+        ],
+        biases: [0.1, 0.1],
+      };
+
+      // Simple coherence function that returns 0.8 for any input
+      const coherenceFn = () => 0.8;
+
+      const updatedParams = optimizer.update(params, gradients, coherenceFn);
+
+      expect(updatedParams.weights[0][0]).toBeLessThan(params.weights[0][0]);
+    });
+  });
+
+  // Integrated Neural Network Test
+  describe('Integrated Neural Network Tests', () => {
+    test('should train a simple XOR neural network with self-optimization', () => {
+      // Create a 2-layer network for XOR problem
+      const hiddenLayer = new Prime.Neural.Layer.SelfOptimizingLayer({
+        inputSize: 2,
+        outputSize: 4,
+        activation: "sigmoid",
+        optimization: {
+          adaptThreshold: 5, // Adapt more frequently for test
+          coherenceThreshold: 1.0, // Always adapt
+          adaptationRate: 0.05,
+        },
+      });
+
+      const outputLayer = new Prime.Neural.Layer.NeuralLayer({
+        // Use regular layer for output
+        inputSize: 4,
+        outputSize: 1,
+        activation: "sigmoid",
+      });
+
+      // Training data for XOR
+      const trainingData = [
+        { input: [0, 0], expected: [0] },
+        { input: [0, 1], expected: [1] },
+        { input: [1, 0], expected: [1] },
+        { input: [1, 1], expected: [0] },
+      ];
+
+      // Simple training loop without optimizer for testing
+      const epochs = 100; // Increased epochs for more reliable learning
+
+      for (let epoch = 0; epoch < epochs; epoch++) {
+        for (const sample of trainingData) {
+          // Forward pass
+          const hiddenResult = hiddenLayer.forward(sample.input);
+          const outputResult = outputLayer.forward(hiddenResult.activation);
+
+          // Calculate output gradient
+          const prediction = outputResult.activation[0];
+          const target = sample.expected[0];
+          const dY = [prediction - target];
+
+          // Backward pass
+          const outputGradients = outputLayer.backward(dY, outputResult.cache);
+          const hiddenGradients = hiddenLayer.backward(
+            outputGradients.dX,
+            hiddenResult.cache,
+          );
+
+          // Update parameters directly
+          outputLayer.update(outputGradients, 0.1);
+          hiddenLayer.update(hiddenGradients, 0.1);
+        }
+      }
+
+      // Test for adaptation history only
+      const adaptationHistory = hiddenLayer.getAdaptationHistory();
+      expect(adaptationHistory.length).toBeGreaterThan(0);
+
+      // Test prediction on a single sample
+      const testSample = trainingData[1]; // [0,1] -> 1
+      const hiddenResult = hiddenLayer.forward(testSample.input);
+      const outputResult = outputLayer.forward(hiddenResult.activation);
+      
+      // For a normally trained XOR network, prediction should be closer to 1 than 0 for this sample
+      // But we'll use a relaxed assertion since we're testing integration, not XOR learning specifically
+      expect(outputResult.activation[0]).toBeGreaterThan(0.4);
+    });
+  });
+});
