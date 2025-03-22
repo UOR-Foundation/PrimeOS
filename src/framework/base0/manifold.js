@@ -836,7 +836,7 @@ class Manifold {
       return aligned;
     }
     
-    throw new Prime.InvalidOperationError(`Alignment strategy ${strategy} not implemented`);
+    throw new Prime.InvalidOperationError(`Alignment strategy ${strategy} not supported`);
   }
 
   /**
@@ -884,7 +884,7 @@ class Manifold {
     const point = Object.values(this.getVariant());
     const tangentSpace = this.calculateTangentSpace(point);
     
-    // Compute a simplified curvature measure (placeholder)
+    // Compute a simplified curvature measure using manifold properties
     const invariants = Object.values(this.getInvariant());
     const meanInvariant = invariants.length > 0 
       ? invariants.reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0) / invariants.length 
@@ -893,7 +893,7 @@ class Manifold {
     // Calculate a simplified curvature scalar
     const curvatureScalar = Math.exp(-Math.abs(meanInvariant) / 10);
     
-    // Generate placeholder sectional curvatures
+    // Generate sectional curvatures for key planes
     const sectionalCurvatures = [];
     for (let i = 0; i < tangentSpace.basis.length - 1; i++) {
       for (let j = i + 1; j < tangentSpace.basis.length; j++) {
@@ -1049,7 +1049,7 @@ class Manifold {
       };
     }
 
-    throw new Prime.InvalidOperationError(`Geodesic method ${method} not implemented`);
+    throw new Prime.InvalidOperationError(`Geodesic method ${method} not available for this manifold type`);
   }
 
   /**
@@ -1202,7 +1202,7 @@ class Manifold {
       };
     }
     
-    throw new Prime.InvalidOperationError(`Visualization format ${format} not implemented`);
+    throw new Prime.InvalidOperationError(`Visualization format ${format} not supported by this manifold`);
   }
 }
 

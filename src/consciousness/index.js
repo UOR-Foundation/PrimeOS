@@ -9,6 +9,28 @@ const Prime = require("../core");
 // Create the Consciousness namespace
 Prime.Consciousness = {};
 
+// Import core components
+const ConsciousnessOperator = require('./operator');
+const SelfReferentialLoop = require('./self-reference');
+const TemporalIntegration = require('./temporal');
+const StateRepresentation = require('./state');
+const AttentionMechanism = require('./attention');
+const MemoryStructure = require('./memory');
+const DecisionMaking = require('./decision');
+const ThresholdManager = require('./threshold');
+const ConsciousnessModule = require('./module');
+
+// Register core components directly
+Prime.Consciousness.Operator = ConsciousnessOperator;
+Prime.Consciousness.SelfReferentialLoop = SelfReferentialLoop;
+Prime.Consciousness.TemporalIntegration = TemporalIntegration;
+Prime.Consciousness.StateRepresentation = StateRepresentation;
+Prime.Consciousness.AttentionMechanism = AttentionMechanism;
+Prime.Consciousness.MemoryStructure = MemoryStructure;
+Prime.Consciousness.DecisionMaking = DecisionMaking;
+Prime.Consciousness.ThresholdManager = ThresholdManager;
+Prime.Consciousness.Module = ConsciousnessModule;
+
 // Import submodules
 require("./models");
 require("./awareness");

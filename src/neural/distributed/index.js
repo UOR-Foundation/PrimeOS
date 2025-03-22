@@ -6,6 +6,12 @@
 // Import the Prime object from core
 const Prime = require("../../core");
 
+// Import the dimension validator
+require("./dimension-validator");
+
+// Import the implementation from our distributed model file
+const DistributedModelImplementation = require("./distributed-model-impl");
+
 // Create the Neural Distributed module using IIFE
 (function () {
   /**
@@ -13,10 +19,11 @@ const Prime = require("../../core");
    * Enhances NeuralModel with distributed computation capabilities
    * @extends Prime.Neural.Model.NeuralModel
    */
-  class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
+  class DistributedNeuralModel extends DistributedModelImplementation {
     /**
      * Create a new distributed neural network model
      * @param {Object} config - Model configuration
+     * @param {number} config.inputSize - Size of the input layer
      * @param {Array} [config.layers=[]] - Array of layer configurations
      * @param {Object} [config.optimizer={}] - Optimizer configuration
      * @param {Object} [config.coherence={}] - Coherence configuration
@@ -24,37 +31,8 @@ const Prime = require("../../core");
      * @param {Object} [config.distributed={}] - Distributed configuration
      */
     constructor(config = {}) {
-      // Call parent constructor with base config
+      // Call the implementation constructor
       super(config);
-
-      // Set up distributed configuration
-      this.distributedConfig = {
-        enabled: config.distributed?.enabled ?? false,
-        clusterManager: config.distributed?.clusterManager || null,
-        partitionScheme: config.distributed?.partitionScheme || "data_parallel",
-        nodeCount: config.distributed?.nodeCount || 1,
-        syncFrequency: config.distributed?.syncFrequency || 10,
-        coherenceCheckFrequency: config.distributed?.coherenceCheckFrequency || 50,
-        fallbackToLocal: config.distributed?.fallbackToLocal ?? true
-      };
-
-      // Distributed operation state
-      this.distributedState = {
-        isInitialized: false,
-        activeNodes: [],
-        taskAssignments: new Map(), // layerId -> nodeId
-        pendingTasks: [],
-        completedTasks: 0,
-        failedTasks: 0,
-        lastSyncIteration: 0,
-        lastCoherenceCheck: 0,
-        networkPartitions: 0
-      };
-
-      // Initialize if distributed mode is enabled and cluster manager is provided
-      if (this.distributedConfig.enabled && this.distributedConfig.clusterManager) {
-        this._initializeDistributedMode();
-      }
     }
 
     /**

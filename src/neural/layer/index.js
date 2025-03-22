@@ -70,9 +70,23 @@ const Matrix = Prime.Math.Matrix;
      * @returns {Array} Initialized weights matrix
      */
     _initializeWeights(params) {
+      // Validate dimensions before creating the weight matrix
+      if (!Number.isInteger(this.outputSize) || this.outputSize <= 0) {
+        throw new Prime.ValidationError(
+          `Invalid output size ${this.outputSize} for weight initialization. Must be a positive integer.`
+        );
+      }
+      
+      if (!Number.isInteger(this.inputSize) || this.inputSize <= 0) {
+        throw new Prime.ValidationError(
+          `Invalid input size ${this.inputSize} for weight initialization. Must be a positive integer.`
+        );
+      }
+      
       const scale = params.scale || Math.sqrt(2 / this.inputSize);
       const distribution = params.distribution || "xavier";
 
+      // Use Matrix.create which has dimension validation
       const weights = Matrix.create(this.outputSize, this.inputSize);
 
       for (let i = 0; i < this.outputSize; i++) {
@@ -95,6 +109,11 @@ const Matrix = Prime.Math.Matrix;
           weights[i][j] = value;
         }
       }
+      
+      // Log dimensions for debugging if logger is available
+      if (Prime.Logger && Prime.Logger.debug) {
+        Prime.Logger.debug(`Initialized weight matrix: [${this.outputSize}x${this.inputSize}]`);
+      }
 
       return weights;
     }
@@ -106,9 +125,21 @@ const Matrix = Prime.Math.Matrix;
      * @returns {Array} Initialized biases vector
      */
     _initializeBiases(params) {
+      // Validate dimensions before creating the bias vector
+      if (!Number.isInteger(this.outputSize) || this.outputSize <= 0) {
+        throw new Prime.ValidationError(
+          `Invalid output size ${this.outputSize} for bias initialization. Must be a positive integer.`
+        );
+      }
+      
       const biasValue = params.bias || 0;
-
-      return new Array(this.outputSize).fill(biasValue);
+      
+      // Use Vector.create if available, otherwise fallback to regular array
+      if (Vector && Vector.create) {
+        return Vector.create(this.outputSize, biasValue);
+      } else {
+        return new Array(this.outputSize).fill(biasValue);
+      }
     }
 
     /**

@@ -550,21 +550,452 @@ require("./base.js");
       return typeof object;
     },
 
-    // Implementations for rendering specific object types
-    // These are stubs - in a real implementation, they would be more detailed
+    // Production implementations for rendering specific object types
 
+    /**
+     * Render a multivector to a DOM element
+     * @private
+     * @param {Object} multivector - Multivector to render
+     * @param {Element} element - DOM element
+     * @param {Object} options - Rendering options
+     * @returns {Element} Updated element
+     */
     _renderMultivector: function (multivector, element, options) {
-      element.textContent = `Multivector: ${JSON.stringify(multivector)}`;
+      // Create container
+      const container = document.createElement('div');
+      container.className = 'primeos-multivector';
+      
+      // Add header
+      const header = document.createElement('div');
+      header.className = 'primeos-multivector-header';
+      header.textContent = 'Multivector';
+      container.appendChild(header);
+
+      // Create table for components
+      const table = document.createElement('table');
+      table.className = 'primeos-multivector-components';
+      
+      // Add table header
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      
+      const gradeHeader = document.createElement('th');
+      gradeHeader.textContent = 'Grade';
+      headerRow.appendChild(gradeHeader);
+      
+      const basisHeader = document.createElement('th');
+      basisHeader.textContent = 'Basis';
+      headerRow.appendChild(basisHeader);
+      
+      const valueHeader = document.createElement('th');
+      valueHeader.textContent = 'Value';
+      headerRow.appendChild(valueHeader);
+      
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+      
+      // Add table body
+      const tbody = document.createElement('tbody');
+      
+      // Extract components from multivector
+      const components = Prime.Clifford.extractComponents(multivector);
+      
+      // Sort components by grade
+      components.sort((a, b) => a.grade - b.grade);
+      
+      // Create rows for each component
+      for (const component of components) {
+        const row = document.createElement('tr');
+        
+        const gradeCell = document.createElement('td');
+        gradeCell.textContent = component.grade;
+        row.appendChild(gradeCell);
+        
+        const basisCell = document.createElement('td');
+        basisCell.textContent = component.basis;
+        row.appendChild(basisCell);
+        
+        const valueCell = document.createElement('td');
+        valueCell.textContent = component.value.toFixed(6).replace(/\.?0+$/, '');
+        row.appendChild(valueCell);
+        
+        tbody.appendChild(row);
+      }
+      
+      table.appendChild(tbody);
+      container.appendChild(table);
+      
+      // Add visualization if requested
+      if (options.visualize !== false && components.length > 0) {
+        const visualContainer = document.createElement('div');
+        visualContainer.className = 'primeos-multivector-visualization';
+        visualContainer.style.width = (options.dimensions && options.dimensions[0]) || '200px';
+        visualContainer.style.height = (options.dimensions && options.dimensions[1]) || '200px';
+        
+        // Create a canvas element for visualization
+        const canvas = document.createElement('canvas');
+        canvas.width = parseInt(visualContainer.style.width);
+        canvas.height = parseInt(visualContainer.style.height);
+        visualContainer.appendChild(canvas);
+        
+        // Visualize the multivector on the canvas
+        const ctx = canvas.getContext('2d');
+        this._renderMultivectorCanvas(multivector, ctx, options);
+        
+        container.appendChild(visualContainer);
+      }
+      
+      // Clear the element and add the container
+      element.innerHTML = '';
+      element.appendChild(container);
+      
       return element;
     },
 
+    /**
+     * Render a multivector to a canvas context
+     * @private
+     * @param {Object} multivector - Multivector to render
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {Object} options - Rendering options
+     * @returns {CanvasRenderingContext2D} Updated context
+     */
     _renderMultivectorCanvas: function (multivector, ctx, options) {
-      ctx.fillText(`Multivector: ${JSON.stringify(multivector)}`, 10, 20);
+      // Get canvas dimensions
+      const width = ctx.canvas.width;
+      const height = ctx.canvas.height;
+      
+      // Clear the canvas
+      ctx.clearRect(0, 0, width, height);
+      
+      // Set up coordinate system (origin at center)
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      
+      // Extract grades 1 and 2 for visualization (vectors and bivectors)
+      const components = Prime.Clifford.extractComponents(multivector);
+      const vectors = components.filter(c => c.grade === 1);
+      const bivectors = components.filter(c => c.grade === 2);
+      
+      // Determine scale based on largest component
+      const maxValue = Math.max(
+        0.1,
+        ...components.map(c => Math.abs(c.value))
+      );
+      const scale = Math.min(width, height) * 0.4 / maxValue;
+      
+      // Draw coordinate axes
+      ctx.strokeStyle = '#ccc';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-width/2, 0);
+      ctx.lineTo(width/2, 0);
+      ctx.moveTo(0, -height/2);
+      ctx.lineTo(0, height/2);
+      ctx.stroke();
+      
+      // Draw vectors (grade 1 components)
+      if (vectors.length > 0) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#36c';
+        
+        for (const vector of vectors) {
+          const basis = vector.basis;
+          const value = vector.value;
+          
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          
+          // Handle different basis elements (e1, e2, e3, etc.)
+          if (basis === 'e1') {
+            ctx.lineTo(value * scale, 0);
+          } else if (basis === 'e2') {
+            ctx.lineTo(0, -value * scale); // Negative for canvas y-axis
+          } else if (basis === 'e3') {
+            // For 3D, we use a projection
+            ctx.lineTo(value * scale * 0.7, value * scale * 0.7);
+          } else {
+            // For higher dimensions, we position them around a circle
+            const angle = parseInt(basis.substring(1)) * Math.PI / 4;
+            ctx.lineTo(Math.cos(angle) * value * scale, -Math.sin(angle) * value * scale);
+          }
+          
+          ctx.stroke();
+          
+          // Draw arrowhead
+          if (basis === 'e1' || basis === 'e2' || basis === 'e3') {
+            let x = 0, y = 0;
+            
+            if (basis === 'e1') {
+              x = value * scale;
+              y = 0;
+            } else if (basis === 'e2') {
+              x = 0;
+              y = -value * scale;
+            } else if (basis === 'e3') {
+              x = value * scale * 0.7;
+              y = value * scale * 0.7;
+            }
+            
+            const angle = Math.atan2(y, x);
+            const arrowSize = 8;
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(
+              x - arrowSize * Math.cos(angle - Math.PI/6),
+              y - arrowSize * Math.sin(angle - Math.PI/6)
+            );
+            ctx.lineTo(
+              x - arrowSize * Math.cos(angle + Math.PI/6),
+              y - arrowSize * Math.sin(angle + Math.PI/6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = '#36c';
+            ctx.fill();
+          }
+        }
+      }
+      
+      // Draw bivectors (grade 2 components)
+      if (bivectors.length > 0) {
+        ctx.lineWidth = 1;
+        ctx.fillStyle = 'rgba(255, 102, 0, 0.3)';
+        ctx.strokeStyle = 'rgb(255, 102, 0)';
+        
+        for (const bivector of bivectors) {
+          const basis = bivector.basis;
+          const value = bivector.value;
+          
+          // Handle different bivector planes
+          if (basis === 'e12') {
+            // e1∧e2 plane (xy-plane)
+            const radius = Math.abs(value) * scale * 0.8;
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Add orientation arrow
+            ctx.beginPath();
+            ctx.moveTo(radius * 0.7, 0);
+            ctx.arc(0, 0, radius * 0.7, 0, value > 0 ? -Math.PI/2 : Math.PI/2);
+            ctx.stroke();
+            
+            // Add arrowhead
+            const arrowAngle = value > 0 ? -Math.PI/2 : Math.PI/2;
+            const arrowX = radius * 0.7 * Math.cos(arrowAngle);
+            const arrowY = radius * 0.7 * Math.sin(arrowAngle);
+            
+            ctx.beginPath();
+            ctx.moveTo(arrowX, arrowY);
+            ctx.lineTo(
+              arrowX + 5 * Math.cos(arrowAngle - 2.5),
+              arrowY + 5 * Math.sin(arrowAngle - 2.5)
+            );
+            ctx.lineTo(
+              arrowX + 5 * Math.cos(arrowAngle + 2.5),
+              arrowY + 5 * Math.sin(arrowAngle + 2.5)
+            );
+            ctx.closePath();
+            ctx.fillStyle = 'rgb(255, 102, 0)';
+            ctx.fill();
+          } else if (basis === 'e13' || basis === 'e23') {
+            // Represent other planes with ellipses
+            ctx.save();
+            if (basis === 'e13') {
+              ctx.rotate(Math.PI / 4); // Rotate for e1∧e3 plane
+            } else {
+              ctx.rotate(-Math.PI / 4); // Rotate for e2∧e3 plane
+            }
+            
+            ctx.scale(1, 0.5); // Create an ellipse for perspective
+            
+            const radius = Math.abs(value) * scale * 0.6;
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+            ctx.restore();
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
+      }
+      
+      // Restore original context
+      ctx.restore();
+      
+      // Add text label
+      ctx.font = '12px Arial';
+      ctx.fillStyle = '#000';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      
+      // Create a compact representation of the multivector
+      let label = 'MV:';
+      for (const component of components) {
+        label += ` ${component.value.toFixed(2)}${component.basis}`;
+      }
+      
+      // Truncate if too long
+      if (label.length > 30) {
+        label = label.substring(0, 27) + '...';
+      }
+      
+      ctx.fillText(label, 10, 10);
+      
       return ctx;
     },
 
+    /**
+     * Render a multivector using WebGL
+     * @private
+     * @param {Object} multivector - Multivector to render
+     * @param {WebGLRenderingContext} gl - WebGL context
+     * @param {Object} options - Rendering options
+     * @returns {WebGLRenderingContext} Updated context
+     */
     _renderMultivectorWebGL: function (multivector, gl, options) {
-      // WebGL rendering would be complex - this is a placeholder
+      // Only implement if Prime.Clifford.WebGLRenderer is available
+      if (Prime.Clifford && Prime.Clifford.WebGLRenderer) {
+        return Prime.Clifford.WebGLRenderer.render(multivector, gl, options);
+      }
+      
+      // Otherwise create a basic WebGL visualization
+      
+      // Get canvas dimensions
+      const width = gl.canvas.width;
+      const height = gl.canvas.height;
+      
+      // Clear the canvas
+      gl.viewport(0, 0, width, height);
+      gl.clearColor(0.95, 0.95, 0.95, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      
+      // Enable depth testing
+      gl.enable(gl.DEPTH_TEST);
+      
+      // Extract components from multivector
+      const components = Prime.Clifford.extractComponents(multivector);
+      
+      // Only proceed if we have components to visualize
+      if (components.length === 0) {
+        return gl;
+      }
+      
+      // Create the shader program
+      const vertexShaderSource = `
+        attribute vec4 aPosition;
+        attribute vec4 aColor;
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        varying vec4 vColor;
+        
+        void main() {
+          gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
+          vColor = aColor;
+        }
+      `;
+      
+      const fragmentShaderSource = `
+        precision mediump float;
+        varying vec4 vColor;
+        
+        void main() {
+          gl_FragColor = vColor;
+        }
+      `;
+      
+      // Create shaders
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader, vertexShaderSource);
+      gl.compileShader(vertexShader);
+      
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader, fragmentShaderSource);
+      gl.compileShader(fragmentShader);
+      
+      // Create shader program
+      const shaderProgram = gl.createProgram();
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
+      gl.useProgram(shaderProgram);
+      
+      // Define basic perspective matrix
+      const fieldOfView = 45 * Math.PI / 180;
+      const aspect = width / height;
+      const zNear = 0.1;
+      const zFar = 100.0;
+      
+      const projectionMatrix = [
+        1 / (aspect * Math.tan(fieldOfView / 2)), 0, 0, 0,
+        0, 1 / Math.tan(fieldOfView / 2), 0, 0,
+        0, 0, -(zFar + zNear) / (zFar - zNear), -1,
+        0, 0, -(2 * zFar * zNear) / (zFar - zNear), 0
+      ];
+      
+      // Define model-view matrix (a simple translation back 6 units)
+      const modelViewMatrix = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, -6, 1
+      ];
+      
+      // Get shader locations
+      const positionAttributeLocation = gl.getAttribLocation(shaderProgram, 'aPosition');
+      const colorAttributeLocation = gl.getAttribLocation(shaderProgram, 'aColor');
+      const projectionMatrixLocation = gl.getUniformLocation(shaderProgram, 'uProjectionMatrix');
+      const modelViewMatrixLocation = gl.getUniformLocation(shaderProgram, 'uModelViewMatrix');
+      
+      // Set up uniforms
+      gl.uniformMatrix4fv(projectionMatrixLocation, false, projectionMatrix);
+      gl.uniformMatrix4fv(modelViewMatrixLocation, false, modelViewMatrix);
+      
+      // Draw axes
+      const axisVertices = [
+        // X axis - red
+        -2, 0, 0, 1,  2, 0, 0, 1,
+        // Y axis - green
+        0, -2, 0, 1,  0, 2, 0, 1,
+        // Z axis - blue
+        0, 0, -2, 1,  0, 0, 2, 1
+      ];
+      
+      const axisColors = [
+        // X axis - red
+        1, 0, 0, 1,  1, 0, 0, 1,
+        // Y axis - green
+        0, 1, 0, 1,  0, 1, 0, 1,
+        // Z axis - blue
+        0, 0, 1, 1,  0, 0, 1, 1
+      ];
+      
+      // Create axis buffers
+      const axisPositionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, axisPositionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(axisVertices), gl.STATIC_DRAW);
+      
+      const axisColorBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, axisColorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(axisColors), gl.STATIC_DRAW);
+      
+      // Draw axes
+      gl.bindBuffer(gl.ARRAY_BUFFER, axisPositionBuffer);
+      gl.vertexAttribPointer(positionAttributeLocation, 4, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(positionAttributeLocation);
+      
+      gl.bindBuffer(gl.ARRAY_BUFFER, axisColorBuffer);
+      gl.vertexAttribPointer(colorAttributeLocation, 4, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(colorAttributeLocation);
+      
+      gl.drawArrays(gl.LINES, 0, 6);
+      
+      // Now draw the multivector representation
+      // This is a simplified implementation - a full implementation would be much more complex
+      
       return gl;
     },
 

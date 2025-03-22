@@ -647,12 +647,71 @@ require("./base.js");
     },
 
     /**
-     * Prune the memoization cache
+     * Prune the memoization cache to maintain limits
      * @private
      */
     _pruneCache: function () {
-      // Implementation would depend on the memoization system
-      // This is a placeholder for now
+      // Get the current memoization limit
+      const limit = this.config.memoizationLimit;
+      
+      // Check all the known memoized functions
+      const functions = Object.values(Prime.Utils._memoizedFunctions || {});
+      
+      for (const memoizedFn of functions) {
+        // Skip if the function doesn't have a cache property
+        if (!memoizedFn.cache) {
+          continue;
+        }
+        
+        // Check if the cache is over the limit
+        if (memoizedFn.cache.size > limit) {
+          // Get the oldest entries
+          const entries = Array.from(memoizedFn.cache.entries());
+          
+          // Sort entries by timestamp (if available)
+          if (entries.length > 0 && entries[0][1] && entries[0][1].timestamp) {
+            entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+          }
+          
+          // Remove oldest entries to get back under the limit
+          const entriesToRemove = entries.slice(0, entries.length - limit);
+          
+          for (const [key] of entriesToRemove) {
+            memoizedFn.cache.delete(key);
+          }
+          
+          if (Prime.Logger && Prime.Logger.debug) {
+            Prime.Logger.debug(`Pruned ${entriesToRemove.length} entries from memoization cache`, {
+              functionName: memoizedFn.name || 'anonymous',
+              beforeSize: entries.length,
+              afterSize: memoizedFn.cache.size,
+              limit
+            });
+          }
+        }
+      }
+      
+      // Check the instance cache as well
+      if (this._cache.size > limit) {
+        // Get the oldest entries by timestamp
+        const entries = Array.from(this._cache.entries())
+          .sort((a, b) => a[1].timestamp - b[1].timestamp);
+        
+        // Remove oldest entries to get back under the limit
+        const entriesToRemove = entries.slice(0, entries.length - limit);
+        
+        for (const [key] of entriesToRemove) {
+          this._cache.delete(key);
+        }
+        
+        if (Prime.Logger && Prime.Logger.debug) {
+          Prime.Logger.debug(`Pruned ${entriesToRemove.length} entries from performance cache`, {
+            beforeSize: entries.length,
+            afterSize: this._cache.size,
+            limit
+          });
+        }
+      }
     },
 
     /**

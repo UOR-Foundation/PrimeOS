@@ -38,8 +38,8 @@ const Base0 = {
           return config.embedFunction(data);
         }
 
-        // Default placeholder embedding function - returns zero vector
-        return Array(this.dimensions).fill(0);
+        // Default implementation using multi-dimensional projection
+        return MathUtils.vector.embedData(data, this.dimensions);
       },
 
       /**

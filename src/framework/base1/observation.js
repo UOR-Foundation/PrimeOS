@@ -31,9 +31,8 @@ const ObservationModel = {
       resolve: function (reference) {
         // Handle UOR references
         if (Prime.UOR && Prime.UOR.isReference(reference)) {
-          // This is a placeholder - in a real implementation, we would
-          // have a way to map references to concrete objects
-          return null;
+          // Utilize the UOR reference system to map to concrete objects
+          return Prime.UOR.resolveReference(reference);
         }
 
         // Handle string identifiers

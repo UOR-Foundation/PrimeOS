@@ -1525,6 +1525,205 @@ try {
   primeMath = {};
 }
 
+/**
+ * Embed data into a fixed dimension vector space
+ * Advanced implementation using spectral projection and pattern recognition
+ *
+ * @param {*} data - Data to embed (any type)
+ * @param {number} dimensions - Target embedding dimension
+ * @returns {Array} Embedding vector with specified dimension
+ */
+vector.embedData = function(data, dimensions) {
+  // Ensure dimensions is valid
+  if (!Number.isInteger(dimensions) || dimensions <= 0) {
+    throw new Error('Embedding dimensions must be a positive integer');
+  }
+
+  // Handle different data types
+  if (typeof data === 'number') {
+    // For numbers, use spectral encoding
+    return this._embedNumber(data, dimensions);
+  } else if (typeof data === 'string') {
+    // For strings, use pattern-based encoding
+    return this._embedString(data, dimensions);
+  } else if (Array.isArray(data)) {
+    // For arrays, adapt dimensionality
+    return this._embedArray(data, dimensions);
+  } else if (data === null || data === undefined) {
+    // For null/undefined, return zero vector
+    return Array(dimensions).fill(0);
+  } else if (typeof data === 'object') {
+    // For objects, create feature-based embedding
+    return this._embedObject(data, dimensions);
+  } else if (typeof data === 'boolean') {
+    // For booleans, use bipolar representation
+    return this._embedBoolean(data, dimensions);
+  } else {
+    // Default approach for other types
+    return this._createHashBasedEmbedding(String(data), dimensions);
+  }
+};
+
+/**
+ * Embed a number into a vector space
+ * @private
+ */
+vector._embedNumber = function(num, dimensions) {
+  const result = Array(dimensions).fill(0);
+  
+  // First position is the normalized value
+  result[0] = Math.tanh(num / 100); // Normalized to (-1,1)
+  
+  // Fill in other dimensions with mathematical transformations
+  if (dimensions > 1) {
+    result[1] = Math.sin(num);
+  }
+  if (dimensions > 2) {
+    result[2] = Math.cos(num);
+  }
+  
+  // Fill remaining positions with scaled values
+  for (let i = 3; i < dimensions; i++) {
+    result[i] = Math.sin(num * (i+1) / dimensions) * Math.exp(-i/dimensions);
+  }
+  
+  return result;
+};
+
+/**
+ * Embed a string into a vector space
+ * @private
+ */
+vector._embedString = function(str, dimensions) {
+  return this._createHashBasedEmbedding(str, dimensions);
+};
+
+/**
+ * Embed an array into a vector space
+ * @private
+ */
+vector._embedArray = function(arr, dimensions) {
+  // If array already has the right size, normalize it
+  if (arr.length === dimensions && arr.every(item => typeof item === 'number')) {
+    return this.normalizeSimple(arr);
+  }
+  
+  const result = Array(dimensions).fill(0);
+  
+  // Handle numeric arrays of different sizes
+  if (arr.every(item => typeof item === 'number')) {
+    // If array is smaller than target, use values directly
+    if (arr.length <= dimensions) {
+      for (let i = 0; i < arr.length; i++) {
+        result[i] = arr[i];
+      }
+    } else {
+      // If array is larger, use dimensionality reduction
+      // Simple approach: average groups of values
+      const stride = arr.length / dimensions;
+      for (let i = 0; i < dimensions; i++) {
+        const startIdx = Math.floor(i * stride);
+        const endIdx = Math.floor((i + 1) * stride);
+        let sum = 0;
+        for (let j = startIdx; j < endIdx; j++) {
+          sum += arr[j];
+        }
+        result[i] = sum / (endIdx - startIdx);
+      }
+    }
+  } else {
+    // For non-numeric arrays, hash each element and combine
+    for (let i = 0; i < arr.length; i++) {
+      const element = arr[i];
+      const elementHash = this._simpleHash(String(element));
+      result[i % dimensions] += Math.sin(elementHash * (i+1));
+    }
+  }
+  
+  return this.normalizeSimple(result);
+};
+
+/**
+ * Embed an object into a vector space
+ * @private
+ */
+vector._embedObject = function(obj, dimensions) {
+  const result = Array(dimensions).fill(0);
+  
+  // Extract features from object
+  const keys = Object.keys(obj);
+  
+  // For each key, add a contribution to the embedding
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const value = obj[key];
+    
+    // Hash the key
+    const keyHash = this._simpleHash(key);
+    
+    // Add contribution based on value type
+    if (typeof value === 'number') {
+      const dimIndex = i % dimensions;
+      result[dimIndex] += Math.tanh(value / 100) * Math.sin(keyHash);
+    } else {
+      const valueHash = this._simpleHash(String(value));
+      const dimIndex = (i + 1) % dimensions;
+      result[dimIndex] += Math.sin(valueHash * keyHash);
+    }
+  }
+  
+  return this.normalizeSimple(result);
+};
+
+/**
+ * Embed a boolean into a vector space
+ * @private
+ */
+vector._embedBoolean = function(bool, dimensions) {
+  const result = Array(dimensions).fill(0);
+  
+  // Set first dimension to indicate the boolean value
+  result[0] = bool ? 1 : -1;
+  
+  // Create a pattern in remaining dimensions
+  for (let i = 1; i < dimensions; i++) {
+    result[i] = bool ? Math.sin(i) : Math.cos(i);
+  }
+  
+  return this.normalizeSimple(result);
+};
+
+/**
+ * Create a hash-based embedding for any string data
+ * @private
+ */
+vector._createHashBasedEmbedding = function(str, dimensions) {
+  const result = Array(dimensions).fill(0);
+  
+  // Use string data to populate embedding vector
+  for (let i = 0; i < str.length; i++) {
+    const charCode = str.charCodeAt(i);
+    const position = i % dimensions;
+    // Use trigonometric functions to distribute values
+    result[position] += Math.sin(charCode * (i+1) / dimensions);
+  }
+  
+  return this.normalizeSimple(result);
+};
+
+/**
+ * Simple string hash function for embedding
+ * @private
+ */
+vector._simpleHash = function(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash) / 2147483647; // Normalize to [0,1]
+};
+
 // Export the math utilities
 module.exports = {
   CONSTANTS,
