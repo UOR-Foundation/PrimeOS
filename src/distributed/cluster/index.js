@@ -725,6 +725,7 @@ const EventBus = require("../event-bus");
      * @param {number} [config.maxNodes=10] - Maximum number of nodes
      * @param {string} [config.discoveryMethod='local'] - Node discovery method
      * @param {Object} [config.coherencePolicy={}] - Coherence policy settings
+     * @param {Object} [config.networkPartitionDetection={}] - Network partition detection settings
      */
     constructor(config = {}) {
       this.config = {
@@ -735,6 +736,14 @@ const EventBus = require("../event-bus");
           minCoherenceThreshold: 0.6,
           recoveryStrategy: "rollback",
         },
+        networkPartitionDetection: config.networkPartitionDetection || {
+          enabled: true,
+          heartbeatInterval: 5000,
+          heartbeatTimeout: 15000,
+          consensusThreshold: 0.6,
+          minPartitionSize: 2,
+          autoRecovery: true
+        }
       };
 
       // Node registry
@@ -744,6 +753,12 @@ const EventBus = require("../event-bus");
       this.taskRegistry = new Map(); // taskId -> task info
       this.taskAssignments = new Map(); // taskId -> nodeId
 
+      // Network partition tracking
+      this.partitionRegistry = new Map(); // partitionId -> partition info
+      this.nodePartitions = new Map(); // nodeId -> partitionId
+      this.heartbeatTimestamps = new Map(); // nodeId -> last heartbeat timestamp
+      this.nodeConnectivity = new Map(); // nodeId -> Set of connected nodeIds
+
       // Performance tracking
       this.metrics = {
         totalTasks: 0,
@@ -751,6 +766,9 @@ const EventBus = require("../event-bus");
         failedTasks: 0,
         averageProcessingTime: 0,
         globalCoherenceScore: 1.0,
+        networkPartitions: 0,
+        partitionRecoveries: 0,
+        currentPartitionCount: 0,
       };
 
       // Create cluster event bus
@@ -758,6 +776,11 @@ const EventBus = require("../event-bus");
 
       // Set up event listeners
       this._setupEventListeners();
+
+      // Start network partition detection if enabled
+      if (this.config.networkPartitionDetection.enabled) {
+        this._startPartitionDetection();
+      }
 
       Prime.Logger.info(
         `Created cluster manager with max ${this.config.maxNodes} nodes`,
@@ -1166,12 +1189,543 @@ const EventBus = require("../event-bus");
       // Update global coherence score
       this.metrics.globalCoherenceScore *= 0.9;
 
+      // Check if this is a network-related coherence violation
+      if (event.type === Prime.Distributed.Coherence.CoherenceViolationType.NETWORK) {
+        // Network partitions should trigger network partition detection
+        this._checkForNetworkPartition(event.nodeId);
+      }
+
       // If global coherence too low, trigger recovery
       if (
         this.metrics.globalCoherenceScore <
         this.config.coherencePolicy.minCoherenceThreshold
       ) {
         this._triggerCoherenceRecovery();
+      }
+    }
+    
+    /**
+     * Start network partition detection
+     * @private
+     */
+    _startPartitionDetection() {
+      // Set up heartbeat monitoring
+      this._heartbeatInterval = setInterval(() => {
+        this._monitorHeartbeats();
+      }, this.config.networkPartitionDetection.heartbeatInterval);
+      
+      // Set up connectivity graph update
+      this._connectivityInterval = setInterval(() => {
+        this._updateConnectivityGraph();
+      }, this.config.networkPartitionDetection.heartbeatInterval * 2);
+      
+      // Register for heartbeat events
+      this.eventBus.on('node:heartbeat', this._onNodeHeartbeat.bind(this));
+      
+      Prime.Logger.info('Network partition detection started', {
+        heartbeatInterval: this.config.networkPartitionDetection.heartbeatInterval,
+        heartbeatTimeout: this.config.networkPartitionDetection.heartbeatTimeout
+      });
+    }
+    
+    /**
+     * Handle node heartbeat
+     * @private
+     * @param {Object} event - Heartbeat event data
+     */
+    _onNodeHeartbeat(event) {
+      const nodeId = event.nodeId;
+      
+      // Update last heartbeat timestamp
+      this.heartbeatTimestamps.set(nodeId, Date.now());
+      
+      // If the node was previously suspected as partitioned, check if it's back
+      if (this.nodePartitions.has(nodeId)) {
+        const partitionId = this.nodePartitions.get(nodeId);
+        const partition = this.partitionRegistry.get(partitionId);
+        
+        // If this node can communicate with the main partition now, it may be healed
+        if (partition && partition.isMinority) {
+          this._checkPartitionHealing(nodeId, partition);
+        }
+      }
+      
+      // Update node's visible peers if provided
+      if (event.visiblePeers && Array.isArray(event.visiblePeers)) {
+        if (!this.nodeConnectivity.has(nodeId)) {
+          this.nodeConnectivity.set(nodeId, new Set());
+        }
+        
+        const connectivity = this.nodeConnectivity.get(nodeId);
+        event.visiblePeers.forEach(peerId => connectivity.add(peerId));
+      }
+    }
+    
+    /**
+     * Monitor node heartbeats to detect potential partitions
+     * @private
+     */
+    _monitorHeartbeats() {
+      const now = Date.now();
+      const timeout = this.config.networkPartitionDetection.heartbeatTimeout;
+      const timeoutNodes = [];
+      
+      // Check for nodes that have timed out
+      for (const [nodeId, lastHeartbeat] of this.heartbeatTimestamps.entries()) {
+        if (now - lastHeartbeat > timeout) {
+          timeoutNodes.push(nodeId);
+        }
+      }
+      
+      // If any nodes timed out, check for network partition
+      if (timeoutNodes.length > 0) {
+        Prime.Logger.warn(`Heartbeat timeout detected for ${timeoutNodes.length} nodes`, {
+          nodes: timeoutNodes
+        });
+        
+        // Trigger network partition detection for each timed out node
+        for (const nodeId of timeoutNodes) {
+          this._checkForNetworkPartition(nodeId);
+        }
+      }
+    }
+    
+    /**
+     * Update the connectivity graph between nodes
+     * @private
+     */
+    _updateConnectivityGraph() {
+      // Skip if we don't have enough nodes
+      if (this.nodes.size < 3) {
+        return;
+      }
+      
+      // Analyze connectivity data to identify partitions
+      const partitions = this._detectPartitionsFromConnectivity();
+      
+      if (partitions.length > 1) {
+        Prime.Logger.warn(`Detected ${partitions.length} network partitions based on connectivity graph`);
+        
+        // Process detected partitions
+        this._handleDetectedPartitions(partitions);
+      }
+    }
+    
+    /**
+     * Check if a specific node might be in a network partition
+     * @private
+     * @param {string} suspectNodeId - ID of node to check
+     */
+    _checkForNetworkPartition(suspectNodeId) {
+      // Skip if the node doesn't exist
+      if (!this.nodes.has(suspectNodeId)) {
+        return;
+      }
+      
+      // Get the suspect node's connectivity
+      const suspectConnectivity = this.nodeConnectivity.get(suspectNodeId) || new Set();
+      
+      // Count how many other nodes can see this node
+      let visibleToCount = 0;
+      for (const [nodeId, connectivity] of this.nodeConnectivity.entries()) {
+        if (nodeId !== suspectNodeId && connectivity.has(suspectNodeId)) {
+          visibleToCount++;
+        }
+      }
+      
+      // Calculate how many nodes this node can see
+      const canSeeCount = suspectConnectivity.size;
+      
+      // Calculate visibility ratios
+      const visibilityRatio = visibleToCount / (this.nodes.size - 1);
+      const canSeeRatio = canSeeCount / (this.nodes.size - 1);
+      
+      // If the node can see less than threshold % of nodes and is seen by less than threshold % of nodes
+      const threshold = this.config.networkPartitionDetection.consensusThreshold;
+      if (visibilityRatio < threshold && canSeeRatio < threshold) {
+        Prime.Logger.warn(`Potential network partition detected for node ${suspectNodeId}`, {
+          visibilityRatio,
+          canSeeRatio,
+          threshold
+        });
+        
+        // Create a partition for this node if it's not already in one
+        if (!this.nodePartitions.has(suspectNodeId)) {
+          this._createPartition([suspectNodeId]);
+        }
+      }
+    }
+    
+    /**
+     * Detect network partitions from connectivity data
+     * @private
+     * @returns {Array<Array<string>>} Detected partitions (arrays of node IDs)
+     */
+    _detectPartitionsFromConnectivity() {
+      // Skip if we don't have enough nodes
+      if (this.nodes.size < 2) {
+        return [[...this.nodes.keys()]];
+      }
+      
+      // Build an undirected graph based on bidirectional connections
+      const graph = {};
+      for (const nodeId of this.nodes.keys()) {
+        graph[nodeId] = [];
+      }
+      
+      // Populate graph with bidirectional connections
+      for (const [nodeId1, connections] of this.nodeConnectivity.entries()) {
+        for (const nodeId2 of connections) {
+          if (this.nodeConnectivity.has(nodeId2) && 
+              this.nodeConnectivity.get(nodeId2).has(nodeId1)) {
+            if (!graph[nodeId1]) graph[nodeId1] = [];
+            if (!graph[nodeId2]) graph[nodeId2] = [];
+            graph[nodeId1].push(nodeId2);
+            graph[nodeId2].push(nodeId1);
+          }
+        }
+      }
+      
+      // Use DFS to identify connected components (partitions)
+      const visited = {};
+      const partitions = [];
+      
+      for (const nodeId of Object.keys(graph)) {
+        if (!visited[nodeId]) {
+          const partition = [];
+          this._dfs(graph, nodeId, visited, partition);
+          if (partition.length > 0) {
+            partitions.push(partition);
+          }
+        }
+      }
+      
+      return partitions;
+    }
+    
+    /**
+     * Depth-first search for connected components
+     * @private
+     * @param {Object} graph - Connectivity graph
+     * @param {string} nodeId - Current node ID
+     * @param {Object} visited - Visited nodes tracking
+     * @param {Array<string>} partition - Current partition being built
+     */
+    _dfs(graph, nodeId, visited, partition) {
+      visited[nodeId] = true;
+      partition.push(nodeId);
+      
+      if (graph[nodeId]) {
+        for (const neighbor of graph[nodeId]) {
+          if (!visited[neighbor]) {
+            this._dfs(graph, neighbor, visited, partition);
+          }
+        }
+      }
+    }
+    
+    /**
+     * Handle detected network partitions
+     * @private
+     * @param {Array<Array<string>>} partitions - Detected partitions
+     */
+    _handleDetectedPartitions(partitions) {
+      // Find the largest partition
+      let largestPartition = partitions[0];
+      for (const partition of partitions) {
+        if (partition.length > largestPartition.length) {
+          largestPartition = partition;
+        }
+      }
+      
+      // Create partition entries for all partitions except the largest
+      for (const partition of partitions) {
+        if (partition !== largestPartition && 
+            partition.length >= this.config.networkPartitionDetection.minPartitionSize) {
+          this._createPartition(partition);
+        }
+      }
+      
+      // Register largest partition if it's not already registered
+      const largestPartitionId = this._findPartitionContainingNodes(largestPartition);
+      if (!largestPartitionId) {
+        this._createPartition(largestPartition, false); // Not a minority partition
+      }
+      
+      // Update metrics
+      this.metrics.currentPartitionCount = this.partitionRegistry.size;
+      
+      // Emit event
+      this.eventBus.emit('network:partitioned', {
+        partitions: partitions.length,
+        largestSize: largestPartition.length,
+        timestamp: Date.now()
+      });
+      
+      // If auto recovery is enabled, trigger recovery
+      if (this.config.networkPartitionDetection.autoRecovery) {
+        this._triggerPartitionRecovery();
+      }
+    }
+    
+    /**
+     * Find if a partition containing specific nodes already exists
+     * @private
+     * @param {Array<string>} nodeIds - Node IDs to check
+     * @returns {string|null} Partition ID if found, null otherwise
+     */
+    _findPartitionContainingNodes(nodeIds) {
+      // Check if all nodes are in the same partition
+      const partitionIds = new Set();
+      
+      for (const nodeId of nodeIds) {
+        if (this.nodePartitions.has(nodeId)) {
+          partitionIds.add(this.nodePartitions.get(nodeId));
+        }
+      }
+      
+      // If all nodes are in exactly one partition, return that partition ID
+      if (partitionIds.size === 1) {
+        return [...partitionIds][0];
+      }
+      
+      return null;
+    }
+    
+    /**
+     * Create a new network partition record
+     * @private
+     * @param {Array<string>} nodeIds - Node IDs in the partition
+     * @param {boolean} [isMinority=true] - Whether this is a minority partition
+     * @returns {string} Created partition ID
+     */
+    _createPartition(nodeIds, isMinority = true) {
+      // Generate a unique partition ID
+      const partitionId = `partition_${Date.now()}_${this.metrics.networkPartitions}`;
+      
+      // Create partition record
+      const partition = {
+        id: partitionId,
+        nodeIds: [...nodeIds],
+        detectedAt: Date.now(),
+        isMinority,
+        recoveryAttempts: 0,
+        state: 'detected'
+      };
+      
+      // Register partition
+      this.partitionRegistry.set(partitionId, partition);
+      
+      // Associate nodes with this partition
+      for (const nodeId of nodeIds) {
+        this.nodePartitions.set(nodeId, partitionId);
+      }
+      
+      // Update metrics
+      this.metrics.networkPartitions++;
+      this.metrics.currentPartitionCount = this.partitionRegistry.size;
+      
+      // Emit partition event
+      this.eventBus.emit('network:partition:created', {
+        partitionId,
+        nodeCount: nodeIds.length,
+        isMinority,
+        timestamp: Date.now()
+      });
+      
+      Prime.Logger.warn(`Created network partition ${partitionId} with ${nodeIds.length} nodes`, {
+        nodeIds,
+        isMinority
+      });
+      
+      return partitionId;
+    }
+    
+    /**
+     * Check if a partition is healing
+     * @private
+     * @param {string} nodeId - Node ID that might have recovered
+     * @param {Object} partition - Partition information
+     */
+    _checkPartitionHealing(nodeId, partition) {
+      // Get the main partition
+      const mainPartitionId = this._findMainPartition();
+      if (!mainPartitionId) return;
+      
+      // Check if this node can now see nodes in the main partition
+      let canSeeMainPartition = false;
+      const nodePeers = this.nodeConnectivity.get(nodeId) || new Set();
+      
+      for (const mainNodeId of this.partitionRegistry.get(mainPartitionId).nodeIds) {
+        if (nodePeers.has(mainNodeId)) {
+          canSeeMainPartition = true;
+          break;
+        }
+      }
+      
+      if (canSeeMainPartition) {
+        // This node seems to have connectivity to the main partition again
+        Prime.Logger.info(`Node ${nodeId} appears to have reconnected to the main partition`);
+        
+        // Check if all nodes in this partition can see the main partition
+        let allNodesRecovered = true;
+        for (const peerNodeId of partition.nodeIds) {
+          if (peerNodeId === nodeId) continue;
+          
+          const peerConnectivity = this.nodeConnectivity.get(peerNodeId) || new Set();
+          let peerCanSeeMain = false;
+          
+          for (const mainNodeId of this.partitionRegistry.get(mainPartitionId).nodeIds) {
+            if (peerConnectivity.has(mainNodeId)) {
+              peerCanSeeMain = true;
+              break;
+            }
+          }
+          
+          if (!peerCanSeeMain) {
+            allNodesRecovered = false;
+            break;
+          }
+        }
+        
+        if (allNodesRecovered) {
+          // All nodes in this partition appear to have healed
+          this._healPartition(partition.id);
+        } else {
+          // Only this node has healed, move it to the main partition
+          this._moveNodeToPartition(nodeId, mainPartitionId);
+        }
+      }
+    }
+    
+    /**
+     * Find the main (largest) partition
+     * @private
+     * @returns {string|null} Main partition ID or null if none found
+     */
+    _findMainPartition() {
+      let mainPartitionId = null;
+      let maxSize = 0;
+      
+      for (const [partitionId, partition] of this.partitionRegistry.entries()) {
+        if (!partition.isMinority && partition.nodeIds.length > maxSize) {
+          mainPartitionId = partitionId;
+          maxSize = partition.nodeIds.length;
+        }
+      }
+      
+      return mainPartitionId;
+    }
+    
+    /**
+     * Move a node to a different partition
+     * @private
+     * @param {string} nodeId - Node ID to move
+     * @param {string} targetPartitionId - Target partition ID
+     */
+    _moveNodeToPartition(nodeId, targetPartitionId) {
+      // Check if node is in a partition
+      if (!this.nodePartitions.has(nodeId)) return;
+      
+      const sourcePartitionId = this.nodePartitions.get(nodeId);
+      const sourcePartition = this.partitionRegistry.get(sourcePartitionId);
+      const targetPartition = this.partitionRegistry.get(targetPartitionId);
+      
+      if (!sourcePartition || !targetPartition) return;
+      
+      // Remove from source partition
+      sourcePartition.nodeIds = sourcePartition.nodeIds.filter(id => id !== nodeId);
+      
+      // Add to target partition
+      targetPartition.nodeIds.push(nodeId);
+      
+      // Update node partition mapping
+      this.nodePartitions.set(nodeId, targetPartitionId);
+      
+      // If source partition is now empty, remove it
+      if (sourcePartition.nodeIds.length === 0) {
+        this.partitionRegistry.delete(sourcePartitionId);
+        this.metrics.currentPartitionCount = this.partitionRegistry.size;
+      }
+      
+      Prime.Logger.info(`Moved node ${nodeId} from partition ${sourcePartitionId} to ${targetPartitionId}`);
+      
+      // Emit move event
+      this.eventBus.emit('network:partition:node:moved', {
+        nodeId,
+        sourcePartitionId,
+        targetPartitionId,
+        timestamp: Date.now()
+      });
+    }
+    
+    /**
+     * Heal a network partition
+     * @private
+     * @param {string} partitionId - Partition ID to heal
+     */
+    _healPartition(partitionId) {
+      const partition = this.partitionRegistry.get(partitionId);
+      if (!partition) return;
+      
+      const mainPartitionId = this._findMainPartition();
+      if (!mainPartitionId) return;
+      
+      // Move all nodes to the main partition
+      for (const nodeId of partition.nodeIds) {
+        this._moveNodeToPartition(nodeId, mainPartitionId);
+      }
+      
+      // Delete the healed partition
+      this.partitionRegistry.delete(partitionId);
+      
+      // Update metrics
+      this.metrics.partitionRecoveries++;
+      this.metrics.currentPartitionCount = this.partitionRegistry.size;
+      
+      Prime.Logger.info(`Healed network partition ${partitionId}`);
+      
+      // Emit heal event
+      this.eventBus.emit('network:partition:healed', {
+        partitionId,
+        mainPartitionId,
+        timestamp: Date.now()
+      });
+    }
+    
+    /**
+     * Trigger recovery for all partitions
+     * @private
+     */
+    _triggerPartitionRecovery() {
+      // For each minority partition, try to recover
+      for (const [partitionId, partition] of this.partitionRegistry.entries()) {
+        if (partition.isMinority) {
+          // Update partition state
+          partition.state = 'recovering';
+          partition.recoveryAttempts++;
+          
+          Prime.Logger.info(`Attempting recovery for partition ${partitionId} (attempt ${partition.recoveryAttempts})`);
+          
+          // Emit recovery attempt event
+          this.eventBus.emit('network:partition:recovery:attempt', {
+            partitionId,
+            attempt: partition.recoveryAttempts,
+            timestamp: Date.now()
+          });
+          
+          // Trigger coherence violations for all nodes in this partition
+          for (const nodeId of partition.nodeIds) {
+            if (this.nodes.has(nodeId)) {
+              this.eventBus.emit('coherence:violation', {
+                nodeId,
+                type: Prime.Distributed.Coherence.CoherenceViolationType.NETWORK,
+                severity: Prime.Distributed.Coherence.ViolationSeverity.HIGH,
+                message: `Node is in network partition ${partitionId}`,
+              });
+            }
+          }
+        }
       }
     }
 
@@ -1334,6 +1888,15 @@ const EventBus = require("../event-bus");
     async shutdown() {
       Prime.Logger.info("Shutting down cluster manager");
 
+      // Stop network partition detection
+      if (this._heartbeatInterval) {
+        clearInterval(this._heartbeatInterval);
+      }
+      
+      if (this._connectivityInterval) {
+        clearInterval(this._connectivityInterval);
+      }
+
       // Terminate all nodes
       const terminationPromises = [];
 
@@ -1352,6 +1915,10 @@ const EventBus = require("../event-bus");
       this.nodes.clear();
       this.taskRegistry.clear();
       this.taskAssignments.clear();
+      this.partitionRegistry.clear();
+      this.nodePartitions.clear();
+      this.heartbeatTimestamps.clear();
+      this.nodeConnectivity.clear();
 
       // Remove all event listeners
       this.eventBus.removeAllListeners();

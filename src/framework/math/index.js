@@ -119,6 +119,56 @@ function kahanSum(values) {
  */
 const vector = {
   /**
+   * Linear interpolation between vectors with enhanced precision
+   *
+   * @param {Array} a - First vector
+   * @param {Array} b - Second vector
+   * @param {number} t - Interpolation parameter (0-1)
+   * @returns {Array} Interpolated vector
+   */
+  lerp: function (a, b, t) {
+    if (!Array.isArray(a) || !Array.isArray(b)) {
+      throw new TypeError("Vectors must be arrays");
+    }
+
+    // Ensure t is clamped to [0,1]
+    const tClamped = Math.max(0, Math.min(1, t));
+    
+    const maxLength = Math.max(a.length, b.length);
+    const result = new Array(maxLength);
+    
+    // Perform interpolation with enhanced precision
+    for (let i = 0; i < maxLength; i++) {
+      const aVal = i < a.length ? a[i] : 0;
+      const bVal = i < b.length ? b[i] : 0;
+      
+      // Use mathematically stable lerp: (1-t)*a + t*b
+      result[i] = (1 - tClamped) * aVal + tClamped * bVal;
+    }
+    
+    return result;
+  },
+  
+  /**
+   * Calculate vector norm (magnitude) with enhanced precision
+   *
+   * @param {Array} v - Vector
+   * @returns {number} Vector norm
+   */
+  norm: function (v) {
+    if (!Array.isArray(v)) {
+      throw new TypeError("Vector must be an array");
+    }
+    
+    // Calculate vector norm using Kahan summation for better precision
+    const squareTerms = v.map((val) => val * val);
+    const sumResult = kahanSum(squareTerms);
+    
+    // Protect against negative values due to floating point errors
+    return Math.sqrt(Math.max(0, sumResult.sum));
+  },
+  
+  /**
    * Calculate Euclidean distance between vectors with enhanced precision
    *
    * @param {Array} a - First vector
@@ -395,6 +445,24 @@ const vector = {
       absoluteError: relativeError * norm,
       conditionNumber: sumResult.conditionNumber,
     };
+  },
+  
+  // Simple-format normalize function for backward compatibility
+  // This version returns just the normalized vector array (not the object with metadata)
+  normalizeSimple: function (v) {
+    if (!Array.isArray(v)) {
+      throw new TypeError("Vector must be an array");
+    }
+    
+    const normVal = this.norm(v);
+    
+    // Handle zero vectors
+    if (normVal === 0) {
+      return Array(v.length).fill(0);
+    }
+    
+    // Return normalized vector as a simple array
+    return v.map(val => val / normVal);
   },
 
   /**

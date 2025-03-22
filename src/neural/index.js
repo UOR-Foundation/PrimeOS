@@ -12,6 +12,10 @@ Prime.Neural = {};
 // Import submodules
 require("./layer");
 require("./optimization");
+require("./layer/convolutional");
+require("./layer/recurrent");
+require("./model");
+require("./distributed");
 
 // Export the enhanced Prime object
 module.exports = Prime;

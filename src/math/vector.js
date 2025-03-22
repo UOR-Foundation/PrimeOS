@@ -250,6 +250,44 @@ const Prime = require("../core");
       const difference = this.subtract(a, b);
       return this.magnitude(difference);
     },
+    
+    /**
+     * Linear interpolation between two vectors
+     * @param {Array} a - Start vector
+     * @param {Array} b - End vector
+     * @param {number} t - Interpolation parameter (0-1)
+     * @returns {Array} - Interpolated vector
+     */
+    lerp: function (a, b, t) {
+      if (!Array.isArray(a) || !Array.isArray(b)) {
+        throw new Prime.ValidationError("Vectors must be arrays");
+      }
+
+      if (a.length !== b.length) {
+        throw new Prime.ValidationError(
+          "Vectors must have the same dimensions",
+        );
+      }
+
+      if (!Prime.Utils.isNumber(t)) {
+        throw new Prime.ValidationError("Interpolation parameter must be a number");
+      }
+
+      // Clamp t to [0,1] for safety
+      const tClamped = Math.max(0, Math.min(1, t));
+      
+      // Linear interpolation: (1-t)*a + t*b
+      return a.map((val, i) => (1 - tClamped) * val + tClamped * b[i]);
+    },
+    
+    /**
+     * Calculate the norm (magnitude) of a vector
+     * @param {Array} vector - Input vector
+     * @returns {number} - Vector norm
+     */
+    norm: function (vector) {
+      return this.magnitude(vector);
+    },
   };
 
   // Add Vector to the Prime.Math namespace

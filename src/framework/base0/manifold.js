@@ -689,6 +689,521 @@ class Manifold {
 
     return intersection.length / union.size;
   }
+
+  /**
+   * Align this manifold with another manifold
+   * @param {Manifold} target - Target manifold to align with
+   * @param {Object} options - Alignment options
+   * @returns {Manifold} Aligned manifold
+   */
+  alignWith(target, options = {}) {
+    if (!(target instanceof Manifold)) {
+      throw new Prime.ValidationError("Target must be a Manifold instance");
+    }
+
+    const strategy = options.strategy || "projection";
+    
+    // Different alignment strategies
+    if (strategy === "projection") {
+      // Use common spaces for alignment
+      const commonSpaces = this.getSpaces().filter(space => 
+        target.getSpaces().includes(space));
+      
+      if (commonSpaces.length === 0) {
+        throw new Prime.InvalidOperationError("Manifolds must share at least one space for projection alignment");
+      }
+      
+      const space = commonSpaces[0];
+      
+      // Project to the common space, aligning with target
+      return this.project(space, (manifold) => {
+        // Create a new variant that aligns with target's structure
+        const sourceVariant = this.getVariant();
+        const targetVariant = target.getVariant();
+        
+        // Initialize with source's variant
+        const alignedVariant = { ...sourceVariant };
+        
+        // Align with target's structure
+        for (const key in targetVariant) {
+          if (sourceVariant.hasOwnProperty(key)) {
+            const sourceVal = sourceVariant[key];
+            const targetVal = targetVariant[key];
+            
+            // Align numeric values with target
+            if (typeof sourceVal === 'number' && typeof targetVal === 'number') {
+              if (targetVal !== 0) {
+                // Scale while preserving relative magnitude
+                const scaleFactor = Math.abs(sourceVal) / Math.abs(targetVal);
+                alignedVariant[key] = targetVal * scaleFactor;
+              }
+            } else if (Array.isArray(sourceVal) && Array.isArray(targetVal)) {
+              // For arrays, align dimensions when possible
+              if (sourceVal.length === targetVal.length) {
+                // Use vector operations if available
+                if (MathUtils && MathUtils.vector) {
+                  try {
+                    const dotProduct = MathUtils.vector.cosineSimilarity(sourceVal, targetVal);
+                    if (Math.abs(dotProduct.similarity) > 0.1) {
+                      // Align in direction while preserving magnitude
+                      const sourceNorm = MathUtils.vector.norm(sourceVal);
+                      const targetNormalized = MathUtils.vector.normalize(targetVal);
+                      alignedVariant[key] = targetNormalized.map(v => v * sourceNorm);
+                    }
+                  } catch (e) {
+                    // Fall back to simple alignment if vector operations fail
+                    // No modification to the variant
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        return {
+          invariant: this.getInvariant(),
+          variant: alignedVariant
+        };
+      });
+    } else if (strategy === "transformation") {
+      // Create a new manifold with transformed properties
+      const meta = {
+        ...this.getMeta(),
+        id: `aligned_${this.getId()}_to_${target.getId()}`,
+        alignedTo: target.getId(),
+        alignmentStrategy: strategy
+      };
+      
+      // Keep the original invariant properties
+      const invariant = this.getInvariant();
+      
+      // Create transformed variant properties based on target
+      const sourceVariant = this.getVariant();
+      const targetVariant = target.getVariant();
+      const variant = { ...sourceVariant };
+      
+      // Calculate transformation parameters
+      const sourceNumeric = Object.entries(sourceVariant)
+        .filter(([_, val]) => typeof val === 'number')
+        .map(([key, val]) => ({ key, val }));
+      
+      const targetNumeric = Object.entries(targetVariant)
+        .filter(([_, val]) => typeof val === 'number')
+        .map(([key, val]) => ({ key, val }));
+      
+      // Apply transformation
+      if (sourceNumeric.length > 0 && targetNumeric.length > 0) {
+        // Simple scale transformation
+        let scaleSum = 0;
+        let scaleCount = 0;
+        
+        for (const { key: sourceKey, val: sourceVal } of sourceNumeric) {
+          for (const { key: targetKey, val: targetVal } of targetNumeric) {
+            if (sourceKey === targetKey && sourceVal !== 0 && targetVal !== 0) {
+              scaleSum += Math.abs(targetVal / sourceVal);
+              scaleCount++;
+            }
+          }
+        }
+        
+        if (scaleCount > 0) {
+          const averageScale = scaleSum / scaleCount;
+          
+          // Apply scaling to all numeric properties
+          for (const key in variant) {
+            if (typeof variant[key] === 'number') {
+              variant[key] *= averageScale;
+            } else if (Array.isArray(variant[key]) && 
+                      variant[key].every(v => typeof v === 'number')) {
+              variant[key] = variant[key].map(v => v * averageScale);
+            }
+          }
+        }
+      }
+      
+      // Create the aligned manifold
+      const aligned = new Manifold({
+        meta,
+        invariant,
+        variant,
+        depth: this.depth,
+        spaces: this.getSpaces()
+      });
+      
+      // Establish relation to the target
+      aligned.relateTo(target, "aligned_to");
+      
+      return aligned;
+    }
+    
+    throw new Prime.InvalidOperationError(`Alignment strategy ${strategy} not implemented`);
+  }
+
+  /**
+   * Calculate tangent space at a point on the manifold
+   * @param {Object} point - Point on the manifold (optional, defaults to current state)
+   * @param {Object} options - Options for tangent space calculation
+   * @returns {Object} Tangent space information
+   */
+  calculateTangentSpace(point = null, options = {}) {
+    // If no point specified, use the current variant properties
+    if (point === null) {
+      point = Object.values(this.getVariant());
+    }
+
+    const dimension = Array.isArray(point) ? point.length : 
+      Object.keys(this.getVariant()).length;
+    
+    const basisVectors = [];
+
+    // Generate basis vectors (simplified implementation)
+    for (let i = 0; i < dimension; i++) {
+      const basisVector = Array(dimension).fill(0);
+      basisVector[i] = 1;
+      basisVectors.push(basisVector);
+    }
+
+    return {
+      point,
+      basis: basisVectors,
+      dimension,
+      manifold: this
+    };
+  }
+
+  /**
+   * Calculate curvature at the current state
+   * @param {Object} options - Options for curvature calculation
+   * @returns {Object} Curvature information
+   */
+  calculateCurvature(options = {}) {
+    // This is a simplified implementation for basic manifolds
+    // A complete implementation would calculate the Riemann curvature tensor
+    
+    // Get the tangent space
+    const point = Object.values(this.getVariant());
+    const tangentSpace = this.calculateTangentSpace(point);
+    
+    // Compute a simplified curvature measure (placeholder)
+    const invariants = Object.values(this.getInvariant());
+    const meanInvariant = invariants.length > 0 
+      ? invariants.reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0) / invariants.length 
+      : 0;
+    
+    // Calculate a simplified curvature scalar
+    const curvatureScalar = Math.exp(-Math.abs(meanInvariant) / 10);
+    
+    // Generate placeholder sectional curvatures
+    const sectionalCurvatures = [];
+    for (let i = 0; i < tangentSpace.basis.length - 1; i++) {
+      for (let j = i + 1; j < tangentSpace.basis.length; j++) {
+        sectionalCurvatures.push({
+          plane: [i, j],
+          value: curvatureScalar * (1 + 0.1 * (i - j))
+        });
+      }
+    }
+    
+    return {
+      point,
+      scalarCurvature: curvatureScalar,
+      sectionalCurvatures,
+      manifold: this
+    };
+  }
+
+  /**
+   * Compute geodesic between this manifold and target
+   * @param {Manifold} target - Target manifold
+   * @param {Object} options - Options for geodesic calculation
+   * @returns {Object} Geodesic information
+   */
+  computeGeodesic(target, options = {}) {
+    if (!(target instanceof Manifold)) {
+      throw new Prime.ValidationError("Target must be a Manifold instance");
+    }
+
+    // Check if manifolds exist in compatible spaces
+    const commonSpaces = this.getSpaces().filter(space => 
+      target.getSpaces().includes(space));
+    
+    if (commonSpaces.length === 0) {
+      throw new Prime.InvalidOperationError("Manifolds must share at least one space for geodesic calculation");
+    }
+
+    const space = commonSpaces[0];
+    const steps = options.steps || 10;
+    const method = options.method || "linear";
+    const metric = options.metric || "euclidean";
+
+    // Get source and target points (simplified implementation)
+    let sourcePoint = Object.values(this.getVariant());
+    let targetPoint = Object.values(target.getVariant());
+
+    // Normalize to ensure same length
+    const maxLength = Math.max(sourcePoint.length, targetPoint.length);
+    if (sourcePoint.length < maxLength) {
+      sourcePoint = [...sourcePoint, ...Array(maxLength - sourcePoint.length).fill(0)];
+    }
+    if (targetPoint.length < maxLength) {
+      targetPoint = [...targetPoint, ...Array(maxLength - targetPoint.length).fill(0)];
+    }
+
+    // Calculate geodesic based on the method
+    if (method === "linear") {
+      // Linear interpolation for flat manifolds
+      const path = [];
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const point = [];
+        
+        // Linear interpolation for each component
+        for (let j = 0; j < maxLength; j++) {
+          point.push(sourcePoint[j] * (1 - t) + targetPoint[j] * t);
+        }
+        
+        path.push({
+          t,
+          point
+        });
+      }
+
+      // Calculate geodesic length
+      let length = 0;
+      for (let i = 1; i < path.length; i++) {
+        // Euclidean distance between points
+        let segmentLength = 0;
+        for (let j = 0; j < maxLength; j++) {
+          segmentLength += Math.pow(path[i].point[j] - path[i-1].point[j], 2);
+        }
+        length += Math.sqrt(segmentLength);
+      }
+
+      return {
+        source: sourcePoint,
+        target: targetPoint,
+        path,
+        length,
+        space,
+        method
+      };
+    } else if (method === "riemannian") {
+      // More complex geodesic calculation on curved manifolds
+      // This is a simplified implementation that approximates the geodesic
+      // A complete implementation would solve the geodesic equation
+      
+      // Calculate tangent vector from source to target
+      const tangentVector = [];
+      for (let j = 0; j < maxLength; j++) {
+        tangentVector.push(targetPoint[j] - sourcePoint[j]);
+      }
+      
+      // Normalize tangent vector
+      let tangentNorm = 0;
+      for (let j = 0; j < maxLength; j++) {
+        tangentNorm += tangentVector[j] * tangentVector[j];
+      }
+      tangentNorm = Math.sqrt(tangentNorm);
+      
+      if (tangentNorm > 1e-10) {
+        for (let j = 0; j < maxLength; j++) {
+          tangentVector[j] /= tangentNorm;
+        }
+      }
+      
+      // Calculate geodesic path
+      const path = [];
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const point = [];
+        
+        // Exponential map approximation - project along tangent
+        for (let j = 0; j < maxLength; j++) {
+          point.push(sourcePoint[j] + tangentVector[j] * tangentNorm * t);
+        }
+        
+        path.push({
+          t,
+          point
+        });
+      }
+      
+      // Calculate geodesic length (same as linear in this simplified case)
+      let length = 0;
+      for (let i = 1; i < path.length; i++) {
+        let segmentLength = 0;
+        for (let j = 0; j < maxLength; j++) {
+          segmentLength += Math.pow(path[i].point[j] - path[i-1].point[j], 2);
+        }
+        length += Math.sqrt(segmentLength);
+      }
+
+      return {
+        source: sourcePoint,
+        target: targetPoint,
+        path,
+        length,
+        space,
+        method,
+        tangentVector
+      };
+    }
+
+    throw new Prime.InvalidOperationError(`Geodesic method ${method} not implemented`);
+  }
+
+  /**
+   * Create visualization data for this manifold
+   * @param {Object} options - Visualization options
+   * @returns {Object} Visualization data
+   */
+  createVisualization(options = {}) {
+    const format = options.format || "json";
+    const dimensions = options.dimensions || 3;
+    
+    // Extract manifold information
+    const meta = this.getMeta();
+    const variant = this.getVariant();
+    
+    // Convert variant properties to numeric format for visualization
+    const numericProperties = Object.entries(variant)
+      .filter(([_, val]) => typeof val === 'number')
+      .map(([key, val]) => ({ key, value: val }));
+    
+    const arrayProperties = Object.entries(variant)
+      .filter(([_, val]) => Array.isArray(val) && val.some(item => typeof item === 'number'))
+      .map(([key, val]) => ({ key, values: val }));
+    
+    // Generate visual coordinates from the manifold data
+    let visualCoordinates;
+    
+    // Use numeric properties first, then arrays if needed
+    if (numericProperties.length >= dimensions) {
+      // Use the first 'dimensions' numeric properties
+      visualCoordinates = numericProperties
+        .slice(0, dimensions)
+        .map(prop => prop.value);
+    } else {
+      // Combine numeric properties with values from arrays
+      visualCoordinates = [...numericProperties.map(prop => prop.value)];
+      
+      // Add values from arrays until we reach the desired dimensions
+      for (const arrayProp of arrayProperties) {
+        for (const val of arrayProp.values) {
+          if (typeof val === 'number' && visualCoordinates.length < dimensions) {
+            visualCoordinates.push(val);
+          }
+          
+          if (visualCoordinates.length >= dimensions) {
+            break;
+          }
+        }
+        
+        if (visualCoordinates.length >= dimensions) {
+          break;
+        }
+      }
+      
+      // Pad with zeros if needed
+      while (visualCoordinates.length < dimensions) {
+        visualCoordinates.push(0);
+      }
+    }
+    
+    // Generate visualization based on format
+    if (format === "json") {
+      return {
+        id: this.getId(),
+        type: this.getType(),
+        name: meta.name || "Unnamed Manifold",
+        description: meta.description || "",
+        properties: {
+          numeric: numericProperties,
+          arrays: arrayProperties,
+          metadata: Object.entries(meta)
+            .filter(([key, _]) => !['id', 'type', 'name', 'description'].includes(key))
+            .reduce((obj, [key, val]) => {
+              obj[key] = val;
+              return obj;
+            }, {})
+        },
+        spaces: this.getSpaces(),
+        coherence: this.getCoherenceScore(),
+        visualCoordinates: visualCoordinates,
+        relations: Array.from(this._relations.entries()).map(([id, relation]) => ({
+          id,
+          type: relation.type,
+          metadata: relation.metadata || {}
+        }))
+      };
+    } else if (format === "graph") {
+      // Create a graph representation of the manifold and its relations
+      const nodes = [{
+        id: this.getId(),
+        type: "manifold",
+        label: meta.name || "Unnamed Manifold",
+        properties: {
+          coherence: this.getCoherenceScore(),
+          type: this.getType(),
+          depth: this.getDepth()
+        }
+      }];
+      
+      const edges = [];
+      
+      // Add related manifolds
+      const relations = this.getRelatedManifolds();
+      for (const relation of relations) {
+        // Add related manifold as a node
+        nodes.push({
+          id: relation.manifold.getId(),
+          type: "manifold",
+          label: relation.manifold.getMeta().name || "Related Manifold",
+          properties: {
+            coherence: relation.manifold.getCoherenceScore(),
+            type: relation.manifold.getType(),
+            depth: relation.manifold.getDepth()
+          }
+        });
+        
+        // Add relation as an edge
+        edges.push({
+          source: this.getId(),
+          target: relation.manifold.getId(),
+          type: relation.type,
+          metadata: relation.metadata || {}
+        });
+      }
+      
+      // Add space nodes
+      for (const space of this.getSpaces()) {
+        // Add space as a node
+        nodes.push({
+          id: `space_${space}`,
+          type: "space",
+          label: space
+        });
+        
+        // Add relation to space as an edge
+        edges.push({
+          source: this.getId(),
+          target: `space_${space}`,
+          type: "exists_in"
+        });
+      }
+      
+      return {
+        nodes,
+        edges,
+        metadata: {
+          focusNodeId: this.getId(),
+          visualization: "graph"
+        }
+      };
+    }
+    
+    throw new Prime.InvalidOperationError(`Visualization format ${format} not implemented`);
+  }
 }
 
 /**
