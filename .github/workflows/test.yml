@@ -32,3 +32,34 @@ jobs:
       
       - name: Build package
         run: npm run build
+
+  numerical-stability:
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: read
+      
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run basic numerical stability tests
+        run: npm run test:extreme:basic
+        
+      - name: Upload basic test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: extreme-basic-report
+          path: test-results/extreme-basic-report.json
+          
+      - name: Run additional numerical stability tests (fiber algebra)
+        # This test focuses on numerical stability in high-dimension fiber algebra operations
+        run: npm run test:extreme:fiber

@@ -98,9 +98,17 @@ This document tracks the progress of fixing test failures across the PrimeOS cod
   - Confirmed numerical stability under extreme conditions
 
 ## Remaining Issues
-- Memory consumption in extreme-conditions-tests.js
-  - Need to optimize test case generation
-  - Consider running tests in smaller batches
-- Build system improvements
-  - Add specific numeric stability tests to CI pipeline
-  - Create benchmarks for operations with extreme values
+- [x] Memory consumption in extreme-conditions-tests.js
+  - [x] Enhanced run-extreme-tests.js to run tests in smaller batches
+  - [x] Added garbage collection between test batches
+  - [x] Split tests into targeted batches by test suite
+  - [x] Added ability to run specific test batches individually
+  - [x] Updated package.json with new test scripts
+- [x] Build system improvements
+  - [x] Added specific numeric stability tests to CI pipeline in .github/workflows/test.yml
+  - [x] Created benchmarks for operations with extreme values
+    - [x] Added benchmark-extreme.js in src/distributed/ for extreme value benchmarking
+    - [x] Created run-extreme-benchmarks.js script for running benchmarks from command line
+    - [x] Implemented comprehensive benchmarks for matrix and vector operations with extreme values
+    - [x] Added comparison benchmarks for different numerical stability techniques
+    - [x] Added npm scripts for running benchmarks with various options
