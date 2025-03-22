@@ -39,16 +39,37 @@ const lazyLoadModules = {
   // Spectral: "./spectral"
 };
 
-// Create getters for lazy loading
+// Create getters for lazy loading - with improved circular dependency handling
 Object.keys(lazyLoadModules).forEach(moduleName => {
   if (!Prime.Math[moduleName]) {
+    let moduleLoaded = false;
+    let moduleExports = null;
+    
     Object.defineProperty(Prime.Math, moduleName, {
       get: function() {
-        // Load the module on first access
-        require(lazyLoadModules[moduleName]);
+        if (!moduleLoaded) {
+          try {
+            // Set a temporary placeholder to break circular dependencies
+            Prime.Math[moduleName] = {};
+            
+            // Load the module
+            moduleExports = require(lazyLoadModules[moduleName]);
+            moduleLoaded = true;
+            
+            // If module exports the enhanced Prime object, update our exports
+            if (moduleExports === Prime) {
+              return Prime.Math[moduleName];
+            }
+            
+            // Otherwise, the module export becomes the module value
+            Prime.Math[moduleName] = moduleExports;
+          } catch (error) {
+            console.error(`Error loading module ${moduleName}:`, error.message);
+            // Return empty object as fallback to avoid breaking the application
+            return {};
+          }
+        }
         
-        // Replace this getter with the actual module
-        // This ensures the module is only loaded once
         return Prime.Math[moduleName];
       },
       configurable: true

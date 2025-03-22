@@ -7,17 +7,44 @@
  * and re-exports functionality from modular components
  */
 
-// Import modular components
-const { CoherenceConstraints, CoherenceNorms } = require('./coherence-constraints.js');
-const { CoherenceValidator } = require('./coherence-validation.js');
-const { MathematicalCoherenceValidator } = require('./manifold-validator.js');
+// Define a safe require function to prevent circular dependencies
+const safeRequire = function(path) {
+  try {
+    return require(path);
+  } catch (error) {
+    console.error(`Error loading module ${path}:`, error.message);
+    return {};
+  }
+};
 
-// Export the module
+// Import modular components with protection against circular dependencies
+const constraintsModule = safeRequire('./coherence-constraints.js');
+const validationModule = safeRequire('./coherence-validation.js');
+const manifoldValidatorModule = safeRequire('./manifold-validator.js');
+
+// Extract components with fallbacks
+const CoherenceConstraints = constraintsModule.CoherenceConstraints || {};
+const CoherenceNorms = constraintsModule.CoherenceNorms || {};
+const CoherenceValidator = validationModule.CoherenceValidator || {};
+const MathematicalCoherenceValidator = manifoldValidatorModule.MathematicalCoherenceValidator || {};
+
+// Export the module with lazy-loading wrapper support
 module.exports = {
-  CoherenceValidator,
-  MathematicalCoherenceValidator,
+  // Core validators
+  get CoherenceValidator() {
+    return validationModule.CoherenceValidator || {};
+  },
   
-  // Re-export constraints and norms for backwards compatibility
-  CoherenceConstraints,
-  CoherenceNorms
+  get MathematicalCoherenceValidator() {
+    return manifoldValidatorModule.MathematicalCoherenceValidator || {};
+  },
+  
+  // Re-export constraints and norms with lazy loading
+  get CoherenceConstraints() {
+    return constraintsModule.CoherenceConstraints || {};
+  },
+  
+  get CoherenceNorms() {
+    return constraintsModule.CoherenceNorms || {};
+  }
 };

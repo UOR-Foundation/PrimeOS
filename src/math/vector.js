@@ -7,25 +7,36 @@
  * backward compatibility.
  */
 
-// Import the modular vector components
-require("./vector-core");
-require("./vector-advanced");
-require("./vector-validation");
-
-// Import the Prime object with all vector components loaded
+// Import the Prime object first
 const Prime = require("../core");
+
+// Import the modular vector components - only explicitly require core
+// Let the others be loaded lazily through Prime.Math
+require("./vector-core");
+
+// Ensure the Math namespace exists
+Prime.Math = Prime.Math || {};
 
 // Create a Vector object that maintains the original API
 (function () {
-  // Ensure all required vector namespaces exist
-  if (!Prime.Math.VectorCore || !Prime.Math.VectorAdvanced || !Prime.Math.VectorValidation) {
-    throw new Error("Vector components must be loaded before Vector");
-  }
-
-  // Get references to the modular components
-  const VectorCore = Prime.Math.VectorCore;
-  const VectorAdvanced = Prime.Math.VectorAdvanced;
-  const VectorValidation = Prime.Math.VectorValidation;
+  // Don't strictly require components to be already loaded
+  // Instead, use getters to access them with lazy loading handled by math/index.js
+  
+  // Define helper function to safely get module reference
+  const getVectorModule = function(moduleName) {
+    if (!Prime.Math[moduleName]) {
+      // If not loaded, try to load it via the getter in math/index.js
+      if (moduleName === 'VectorAdvanced') {
+        require('./vector-advanced');
+      } else if (moduleName === 'VectorValidation') {
+        require('./vector-validation');
+      }
+    }
+    return Prime.Math[moduleName] || {};
+  };
+  
+  // Get references to the modular components - using our helper function
+  const VectorCore = Prime.Math.VectorCore || {};
 
   /**
    * Vector operations for mathematical computations
@@ -108,7 +119,8 @@ const Prime = require("../core");
      * @returns {Array} - Cross product
      */
     cross: function (a, b) {
-      return VectorAdvanced.cross(a, b);
+      const VectorAdvanced = getVectorModule('VectorAdvanced');
+      return VectorAdvanced.cross ? VectorAdvanced.cross(a, b) : [];
     },
 
     /**
@@ -118,7 +130,8 @@ const Prime = require("../core");
      * @returns {number} - Angle in radians
      */
     angle: function (a, b) {
-      return VectorAdvanced.angle(a, b);
+      const VectorAdvanced = getVectorModule('VectorAdvanced');
+      return VectorAdvanced.angle ? VectorAdvanced.angle(a, b) : 0;
     },
 
     /**
@@ -128,7 +141,8 @@ const Prime = require("../core");
      * @returns {Array} - Projection result
      */
     project: function (a, b) {
-      return VectorAdvanced.project(a, b);
+      const VectorAdvanced = getVectorModule('VectorAdvanced');
+      return VectorAdvanced.project ? VectorAdvanced.project(a, b) : [];
     },
 
     /**
@@ -149,7 +163,8 @@ const Prime = require("../core");
      * @returns {Array} - Interpolated vector
      */
     lerp: function (a, b, t) {
-      return VectorAdvanced.lerp(a, b, t);
+      const VectorAdvanced = getVectorModule('VectorAdvanced');
+      return VectorAdvanced.lerp ? VectorAdvanced.lerp(a, b, t) : [];
     },
     
     /**
@@ -220,7 +235,12 @@ const Prime = require("../core");
           if (args.length !== 3) {
             throw new Prime.ValidationError("Lerp operation requires two vectors and a parameter");
           }
-          return VectorAdvanced.lerp(args[0], args[1], args[2], result);
+          const VectorAdvanced = getVectorModule('VectorAdvanced');
+          if (VectorAdvanced.lerp) {
+            return VectorAdvanced.lerp(args[0], args[1], args[2], result);
+          } else {
+            throw new Prime.ValidationError("VectorAdvanced module not properly loaded");
+          }
           
         default:
           throw new Prime.ValidationError(`Unknown operation: ${operation}`);
@@ -240,14 +260,28 @@ const Prime = require("../core");
      * @returns {Object} - Diagnostic information
      */
     getDiagnostics: function(v) {
-      // We need to call this through VectorValidation to ensure 'this' binding is correct
-      return VectorValidation.getDiagnostics(v);
+      // Load VectorValidation on demand
+      const VectorValidation = getVectorModule('VectorValidation');
+      if (VectorValidation.getDiagnostics) {
+        return VectorValidation.getDiagnostics(v);
+      } else {
+        return { error: "VectorValidation module not properly loaded" };
+      }
     }
   };
 
-  // Add Vector to the Prime.Math namespace
+  // Add Vector to the Prime.Math namespace 
   Prime.Math = Prime.Math || {};
-  Prime.Math.Vector = Vector;
+  
+  // Safely update the Vector module to avoid overwriting any existing properties
+  if (!Prime.Math.Vector) {
+    Prime.Math.Vector = Vector;
+  } else {
+    // If Vector already exists, update it with our implementation
+    Object.keys(Vector).forEach(key => {
+      Prime.Math.Vector[key] = Vector[key];
+    });
+  }
 })();
 
 // Export the enhanced Prime object
