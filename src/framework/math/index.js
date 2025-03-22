@@ -1724,6 +1724,44 @@ vector._simpleHash = function(str) {
   return Math.abs(hash) / 2147483647; // Normalize to [0,1]
 };
 
+// Import refactored vector modules if available
+let vectorCore, vectorAdvanced, vectorValidation;
+try {
+  // First try to import from new modular structure
+  vectorCore = require('../../math/vector-core').Math.VectorCore;
+  vectorAdvanced = require('../../math/vector-advanced').Math.VectorAdvanced;
+  vectorValidation = require('../../math/vector-validation').Math.VectorValidation;
+} catch (e) {
+  // Fallback to legacy implementation
+  vectorCore = null;
+  vectorAdvanced = null;
+  vectorValidation = null;
+}
+
+// Enhance vector module with refactored functionality if available
+if (vectorCore && vectorAdvanced && vectorValidation) {
+  // Add optimized implementations from refactored modules
+  vector.createTyped = vectorCore.create;
+  vector.applyInPlace = function(operation, ...args) {
+    const result = args[args.length - 1];
+    
+    switch (operation) {
+      case 'add':
+        return vectorCore.add(args[0], args[1], result);
+      case 'subtract':
+        return vectorCore.subtract(args[0], args[1], result);
+      case 'scale':
+        return vectorCore.scale(args[0], args[1], result);
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+  };
+  
+  // Add validation utilities
+  vector.validate = vectorValidation.validateVector;
+  vector.getDiagnostics = vectorValidation.getDiagnostics;
+}
+
 // Export the math utilities
 module.exports = {
   CONSTANTS,
@@ -1738,4 +1776,9 @@ module.exports = {
   coherence,
   linalg,
   primeMath,
+  
+  // Export refactored modules if available
+  vectorCore,
+  vectorAdvanced,
+  vectorValidation
 };

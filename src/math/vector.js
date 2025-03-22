@@ -1,15 +1,36 @@
 /**
  * PrimeOS JavaScript Library - Vector Math
  * Vector operations and utilities
+ * 
+ * This file serves as the main entry point for vector operations,
+ * importing functionality from the modular components while maintaining
+ * backward compatibility.
  */
 
-// Import the Prime object
+// Import the modular vector components
+require("./vector-core");
+require("./vector-advanced");
+require("./vector-validation");
+
+// Import the Prime object with all vector components loaded
 const Prime = require("../core");
 
-// Create the Vector module using IIFE
+// Create a Vector object that maintains the original API
 (function () {
+  // Ensure all required vector namespaces exist
+  if (!Prime.Math.VectorCore || !Prime.Math.VectorAdvanced || !Prime.Math.VectorValidation) {
+    throw new Error("Vector components must be loaded before Vector");
+  }
+
+  // Get references to the modular components
+  const VectorCore = Prime.Math.VectorCore;
+  const VectorAdvanced = Prime.Math.VectorAdvanced;
+  const VectorValidation = Prime.Math.VectorValidation;
+
   /**
    * Vector operations for mathematical computations
+   * Combines core, advanced, and validation functionality
+   * while maintaining backward compatibility
    */
   const Vector = {
     /**
@@ -19,17 +40,7 @@ const Prime = require("../core");
      * @returns {Array} - New vector with specified dimensions
      */
     create: function (dimensions, initialValue = 0) {
-      if (
-        !Prime.Utils.isNumber(dimensions) ||
-        dimensions <= 0 ||
-        !Number.isInteger(dimensions)
-      ) {
-        throw new Prime.ValidationError(
-          "Dimensions must be a positive integer",
-        );
-      }
-
-      return new Array(dimensions).fill(initialValue);
+      return VectorCore.create(dimensions, initialValue);
     },
 
     /**
@@ -39,17 +50,7 @@ const Prime = require("../core");
      * @returns {Array} - Result of addition
      */
     add: function (a, b) {
-      if (!Array.isArray(a) || !Array.isArray(b)) {
-        throw new Prime.ValidationError("Vectors must be arrays");
-      }
-
-      if (a.length !== b.length) {
-        throw new Prime.ValidationError(
-          "Vectors must have the same dimensions",
-        );
-      }
-
-      return a.map((val, i) => val + b[i]);
+      return VectorCore.add(a, b);
     },
 
     /**
@@ -59,17 +60,7 @@ const Prime = require("../core");
      * @returns {Array} - Result of subtraction
      */
     subtract: function (a, b) {
-      if (!Array.isArray(a) || !Array.isArray(b)) {
-        throw new Prime.ValidationError("Vectors must be arrays");
-      }
-
-      if (a.length !== b.length) {
-        throw new Prime.ValidationError(
-          "Vectors must have the same dimensions",
-        );
-      }
-
-      return a.map((val, i) => val - b[i]);
+      return VectorCore.subtract(a, b);
     },
 
     /**
@@ -79,17 +70,7 @@ const Prime = require("../core");
      * @returns {number} - Dot product
      */
     dot: function (a, b) {
-      if (!Array.isArray(a) || !Array.isArray(b)) {
-        throw new Prime.ValidationError("Vectors must be arrays");
-      }
-
-      if (a.length !== b.length) {
-        throw new Prime.ValidationError(
-          "Vectors must have the same dimensions",
-        );
-      }
-
-      return a.reduce((sum, val, i) => sum + val * b[i], 0);
+      return VectorCore.dot(a, b);
     },
 
     /**
@@ -99,15 +80,7 @@ const Prime = require("../core");
      * @returns {Array} - Scaled vector
      */
     scale: function (vector, scalar) {
-      if (!Array.isArray(vector)) {
-        throw new Prime.ValidationError("Vector must be an array");
-      }
-
-      if (!Prime.Utils.isNumber(scalar)) {
-        throw new Prime.ValidationError("Scalar must be a number");
-      }
-
-      return vector.map((val) => val * scalar);
+      return VectorCore.scale(vector, scalar);
     },
 
     /**
@@ -116,12 +89,7 @@ const Prime = require("../core");
      * @returns {number} - Vector magnitude
      */
     magnitude: function (vector) {
-      if (!Array.isArray(vector)) {
-        throw new Prime.ValidationError("Vector must be an array");
-      }
-
-      const sumOfSquares = vector.reduce((sum, val) => sum + val * val, 0);
-      return Math.sqrt(sumOfSquares);
+      return VectorCore.magnitude(vector);
     },
 
     /**
@@ -130,17 +98,7 @@ const Prime = require("../core");
      * @returns {Array} - Normalized vector
      */
     normalize: function (vector) {
-      if (!Array.isArray(vector)) {
-        throw new Prime.ValidationError("Vector must be an array");
-      }
-
-      const mag = this.magnitude(vector);
-
-      if (mag === 0) {
-        throw new Prime.MathematicalError("Cannot normalize a zero vector");
-      }
-
-      return vector.map((val) => val / mag);
+      return VectorCore.normalize(vector);
     },
 
     /**
@@ -150,21 +108,7 @@ const Prime = require("../core");
      * @returns {Array} - Cross product
      */
     cross: function (a, b) {
-      if (!Array.isArray(a) || !Array.isArray(b)) {
-        throw new Prime.ValidationError("Vectors must be arrays");
-      }
-
-      if (a.length !== 3 || b.length !== 3) {
-        throw new Prime.ValidationError(
-          "Cross product is only defined for 3D vectors",
-        );
-      }
-
-      return [
-        a[1] * b[2] - a[2] * b[1],
-        a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0],
-      ];
+      return VectorAdvanced.cross(a, b);
     },
 
     /**
@@ -174,33 +118,7 @@ const Prime = require("../core");
      * @returns {number} - Angle in radians
      */
     angle: function (a, b) {
-      if (!Array.isArray(a) || !Array.isArray(b)) {
-        throw new Prime.ValidationError("Vectors must be arrays");
-      }
-
-      if (a.length !== b.length) {
-        throw new Prime.ValidationError(
-          "Vectors must have the same dimensions",
-        );
-      }
-
-      const magA = this.magnitude(a);
-      const magB = this.magnitude(b);
-
-      if (magA === 0 || magB === 0) {
-        throw new Prime.MathematicalError(
-          "Cannot calculate angle with zero vector",
-        );
-      }
-
-      const dotProduct = this.dot(a, b);
-      const cosTheta = dotProduct / (magA * magB);
-
-      // Handle floating point precision issues
-      if (cosTheta > 1) return 0;
-      if (cosTheta < -1) return Math.PI;
-
-      return Math.acos(cosTheta);
+      return VectorAdvanced.angle(a, b);
     },
 
     /**
@@ -210,24 +128,7 @@ const Prime = require("../core");
      * @returns {Array} - Projection result
      */
     project: function (a, b) {
-      if (!Array.isArray(a) || !Array.isArray(b)) {
-        throw new Prime.ValidationError("Vectors must be arrays");
-      }
-
-      if (a.length !== b.length) {
-        throw new Prime.ValidationError(
-          "Vectors must have the same dimensions",
-        );
-      }
-
-      const magBSquared = this.dot(b, b);
-
-      if (magBSquared === 0) {
-        throw new Prime.MathematicalError("Cannot project onto a zero vector");
-      }
-
-      const scalar = this.dot(a, b) / magBSquared;
-      return this.scale(b, scalar);
+      return VectorAdvanced.project(a, b);
     },
 
     /**
@@ -237,18 +138,7 @@ const Prime = require("../core");
      * @returns {number} - Distance between vectors
      */
     distance: function (a, b) {
-      if (!Array.isArray(a) || !Array.isArray(b)) {
-        throw new Prime.ValidationError("Vectors must be arrays");
-      }
-
-      if (a.length !== b.length) {
-        throw new Prime.ValidationError(
-          "Vectors must have the same dimensions",
-        );
-      }
-
-      const difference = this.subtract(a, b);
-      return this.magnitude(difference);
+      return VectorCore.distance(a, b);
     },
     
     /**
@@ -259,25 +149,7 @@ const Prime = require("../core");
      * @returns {Array} - Interpolated vector
      */
     lerp: function (a, b, t) {
-      if (!Array.isArray(a) || !Array.isArray(b)) {
-        throw new Prime.ValidationError("Vectors must be arrays");
-      }
-
-      if (a.length !== b.length) {
-        throw new Prime.ValidationError(
-          "Vectors must have the same dimensions",
-        );
-      }
-
-      if (!Prime.Utils.isNumber(t)) {
-        throw new Prime.ValidationError("Interpolation parameter must be a number");
-      }
-
-      // Clamp t to [0,1] for safety
-      const tClamped = Math.max(0, Math.min(1, t));
-      
-      // Linear interpolation: (1-t)*a + t*b
-      return a.map((val, i) => (1 - tClamped) * val + tClamped * b[i]);
+      return VectorAdvanced.lerp(a, b, t);
     },
     
     /**
@@ -286,8 +158,91 @@ const Prime = require("../core");
      * @returns {number} - Vector norm
      */
     norm: function (vector) {
-      return this.magnitude(vector);
+      return VectorCore.magnitude(vector);
     },
+
+    // Add new methods not in the original API
+    
+    /**
+     * Create a vector using TypedArray for improved memory efficiency
+     * @param {number} dimensions - Number of dimensions
+     * @param {number} [initialValue=0] - Initial value for all elements
+     * @param {string} [arrayType='float64'] - Type of TypedArray ('float64', 'float32', etc.)
+     * @returns {TypedArray} - New vector with specified dimensions
+     */
+    createTyped: function (dimensions, initialValue = 0, arrayType = 'float64') {
+      return VectorCore.create(dimensions, initialValue, { 
+        useTypedArray: true, 
+        arrayType 
+      });
+    },
+    
+    /**
+     * Apply an operation to vector(s) in-place to avoid memory allocation
+     * @param {string} operation - Operation name ('add', 'subtract', 'scale', etc.)
+     * @param {...any} args - Arguments for the operation
+     * @param {Array|TypedArray} result - Vector to store the result in
+     * @returns {Array|TypedArray} - The result vector (same as the last argument)
+     */
+    applyInPlace: function (operation, ...args) {
+      const result = args.pop(); // Last argument is the result vector
+      
+      if (!VectorCore.isVector(result)) {
+        throw new Prime.ValidationError("Last argument must be a vector to store the result");
+      }
+      
+      switch (operation) {
+        case 'add':
+          if (args.length !== 2) {
+            throw new Prime.ValidationError("Add operation requires two vectors");
+          }
+          return VectorCore.add(args[0], args[1], result);
+          
+        case 'subtract':
+          if (args.length !== 2) {
+            throw new Prime.ValidationError("Subtract operation requires two vectors");
+          }
+          return VectorCore.subtract(args[0], args[1], result);
+          
+        case 'scale':
+          if (args.length !== 2) {
+            throw new Prime.ValidationError("Scale operation requires a vector and a scalar");
+          }
+          return VectorCore.scale(args[0], args[1], result);
+          
+        case 'normalize':
+          if (args.length !== 1) {
+            throw new Prime.ValidationError("Normalize operation requires one vector");
+          }
+          return VectorCore.normalize(args[0], result);
+          
+        case 'lerp':
+          if (args.length !== 3) {
+            throw new Prime.ValidationError("Lerp operation requires two vectors and a parameter");
+          }
+          return VectorAdvanced.lerp(args[0], args[1], args[2], result);
+          
+        default:
+          throw new Prime.ValidationError(`Unknown operation: ${operation}`);
+      }
+    },
+    
+    /**
+     * Check if a value is a valid vector
+     * @param {*} v - Value to check
+     * @returns {boolean} - True if v is a valid vector
+     */
+    isVector: VectorCore.isVector,
+    
+    /**
+     * Get detailed diagnostics about a vector
+     * @param {*} v - Vector to diagnose
+     * @returns {Object} - Diagnostic information
+     */
+    getDiagnostics: function(v) {
+      // We need to call this through VectorValidation to ensure 'this' binding is correct
+      return VectorValidation.getDiagnostics(v);
+    }
   };
 
   // Add Vector to the Prime.Math namespace
