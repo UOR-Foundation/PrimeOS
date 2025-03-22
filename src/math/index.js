@@ -31,12 +31,12 @@ const lazyLoadModules = {
   Matrix: "./matrix",
   
   // Other math modules
-  Clifford: "./clifford"
+  Clifford: "./clifford",
   
-  // Future modules
-  // Lie: "./lie",
-  // Numerical: "./numerical", 
-  // Spectral: "./spectral"
+  // Future modules (now implemented)
+  Lie: "./lie",
+  Numerical: "./numerical", 
+  Spectral: "./spectral"
 };
 
 // Create getters for lazy loading - with improved circular dependency handling
@@ -46,44 +46,41 @@ Object.keys(lazyLoadModules).forEach(moduleName => {
     let moduleExports = null;
     let tempPlaceholder = {};
     
+    // Store placeholder before defining property to avoid recursive gets
+    const placeholderMap = new Map();
+    placeholderMap.set(moduleName, tempPlaceholder);
+    
     Object.defineProperty(Prime.Math, moduleName, {
       get: function() {
         if (!moduleLoaded) {
           try {
-            // Use the temporary placeholder to break circular dependencies
-            // We need to avoid modifying Prime.Math[moduleName] here to prevent recursion
-            
             // Set the loaded flag before requiring to break potential cycles
             moduleLoaded = true;
             
             // Load the module
             moduleExports = require(lazyLoadModules[moduleName]);
             
-            // If module exports the enhanced Prime object, keep using our placeholder
+            // If module exports the enhanced Prime object, return the module's version if it exists
             if (moduleExports === Prime) {
-              // The module has successfully registered itself on Prime.Math
-              return Prime.Math[moduleName] || tempPlaceholder;
+              if (typeof Prime.Math[moduleName] === 'object' && 
+                  Prime.Math[moduleName] !== null && 
+                  Prime.Math[moduleName] !== placeholderMap.get(moduleName)) {
+                return Prime.Math[moduleName];
+              }
+              return placeholderMap.get(moduleName);
             }
             
-            // Otherwise, the module export becomes the module value - but only if we haven't
-            // already initialized it through a circular reference
-            if (Prime.Math[moduleName] === tempPlaceholder) {
-              Prime.Math[moduleName] = moduleExports;
-            }
+            // Otherwise store the module exports for future gets
+            placeholderMap.set(moduleName, moduleExports);
           } catch (error) {
             console.error(`Error loading module ${moduleName}:`, error.message);
-            // Return placeholder object as fallback to avoid breaking the application
-            return tempPlaceholder;
           }
         }
         
-        return Prime.Math[moduleName] || tempPlaceholder;
+        return placeholderMap.get(moduleName);
       },
       configurable: true
     });
-    
-    // Initialize with placeholder to prevent recursion
-    Prime.Math[moduleName] = tempPlaceholder;
   }
 });
 

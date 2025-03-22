@@ -1126,27 +1126,74 @@ const EventBus = require("../event-bus");
       const dB = new Array(this.layerConfig.outputSize).fill(0);
       const dX = new Array(this.layerConfig.inputSize).fill(0);
 
-      // Combine gradients from all nodes
+      // Helper functions for numerical stability
+      const isStable = (value) => Number.isFinite(value) && !Number.isNaN(value);
+      
+      const clipValue = (value, maxAbs = 1e6) => {
+        if (!isStable(value)) return 0;
+        return Math.max(-maxAbs, Math.min(maxAbs, value));
+      };
+      
+      // Compensation arrays for Kahan summation to reduce floating point error
+      const dWCompensation = Array.from({ length: dW.length }, () => 
+        new Array(dW[0].length).fill(0)
+      );
+      const dBCompensation = new Array(dB.length).fill(0);
+      const dXCompensation = new Array(dX.length).fill(0);
+      
+      // Scale factor for averaging
+      const scaleFactor = 1 / Math.max(1, nodeResults.length);
+      
+      // Combine gradients from all nodes with numerical stability enhancements
       for (const result of nodeResults) {
         if (!result || !result.gradients) {
           continue;
         }
 
-        // Add weight gradients
-        for (let i = 0; i < dW.length; i++) {
-          for (let j = 0; j < dW[i].length; j++) {
-            dW[i][j] += result.gradients.dW[i][j] / nodeResults.length;
+        // Add weight gradients with Kahan summation for better precision
+        if (result.gradients.dW && Array.isArray(result.gradients.dW)) {
+          for (let i = 0; i < dW.length && i < result.gradients.dW.length; i++) {
+            if (Array.isArray(result.gradients.dW[i])) {
+              for (let j = 0; j < dW[i].length && j < result.gradients.dW[i].length; j++) {
+                // Clip value for numerical stability
+                const value = clipValue(result.gradients.dW[i][j]) * scaleFactor;
+                
+                // Kahan summation to reduce floating point error
+                const y = value - dWCompensation[i][j];
+                const t = dW[i][j] + y;
+                dWCompensation[i][j] = (t - dW[i][j]) - y;
+                dW[i][j] = t;
+              }
+            }
           }
         }
 
-        // Add bias gradients
-        for (let i = 0; i < dB.length; i++) {
-          dB[i] += result.gradients.dB[i] / nodeResults.length;
+        // Add bias gradients with stability checks
+        if (result.gradients.dB && Array.isArray(result.gradients.dB)) {
+          for (let i = 0; i < dB.length && i < result.gradients.dB.length; i++) {
+            // Clip value for numerical stability
+            const value = clipValue(result.gradients.dB[i]) * scaleFactor;
+            
+            // Kahan summation to reduce floating point error
+            const y = value - dBCompensation[i];
+            const t = dB[i] + y;
+            dBCompensation[i] = (t - dB[i]) - y;
+            dB[i] = t;
+          }
         }
 
-        // Add input gradients
-        for (let i = 0; i < dX.length; i++) {
-          dX[i] += result.gradients.dX[i] / nodeResults.length;
+        // Add input gradients with stability checks
+        if (result.gradients.dX && Array.isArray(result.gradients.dX)) {
+          for (let i = 0; i < dX.length && i < result.gradients.dX.length; i++) {
+            // Clip value for numerical stability
+            const value = clipValue(result.gradients.dX[i]) * scaleFactor;
+            
+            // Kahan summation to reduce floating point error
+            const y = value - dXCompensation[i];
+            const t = dX[i] + y;
+            dXCompensation[i] = (t - dX[i]) - y;
+            dX[i] = t;
+          }
         }
       }
 
@@ -1228,7 +1275,18 @@ const EventBus = require("../event-bus");
       const dB = new Array(this.layerConfig.outputSize).fill(0);
       const dX = new Array(this.layerConfig.inputSize).fill(0);
 
-      // Combine results from all nodes
+      // Helper functions for numerical stability
+      const isStable = (value) => Number.isFinite(value) && !Number.isNaN(value);
+      
+      const clipValue = (value, maxAbs = 1e6) => {
+        if (!isStable(value)) return 0;
+        return Math.max(-maxAbs, Math.min(maxAbs, value));
+      };
+      
+      // Compensation arrays for Kahan summation to reduce floating point error
+      const dXCompensation = new Array(dX.length).fill(0);
+      
+      // Combine results from all nodes with numerical stability checks
       for (const result of nodeResults) {
         if (!result || !result.gradients) {
           continue;
@@ -1241,21 +1299,38 @@ const EventBus = require("../event-bus");
           outputOffset = result.outputRange[0];
         }
 
-        // Copy weight gradients to the right place
-        for (let i = 0; i < result.gradients.dW.length; i++) {
-          for (let j = 0; j < result.gradients.dW[i].length; j++) {
-            dW[outputOffset + i][j] = result.gradients.dW[i][j];
+        // Copy weight gradients to the right place with stability checks
+        if (result.gradients.dW && Array.isArray(result.gradients.dW)) {
+          for (let i = 0; i < result.gradients.dW.length; i++) {
+            if (Array.isArray(result.gradients.dW[i])) {
+              for (let j = 0; j < result.gradients.dW[i].length; j++) {
+                if (outputOffset + i < dW.length && j < dW[outputOffset + i].length) {
+                  dW[outputOffset + i][j] = clipValue(result.gradients.dW[i][j]);
+                }
+              }
+            }
           }
         }
 
-        // Copy bias gradients
-        for (let i = 0; i < result.gradients.dB.length; i++) {
-          dB[outputOffset + i] = result.gradients.dB[i];
+        // Copy bias gradients with stability checks
+        if (result.gradients.dB && Array.isArray(result.gradients.dB)) {
+          for (let i = 0; i < result.gradients.dB.length; i++) {
+            if (outputOffset + i < dB.length) {
+              dB[outputOffset + i] = clipValue(result.gradients.dB[i]);
+            }
+          }
         }
 
-        // Add input gradients (all nodes contribute to full dX)
-        for (let i = 0; i < dX.length; i++) {
-          dX[i] += result.gradients.dX[i];
+        // Add input gradients (all nodes contribute to full dX) with Kahan summation
+        if (result.gradients.dX && Array.isArray(result.gradients.dX)) {
+          for (let i = 0; i < dX.length && i < result.gradients.dX.length; i++) {
+            // Use Kahan summation algorithm for better numerical stability
+            const value = clipValue(result.gradients.dX[i]);
+            const y = value - dXCompensation[i];
+            const t = dX[i] + y;
+            dXCompensation[i] = (t - dX[i]) - y;
+            dX[i] = t;
+          }
         }
       }
 
@@ -1293,6 +1368,42 @@ const EventBus = require("../event-bus");
 
       // Execute task on single node
       const result = await this._executeTask(nodeId, nodeTask);
+      
+      // Ensure numerical stability in result gradients
+      if (result && result.gradients) {
+        // Helper functions for numerical stability
+        const isStable = (value) => Number.isFinite(value) && !Number.isNaN(value);
+        
+        const clipValue = (value, maxAbs = 1e6) => {
+          if (!isStable(value)) return 0;
+          return Math.max(-maxAbs, Math.min(maxAbs, value));
+        };
+        
+        // Apply numerical stability to weight gradients
+        if (result.gradients.dW && Array.isArray(result.gradients.dW)) {
+          for (let i = 0; i < result.gradients.dW.length; i++) {
+            if (Array.isArray(result.gradients.dW[i])) {
+              for (let j = 0; j < result.gradients.dW[i].length; j++) {
+                result.gradients.dW[i][j] = clipValue(result.gradients.dW[i][j]);
+              }
+            }
+          }
+        }
+        
+        // Apply numerical stability to bias gradients
+        if (result.gradients.dB && Array.isArray(result.gradients.dB)) {
+          for (let i = 0; i < result.gradients.dB.length; i++) {
+            result.gradients.dB[i] = clipValue(result.gradients.dB[i]);
+          }
+        }
+        
+        // Apply numerical stability to input gradients
+        if (result.gradients.dX && Array.isArray(result.gradients.dX)) {
+          for (let i = 0; i < result.gradients.dX.length; i++) {
+            result.gradients.dX[i] = clipValue(result.gradients.dX[i]);
+          }
+        }
+      }
 
       return {
         dW: result.gradients.dW,
@@ -1562,7 +1673,12 @@ const EventBus = require("../event-bus");
     _simulateForwardPass(data) {
       const { layerConfig, input, outputRange } = data;
 
-      // Create temporary layer for computation
+      // Ensure Neural module is loaded before use
+      if (!Prime.Neural || !Prime.Neural.Layer || !Prime.Neural.Layer.NeuralLayer) {
+        throw new Error("Neural module not loaded or NeuralLayer not available");
+      }
+      
+      // Create neural layer instance
       const layer = new Prime.Neural.Layer.NeuralLayer(layerConfig);
 
       // Perform forward pass
@@ -1585,7 +1701,12 @@ const EventBus = require("../event-bus");
     _simulateBackwardPass(data) {
       const { layerConfig, gradOutput, cache, outputRange } = data;
 
-      // Create temporary layer for computation
+      // Ensure Neural module is loaded before use
+      if (!Prime.Neural || !Prime.Neural.Layer || !Prime.Neural.Layer.NeuralLayer) {
+        throw new Error("Neural module not loaded or NeuralLayer not available");
+      }
+      
+      // Create neural layer instance
       const layer = new Prime.Neural.Layer.NeuralLayer(layerConfig);
 
       // Perform backward pass
@@ -1609,7 +1730,12 @@ const EventBus = require("../event-bus");
     _simulateWeightUpdate(data) {
       const { layerConfig, gradients, learningRate, outputRange } = data;
 
-      // Create temporary layer for computation
+      // Ensure Neural module is loaded before use
+      if (!Prime.Neural || !Prime.Neural.Layer || !Prime.Neural.Layer.NeuralLayer) {
+        throw new Error("Neural module not loaded or NeuralLayer not available");
+      }
+      
+      // Create neural layer instance
       const layer = new Prime.Neural.Layer.NeuralLayer(layerConfig);
 
       // Apply weight update
@@ -1619,14 +1745,14 @@ const EventBus = require("../event-bus");
       const result = {
         updatedWeights: layer.weights,
         updatedBiases: layer.biases,
-        coherenceScore: 0.9, // Simulated score
+        coherenceScore: layer.getCoherenceScore ? layer.getCoherenceScore() : 0.9,
       };
 
       // Add output range to result if provided
       if (outputRange) {
         result.outputRange = outputRange;
       }
-
+      
       return result;
     }
 
@@ -1637,18 +1763,23 @@ const EventBus = require("../event-bus");
      * @returns {Object} Simulated result
      */
     _simulateCoherenceCheck(data) {
-      // Simulate coherence analysis
-      return {
-        score: 0.8 + Math.random() * 0.2, // Simulated score
-        weightNorm: Math.random() * 10,
-        gradientAlignment: Math.random(),
-        activationDistribution: {
-          mean: Math.random() * 0.5,
-          variance: Math.random() * 0.2,
-          sparsity: Math.random() * 0.8,
-        },
-        recommendations: [],
-      };
+      // Ensure Coherence module is loaded before use
+      if (!Prime.Distributed || !Prime.Distributed.Coherence || 
+          !Prime.Distributed.Coherence.DistributedCoherenceManager) {
+        throw new Error("Coherence module not loaded or DistributedCoherenceManager not available");
+      }
+      
+      // Use the proper coherence checker implementation
+      const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager();
+      
+      // Extract layer data from task
+      const { layer, globalParams } = data;
+      
+      // Perform coherence check
+      return coherenceManager.checkLayerCoherence(layer, {
+        isDistributed: true,
+        globalParams
+      });
     }
 
     /**

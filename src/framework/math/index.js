@@ -1727,15 +1727,22 @@ vector._simpleHash = function(str) {
 // Import refactored vector modules if available
 let vectorCore, vectorAdvanced, vectorValidation;
 try {
-  // First try to import from new modular structure
-  vectorCore = require('../../math/vector-core').Math.VectorCore;
-  vectorAdvanced = require('../../math/vector-advanced').Math.VectorAdvanced;
-  vectorValidation = require('../../math/vector-validation').Math.VectorValidation;
+  // First try to import from new modular structure - import Prime object
+  const Prime = require('../../core');
+  
+  // Ensure math modules are loaded - this will trigger lazy loading
+  require('../../math/index');
+  
+  // Access through the Prime.Math namespace which should now have the modules
+  vectorCore = Prime.Math.VectorCore || null;
+  vectorAdvanced = Prime.Math.VectorAdvanced || null;
+  vectorValidation = Prime.Math.VectorValidation || null;
 } catch (e) {
   // Fallback to legacy implementation
   vectorCore = null;
   vectorAdvanced = null;
   vectorValidation = null;
+  console.error('Error loading vector modules:', e.message);
 }
 
 // Enhance vector module with refactored functionality if available

@@ -7,44 +7,104 @@
  * and re-exports functionality from modular components
  */
 
-// Define a safe require function to prevent circular dependencies
-const safeRequire = function(path) {
-  try {
-    return require(path);
-  } catch (error) {
-    console.error(`Error loading module ${path}:`, error.message);
-    return {};
-  }
-};
+// Import the Prime object for namespace handling
+const Prime = require('../../core');
 
-// Import modular components with protection against circular dependencies
-const constraintsModule = safeRequire('./coherence-constraints.js');
-const validationModule = safeRequire('./coherence-validation.js');
-const manifoldValidatorModule = safeRequire('./manifold-validator.js');
+// Ensure the Prime.Framework.Base0 namespace exists
+Prime.Framework = Prime.Framework || {};
+Prime.Framework.Base0 = Prime.Framework.Base0 || {};
 
-// Extract components with fallbacks
-const CoherenceConstraints = constraintsModule.CoherenceConstraints || {};
-const CoherenceNorms = constraintsModule.CoherenceNorms || {};
-const CoherenceValidator = validationModule.CoherenceValidator || {};
-const MathematicalCoherenceValidator = manifoldValidatorModule.MathematicalCoherenceValidator || {};
+// Import required modules directly
+const { CoherenceConstraints, CoherenceNorms } = require('./coherence-constraints.js');
+const { CoherenceValidator } = require('./coherence-validation.js');
+const { MathematicalCoherenceValidator } = require('./manifold-validator.js');
 
-// Export the module with lazy-loading wrapper support
+// Add components to the Prime namespace with proper circular dependency handling
+// For CoherenceValidator
+if (Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceValidator') && 
+    Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceValidator').get) {
+  const descriptor = Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceValidator');
+  const originalGetter = descriptor.get;
+  
+  Object.defineProperty(Prime.Framework.Base0, 'CoherenceValidator', {
+    get: function() {
+      const result = originalGetter.call(this);
+      if (!result || Object.keys(result).length === 0) {
+        return CoherenceValidator;
+      }
+      return result;
+    },
+    configurable: true
+  });
+} else {
+  Prime.Framework.Base0.CoherenceValidator = CoherenceValidator;
+}
+
+// For MathematicalCoherenceValidator
+if (Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'MathematicalCoherenceValidator') && 
+    Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'MathematicalCoherenceValidator').get) {
+  const descriptor = Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'MathematicalCoherenceValidator');
+  const originalGetter = descriptor.get;
+  
+  Object.defineProperty(Prime.Framework.Base0, 'MathematicalCoherenceValidator', {
+    get: function() {
+      const result = originalGetter.call(this);
+      if (!result || Object.keys(result).length === 0) {
+        return MathematicalCoherenceValidator;
+      }
+      return result;
+    },
+    configurable: true
+  });
+} else {
+  Prime.Framework.Base0.MathematicalCoherenceValidator = MathematicalCoherenceValidator;
+}
+
+// For CoherenceConstraints
+if (Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceConstraints') && 
+    Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceConstraints').get) {
+  const descriptor = Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceConstraints');
+  const originalGetter = descriptor.get;
+  
+  Object.defineProperty(Prime.Framework.Base0, 'CoherenceConstraints', {
+    get: function() {
+      const result = originalGetter.call(this);
+      if (!result || Object.keys(result).length === 0) {
+        return CoherenceConstraints;
+      }
+      return result;
+    },
+    configurable: true
+  });
+} else {
+  Prime.Framework.Base0.CoherenceConstraints = CoherenceConstraints;
+}
+
+// For CoherenceNorms
+if (Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceNorms') && 
+    Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceNorms').get) {
+  const descriptor = Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceNorms');
+  const originalGetter = descriptor.get;
+  
+  Object.defineProperty(Prime.Framework.Base0, 'CoherenceNorms', {
+    get: function() {
+      const result = originalGetter.call(this);
+      if (!result || Object.keys(result).length === 0) {
+        return CoherenceNorms;
+      }
+      return result;
+    },
+    configurable: true
+  });
+} else {
+  Prime.Framework.Base0.CoherenceNorms = CoherenceNorms;
+}
+
+// Export all components with the Prime object for global usage
 module.exports = {
-  // Core validators
-  get CoherenceValidator() {
-    return validationModule.CoherenceValidator || {};
-  },
-  
-  get MathematicalCoherenceValidator() {
-    return manifoldValidatorModule.MathematicalCoherenceValidator || {};
-  },
-  
-  // Re-export constraints and norms with lazy loading
-  get CoherenceConstraints() {
-    return constraintsModule.CoherenceConstraints || {};
-  },
-  
-  get CoherenceNorms() {
-    return constraintsModule.CoherenceNorms || {};
-  }
+  CoherenceValidator,
+  MathematicalCoherenceValidator,
+  CoherenceConstraints,
+  CoherenceNorms,
+  Prime
 };

@@ -273,7 +273,150 @@ class ClusterNode {
       details: violation.details || {}
     });
     
+    // For numerical stability violations, attempt automatic recovery
+    if (violation.type === 'numerical' && 
+        Prime.Distributed && 
+        Prime.Distributed.Coherence && 
+        Prime.Distributed.Coherence.DistributedCoherenceManager) {
+      
+      this._attemptAutomaticRecovery(violation);
+    }
+    
     return true;
+  }
+  
+  /**
+   * Attempt automatic recovery from coherence violations
+   * @private
+   * @param {Object} violation - The violation to recover from
+   */
+  _attemptAutomaticRecovery(violation) {
+    try {
+      // Find the affected task based on violation
+      let affectedTaskId = null;
+      if (violation.details && violation.details.taskId) {
+        affectedTaskId = violation.details.taskId;
+      } else if (violation.context && violation.context.taskId) {
+        affectedTaskId = violation.context.taskId;
+      }
+      
+      if (!affectedTaskId) {
+        // Can't determine which task was affected
+        return;
+      }
+      
+      const task = this.currentTasks.get(affectedTaskId);
+      if (!task) {
+        // Task not found or already completed
+        return;
+      }
+      
+      // Create a coherence manager for recovery
+      const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager({
+        strictChecking: true,
+        thresholds: {
+          numerical: 1e-8,
+          gradient: 1.0,
+          synchronization: 0.01
+        }
+      });
+      
+      // Apply corrections based on violation type
+      if (violation.type === 'numerical') {
+        // For numerical stability issues, apply corrections to task data
+        if (task.data && task.data.parameters) {
+          // Apply numerical stability fixes to parameters
+          const corrections = coherenceManager.applyCoherenceCorrection(
+            task.data.parameters, 
+            [violation]
+          );
+          
+          if (corrections.applied) {
+            Prime.Logger.info(`Applied automatic numerical stability corrections to task ${affectedTaskId}`, {
+              corrections: corrections.corrections,
+              taskType: task.type,
+              nodeId: this.id
+            });
+          }
+        }
+        
+        if (task.data && task.data.gradients) {
+          // Apply gradient clipping for extreme values
+          const clippedGradients = this._applyGradientClipping(task.data.gradients);
+          task.data.gradients = clippedGradients;
+          
+          Prime.Logger.info(`Applied gradient clipping to task ${affectedTaskId}`, {
+            taskType: task.type,
+            nodeId: this.id
+          });
+        }
+      }
+    } catch (error) {
+      Prime.Logger.error(`Error during automatic recovery attempt`, {
+        error: error.message,
+        stack: error.stack,
+        nodeId: this.id,
+        violationType: violation.type
+      });
+    }
+  }
+  
+  /**
+   * Apply gradient clipping to prevent numerical instability
+   * @private
+   * @param {Object} gradients - Gradients to clip
+   * @param {number} maxValue - Maximum absolute value (default: 1000.0)
+   * @returns {Object} Clipped gradients
+   */
+  _applyGradientClipping(gradients, maxValue = 1000.0) {
+    if (!gradients || typeof gradients !== 'object') {
+      return gradients;
+    }
+    
+    const clipped = JSON.parse(JSON.stringify(gradients));
+    
+    // Helper function to clip a single value
+    const clipValue = (value) => {
+      if (!Number.isFinite(value)) {
+        return 0; // Replace NaN or Infinity with 0
+      }
+      return Math.max(-maxValue, Math.min(maxValue, value));
+    };
+    
+    // Process all gradient values recursively
+    const processObject = (obj) => {
+      if (!obj || typeof obj !== 'object') {
+        return;
+      }
+      
+      // Handle arrays (including matrices)
+      if (Array.isArray(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+          if (Array.isArray(obj[i])) {
+            processObject(obj[i]); // Process nested arrays
+          } else if (typeof obj[i] === 'number') {
+            obj[i] = clipValue(obj[i]); // Clip numeric values
+          }
+        }
+      }
+      // Handle plain objects
+      else {
+        for (const key in obj) {
+          if (obj.hasOwnProperty(key)) {
+            if (obj[key] && typeof obj[key] === 'object') {
+              processObject(obj[key]); // Process nested objects
+            } else if (typeof obj[key] === 'number') {
+              obj[key] = clipValue(obj[key]); // Clip numeric values
+            }
+          }
+        }
+      }
+    };
+    
+    // Process the gradients
+    processObject(clipped);
+    
+    return clipped;
   }
 
   /**
@@ -347,6 +490,14 @@ class ClusterNode {
    */
   _handleTaskError(eventData) {
     // Additional handling can be added here
+  }
+  
+  /**
+   * Get node metrics
+   * @returns {Object} Node metrics
+   */
+  getMetrics() {
+    return this.metrics;
   }
 }
 

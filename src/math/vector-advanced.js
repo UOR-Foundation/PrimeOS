@@ -496,10 +496,25 @@ const VectorAdvanced = {
       );
     }
     
+    // Use an algorithm that handles extreme numerical values better
+    // Similar to the one used in extreme-conditions-tests.js
+    
+    // Get the tolerance
     const tolerance = options.tolerance || 1e-10;
+    
+    // Calculate dot product
     const dot = VectorCore.dot(a, b);
     
-    return Math.abs(dot) < tolerance;
+    // Calculate norms
+    const normA = VectorCore.magnitude(a);
+    const normB = VectorCore.magnitude(b);
+    
+    // For vectors with extreme ranges, scale tolerance by the product of norms
+    // Plus Number.MIN_VALUE to avoid division by zero when norms are extremely small
+    const scaledTolerance = tolerance * (normA * normB + Number.MIN_VALUE);
+    
+    // Check if dot product is close to zero relative to vector magnitudes
+    return Math.abs(dot) <= scaledTolerance;
   },
 
   /**
@@ -580,7 +595,30 @@ const VectorAdvanced = {
 
 // Add vector-advanced to the Prime.Math namespace
 Prime.Math = Prime.Math || {};
-Prime.Math.VectorAdvanced = VectorAdvanced;
+
+// Check if VectorAdvanced already has a getter defined, if so, use it
+if (Object.getOwnPropertyDescriptor(Prime.Math, 'VectorAdvanced') && 
+    Object.getOwnPropertyDescriptor(Prime.Math, 'VectorAdvanced').get) {
+  // Use a more careful approach to update the property
+  const descriptor = Object.getOwnPropertyDescriptor(Prime.Math, 'VectorAdvanced');
+  const originalGetter = descriptor.get;
+  
+  Object.defineProperty(Prime.Math, 'VectorAdvanced', {
+    get: function() {
+      const result = originalGetter.call(this);
+      // If result is an empty object (placeholder), return our implementation
+      if (Object.keys(result).length === 0) {
+        return VectorAdvanced;
+      }
+      // Otherwise, preserve what's already there
+      return result;
+    },
+    configurable: true
+  });
+} else {
+  // Direct assignment if no getter exists
+  Prime.Math.VectorAdvanced = VectorAdvanced;
+}
 
 // Export the enhanced Prime object
 module.exports = Prime;

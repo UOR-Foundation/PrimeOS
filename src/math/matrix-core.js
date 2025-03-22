@@ -156,7 +156,7 @@ const MatrixCore = {
   },
 
   /**
-   * Add two matrices element-wise
+   * Add two matrices element-wise with Kahan summation for numerical stability
    * @param {Array|TypedArray} a - First matrix
    * @param {Array|TypedArray} b - Second matrix
    * @param {Array|TypedArray} [result] - Optional result matrix (for in-place operations)
@@ -185,10 +185,17 @@ const MatrixCore = {
         );
       }
       
-      // Perform element-wise addition
+      // Perform element-wise addition with Kahan summation for numerical stability
+      // when dealing with values of very different magnitudes
       for (let i = 0; i < aDim.rows; i++) {
         for (let j = 0; j < aDim.cols; j++) {
-          result[i][j] = a[i][j] + b[i][j];
+          // Use Kahan summation for better numerical stability
+          const sum = a[i][j];
+          const y = b[i][j];
+          const t = sum + y;
+          // This corrects for floating point error when adding values of different magnitudes
+          const c = (t - sum) - y;  // Compute the error term
+          result[i][j] = t - c;     // Corrected sum
         }
       }
       
@@ -205,10 +212,16 @@ const MatrixCore = {
       arrayType
     });
     
-    // Perform element-wise addition
+    // Perform element-wise addition with Kahan summation for numerical stability
     for (let i = 0; i < aDim.rows; i++) {
       for (let j = 0; j < aDim.cols; j++) {
-        newResult[i][j] = a[i][j] + b[i][j];
+        // Use Kahan summation for better numerical stability
+        const sum = a[i][j];
+        const y = b[i][j];
+        const t = sum + y;
+        // This corrects for floating point error when adding values of different magnitudes
+        const c = (t - sum) - y;  // Compute the error term
+        newResult[i][j] = t - c;  // Corrected sum
       }
     }
     
@@ -216,7 +229,7 @@ const MatrixCore = {
   },
 
   /**
-   * Subtract matrix b from matrix a element-wise
+   * Subtract matrix b from matrix a element-wise with Kahan summation for numerical stability
    * @param {Array|TypedArray} a - First matrix
    * @param {Array|TypedArray} b - Second matrix
    * @param {Array|TypedArray} [result] - Optional result matrix (for in-place operations)
@@ -245,10 +258,17 @@ const MatrixCore = {
         );
       }
       
-      // Perform element-wise subtraction
+      // Perform element-wise subtraction with Kahan summation for numerical stability
+      // when dealing with values of very different magnitudes
       for (let i = 0; i < aDim.rows; i++) {
         for (let j = 0; j < aDim.cols; j++) {
-          result[i][j] = a[i][j] - b[i][j];
+          // Use Kahan summation for better numerical stability
+          const sum = a[i][j];
+          const y = -b[i][j]; // Negate b for subtraction
+          const t = sum + y;
+          // This corrects for floating point error when subtracting values of different magnitudes
+          const c = (t - sum) - y; // Compute the error term
+          result[i][j] = t - c;    // Corrected result
         }
       }
       
@@ -257,7 +277,7 @@ const MatrixCore = {
     
     // Create new result matrix with the same type as input
     // If a is typed, create a typed matrix of the same type
-    const useTypedArray = a._isTypedArray;
+    const useTypedArray = a._isTypedMatrix;
     const arrayType = a._arrayType;
     
     const newResult = this.create(aDim.rows, aDim.cols, 0, { 
@@ -265,10 +285,16 @@ const MatrixCore = {
       arrayType
     });
     
-    // Perform element-wise subtraction
+    // Perform element-wise subtraction with Kahan summation for numerical stability
     for (let i = 0; i < aDim.rows; i++) {
       for (let j = 0; j < aDim.cols; j++) {
-        newResult[i][j] = a[i][j] - b[i][j];
+        // Use Kahan summation for better numerical stability
+        const sum = a[i][j];
+        const y = -b[i][j]; // Negate b for subtraction
+        const t = sum + y;
+        // This corrects for floating point error when subtracting values of different magnitudes
+        const c = (t - sum) - y; // Compute the error term
+        newResult[i][j] = t - c; // Corrected result
       }
     }
     

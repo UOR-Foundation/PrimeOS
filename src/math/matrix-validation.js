@@ -25,6 +25,33 @@ const MatrixValidation = {
   },
   
   /**
+   * Compute adaptive tolerance based on matrix magnitude
+   * @param {Array|TypedArray} matrix - Input matrix
+   * @param {number} [baseTolerance=1e-10] - Base tolerance level
+   * @returns {number} - Scaled tolerance
+   */
+  computeAdaptiveTolerance: function(matrix, baseTolerance = 1e-10) {
+    if (!this.isMatrix(matrix)) {
+      return baseTolerance;
+    }
+    
+    const MatrixCore = Prime.Math.MatrixCore;
+    const dim = MatrixCore ? MatrixCore.dimensions(matrix) : 
+      { rows: matrix.length, cols: matrix[0].length };
+    
+    // Find maximum absolute value in the matrix
+    let maxAbs = 0;
+    for (let i = 0; i < dim.rows; i++) {
+      for (let j = 0; j < dim.cols; j++) {
+        maxAbs = Math.max(maxAbs, Math.abs(matrix[i][j]));
+      }
+    }
+    
+    // Scale tolerance based on magnitude and machine epsilon
+    return baseTolerance * (1 + maxAbs * Number.EPSILON * 100);
+  },
+  
+  /**
    * Check if a matrix is square (has the same number of rows and columns)
    * @param {Array|TypedArray} matrix - Matrix to check
    * @returns {boolean} - True if the matrix is square
@@ -107,7 +134,7 @@ const MatrixValidation = {
   /**
    * Check if a matrix is symmetric (equal to its transpose)
    * @param {Array|TypedArray} matrix - Matrix to check
-   * @param {number} [tolerance=1e-10] - Tolerance for floating-point comparisons
+   * @param {number} [tolerance=1e-10] - Base tolerance for floating-point comparisons
    * @returns {boolean} - True if the matrix is symmetric
    */
   isSymmetric: function (matrix, tolerance = 1e-10) {
@@ -120,7 +147,11 @@ const MatrixValidation = {
     
     for (let i = 0; i < n; i++) {
       for (let j = i + 1; j < n; j++) {
-        if (Math.abs(matrix[i][j] - matrix[j][i]) > tolerance) {
+        // Use adaptive tolerance based on the magnitudes of compared elements
+        const elemMagnitude = Math.max(Math.abs(matrix[i][j]), Math.abs(matrix[j][i]));
+        const adaptiveTolerance = tolerance * (1 + elemMagnitude * Number.EPSILON * 100);
+        
+        if (Math.abs(matrix[i][j] - matrix[j][i]) > adaptiveTolerance) {
           return false;
         }
       }
@@ -132,7 +163,7 @@ const MatrixValidation = {
   /**
    * Check if a matrix is diagonal (all non-diagonal elements are zero)
    * @param {Array|TypedArray} matrix - Matrix to check
-   * @param {number} [tolerance=1e-10] - Tolerance for floating-point comparisons
+   * @param {number} [tolerance=1e-10] - Base tolerance for floating-point comparisons
    * @returns {boolean} - True if the matrix is diagonal
    */
   isDiagonal: function (matrix, tolerance = 1e-10) {
@@ -143,9 +174,18 @@ const MatrixValidation = {
     const MatrixCore = Prime.Math.MatrixCore;
     const n = MatrixCore ? MatrixCore.dimensions(matrix).rows : matrix.length;
     
+    // Find maximum diagonal magnitude for tolerance scaling
+    let maxDiagonal = 0;
+    for (let i = 0; i < n; i++) {
+      maxDiagonal = Math.max(maxDiagonal, Math.abs(matrix[i][i]));
+    }
+    
+    // Scale tolerance by diagonal magnitude
+    const scaledTolerance = tolerance * (1 + maxDiagonal * Number.EPSILON * 100);
+    
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
-        if (i !== j && Math.abs(matrix[i][j]) > tolerance) {
+        if (i !== j && Math.abs(matrix[i][j]) > scaledTolerance) {
           return false;
         }
       }
@@ -157,7 +197,7 @@ const MatrixValidation = {
   /**
    * Check if a matrix is an identity matrix
    * @param {Array|TypedArray} matrix - Matrix to check
-   * @param {number} [tolerance=1e-10] - Tolerance for floating-point comparisons
+   * @param {number} [tolerance=1e-10] - Base tolerance for floating-point comparisons
    * @returns {boolean} - True if the matrix is an identity matrix
    */
   isIdentity: function (matrix, tolerance = 1e-10) {
@@ -168,10 +208,13 @@ const MatrixValidation = {
     const MatrixCore = Prime.Math.MatrixCore;
     const n = MatrixCore ? MatrixCore.dimensions(matrix).rows : matrix.length;
     
+    // Compute adaptive tolerance based on the matrix magnitude
+    const adaptiveTol = this.computeAdaptiveTolerance(matrix, tolerance);
+    
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
         const expected = i === j ? 1 : 0;
-        if (Math.abs(matrix[i][j] - expected) > tolerance) {
+        if (Math.abs(matrix[i][j] - expected) > adaptiveTol) {
           return false;
         }
       }
@@ -183,7 +226,7 @@ const MatrixValidation = {
   /**
    * Check if a matrix is invertible (non-singular)
    * @param {Array|TypedArray} matrix - Matrix to check
-   * @param {number} [tolerance=1e-10] - Tolerance for determinant near zero
+   * @param {number} [tolerance=1e-10] - Base tolerance for determinant near zero
    * @returns {boolean} - True if the matrix is invertible
    */
   isInvertible: function (matrix, tolerance = 1e-10) {
@@ -194,7 +237,17 @@ const MatrixValidation = {
     try {
       const MatrixAdvanced = Prime.Math.MatrixAdvanced;
       const det = MatrixAdvanced.determinant(matrix);
-      return Math.abs(det) > tolerance;
+      
+      // Compute adaptive tolerance based on matrix magnitude
+      const matrixMagnitude = this.computeAdaptiveTolerance(matrix, 1.0) - 1.0;
+      
+      // Scale tolerance by determinant magnitude estimate
+      // For an n×n matrix with values of magnitude m, determinant can be ~m^n in magnitude
+      const n = matrix.length;
+      const detMagnitudeEstimate = Math.pow(matrixMagnitude, n);
+      const scaledTolerance = tolerance * Math.max(1, detMagnitudeEstimate * Number.EPSILON * 1000);
+      
+      return Math.abs(det) > scaledTolerance;
     } catch (error) {
       return false;
     }
@@ -224,7 +277,7 @@ const MatrixValidation = {
   /**
    * Check if a matrix is orthogonal (its transpose equals its inverse)
    * @param {Array|TypedArray} matrix - Matrix to check
-   * @param {number} [tolerance=1e-10] - Tolerance for floating-point comparisons
+   * @param {number} [tolerance=1e-10] - Base tolerance for floating-point comparisons
    * @returns {boolean} - True if the matrix is orthogonal
    */
   isOrthogonal: function (matrix, tolerance = 1e-10) {
@@ -235,12 +288,42 @@ const MatrixValidation = {
     const MatrixCore = Prime.Math.MatrixCore;
     
     if (MatrixCore) {
+      // Compute adaptive tolerance based on matrix magnitude
+      const adaptiveTol = this.computeAdaptiveTolerance(matrix, tolerance);
+      
       // Multiply matrix by its transpose, should be identity
       const transpose = MatrixCore.transpose(matrix);
       const product = MatrixCore.multiply(matrix, transpose);
       
-      // Check if product is identity
-      return this.isIdentity(product, tolerance);
+      const n = matrix.length;
+      
+      // Row by row check of orthogonality with adaptive tolerance
+      for (let i = 0; i < n; i++) {
+        // Diagonal elements should be 1
+        if (Math.abs(product[i][i] - 1) > adaptiveTol) {
+          return false;
+        }
+        
+        // Off-diagonal elements should be 0
+        for (let j = 0; j < n; j++) {
+          if (i !== j) {
+            // For each element, calculate row magnitude for better tolerance
+            let rowMagnitude = 0;
+            for (let k = 0; k < n; k++) {
+              rowMagnitude += matrix[i][k] * matrix[i][k];
+            }
+            
+            // Scale tolerance by row magnitude
+            const elementTolerance = adaptiveTol * Math.sqrt(rowMagnitude);
+            
+            if (Math.abs(product[i][j]) > elementTolerance) {
+              return false;
+            }
+          }
+        }
+      }
+      
+      return true;
     }
     
     return false;
@@ -367,7 +450,7 @@ const MatrixValidation = {
   /**
    * Check if a matrix is close to being singular
    * @param {Array|TypedArray} matrix - Matrix to check
-   * @param {number} [tolerance=1e-10] - Tolerance for determinant near zero
+   * @param {number} [tolerance=1e-10] - Base tolerance for determinant near zero
    * @returns {boolean} - True if the matrix is nearly singular
    */
   isNearlySingular: function (matrix, tolerance = 1e-10) {
@@ -384,9 +467,16 @@ const MatrixValidation = {
         return condition > 1e14 || !isFinite(condition);
       }
       
-      // Fallback to determinant
+      // Fallback to determinant with adaptive tolerance
       const det = MatrixAdvanced.determinant(matrix);
-      return Math.abs(det) < tolerance;
+      
+      // Use the same adaptive tolerance calculation as in isInvertible
+      const matrixMagnitude = this.computeAdaptiveTolerance(matrix, 1.0) - 1.0;
+      const n = matrix.length;
+      const detMagnitudeEstimate = Math.pow(matrixMagnitude, n);
+      const scaledTolerance = tolerance * Math.max(1, detMagnitudeEstimate * Number.EPSILON * 1000);
+      
+      return Math.abs(det) < scaledTolerance;
     } catch (error) {
       return true;
     }
@@ -418,7 +508,30 @@ const MatrixValidation = {
 
 // Export the MatrixValidation module
 Prime.Math = Prime.Math || {};
-Prime.Math.MatrixValidation = MatrixValidation;
+
+// Check if MatrixValidation already has a getter defined, if so, use it
+if (Object.getOwnPropertyDescriptor(Prime.Math, 'MatrixValidation') && 
+    Object.getOwnPropertyDescriptor(Prime.Math, 'MatrixValidation').get) {
+  // Use a more careful approach to update the property
+  const descriptor = Object.getOwnPropertyDescriptor(Prime.Math, 'MatrixValidation');
+  const originalGetter = descriptor.get;
+  
+  Object.defineProperty(Prime.Math, 'MatrixValidation', {
+    get: function() {
+      const result = originalGetter.call(this);
+      // If result is an empty object (placeholder), return our implementation
+      if (Object.keys(result).length === 0) {
+        return MatrixValidation;
+      }
+      // Otherwise, preserve what's already there
+      return result;
+    },
+    configurable: true
+  });
+} else {
+  // Direct assignment if no getter exists
+  Prime.Math.MatrixValidation = MatrixValidation;
+}
 
 // Export the enhanced Prime object
 module.exports = Prime;

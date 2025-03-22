@@ -12,44 +12,76 @@ Prime.distributed = Prime.distributed || {};
 // Set up coherence namespace
 Prime.distributed.coherence = Prime.distributed.coherence || {};
 
-// Create a function to safely load components
-const safeRequire = function(path) {
-  try {
-    return require(path);
-  } catch (error) {
-    console.error(`Error loading module ${path}:`, error.message);
-    return {};
-  }
-};
+// Import coherence components directly
+const violations = require('./coherence-violations');
+const recovery = require('./coherence-recovery');
+const metrics = require('./coherence-metrics');
+const core = require('./coherence-core');
 
-// Import coherence components with protection against circular dependencies
-const modules = [
-  './coherence-violations',
-  './coherence-recovery',
-  './coherence-metrics',
-  './coherence-core'
+// Set up component references with proper circular dependency handling
+const components = [
+  { name: 'CoherenceViolations', module: violations.Distributed && violations.Distributed.Coherence ? 
+      violations.Distributed.Coherence.Violations : {} },
+  { name: 'CoherenceRecovery', module: recovery.Distributed && recovery.Distributed.Coherence ? 
+      recovery.Distributed.Coherence.Recovery : {} },
+  { name: 'CoherenceMetrics', module: metrics.Distributed && metrics.Distributed.Coherence ? 
+      metrics.Distributed.Coherence.Metrics : {} },
+  { name: 'CoherenceCore', module: core.CoherenceCore || {} }
 ];
 
-// Load modules in a controlled manner
-modules.forEach(modulePath => {
-  try {
-    require(modulePath);
-  } catch (error) {
-    // If direct require fails, it might be due to circular dependencies
-    // Set up placeholder objects that will be populated later
-    const moduleName = modulePath.split('/').pop().replace('.js', '');
-    const namespacePath = moduleName.split('-').map(part => 
-      part.charAt(0).toUpperCase() + part.slice(1)
-    ).join('');
+// Add each component to the namespace with circular dependency protection
+components.forEach(component => {
+  if (Object.getOwnPropertyDescriptor(Prime.distributed.coherence, component.name) && 
+      Object.getOwnPropertyDescriptor(Prime.distributed.coherence, component.name).get) {
+    // Use a more careful approach to update properties that already have getters
+    const descriptor = Object.getOwnPropertyDescriptor(Prime.distributed.coherence, component.name);
+    const originalGetter = descriptor.get;
     
-    // Add placeholder if needed
-    if (!Prime.distributed.coherence[namespacePath]) {
-      Prime.distributed.coherence[namespacePath] = {};
-    }
-    
-    console.warn(`Module ${modulePath} lazy-loaded due to potential circular dependency`);
+    Object.defineProperty(Prime.distributed.coherence, component.name, {
+      get: function() {
+        const result = originalGetter.call(this);
+        if (!result || Object.keys(result).length === 0) {
+          return component.module;
+        }
+        return result;
+      },
+      configurable: true
+    });
+  } else {
+    // Direct assignment if no getter exists
+    Prime.distributed.coherence[component.name] = component.module;
   }
 });
+
+// Ensure Prime.Distributed namespace exists
+Prime.Distributed = Prime.Distributed || {};
+Prime.Distributed.Coherence = Prime.Distributed.Coherence || {};
+
+// Use the proper CoherenceManager from the core module
+if (core.CoherenceCore && core.CoherenceCore.Manager) {
+  Prime.Distributed.Coherence.DistributedCoherenceManager = core.CoherenceCore.Manager;
+}
+
+// Re-export violation types and severity from the violations module
+if (violations.Distributed && violations.Distributed.Coherence && violations.Distributed.Coherence.Violations) {
+  Prime.Distributed.Coherence.CoherenceViolationType = 
+    violations.Distributed.Coherence.Violations.Types || {};
+  Prime.Distributed.Coherence.ViolationSeverity = 
+    violations.Distributed.Coherence.Violations.Severity || {};
+}
+
+if (recovery.Distributed && recovery.Distributed.Coherence && recovery.Distributed.Coherence.Recovery) {
+  Prime.Distributed.Coherence.RecoveryStrategy =
+    recovery.Distributed.Coherence.Recovery.Strategies || {};
+}
+
+// For backward compatibility
+if (violations.Distributed && violations.Distributed.Coherence && violations.Distributed.Coherence.Violations) {
+  Prime.Distributed.Coherence.ViolationType = 
+    violations.Distributed.Coherence.Violations.Types || {};
+  Prime.Distributed.CoherenceViolationType = 
+    violations.Distributed.Coherence.Violations.Types || {};
+}
 
 // Export the enhanced Prime object
 module.exports = Prime;

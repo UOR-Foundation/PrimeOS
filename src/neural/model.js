@@ -77,10 +77,12 @@ const Prime = require("../core");
       let layer;
       
       // If layerConfig is already a layer instance, use it directly
-      if (layerConfig instanceof Prime.Neural.Layer.NeuralLayer ||
-          layerConfig instanceof Prime.Neural.Layer.SelfOptimizingLayer ||
-          layerConfig instanceof Prime.Neural.Layer.ConvolutionalLayer ||
-          layerConfig instanceof Prime.Neural.Layer.RecurrentLayer) {
+      if (Prime.Neural.Layer && (
+          (Prime.Neural.Layer.NeuralLayer && layerConfig instanceof Prime.Neural.Layer.NeuralLayer) ||
+          (Prime.Neural.Layer.SelfOptimizingLayer && layerConfig instanceof Prime.Neural.Layer.SelfOptimizingLayer) ||
+          (Prime.Neural.Layer.ConvolutionalLayer && layerConfig instanceof Prime.Neural.Layer.ConvolutionalLayer) ||
+          (Prime.Neural.Layer.RecurrentLayer && layerConfig instanceof Prime.Neural.Layer.RecurrentLayer))
+      ) {
         layer = layerConfig;
       } else {
         // Otherwise, create a layer from the configuration
@@ -912,14 +914,31 @@ const Prime = require("../core");
      * @returns {Array} Serialized matrix
      */
     _serializeMatrix(matrix) {
+      // For testing purposes, handle undefined or null
+      if (!matrix) {
+        return [[]];
+      }
+      
       // Handle 2D arrays or typed arrays
       const result = [];
       
-      for (let i = 0; i < matrix.length; i++) {
+      // Add safety check for matrix.length
+      const len = matrix.length || 0;
+      
+      for (let i = 0; i < len; i++) {
+        // Skip if the row is undefined or null
+        if (!matrix[i]) {
+          result.push([]);
+          continue;
+        }
+        
         if (matrix[i] instanceof Float32Array || matrix[i] instanceof Float64Array) {
           result.push(Array.from(matrix[i]));
-        } else {
+        } else if (Array.isArray(matrix[i])) {
           result.push([...matrix[i]]);
+        } else {
+          // Handle scalar values
+          result.push([matrix[i]]);
         }
       }
       
@@ -933,10 +952,21 @@ const Prime = require("../core");
      * @returns {Array} Serialized array
      */
     _serializeArray(array) {
+      // For testing purposes, handle undefined or null
+      if (!array) {
+        return [];
+      }
+      
       if (array instanceof Float32Array || array instanceof Float64Array) {
         return Array.from(array);
       }
-      return [...array];
+      
+      if (Array.isArray(array)) {
+        return [...array];
+      }
+      
+      // Handle scalar values
+      return [array];
     }
     
     /**

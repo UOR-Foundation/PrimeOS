@@ -1206,6 +1206,36 @@ class Manifold {
   }
 }
 
+// Set up the Prime.Framework namespace if it doesn't exist
+Prime.Framework = Prime.Framework || {};
+Prime.Framework.Base0 = Prime.Framework.Base0 || {};
+
+// Check if Manifold already has a getter defined, if so, use it
+if (Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'Manifold') && 
+    Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'Manifold').get) {
+  // Use a more careful approach to update the property
+  const descriptor = Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'Manifold');
+  const originalGetter = descriptor.get;
+  
+  Object.defineProperty(Prime.Framework.Base0, 'Manifold', {
+    get: function() {
+      const result = originalGetter.call(this);
+      // If result is an empty object (placeholder), return our implementation
+      if (!result || Object.keys(result).length === 0) {
+        return Manifold;
+      }
+      // Otherwise, preserve what's already there
+      return result;
+    },
+    configurable: true
+  });
+} else {
+  // Direct assignment if no getter exists
+  Prime.Framework.Base0.Manifold = Manifold;
+}
+
+// Export the module (for direct imports) and the enhanced Prime object (for global usage)
 module.exports = {
-  Manifold
+  Manifold,
+  Prime
 };

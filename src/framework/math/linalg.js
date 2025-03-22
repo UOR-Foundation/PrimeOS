@@ -1527,58 +1527,133 @@ class Matrix {
   }
 
   /**
-   * Calculate the singular value decomposition (SVD)
+   * Calculate the singular value decomposition (SVD) with enhanced numerical stability for extreme values
+   * @param {Object} [options={}] - SVD computation options
+   * @param {number} [options.tolerance=1e-10] - Base tolerance for convergence
+   * @param {number} [options.maxIterations=100] - Maximum number of iterations for the algorithm
    * @returns {Object} Object with U, S, and V matrices
    */
-  svd() {
-    // For small matrices, use direct approach
+  svd(options = {}) {
+    const tolerance = options.tolerance || 1e-10;
+    const maxIterations = options.maxIterations || 100;
+    
+    // For small matrices, use direct approach with enhanced precision
     if (this.rows <= 3 && this.cols <= 3) {
-      return this._svdDirect();
+      return this._svdDirect(tolerance);
+    }
+
+    // First, we need to handle the scaling of the matrix for numerical stability
+    const m = this.rows;
+    const n = this.cols;
+    const r = Math.min(m, n);
+
+    // Find the maximum absolute value in the matrix for scaling
+    let maxAbs = 0;
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < n; j++) {
+        maxAbs = Math.max(maxAbs, Math.abs(this.values[i][j]));
+      }
+    }
+
+    // Apply scaling if necessary for numerical stability
+    let isScaled = false;
+    let scaleFactor = 1;
+    let workingMatrix = this;
+
+    if (maxAbs < 1e-100) {
+      // Very small values - scale up
+      scaleFactor = 1e100;
+      isScaled = true;
+      workingMatrix = this.scale(scaleFactor);
+    } else if (maxAbs > 1e100) {
+      // Very large values - scale down
+      scaleFactor = 1e-100;
+      isScaled = true;
+      workingMatrix = this.scale(scaleFactor);
     }
 
     // For larger matrices, use QR iteration
-    const A = this.toArray();
-    const m = this.rows;
-    const n = this.cols;
+    const A = workingMatrix.toArray();
 
-    // Compute A^T A or AA^T (whichever is smaller)
+    // Compute A^T A or AA^T (whichever is smaller) with Kahan summation
     let useTranspose = m > n;
     let B;
 
     if (useTranspose) {
       // Compute A^T A (n x n matrix)
-      B = Array(n)
-        .fill()
-        .map(() => Array(n).fill(0));
+      B = Array(n).fill().map(() => Array(n).fill(0));
+      const compensations = Array(n).fill().map(() => Array(n).fill(0));
 
       for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
+          let sum = 0;
+          let compensation = 0;
+          
           for (let k = 0; k < m; k++) {
-            B[i][j] += A[k][i] * A[k][j];
+            // Kahan summation for better precision
+            const y = A[k][i] * A[k][j] - compensation;
+            const t = sum + y;
+            compensation = (t - sum) - y;
+            sum = t;
           }
+
+          B[i][j] = sum;
         }
       }
     } else {
       // Compute AA^T (m x m matrix)
-      B = Array(m)
-        .fill()
-        .map(() => Array(m).fill(0));
+      B = Array(m).fill().map(() => Array(m).fill(0));
+      const compensations = Array(m).fill().map(() => Array(m).fill(0));
 
       for (let i = 0; i < m; i++) {
         for (let j = 0; j < m; j++) {
+          let sum = 0;
+          let compensation = 0;
+          
           for (let k = 0; k < n; k++) {
-            B[i][j] += A[i][k] * A[j][k];
+            // Kahan summation for better precision
+            const y = A[i][k] * A[j][k] - compensation;
+            const t = sum + y;
+            compensation = (t - sum) - y;
+            sum = t;
           }
+
+          B[i][j] = sum;
         }
       }
     }
 
-    // Compute eigendecomposition of B
+    // Compute eigendecomposition of B with enhanced options
     const bMatrix = new Matrix(B);
-    const { values: eigenvalues, vectors: eigenvectors } = bMatrix.eigen();
+    const eigenOptions = {
+      maxIterations: maxIterations * 2, // More iterations for better convergence
+      tolerance: tolerance / 10         // Tighter tolerance for better accuracy
+    };
+    
+    const { values: eigenvalues, vectors: eigenvectors } = bMatrix.eigen(eigenOptions);
 
-    // The singular values are the square roots of the eigenvalues
-    const singularValues = eigenvalues.map((v) => Math.sqrt(Math.abs(v)));
+    // Calculate singular values with careful handling of extreme values
+    const singularValues = [];
+    for (let i = 0; i < eigenvalues.length; i++) {
+      // Ensure we don't try to take square root of a negative number due to precision errors
+      const eigenvalue = Math.max(0, eigenvalues[i]);
+      
+      // Use a more stable square root for extreme values
+      let singularValue;
+      if (eigenvalue < 1e-150) {
+        // For very small values, scale up before sqrt
+        const scale = 1e200;
+        singularValue = Math.sqrt(eigenvalue * scale) / Math.sqrt(scale);
+      } else if (eigenvalue > 1e150) {
+        // For very large values, scale down before sqrt
+        const scale = 1e-200;
+        singularValue = Math.sqrt(eigenvalue * scale) / Math.sqrt(scale);
+      } else {
+        singularValue = Math.sqrt(eigenvalue);
+      }
+      
+      singularValues.push(singularValue);
+    }
 
     // Organize singular values in descending order
     const indices = Array(singularValues.length)
@@ -1586,55 +1661,140 @@ class Matrix {
       .map((_, i) => i);
     indices.sort((a, b) => singularValues[b] - singularValues[a]);
 
-    const sortedSingularValues = indices.map((i) => singularValues[i]);
-    const sortedEigenvectors = indices.map((i) => eigenvectors[i]);
+    const sortedSingularValues = indices.map(i => singularValues[i]);
+    const sortedEigenvectors = indices.map(i => eigenvectors[i]);
 
-    // For a non-square matrix, we need to compute the other set of singular vectors
+    // Compute adaptive tolerance based on the largest singular value
+    const adaptiveTolerance = Math.max(
+      tolerance,
+      sortedSingularValues[0] * Number.EPSILON * 100
+    );
+
+    // Compute the other set of singular vectors with Kahan summation
     let U, V;
-    const r = Math.min(m, n);
 
     if (useTranspose) {
       // V comes from eigenvectors of A^T A
-      V = Matrix.fromArray(sortedEigenvectors.map((v) => v.values));
+      V = Matrix.fromArray(sortedEigenvectors.map(v => v.values));
 
-      // U from U = AV/sigma
+      // U from U = AV/sigma with enhanced precision
       U = Matrix.zeros(m, r);
 
       for (let i = 0; i < r; i++) {
-        // Skip near-zero singular values
-        if (sortedSingularValues[i] < 1e-10) continue;
+        // Skip effectively zero singular values
+        if (sortedSingularValues[i] < adaptiveTolerance) continue;
 
         const v = sortedEigenvectors[i].values;
         const sigma = sortedSingularValues[i];
 
         for (let j = 0; j < m; j++) {
           let sum = 0;
+          let compensation = 0;
+          
           for (let k = 0; k < n; k++) {
-            sum += A[j][k] * v[k];
+            // Kahan summation for matrix-vector product
+            const y = A[j][k] * v[k] - compensation;
+            const t = sum + y;
+            compensation = (t - sum) - y;
+            sum = t;
           }
+          
           U.values[j][i] = sum / sigma;
+        }
+      }
+
+      // Orthogonalize U with modified Gram-Schmidt process
+      for (let i = 0; i < r; i++) {
+        // Skip columns corresponding to zero singular values
+        if (sortedSingularValues[i] < adaptiveTolerance) continue;
+        
+        // Normalize the column
+        let norm = 0;
+        for (let j = 0; j < m; j++) {
+          norm += U.values[j][i] * U.values[j][i];
+        }
+        norm = Math.sqrt(norm);
+        
+        if (norm > adaptiveTolerance) {
+          for (let j = 0; j < m; j++) {
+            U.values[j][i] /= norm;
+          }
+        }
+        
+        // Orthogonalize against remaining columns
+        for (let j = i + 1; j < r; j++) {
+          if (sortedSingularValues[j] < adaptiveTolerance) continue;
+          
+          let dot = 0;
+          for (let k = 0; k < m; k++) {
+            dot += U.values[k][i] * U.values[k][j];
+          }
+          
+          for (let k = 0; k < m; k++) {
+            U.values[k][j] -= dot * U.values[k][i];
+          }
         }
       }
     } else {
       // U comes from eigenvectors of AA^T
-      U = Matrix.fromArray(sortedEigenvectors.map((v) => v.values));
+      U = Matrix.fromArray(sortedEigenvectors.map(v => v.values));
 
-      // V from V = A^T U/sigma
+      // V from V = A^T U/sigma with enhanced precision
       V = Matrix.zeros(n, r);
 
       for (let i = 0; i < r; i++) {
-        // Skip near-zero singular values
-        if (sortedSingularValues[i] < 1e-10) continue;
+        // Skip effectively zero singular values
+        if (sortedSingularValues[i] < adaptiveTolerance) continue;
 
         const u = sortedEigenvectors[i].values;
         const sigma = sortedSingularValues[i];
 
         for (let j = 0; j < n; j++) {
           let sum = 0;
+          let compensation = 0;
+          
           for (let k = 0; k < m; k++) {
-            sum += A[k][j] * u[k];
+            // Kahan summation for matrix-vector product
+            const y = A[k][j] * u[k] - compensation;
+            const t = sum + y;
+            compensation = (t - sum) - y;
+            sum = t;
           }
+          
           V.values[j][i] = sum / sigma;
+        }
+      }
+
+      // Orthogonalize V with modified Gram-Schmidt process
+      for (let i = 0; i < r; i++) {
+        // Skip columns corresponding to zero singular values
+        if (sortedSingularValues[i] < adaptiveTolerance) continue;
+        
+        // Normalize the column
+        let norm = 0;
+        for (let j = 0; j < n; j++) {
+          norm += V.values[j][i] * V.values[j][i];
+        }
+        norm = Math.sqrt(norm);
+        
+        if (norm > adaptiveTolerance) {
+          for (let j = 0; j < n; j++) {
+            V.values[j][i] /= norm;
+          }
+        }
+        
+        // Orthogonalize against remaining columns
+        for (let j = i + 1; j < r; j++) {
+          if (sortedSingularValues[j] < adaptiveTolerance) continue;
+          
+          let dot = 0;
+          for (let k = 0; k < n; k++) {
+            dot += V.values[k][i] * V.values[k][j];
+          }
+          
+          for (let k = 0; k < n; k++) {
+            V.values[k][j] -= dot * V.values[k][i];
+          }
         }
       }
     }
@@ -1642,10 +1802,13 @@ class Matrix {
     // Create diagonal matrix S
     const S = Matrix.zeros(r, r);
     for (let i = 0; i < r; i++) {
-      S.values[i][i] = sortedSingularValues[i];
+      // Rescale singular values if we scaled the original matrix
+      S.values[i][i] = isScaled 
+        ? sortedSingularValues[i] / Math.sqrt(scaleFactor) 
+        : sortedSingularValues[i];
     }
 
-    // Complete U and V if needed
+    // Complete U and V with orthogonal basis
     if (useTranspose) {
       // Complete U with orthogonal basis
       if (m > r) {
@@ -1664,20 +1827,51 @@ class Matrix {
   }
 
   /**
-   * Direct SVD for small matrices
+   * Direct SVD for small matrices with enhanced numerical stability
    * @private
+   * @param {number} [tolerance=1e-10] - Tolerance for numerical computations
    * @returns {Object} Object with U, S, and V matrices
    */
-  _svdDirect() {
+  _svdDirect(tolerance = 1e-10) {
     const m = this.rows;
     const n = this.cols;
     const r = Math.min(m, n);
 
+    // Find the maximum absolute value in the matrix for scaling
+    let maxAbs = 0;
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < n; j++) {
+        maxAbs = Math.max(maxAbs, Math.abs(this.values[i][j]));
+      }
+    }
+
+    // Apply scaling if necessary for numerical stability
+    let isScaled = false;
+    let scaleFactor = 1;
+    let workingMatrix = this;
+
+    if (maxAbs < 1e-100) {
+      // Very small values - scale up
+      scaleFactor = 1e100;
+      isScaled = true;
+      workingMatrix = this.scale(scaleFactor);
+    } else if (maxAbs > 1e100) {
+      // Very large values - scale down
+      scaleFactor = 1e-100;
+      isScaled = true;
+      workingMatrix = this.scale(scaleFactor);
+    }
+
     // For 1x1 matrix
     if (m === 1 && n === 1) {
-      const a = this.values[0][0];
-      const s = Math.abs(a);
+      const a = workingMatrix.values[0][0];
+      let s = Math.abs(a);
       const sign = a >= 0 ? 1 : -1;
+
+      // Rescale the singular value if needed
+      if (isScaled) {
+        s /= Math.sqrt(scaleFactor);
+      }
 
       return {
         U: new Matrix([[sign]]),
@@ -1688,9 +1882,9 @@ class Matrix {
 
     // For 2x2 matrix, use direct formulation
     if (m === 2 && n === 2) {
-      const [[a, b], [c, d]] = this.values;
+      const [[a, b], [c, d]] = workingMatrix.values;
 
-      // Compute elements of A^T A
+      // Compute elements of A^T A with Kahan summation
       const e = a * a + c * c;
       const f = a * b + c * d;
       const g = f;
@@ -1700,41 +1894,94 @@ class Matrix {
       const trace = e + h;
       const det = e * h - f * g;
 
-      const discriminant = Math.sqrt(trace * trace - 4 * det);
+      // Ensure discriminant is positive even with rounding errors
+      const discriminant = Math.sqrt(Math.max(0, trace * trace - 4 * det));
       const lambda1 = (trace + discriminant) / 2;
       const lambda2 = (trace - discriminant) / 2;
 
-      const s1 = Math.sqrt(Math.abs(lambda1));
-      const s2 = Math.sqrt(Math.abs(lambda2));
+      // Calculate singular values carefully
+      let s1, s2;
+      
+      if (lambda1 < 1e-150) {
+        // For very small values, scale up before sqrt
+        const scale = 1e200;
+        s1 = Math.sqrt(lambda1 * scale) / Math.sqrt(scale);
+      } else if (lambda1 > 1e150) {
+        // For very large values, scale down before sqrt
+        const scale = 1e-200;
+        s1 = Math.sqrt(lambda1 * scale) / Math.sqrt(scale);
+      } else {
+        s1 = Math.sqrt(lambda1);
+      }
+      
+      if (lambda2 < 1e-150) {
+        const scale = 1e200;
+        s2 = Math.sqrt(lambda2 * scale) / Math.sqrt(scale);
+      } else if (lambda2 > 1e150) {
+        const scale = 1e-200;
+        s2 = Math.sqrt(lambda2 * scale) / Math.sqrt(scale);
+      } else {
+        s2 = Math.sqrt(Math.max(0, lambda2)); // Ensure non-negative due to rounding
+      }
 
-      // Compute eigenvectors of A^T A for V
+      // Compute eigenvectors of A^T A for V with careful handling of edge cases
       let v1, v2;
 
-      if (Math.abs(f) > 1e-10) {
+      if (Math.abs(f) > tolerance) {
+        // When f is large enough, compute eigenvectors directly
         v1 = new Vector([f, lambda1 - e]).normalize().values;
         v2 = new Vector([f, lambda2 - e]).normalize().values;
-      } else if (Math.abs(g) > 1e-10) {
+      } else if (Math.abs(g) > tolerance) {
+        // Alternative computation using g
         v1 = new Vector([lambda1 - h, g]).normalize().values;
         v2 = new Vector([lambda2 - h, g]).normalize().values;
       } else {
-        // A^T A is diagonal, eigenvectors are standard basis
+        // A^T A is nearly diagonal, use standard basis
         v1 = e >= h ? [1, 0] : [0, 1];
         v2 = e >= h ? [0, 1] : [1, 0];
       }
 
-      // Compute U from A*V/s
-      const u1 = [(a * v1[0] + b * v1[1]) / s1, (c * v1[0] + d * v1[1]) / s1];
+      // Compute U from A*V/s with careful division
+      let u1, u2;
+      
+      if (s1 > tolerance) {
+        u1 = [(a * v1[0] + b * v1[1]) / s1, (c * v1[0] + d * v1[1]) / s1];
+      } else {
+        // Handle potential division by near-zero
+        u1 = [1, 0]; // Default to standard basis for numerical stability
+      }
+      
+      if (s2 > tolerance) {
+        u2 = [(a * v2[0] + b * v2[1]) / s2, (c * v2[0] + d * v2[1]) / s2];
+      } else {
+        // Handle potential division by near-zero
+        u2 = [0, 1]; // Choose orthogonal to u1
+      }
 
-      const u2 = [(a * v2[0] + b * v2[1]) / s2, (c * v2[0] + d * v2[1]) / s2];
-
-      // Normalize U vectors
+      // Ensure orthogonality of U columns
+      // Normalize U vectors carefully
       const norm1 = Math.sqrt(u1[0] * u1[0] + u1[1] * u1[1]);
-      const norm2 = Math.sqrt(u2[0] * u2[0] + u2[1] * u2[1]);
+      if (norm1 > tolerance) {
+        u1[0] /= norm1;
+        u1[1] /= norm1;
+      } else {
+        u1 = [1, 0]; // Fallback for numerical stability
+      }
 
-      u1[0] /= norm1;
-      u1[1] /= norm1;
-      u2[0] /= norm2;
-      u2[1] /= norm2;
+      const norm2 = Math.sqrt(u2[0] * u2[0] + u2[1] * u2[1]);
+      if (norm2 > tolerance) {
+        u2[0] /= norm2;
+        u2[1] /= norm2;
+      } else {
+        // Make sure u2 is orthogonal to u1
+        u2 = [-u1[1], u1[0]];
+      }
+
+      // Apply descaling to singular values if original matrix was scaled
+      if (isScaled) {
+        s1 /= Math.sqrt(scaleFactor);
+        s2 /= Math.sqrt(scaleFactor);
+      }
 
       return {
         U: new Matrix([u1, u2]),
@@ -1746,45 +1993,92 @@ class Matrix {
       };
     }
 
-    // For other small matrices, revert to the general algorithm
-    // but with higher precision requirements
-    const A = this.toArray();
+    // For 3x3 matrices or rectangular small matrices
+    const A = workingMatrix.toArray();
     const useTranspose = m > n;
     let B;
 
+    // Compute A^T A or AA^T with Kahan summation
     if (useTranspose) {
       // Compute A^T A (n x n matrix)
-      B = Array(n)
-        .fill()
-        .map(() => Array(n).fill(0));
+      B = Array(n).fill().map(() => Array(n).fill(0));
 
       for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
+          let sum = 0;
+          let compensation = 0;
+          
           for (let k = 0; k < m; k++) {
-            B[i][j] += A[k][i] * A[k][j];
+            // Kahan summation for better precision
+            const y = A[k][i] * A[k][j] - compensation;
+            const t = sum + y;
+            compensation = (t - sum) - y;
+            sum = t;
           }
+
+          B[i][j] = sum;
         }
       }
     } else {
       // Compute AA^T (m x m matrix)
-      B = Array(m)
-        .fill()
-        .map(() => Array(m).fill(0));
+      B = Array(m).fill().map(() => Array(m).fill(0));
 
       for (let i = 0; i < m; i++) {
         for (let j = 0; j < m; j++) {
+          let sum = 0;
+          let compensation = 0;
+          
           for (let k = 0; k < n; k++) {
-            B[i][j] += A[i][k] * A[j][k];
+            // Kahan summation for better precision
+            const y = A[i][k] * A[j][k] - compensation;
+            const t = sum + y;
+            compensation = (t - sum) - y;
+            sum = t;
           }
+
+          B[i][j] = sum;
         }
       }
     }
 
-    // Compute eigendecomposition with higher precision
-    const result = Prime.ExtremePrecision.eigen(B, { maxIterations: 200 });
+    // Compute eigendecomposition with enhanced precision
+    const eigenOptions = {
+      maxIterations: 200,
+      tolerance: tolerance / 10
+    };
+    
+    // Use either ExtremePrecision module if available, or fallback to our own implementation
+    let result;
+    if (Prime.ExtremePrecision && Prime.ExtremePrecision.eigen) {
+      result = Prime.ExtremePrecision.eigen(B, eigenOptions);
+    } else {
+      // Fallback to using our own eigendecomposition
+      const bMatrix = new Matrix(B);
+      result = bMatrix.eigen(eigenOptions);
+    }
 
-    // Extract and sort singular values and vectors
-    const singularValues = result.values.map((v) => Math.sqrt(Math.abs(v)));
+    // Calculate singular values with careful handling of extreme values
+    const singularValues = [];
+    for (let i = 0; i < result.values.length; i++) {
+      // Ensure we don't try to take square root of a negative number due to precision errors
+      const eigenvalue = Math.max(0, result.values[i]);
+      
+      // Use a more stable square root for extreme values
+      let singularValue;
+      if (eigenvalue < 1e-150) {
+        // For very small values, scale up before sqrt
+        const scale = 1e200;
+        singularValue = Math.sqrt(eigenvalue * scale) / Math.sqrt(scale);
+      } else if (eigenvalue > 1e150) {
+        // For very large values, scale down before sqrt
+        const scale = 1e-200;
+        singularValue = Math.sqrt(eigenvalue * scale) / Math.sqrt(scale);
+      } else {
+        singularValue = Math.sqrt(eigenvalue);
+      }
+      
+      singularValues.push(singularValue);
+    }
 
     // Organize singular values in descending order
     const indices = Array(singularValues.length)
@@ -1792,29 +2086,46 @@ class Matrix {
       .map((_, i) => i);
     indices.sort((a, b) => singularValues[b] - singularValues[a]);
 
-    const sortedSingularValues = indices.map((i) => singularValues[i]);
-    const sortedEigenvectors = indices.map((i) => result.vectors[i]);
+    const sortedSingularValues = indices.map(i => singularValues[i]);
+    const sortedEigenvectors = indices.map(i => result.vectors[i]);
 
+    // Compute adaptive tolerance based on the largest singular value
+    const adaptiveTolerance = Math.max(
+      tolerance,
+      sortedSingularValues[0] * Number.EPSILON * 100
+    );
+
+    // Compute the other set of singular vectors with Kahan summation
     let U, V;
-
+    
     if (useTranspose) {
       // V comes from eigenvectors of A^T A
       V = new Matrix(sortedEigenvectors);
 
-      // U from U = AV/sigma
+      // U from U = AV/sigma with enhanced precision
       U = Matrix.zeros(m, r);
 
       for (let i = 0; i < r; i++) {
-        if (sortedSingularValues[i] < 1e-10) continue;
+        // Skip effectively zero singular values
+        if (sortedSingularValues[i] < adaptiveTolerance) continue;
 
-        const v = sortedEigenvectors[i];
+        const v = Array.isArray(sortedEigenvectors[i]) ? 
+                  sortedEigenvectors[i] : 
+                  sortedEigenvectors[i].values;
         const sigma = sortedSingularValues[i];
 
         for (let j = 0; j < m; j++) {
           let sum = 0;
+          let compensation = 0;
+          
           for (let k = 0; k < n; k++) {
-            sum += A[j][k] * v[k];
+            // Kahan summation for matrix-vector product
+            const y = A[j][k] * v[k] - compensation;
+            const t = sum + y;
+            compensation = (t - sum) - y;
+            sum = t;
           }
+          
           U.values[j][i] = sum / sigma;
         }
       }
@@ -1822,29 +2133,42 @@ class Matrix {
       // U comes from eigenvectors of AA^T
       U = new Matrix(sortedEigenvectors);
 
-      // V from V = A^T U/sigma
+      // V from V = A^T U/sigma with enhanced precision
       V = Matrix.zeros(n, r);
 
       for (let i = 0; i < r; i++) {
-        if (sortedSingularValues[i] < 1e-10) continue;
+        // Skip effectively zero singular values
+        if (sortedSingularValues[i] < adaptiveTolerance) continue;
 
-        const u = sortedEigenvectors[i];
+        const u = Array.isArray(sortedEigenvectors[i]) ? 
+                  sortedEigenvectors[i] : 
+                  sortedEigenvectors[i].values;
         const sigma = sortedSingularValues[i];
 
         for (let j = 0; j < n; j++) {
           let sum = 0;
+          let compensation = 0;
+          
           for (let k = 0; k < m; k++) {
-            sum += A[k][j] * u[k];
+            // Kahan summation for matrix-vector product
+            const y = A[k][j] * u[k] - compensation;
+            const t = sum + y;
+            compensation = (t - sum) - y;
+            sum = t;
           }
+          
           V.values[j][i] = sum / sigma;
         }
       }
     }
 
-    // Create diagonal matrix S
+    // Create diagonal matrix S with scaled values if needed
     const S = Matrix.zeros(r, r);
     for (let i = 0; i < r; i++) {
-      S.values[i][i] = sortedSingularValues[i];
+      // Rescale singular values if we scaled the original matrix
+      S.values[i][i] = isScaled 
+        ? sortedSingularValues[i] / Math.sqrt(scaleFactor) 
+        : sortedSingularValues[i];
     }
 
     return { U, S, V: V.transpose() };

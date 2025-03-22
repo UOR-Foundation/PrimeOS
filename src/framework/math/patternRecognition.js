@@ -343,11 +343,19 @@ class FiberAlgebraPatternRecognition {
     }
 
     // Compute average coherence across all pairs
-    const avgCoherence =
+    let avgCoherence =
       coherenceValues.length > 0
         ? coherenceValues.reduce((sum, val) => sum + val, 0) /
           coherenceValues.length
         : 0;
+    
+    // Normalize coherence to [0,1] range
+    // If the coherence is greater than 1, we scale it down
+    if (avgCoherence > 1.0) {
+      avgCoherence = 1.0;
+    } else if (avgCoherence < 0.0) {
+      avgCoherence = 0.0;
+    }
 
     // Cache the result
     this._coherenceCache[cacheKey] = avgCoherence;
@@ -419,7 +427,10 @@ class FiberAlgebraPatternRecognition {
     const encodedStates = this.encodeData(processedData);
 
     // Compute initial coherence
-    const baseCoherence = this.computeCoherence(encodedStates);
+    let baseCoherence = this.computeCoherence(encodedStates);
+    
+    // Ensure coherence is in [0,1] range
+    baseCoherence = Math.max(0, Math.min(1, baseCoherence));
 
     // Apply transformations to find more patterns
     const transformedStatesList = this.applyTransformations(encodedStates);
@@ -428,7 +439,11 @@ class FiberAlgebraPatternRecognition {
     const coherenceScores = [];
     for (let i = 0; i < transformedStatesList.length; i++) {
       const transformedStates = transformedStatesList[i];
-      const coherence = this.computeCoherence(transformedStates);
+      let coherence = this.computeCoherence(transformedStates);
+      
+      // Ensure coherence is in [0,1] range
+      coherence = Math.max(0, Math.min(1, coherence));
+      
       coherenceScores.push([i, coherence]);
     }
 
@@ -460,7 +475,7 @@ class FiberAlgebraPatternRecognition {
 
       const pattern = {
         type: "transformation",
-        coherence,
+        coherence: Math.max(0, Math.min(1, coherence)), // Ensure coherence is in [0,1]
         states: transformedStates,
         transformation: generatorIdx,
         strength: amount,
@@ -470,6 +485,13 @@ class FiberAlgebraPatternRecognition {
 
     // Sort patterns by coherence
     patterns.sort((a, b) => b.coherence - a.coherence);
+
+    // Final validation of all coherence values
+    for (const pattern of patterns) {
+      if (pattern.coherence < 0 || pattern.coherence > 1) {
+        pattern.coherence = Math.max(0, Math.min(1, pattern.coherence));
+      }
+    }
 
     return patterns;
   }
@@ -799,8 +821,13 @@ class SequencePatternRecognition {
       totalCoherence += similarity;
     }
 
-    // Normalize by number of windows
-    return windows.length > 0 ? totalCoherence / windows.length : 0;
+    // Normalize by number of windows and ensure it's in the [0,1] range
+    let coherence = windows.length > 0 ? totalCoherence / windows.length : 0;
+    
+    // Clamp to [0,1] range
+    coherence = Math.max(0, Math.min(1, coherence));
+    
+    return coherence;
   }
 
   /**

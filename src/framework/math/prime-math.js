@@ -248,6 +248,8 @@ const PrimeMath = {
    * @returns {Matrix} New matrix
    */
   createMatrix: function (values, rows, cols) {
+    // Ensure we're using the correct Matrix constructor from linalg
+    const { Matrix } = require("./linalg.js");
     return new Matrix(values, rows, cols);
   },
 

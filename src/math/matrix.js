@@ -279,6 +279,16 @@ require("./matrix-validation");
     isInvertible: function (matrix, tolerance = 1e-10) {
       return Prime.Math.MatrixValidation.isInvertible(matrix, tolerance);
     },
+    
+    /**
+     * Check if a matrix is orthogonal (its transpose equals its inverse)
+     * @param {Array|TypedArray} matrix - Matrix to check
+     * @param {number} [tolerance=1e-10] - Tolerance for floating-point comparisons
+     * @returns {boolean} - True if the matrix is orthogonal
+     */
+    isOrthogonal: function (matrix, tolerance = 1e-10) {
+      return Prime.Math.MatrixValidation.isOrthogonal(matrix, tolerance);
+    },
 
     /**
      * Fill a matrix with a specific value
@@ -293,7 +303,30 @@ require("./matrix-validation");
 
   // Add Matrix to the Prime.Math namespace
   Prime.Math = Prime.Math || {};
-  Prime.Math.Matrix = Matrix;
+  
+  // Check if Matrix already has a getter defined, if so, use it
+  if (Object.getOwnPropertyDescriptor(Prime.Math, 'Matrix') && 
+      Object.getOwnPropertyDescriptor(Prime.Math, 'Matrix').get) {
+    // Use a more careful approach to update the property
+    const descriptor = Object.getOwnPropertyDescriptor(Prime.Math, 'Matrix');
+    const originalGetter = descriptor.get;
+    
+    Object.defineProperty(Prime.Math, 'Matrix', {
+      get: function() {
+        const result = originalGetter.call(this);
+        // If result is an empty object (placeholder), return our implementation
+        if (Object.keys(result).length === 0) {
+          return Matrix;
+        }
+        // Otherwise, preserve what's already there
+        return result;
+      },
+      configurable: true
+    });
+  } else {
+    // Direct assignment if no getter exists
+    Prime.Math.Matrix = Matrix;
+  }
 })();
 
 // Export the enhanced Prime object

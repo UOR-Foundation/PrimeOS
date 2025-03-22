@@ -331,7 +331,30 @@ const VectorValidation = {
 
 // Add vector-validation to the Prime.Math namespace
 Prime.Math = Prime.Math || {};
-Prime.Math.VectorValidation = VectorValidation;
+
+// Check if VectorValidation already has a getter defined, if so, use it
+if (Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation') && 
+    Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation').get) {
+  // Use a more careful approach to update the property
+  const descriptor = Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation');
+  const originalGetter = descriptor.get;
+  
+  Object.defineProperty(Prime.Math, 'VectorValidation', {
+    get: function() {
+      const result = originalGetter.call(this);
+      // If result is an empty object (placeholder), return our implementation
+      if (Object.keys(result).length === 0) {
+        return VectorValidation;
+      }
+      // Otherwise, preserve what's already there
+      return result;
+    },
+    configurable: true
+  });
+} else {
+  // Direct assignment if no getter exists
+  Prime.Math.VectorValidation = VectorValidation;
+}
 
 // Export the enhanced Prime object
 module.exports = Prime;
