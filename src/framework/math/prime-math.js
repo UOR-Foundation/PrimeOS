@@ -351,6 +351,9 @@ const PrimeMath = {
    * @returns {Matrix|Vector} Result of multiplication
    */
   multiplyMatrices: function (m1, m2) {
+    // Ensure we're using the correct Matrix constructor from linalg
+    const { Matrix } = require("./linalg.js");
+    
     const mat1 = m1 instanceof Matrix ? m1 : new Matrix(m1);
     return mat1.multiply(m2);
   },
@@ -361,6 +364,9 @@ const PrimeMath = {
    * @returns {Matrix} Transposed matrix
    */
   transposeMatrix: function (m) {
+    // Ensure we're using the correct Matrix constructor from linalg
+    const { Matrix } = require("./linalg.js");
+    
     const mat = m instanceof Matrix ? m : new Matrix(m);
     return mat.transpose();
   },
@@ -442,7 +448,27 @@ const PrimeMath = {
    * @returns {Object} Object with U, S, and V matrices
    */
   svd: function (m) {
-    const mat = m instanceof Matrix ? m : new Matrix(m);
+    // Ensure we're using the correct Matrix constructor from linalg
+    const { Matrix } = require("./linalg.js");
+    
+    // Use the specialized extreme precision implementation if available
+    if (Prime.ExtremePrecision && Prime.ExtremePrecision.svd) {
+      // Extract values from the matrix if needed
+      const values = (m instanceof Matrix) ? m.values : m;
+      
+      // Get SVD from ExtremePrecision module
+      const result = Prime.ExtremePrecision.svd(values);
+      
+      // Convert result arrays to Matrix objects for consistent interface
+      return {
+        U: new Matrix(result.U),
+        S: new Matrix(result.S),
+        V: new Matrix(result.V)
+      };
+    }
+    
+    // Otherwise fall back to standard implementation
+    const mat = (m instanceof Matrix) ? m : new Matrix(m);
     return mat.svd();
   },
 
