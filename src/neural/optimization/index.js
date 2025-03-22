@@ -1,13 +1,58 @@
 /**
  * PrimeOS JavaScript Library - Neural Optimization Module
- * Advanced optimization algorithms with coherence constraints
+ * Advanced optimization algorithms with coherence constraints and memory efficiency
  */
 
 // Import the Prime object from core
 const Prime = require("../../core");
 
+// Import specialized optimizers
+require("./sgd-optimizer");
+require("./adam-optimizer");
+
 // Create the Neural Optimization module using IIFE
 (function () {
+  /**
+   * OptimizerFactory - Factory for creating optimizers with standardized interfaces
+   */
+  class OptimizerFactory {
+    /**
+     * Create a new optimizer
+     * @param {string} type - Type of optimizer ('sgd', 'adam', etc.)
+     * @param {Object} config - Optimizer configuration
+     * @returns {Object} Configured optimizer instance
+     */
+    static create(type, config = {}) {
+      const lowerType = type.toLowerCase();
+      
+      switch (lowerType) {
+        case 'sgd':
+          return new Prime.Neural.Optimization.SGDOptimizer(config);
+        case 'adam':
+          return new Prime.Neural.Optimization.AdamOptimizer(config);
+        case 'coherence_sgd':
+          return new Prime.Neural.Optimization.CoherenceSGD(config);
+        case 'coherence_adam':
+          return new Prime.Neural.Optimization.CoherenceAdam(config);
+        default:
+          throw new Error(`Unknown optimizer type: ${type}`);
+      }
+    }
+    
+    /**
+     * Get available optimizer types
+     * @returns {Array<string>} List of available optimizer types
+     */
+    static getAvailableTypes() {
+      return [
+        'sgd',
+        'adam',
+        'coherence_sgd',
+        'coherence_adam'
+      ];
+    }
+  }
+
   /**
    * CoherenceOptimizer - Base class for optimizers with coherence awareness
    */
@@ -510,11 +555,11 @@ const Prime = require("../../core");
 
   // Add optimizers to Prime.Neural.Optimization namespace
   Prime.Neural = Prime.Neural || {};
-  Prime.Neural.Optimization = {
-    CoherenceOptimizer,
-    CoherenceSGD,
-    CoherenceAdam,
-  };
+  Prime.Neural.Optimization = Prime.Neural.Optimization || {};
+  Prime.Neural.Optimization.OptimizerFactory = OptimizerFactory;
+  Prime.Neural.Optimization.CoherenceOptimizer = CoherenceOptimizer;
+  Prime.Neural.Optimization.CoherenceSGD = CoherenceSGD;
+  Prime.Neural.Optimization.CoherenceAdam = CoherenceAdam;
 })();
 
 // Export the enhanced Prime object
