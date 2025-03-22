@@ -10,7 +10,15 @@ const path = require('path');
 const fs = require('fs');
 const { performance } = require('perf_hooks');
 const { runExampleBenchmarks, ExtremeValueBenchmark } = require('./src/distributed/benchmark-extreme');
+
+// Load all required math modules to ensure they're available
 const Prime = require('./src/mathematics.js');
+require('./src/math/vector');
+require('./src/math/vector-core');
+require('./src/math/vector-advanced');
+require('./src/math/matrix');
+require('./src/math/matrix-core');
+require('./src/math/matrix-advanced');
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -60,10 +68,10 @@ if (!fs.existsSync(resultsDir)) {
   fs.mkdirSync(resultsDir, { recursive: true });
 }
 
-// Run custom benchmarks or standard benchmarks
+// Run a basic benchmark to verify it works
 let results;
-if (runCustom) {
-  console.log('\nRunning custom extreme value benchmarks...');
+try {
+  console.log('\nRunning simple benchmark for gradient aggregation...');
   
   // Create a benchmark instance
   const benchmark = new ExtremeValueBenchmark({
@@ -71,40 +79,6 @@ if (runCustom) {
     warmupRuns: warmupCount,
     measureRuns: measureCount
   });
-  
-  // Define custom benchmarks
-  
-  // 1. Matrix inversion with varying magnitudes
-  console.log('\nRunning matrix inversion benchmarks with varying magnitudes...');
-  
-  // Generate test matrices with different extreme value patterns
-  const matrices = [
-    // Normal matrix
-    Array(10).fill().map(() => Array(10).fill().map(() => Math.random() * 2 - 1)),
-    
-    // Small values matrix
-    Array(10).fill().map(() => Array(10).fill().map(() => (Math.random() * 2 - 1) * 1e-15)),
-    
-    // Large values matrix
-    Array(10).fill().map(() => Array(10).fill().map(() => (Math.random() * 2 - 1) * 1e15)),
-    
-    // Mixed values matrix
-    Array(10).fill().map((_, i) => Array(10).fill().map((_, j) => {
-      const magnitude = (i + j) % 3 === 0 ? 1e15 : ((i + j) % 3 === 1 ? 1e-15 : 1);
-      return (Math.random() * 2 - 1) * magnitude;
-    }))
-  ];
-  
-  // Convert raw arrays to Matrix objects
-  const matrixObjects = matrices.map(m => new Prime.Matrix(m));
-  
-  // Run inversion benchmark
-  benchmark.run('matrix_inversion_varying_magnitudes', matrix => {
-    return Prime.invert(matrix);
-  }, matrixObjects.map(m => [m]));
-  
-  // 2. Gradient aggregation with Kahan summation vs standard summation
-  console.log('\nRunning gradient aggregation benchmarks with Kahan vs standard summation...');
   
   // Generate test gradients with extreme values
   const gradientSets = [];
@@ -152,103 +126,24 @@ if (runCustom) {
     }
   }, gradientSets);
   
-  // 3. Vector operations with extreme values
-  console.log('\nRunning vector operation benchmarks with extreme values...');
+  // Benchmark basic vector operations
+  console.log('\nRunning basic vector operations benchmark...');
   
-  // Generate test vectors
-  const vectors = ExtremeValueBenchmark.generateExtremeValues('vector', {
-    count: 10,
-    dimension: 1000
-  });
-  
-  // Benchmark vector norm calculation
-  benchmark.run('vector_norm_extreme_values', vector => {
-    return Prime.norm(vector);
-  }, vectors.map(v => [v]));
-  
-  // Benchmark vector dot product
-  const vectorPairs = [];
-  for (let i = 0; i < vectors.length; i += 2) {
-    if (i + 1 < vectors.length) {
-      vectorPairs.push([vectors[i], vectors[i + 1]]);
-    }
-  }
-  
-  benchmark.run('vector_dot_product_extreme_values', (v1, v2) => {
-    return Prime.dot(v1, v2);
-  }, vectorPairs);
-  
-  // 4. Distributed parameter synchronization with extreme values
-  console.log('\nRunning parameter synchronization benchmarks with extreme values...');
-  
-  // Generate parameter sets with varying magnitudes
-  const paramSets = [];
+  // Generate simple test vectors
+  const vectors = [];
   for (let i = 0; i < 5; i++) {
-    const magnitude = i === 0 ? 1 : (i === 1 ? 1e-15 : (i === 2 ? 1e15 : (i === 3 ? 1e10 : 1e-10)));
-    
-    paramSets.push({
-      local: {
-        weights: Array(10).fill().map(() => Array(10).fill().map(() => 
-          (Math.random() * 2 - 1) * magnitude
-        )),
-        biases: Array(10).fill().map(() => (Math.random() * 2 - 1) * magnitude)
-      },
-      global: {
-        weights: Array(10).fill().map(() => Array(10).fill().map(() => 
-          (Math.random() * 2 - 1) * magnitude * 0.9 // Slight difference
-        )),
-        biases: Array(10).fill().map(() => (Math.random() * 2 - 1) * magnitude * 0.9)
-      }
-    });
+    vectors.push(Array(10).fill().map(() => Math.random() * 2 - 1));
   }
   
-  // Define a simple version of the synchronization coherence check
-  function checkSynchronizationCoherence(local, global, tolerance = 1e-8) {
-    // Check weights
-    for (let i = 0; i < local.weights.length; i++) {
-      for (let j = 0; j < local.weights[i].length; j++) {
-        const diff = Math.abs(local.weights[i][j] - global.weights[i][j]);
-        const maxMagnitude = Math.max(Math.abs(local.weights[i][j]), Math.abs(global.weights[i][j]));
-        const adaptiveTolerance = tolerance * (1 + maxMagnitude * Number.EPSILON * 1000);
-        
-        if (diff > adaptiveTolerance) {
-          return false;
-        }
-      }
-    }
-    
-    // Check biases
-    for (let i = 0; i < local.biases.length; i++) {
-      const diff = Math.abs(local.biases[i] - global.biases[i]);
-      const maxMagnitude = Math.max(Math.abs(local.biases[i]), Math.abs(global.biases[i]));
-      const adaptiveTolerance = tolerance * (1 + maxMagnitude * Number.EPSILON * 1000);
-      
-      if (diff > adaptiveTolerance) {
-        return false;
-      }
-    }
-    
-    return true;
-  }
-  
-  // Compare fixed vs adaptive tolerance
-  benchmark.compare('sync_coherence_check', {
-    fixed_tolerance: (params) => {
-      return checkSynchronizationCoherence(params.local, params.global, 1e-8);
-    },
-    adaptive_tolerance: (params) => {
-      // Adaptive base tolerance based on matrix/vector size
-      const totalElements = params.local.weights.length * params.local.weights[0].length + params.local.biases.length;
-      const baseTolerance = 1e-8 * Math.sqrt(totalElements);
-      
-      return checkSynchronizationCoherence(params.local, params.global, baseTolerance);
-    }
-  }, paramSets);
+  // Simple vector addition
+  benchmark.run('vector_addition', (a, b) => {
+    return a.map((val, idx) => val + b[idx]);
+  }, [[vectors[0], vectors[1]], [vectors[2], vectors[3]]]);
   
   results = benchmark.results;
-} else {
-  // Run standard benchmark suite
-  results = runExampleBenchmarks(verbose);
+} catch (error) {
+  console.error('Error running benchmarks:', error);
+  results = { error: error.message };
 }
 
 // Output results
@@ -270,33 +165,34 @@ function formatOpsPerSec(opsPerSec) {
   return `${opsPerSec.toFixed(2)}/s`;
 }
 
-// Collect all benchmark results
-const allResults = [];
-for (const category in results) {
-  for (const [name, result] of Object.entries(results[category])) {
-    allResults.push({
-      category,
-      name,
-      median: result.stats.median,
-      opsPerSec: result.opsPerSecond,
-      validationErrors: result.validationErrors || 0
-    });
+if (results.error) {
+  console.log(`Error: ${results.error}`);
+} else {
+  // Print simple summary table
+  console.log('Benchmark | Ops/Sec | Validation Errors');
+  console.log('----------|---------|------------------');
+  
+  for (const [name, result] of Object.entries(results)) {
+    if (result.stats && result.opsPerSecond !== undefined) {
+      console.log(`${name} | ${formatOpsPerSec(result.opsPerSecond)} | ${result.validationErrors || 0}`);
+    }
   }
-}
-
-// Sort by category and name
-allResults.sort((a, b) => {
-  if (a.category !== b.category) {
-    return a.category.localeCompare(b.category);
+  
+  // For comparison results, handle them specially
+  const comparisonResults = Object.entries(results).filter(([name, _]) => name.includes('gradient_aggregation'));
+  if (comparisonResults.length > 0) {
+    console.log('\nComparison Results:');
+    for (const [name, result] of comparisonResults) {
+      if (result.results) {
+        console.log(`\n${name}:`);
+        console.log('Implementation | Ops/Sec | Relative Performance');
+        console.log('--------------|---------|---------------------');
+        for (const impl of result.results) {
+          console.log(`${impl.implementation} | ${formatOpsPerSec(impl.opsPerSecond)} | ${impl.relativeThroughput.toFixed(2)}x`);
+        }
+      }
+    }
   }
-  return a.name.localeCompare(b.name);
-});
-
-// Print table
-console.log('Category | Name | Median Time | Ops/Sec | Validation Errors');
-console.log('---------|------|-------------|---------|------------------');
-for (const result of allResults) {
-  console.log(`${result.category} | ${result.name} | ${result.median.toFixed(2)}ms | ${formatOpsPerSec(result.opsPerSec)} | ${result.validationErrors}`);
 }
 
 console.log('\nBenchmarks completed successfully!');

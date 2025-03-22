@@ -48,25 +48,25 @@ const testBatches = [
   {
     name: 'rna-folding',
     description: 'RNA Folding simulation tests',
-    testRegex: 'extreme-conditions-tests\\.js',
+    testMatch: ['**/extreme-conditions-tests.js'],
     testNamePattern: 'Extreme Conditions Handling.*RNA.*'
   },
   {
     name: 'high-dimension',
     description: 'High-Dimension Fiber Algebra tests',
-    testRegex: 'extreme-conditions-tests\\.js',
+    testMatch: ['**/extreme-conditions-tests.js'],
     testNamePattern: 'Extreme Conditions Handling.*High-Dimension Fiber Algebra.*'
   },
   {
     name: 'coherence-gradient',
     description: 'Coherence-Gradient Descent tests',
-    testRegex: 'extreme-conditions-tests\\.js',
+    testMatch: ['**/extreme-conditions-tests.js'],
     testNamePattern: 'Extreme Conditions Handling.*Coherence-Gradient Descent.*'
   },
   {
     name: 'numerical-propagation',
     description: 'Numerical Propagation Analysis tests',
-    testRegex: 'extreme-conditions-tests\\.js',
+    testMatch: ['**/extreme-conditions-tests.js'],
     testNamePattern: 'Extreme Conditions Handling.*Numerical Propagation Analysis.*'
   }
 ];
@@ -211,13 +211,28 @@ async function runTestBatch(batch) {
   console.log(`\n=== Starting batch: ${batch.name} - ${batch.description} ===`);
   console.log('Testing with extended precision and memory profiling enabled');
   
-  const options = { ...baseOptions };
+  // Create a fresh options object for each batch
+  const options = {
+    testTimeout: 120000,
+    setupFiles: ['./test-setup.js'],
+    reporters: ['default'],
+    collectCoverage: false,
+    verbose: false,
+    maxWorkers: 1,
+    logHeapUsage: false,
+    detectLeaks: false,
+    globals: {
+      EXTENDED_PRECISION: true,
+      EXTREME_TESTING: true
+    },
+    // Override the default testPathIgnorePatterns to allow running extreme-conditions-tests.js
+    testPathIgnorePatterns: ['/node_modules/']
+  };
   
-  // Configure test matching
+  // Configure test matching - only set one of testMatch or testRegex
   if (batch.testMatch) {
     options.testMatch = batch.testMatch;
-  }
-  if (batch.testRegex) {
+  } else if (batch.testRegex) {
     options.testRegex = batch.testRegex;
   }
   if (batch.testNamePattern) {

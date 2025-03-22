@@ -155,16 +155,33 @@ describe('Matrix Refactoring', () => {
         [6, 3]
       ];
       
-      const { L, U } = Prime.Math.Matrix.luDecomposition(a);
+      const { L, U, P } = Prime.Math.Matrix.luDecomposition(a);
       
-      // Check that L * U = A
+      // Check that P * A = L * U where P is the permutation matrix
+      
+      // First create the permutation matrix from P
+      const permMatrix = [
+        [0, 0],
+        [0, 0]
+      ];
+      
+      // Convert P array to permutation matrix
+      for (let i = 0; i < 2; i++) {
+        permMatrix[i][P[i]] = 1;
+      }
+      
+      // Multiply P * A to get the permuted matrix
+      const permutedA = Prime.Math.Matrix.multiply(permMatrix, a);
+      
+      // Now check L*U against permuted matrix
       const product = Prime.Math.Matrix.multiply(L, U);
       
       // Allow for floating point imprecision
-      expect(Math.abs(product[0][0] - a[0][0])).toBeLessThan(1e-10);
-      expect(Math.abs(product[0][1] - a[0][1])).toBeLessThan(1e-10);
-      expect(Math.abs(product[1][0] - a[1][0])).toBeLessThan(1e-10);
-      expect(Math.abs(product[1][1] - a[1][1])).toBeLessThan(1e-10);
+      for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
+          expect(Math.abs(product[i][j] - permutedA[i][j])).toBeLessThan(1e-10);
+        }
+      }
     });
 
     test('should solve linear system correctly', () => {
@@ -280,6 +297,103 @@ describe('Matrix Refactoring', () => {
       expect(typeof Prime.Math.Matrix.determinant).toBe('function');
       expect(typeof Prime.Math.Matrix.inverse).toBe('function');
       expect(typeof Prime.Math.Matrix.solve).toBe('function');
+    });
+  });
+  
+  // Extreme values tests
+  describe('Extreme Values Handling', () => {
+    test('should correctly validate symmetric matrices with extreme values', () => {
+      // Create a symmetric matrix with extreme values
+      const extremeSymmetric = [
+        [1e-15, 1e15, 1e-10],
+        [1e15, 2, 1e20],
+        [1e-10, 1e20, 3]
+      ];
+      
+      expect(Prime.Math.Matrix.isSymmetric(extremeSymmetric)).toBe(true);
+      
+      // Non-symmetric matrix with extreme values
+      const nonSymmetric = [
+        [1e-15, 1e15, 1e-10],
+        [1e15, 2, 1e20],
+        [1e-10, 1e20 + 1e5, 3] // Small difference in extreme value
+      ];
+      
+      expect(Prime.Math.Matrix.isSymmetric(nonSymmetric)).toBe(false);
+    });
+    
+    test('should correctly identify orthogonal matrices with extreme values', () => {
+      // Create a rotation matrix (orthogonal) and scale some rows to extreme values
+      const angle = Math.PI / 4; // 45 degrees
+      const c = Math.cos(angle);
+      const s = Math.sin(angle);
+      
+      const rotationMatrix = [
+        [c, -s, 0],
+        [s, c, 0],
+        [0, 0, 1]
+      ];
+      
+      expect(Prime.Math.Matrix.isOrthogonal(rotationMatrix)).toBe(true);
+      
+      // Scale a row to extreme values (this breaks orthogonality)
+      const extremeRotation = [
+        [c * 1e-10, -s * 1e-10, 0],
+        [s, c, 0],
+        [0, 0, 1]
+      ];
+      
+      // This is not orthogonal because rows must have the same scale
+      expect(Prime.Math.Matrix.isOrthogonal(extremeRotation)).toBe(false);
+      
+      // Special case of orthogonal matrix with uniform scaling factors
+      const fullyScaledOrthogonal = [
+        [c * 1e-5, -s * 1e-5, 0],
+        [s * 1e-5, c * 1e-5, 0],
+        [0, 0, 1e-5]
+      ];
+      
+      // This isn't truly orthogonal, but it's orthogonal up to a scaling factor
+      // Our implementation requires actual orthogonality (QᵀQ = I)
+      expect(Prime.Math.Matrix.isOrthogonal(fullyScaledOrthogonal)).toBe(false);
+      
+      // Rescale to create a truly orthogonal matrix with mixed extreme values
+      // This is a proper orthogonal matrix with unit columns
+      const smallRotation = [
+        [c, -s, 0],
+        [s, c, 0],
+        [0, 0, 1]
+      ];
+      
+      expect(Prime.Math.Matrix.isOrthogonal(smallRotation)).toBe(true);
+    });
+    
+    test('should handle matrix operations with extreme values', () => {
+      // Create matrices with extreme values
+      const a = Prime.Math.Matrix.create(2, 2, 1e15);
+      const b = Prime.Math.Matrix.create(2, 2, 1e-15);
+      
+      // Addition should work with extreme values
+      const sum = Prime.Math.Matrix.add(a, b);
+      expect(sum[0][0]).toBeCloseTo(1e15, 5);
+      
+      // Subtraction should work with extreme values
+      const diff = Prime.Math.Matrix.subtract(a, b);
+      expect(diff[0][0]).toBeCloseTo(1e15, 5);
+      
+      // Multiplication should work with extreme values
+      const product = Prime.Math.Matrix.multiply(a, b);
+      expect(product[0][0]).toBeCloseTo(2e15 * 1e-15, 5);
+      
+      // Matrix inverse with extreme values
+      const c = [
+        [1e10, 0],
+        [0, 1e-10]
+      ];
+      
+      const cInverse = Prime.Math.Matrix.inverse(c);
+      expect(cInverse[0][0]).toBeCloseTo(1e-10, 5);
+      expect(cInverse[1][1]).toBeCloseTo(1e10, 5);
     });
   });
 });

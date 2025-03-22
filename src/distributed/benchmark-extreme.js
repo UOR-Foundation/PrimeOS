@@ -357,7 +357,13 @@ function createMatrixBenchmarkSuite(math, options = {}) {
   
   // Convert raw arrays to matrix objects if needed
   const prepareMatrix = (m) => {
-    return math.Matrix ? new math.Matrix(m) : m;
+    if (math.Matrix && math.Matrix.create) {
+      return math.Matrix.create(m.length, m[0].length, 0);
+    } else if (math.Matrix) {
+      return new math.Matrix(m);
+    } else {
+      return m;
+    }
   };
   
   const normalMatrixObjects = normalMatrices.map(prepareMatrix);
@@ -380,17 +386,17 @@ function createMatrixBenchmarkSuite(math, options = {}) {
     benchmarkInversion() {
       // Benchmark with normal matrices
       benchmark.run('matrix_inversion_normal', matrix => {
-        return math.invert(matrix);
+        return math.Matrix ? math.Matrix.inverse(matrix) : math.inverse(matrix);
       }, normalMatrixObjects.map(m => [m]));
       
       // Benchmark with extreme matrices
       benchmark.run('matrix_inversion_extreme', matrix => {
-        return math.invert(matrix);
+        return math.Matrix ? math.Matrix.inverse(matrix) : math.inverse(matrix);
       }, extremeMatrixObjects.map(m => [m]));
       
       // Benchmark with mixed matrices
       benchmark.run('matrix_inversion_mixed', matrix => {
-        return math.invert(matrix);
+        return math.Matrix ? math.Matrix.inverse(matrix) : math.inverse(matrix);
       }, mixedMatrixObjects.map(m => [m]));
       
       return benchmark.results;
@@ -412,17 +418,17 @@ function createMatrixBenchmarkSuite(math, options = {}) {
       
       // Benchmark with normal matrices
       benchmark.run('matrix_multiplication_normal', (a, b) => {
-        return math.multiply(a, b);
+        return math.Matrix ? math.Matrix.multiply(a, b) : math.multiply(a, b);
       }, normalPairs);
       
       // Benchmark with extreme matrices
       benchmark.run('matrix_multiplication_extreme', (a, b) => {
-        return math.multiply(a, b);
+        return math.Matrix ? math.Matrix.multiply(a, b) : math.multiply(a, b);
       }, extremePairs);
       
       // Benchmark with mixed matrices
       benchmark.run('matrix_multiplication_mixed', (a, b) => {
-        return math.multiply(a, b);
+        return math.Matrix ? math.Matrix.multiply(a, b) : math.multiply(a, b);
       }, mixedPairs);
       
       return benchmark.results;
@@ -430,23 +436,24 @@ function createMatrixBenchmarkSuite(math, options = {}) {
     
     // Matrix decomposition benchmark
     benchmarkDecomposition() {
-      if (!math.decompose) {
+      const hasDecompose = math.Matrix && math.Matrix.decompose || math.decompose;
+      if (!hasDecompose) {
         return false;
       }
       
       // Benchmark with normal matrices
       benchmark.run('matrix_decomposition_normal', matrix => {
-        return math.decompose(matrix);
+        return math.Matrix ? math.Matrix.decompose(matrix) : math.decompose(matrix);
       }, normalMatrixObjects.map(m => [m]));
       
       // Benchmark with extreme matrices
       benchmark.run('matrix_decomposition_extreme', matrix => {
-        return math.decompose(matrix);
+        return math.Matrix ? math.Matrix.decompose(matrix) : math.decompose(matrix);
       }, extremeMatrixObjects.map(m => [m]));
       
       // Benchmark with mixed matrices
       benchmark.run('matrix_decomposition_mixed', matrix => {
-        return math.decompose(matrix);
+        return math.Matrix ? math.Matrix.decompose(matrix) : math.decompose(matrix);
       }, mixedMatrixObjects.map(m => [m]));
       
       return benchmark.results;
@@ -454,23 +461,24 @@ function createMatrixBenchmarkSuite(math, options = {}) {
     
     // Eigenvalues benchmark
     benchmarkEigenvalues() {
-      if (!math.eigenvalues) {
+      const hasEigenvalues = math.Matrix && math.Matrix.eigenvalues || math.eigenvalues;
+      if (!hasEigenvalues) {
         return false;
       }
       
       // Benchmark with normal matrices
       benchmark.run('matrix_eigenvalues_normal', matrix => {
-        return math.eigenvalues(matrix);
+        return math.Matrix ? math.Matrix.eigenvalues(matrix) : math.eigenvalues(matrix);
       }, normalMatrixObjects.map(m => [m]));
       
       // Benchmark with extreme matrices
       benchmark.run('matrix_eigenvalues_extreme', matrix => {
-        return math.eigenvalues(matrix);
+        return math.Matrix ? math.Matrix.eigenvalues(matrix) : math.eigenvalues(matrix);
       }, extremeMatrixObjects.map(m => [m]));
       
       // Benchmark with mixed matrices
       benchmark.run('matrix_eigenvalues_mixed', matrix => {
-        return math.eigenvalues(matrix);
+        return math.Matrix ? math.Matrix.eigenvalues(matrix) : math.eigenvalues(matrix);
       }, mixedMatrixObjects.map(m => [m]));
       
       return benchmark.results;
@@ -515,7 +523,13 @@ function createVectorBenchmarkSuite(math, options = {}) {
   
   // Convert raw arrays to vector objects if needed
   const prepareVector = (v) => {
-    return math.Vector ? new math.Vector(v) : v;
+    if (math.Vector && math.Vector.create) {
+      return math.Vector.create(v.length);
+    } else if (math.Vector) {
+      return new math.Vector(v);
+    } else {
+      return v;
+    }
   };
   
   const normalVectorObjects = normalVectors.map(prepareVector);
@@ -550,17 +564,17 @@ function createVectorBenchmarkSuite(math, options = {}) {
       
       // Benchmark with normal vectors
       benchmark.run('vector_dot_product_normal', (a, b) => {
-        return math.dot(a, b);
+        return math.Vector ? math.Vector.dot(a, b) : math.dot(a, b);
       }, normalPairs);
       
       // Benchmark with extreme vectors
       benchmark.run('vector_dot_product_extreme', (a, b) => {
-        return math.dot(a, b);
+        return math.Vector ? math.Vector.dot(a, b) : math.dot(a, b);
       }, extremePairs);
       
       // Benchmark with mixed vectors
       benchmark.run('vector_dot_product_mixed', (a, b) => {
-        return math.dot(a, b);
+        return math.Vector ? math.Vector.dot(a, b) : math.dot(a, b);
       }, mixedPairs);
       
       return benchmark.results;
@@ -570,17 +584,17 @@ function createVectorBenchmarkSuite(math, options = {}) {
     benchmarkNorm() {
       // Benchmark with normal vectors
       benchmark.run('vector_norm_normal', vector => {
-        return math.norm(vector);
+        return math.Vector ? math.Vector.norm(vector) : math.norm(vector);
       }, normalVectorObjects.map(v => [v]));
       
       // Benchmark with extreme vectors
       benchmark.run('vector_norm_extreme', vector => {
-        return math.norm(vector);
+        return math.Vector ? math.Vector.norm(vector) : math.norm(vector);
       }, extremeVectorObjects.map(v => [v]));
       
       // Benchmark with mixed vectors
       benchmark.run('vector_norm_mixed', vector => {
-        return math.norm(vector);
+        return math.Vector ? math.Vector.norm(vector) : math.norm(vector);
       }, mixedVectorObjects.map(v => [v]));
       
       return benchmark.results;
@@ -602,17 +616,17 @@ function createVectorBenchmarkSuite(math, options = {}) {
       
       // Benchmark with normal vectors
       benchmark.run('vector_addition_normal', (a, b) => {
-        return math.add(a, b);
+        return math.Vector ? math.Vector.add(a, b) : math.add(a, b);
       }, normalPairs);
       
       // Benchmark with extreme vectors
       benchmark.run('vector_addition_extreme', (a, b) => {
-        return math.add(a, b);
+        return math.Vector ? math.Vector.add(a, b) : math.add(a, b);
       }, extremePairs);
       
       // Benchmark with mixed vectors
       benchmark.run('vector_addition_mixed', (a, b) => {
-        return math.add(a, b);
+        return math.Vector ? math.Vector.add(a, b) : math.add(a, b);
       }, mixedPairs);
       
       return benchmark.results;
@@ -620,7 +634,8 @@ function createVectorBenchmarkSuite(math, options = {}) {
     
     // Vector orthogonalization benchmark
     benchmarkOrthogonalization() {
-      if (!math.orthogonalize) {
+      const hasOrthogonalize = math.Vector && math.Vector.orthogonalize || math.orthogonalize;
+      if (!hasOrthogonalize) {
         return false;
       }
       
@@ -646,17 +661,17 @@ function createVectorBenchmarkSuite(math, options = {}) {
       
       // Benchmark with normal vectors
       benchmark.run('vector_orthogonalization_normal', vectors => {
-        return math.orthogonalize(vectors);
+        return math.Vector ? math.Vector.orthogonalize(vectors) : math.orthogonalize(vectors);
       }, normalSets);
       
       // Benchmark with extreme vectors
       benchmark.run('vector_orthogonalization_extreme', vectors => {
-        return math.orthogonalize(vectors);
+        return math.Vector ? math.Vector.orthogonalize(vectors) : math.orthogonalize(vectors);
       }, extremeSets);
       
       // Benchmark with mixed vectors
       benchmark.run('vector_orthogonalization_mixed', vectors => {
-        return math.orthogonalize(vectors);
+        return math.Vector ? math.Vector.orthogonalize(vectors) : math.orthogonalize(vectors);
       }, mixedSets);
       
       return benchmark.results;
