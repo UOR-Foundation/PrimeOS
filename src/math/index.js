@@ -44,36 +44,46 @@ Object.keys(lazyLoadModules).forEach(moduleName => {
   if (!Prime.Math[moduleName]) {
     let moduleLoaded = false;
     let moduleExports = null;
+    let tempPlaceholder = {};
     
     Object.defineProperty(Prime.Math, moduleName, {
       get: function() {
         if (!moduleLoaded) {
           try {
-            // Set a temporary placeholder to break circular dependencies
-            Prime.Math[moduleName] = {};
+            // Use the temporary placeholder to break circular dependencies
+            // We need to avoid modifying Prime.Math[moduleName] here to prevent recursion
+            
+            // Set the loaded flag before requiring to break potential cycles
+            moduleLoaded = true;
             
             // Load the module
             moduleExports = require(lazyLoadModules[moduleName]);
-            moduleLoaded = true;
             
-            // If module exports the enhanced Prime object, update our exports
+            // If module exports the enhanced Prime object, keep using our placeholder
             if (moduleExports === Prime) {
-              return Prime.Math[moduleName];
+              // The module has successfully registered itself on Prime.Math
+              return Prime.Math[moduleName] || tempPlaceholder;
             }
             
-            // Otherwise, the module export becomes the module value
-            Prime.Math[moduleName] = moduleExports;
+            // Otherwise, the module export becomes the module value - but only if we haven't
+            // already initialized it through a circular reference
+            if (Prime.Math[moduleName] === tempPlaceholder) {
+              Prime.Math[moduleName] = moduleExports;
+            }
           } catch (error) {
             console.error(`Error loading module ${moduleName}:`, error.message);
-            // Return empty object as fallback to avoid breaking the application
-            return {};
+            // Return placeholder object as fallback to avoid breaking the application
+            return tempPlaceholder;
           }
         }
         
-        return Prime.Math[moduleName];
+        return Prime.Math[moduleName] || tempPlaceholder;
       },
       configurable: true
     });
+    
+    // Initialize with placeholder to prevent recursion
+    Prime.Math[moduleName] = tempPlaceholder;
   }
 });
 
