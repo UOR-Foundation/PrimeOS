@@ -67,21 +67,15 @@ require("../src/neural/distributed/dimension-validator.js");
 require("../src/neural/distributed/distributed-model-impl.js");
 require("../src/neural/distributed/model-factory.js");
 
-// Test utilities
+// Test utilities for Jest
 const assert = (condition, message) => {
-  if (!condition) {
-    throw new Error(`Assertion failed: ${message}`);
-  }
+  expect(condition).toBe(true);
   console.log(`✓ PASS: ${message}`);
 };
 
 const assertApproximatelyEqual = (a, b, message, epsilon = 1e-6) => {
   const diff = Math.abs(a - b);
-  if (diff > epsilon) {
-    throw new Error(
-      `Assertion failed: ${message} - values differ by ${diff} (${a} vs ${b})`,
-    );
-  }
+  expect(diff).toBeLessThan(epsilon);
   console.log(`✓ PASS: ${message}`);
 };
 
@@ -1169,15 +1163,9 @@ const runEndToEndPipelineTests = async () => {
   console.log("\n=== All End-to-End Pipeline Tests Passed ===");
 };
 
-// Run the end-to-end tests
-try {
-  runEndToEndPipelineTests().catch(error => {
-    console.error("End-to-end tests failed:", error.message);
-    console.error(error.stack);
-    process.exit(1);
-  });
-} catch (error) {
-  console.error("Test setup failed:", error.message);
-  console.error(error.stack);
-  process.exit(1);
-}
+// Convert to Jest test
+describe('Distributed Pipeline End-to-End Tests', () => {
+  test('runEndToEndPipelineTests', async () => {
+    await runEndToEndPipelineTests();
+  }, 30000); // Increase timeout to 30 seconds for this test
+});
