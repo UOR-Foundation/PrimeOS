@@ -494,7 +494,7 @@ const Base0 = {
    */
   connectToCoherence: function (components) {
     if (!Prime.coherence) {
-      Prime.Logger.warn('Coherence system not available');
+      Prime.Logger && Prime.Logger.warn('Coherence system not available');
       return components;
     }
 
