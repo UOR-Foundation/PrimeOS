@@ -19,6 +19,9 @@ require('./consciousness');
 // Import distributed computation module
 require('./distributed');
 
+// Import storage module
+require('./storage');
+
 // Import legacy modules
 // These will be refactored in future phases
 require('./coherence.js');
@@ -45,6 +48,7 @@ module.exports.Math = Prime.Math;
 module.exports.Neural = Prime.Neural;
 module.exports.Consciousness = Prime.Consciousness;
 module.exports.Distributed = Prime.Distributed;
+module.exports.Storage = Prime.Storage;
 
 // Legacy exports
 module.exports.ModuleLogger = Prime.ModuleLogger;

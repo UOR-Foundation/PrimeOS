@@ -10,6 +10,7 @@ A neural network-based operating system built on the Prime Framework, representi
 - **Neural Computation**: All components implemented as neural network models
 - **Resource Optimization**: Intelligent allocation based on coherence requirements
 - **Extreme Condition Handling**: Robust numerical computations for demanding scientific applications (e.g., RNA folding)
+- **Storage Provider**: Persistent storage with support for data larger than available memory
 
 ## Mathematical Foundation
 
@@ -87,6 +88,34 @@ const app = framework.createApplication({
 
 // Start the application
 app.start();
+```
+
+### Using Storage Provider
+
+```javascript
+import Prime from '@uor-foundation/primeos';
+
+// Create and initialize a storage manager
+const storageManager = Prime.Storage.createManager();
+await storageManager.init();
+
+// Store large datasets
+const largeData = /* large array or object */;
+const id = await storageManager.store(largeData);
+
+// Retrieve data
+const retrievedData = await storageManager.load(id);
+
+// Work with data larger than memory using virtual arrays
+const virtualArray = Prime.Storage.createVirtualArray(storageManager, {
+  length: 1000000, // 1 million items
+  itemFactory: index => ({ id: index, value: `Item ${index}` })
+});
+
+// Process in manageable chunks
+for await (const chunk of virtualArray.iterateChunks(1000)) {
+  // Process chunk without loading entire dataset
+}
 ```
 
 ## Documentation
