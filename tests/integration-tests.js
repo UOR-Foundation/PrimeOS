@@ -354,89 +354,85 @@ describe("PrimeOS Integration Tests", () => {
 
   describe("Mathematics", () => {
     test("Vector operations", () => {
-      // Check if math module exists
-      if (!Prime.math) {
-        throw new Error("Prime.math module not available");
+      // Check if Math module exists (note: capital M in Math)
+      if (!Prime.Math) {
+        throw new Error("Prime.Math module not available");
       }
 
-      // Check if Vector class/constructor exists
-      if (!Prime.math.Vector) {
+      // Check if Vector module exists
+      if (!Prime.Math.Vector) {
         throw new Error("Vector operations not available");
       }
 
-      // Create vectors
-      const v1 = new Prime.math.Vector([1, 2, 3]);
-      const v2 = new Prime.math.Vector([4, 5, 6]);
+      // Create vectors using Vector.create
+      const v1 = Prime.Math.Vector.create(3, 0);
+      const v2 = Prime.Math.Vector.create(3, 0);
+      
+      // Initialize vectors
+      v1[0] = 1; v1[1] = 2; v1[2] = 3;
+      v2[0] = 4; v2[1] = 5; v2[2] = 6;
 
       // Test vector addition
-      const sum = v1.add(v2);
-      expect(sum.equals(new Prime.math.Vector([5, 7, 9]))).toBe(true);
+      const sum = Prime.Math.Vector.add(v1, v2);
+      expect(sum[0]).toBe(5);
+      expect(sum[1]).toBe(7);
+      expect(sum[2]).toBe(9);
 
       // Test vector dot product
-      const dot = v1.dot(v2);
+      const dot = Prime.Math.Vector.dot(v1, v2);
       expect(dot).toBe(32);
 
       // Test vector magnitude
-      const magnitude = v1.magnitude();
+      const magnitude = Prime.Math.Vector.magnitude(v1);
       expect(magnitude).toBeCloseTo(Math.sqrt(14), 3);
 
-      // Test vector normalization if supported
-      if (typeof v1.normalize === "function") {
-        const normalized = v1.normalize();
-        expect(normalized.magnitude()).toBeCloseTo(1.0, 3);
-      }
+      // Test vector normalization
+      const normalized = Prime.Math.Vector.normalize(v1);
+      expect(Prime.Math.Vector.magnitude(normalized)).toBeCloseTo(1.0, 3);
     });
 
     test("Matrix operations", () => {
-      // Check if Matrix class/constructor exists
-      if (!Prime.math || !Prime.math.Matrix) {
+      // Check if Matrix module exists
+      if (!Prime.Math || !Prime.Math.Matrix) {
         throw new Error("Matrix operations not available");
       }
 
-      // Create matrices
-      const m1 = new Prime.math.Matrix([
-        [1, 2],
-        [3, 4],
-      ]);
-      const m2 = new Prime.math.Matrix([
-        [5, 6],
-        [7, 8],
-      ]);
+      // Create matrices using Matrix.create
+      const m1 = Prime.Math.Matrix.create(2, 2, 0);
+      m1[0][0] = 1; m1[0][1] = 2;
+      m1[1][0] = 3; m1[1][1] = 4;
+      
+      const m2 = Prime.Math.Matrix.create(2, 2, 0);
+      m2[0][0] = 5; m2[0][1] = 6;
+      m2[1][0] = 7; m2[1][1] = 8;
 
       // Test matrix addition
-      const sum = m1.add(m2);
-      expect(
-        sum.equals(
-          new Prime.math.Matrix([
-            [6, 8],
-            [10, 12],
-          ]),
-        ),
-      ).toBe(true);
+      const sum = Prime.Math.Matrix.add(m1, m2);
+      expect(sum[0][0]).toBe(6);
+      expect(sum[0][1]).toBe(8);
+      expect(sum[1][0]).toBe(10);
+      expect(sum[1][1]).toBe(12);
 
       // Test matrix multiplication
-      const product = m1.multiply(m2);
-      const expected = new Prime.math.Matrix([
-        [19, 22],
-        [43, 50],
-      ]);
-      expect(product.equals(expected)).toBe(true);
+      const product = Prime.Math.Matrix.multiply(m1, m2);
+      expect(product[0][0]).toBe(19);
+      expect(product[0][1]).toBe(22);
+      expect(product[1][0]).toBe(43);
+      expect(product[1][1]).toBe(50);
 
       // Test determinant
-      const det = m1.determinant();
+      const det = Prime.Math.Matrix.determinant(m1);
       expect(det).toBe(-2);
 
-      // Test matrix inverse if supported
-      if (typeof m1.inverse === "function") {
-        const inv = m1.inverse();
-        const identity = m1.multiply(inv);
+      // Test matrix inverse
+      const inv = Prime.Math.Matrix.inverse(m1);
+      const identity = Prime.Math.Matrix.multiply(m1, inv);
 
-        // Check that m1 * inv is close to identity
-        expect(identity.get(0, 0)).toBeCloseTo(1, 3);
-        expect(identity.get(1, 1)).toBeCloseTo(1, 3);
-        expect(identity.get(0, 1)).toBeCloseTo(0, 3);
-        expect(identity.get(1, 0)).toBeCloseTo(0, 3);
-      }
+      // Check that m1 * inv is close to identity
+      expect(identity[0][0]).toBeCloseTo(1, 3);
+      expect(identity[1][1]).toBeCloseTo(1, 3);
+      expect(identity[0][1]).toBeCloseTo(0, 3);
+      expect(identity[1][0]).toBeCloseTo(0, 3);
     });
   });
 

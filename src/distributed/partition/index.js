@@ -112,7 +112,16 @@ const EventBus = require("../event-bus");
       const layerIds = Object.keys(this.layerConfig);
 
       if (layerIds.length === 0) {
-        Prime.Logger.warn("No layers provided for partitioning");
+        Prime.Logger.debug("No layers provided for partitioning, creating empty partition structure");
+        
+        // Create empty partition structure with one node
+        const nodeId = `node_0`;
+        this.partitionMap.set(nodeId, {
+          layers: [],
+          dataIndices: null,
+          partialComputation: false,
+        });
+        
         return;
       }
 
@@ -151,7 +160,16 @@ const EventBus = require("../event-bus");
       const layerIds = Object.keys(this.layerConfig);
 
       if (layerIds.length === 0) {
-        Prime.Logger.warn("No layers provided for partitioning");
+        Prime.Logger.debug("No layers provided for intra-layer partitioning, creating empty partition structure");
+        
+        // Create empty partition structure with one node
+        const nodeId = `node_0`;
+        this.partitionMap.set(nodeId, {
+          layers: [],
+          dataIndices: null,
+          partialComputation: true,
+        });
+        
         return;
       }
 
@@ -214,7 +232,30 @@ const EventBus = require("../event-bus");
       const layerIds = Object.keys(this.layerConfig);
 
       if (layerIds.length === 0) {
-        Prime.Logger.warn("No layers provided for partitioning");
+        Prime.Logger.debug("No layers provided for data-parallel partitioning, creating empty partition structure");
+        
+        // Determine batch size from configuration or use default
+        const batchSize = this.layerConfig.batchSize || 32;
+        
+        // Create empty partition structures
+        for (let nodeIndex = 0; nodeIndex < this.nodeCount; nodeIndex++) {
+          const nodeId = `node_${nodeIndex}`;
+          
+          // Calculate this node's data range
+          const dataIndicesPerNode = Math.ceil(batchSize / this.nodeCount);
+          const startIndex = nodeIndex * dataIndicesPerNode;
+          const endIndex = Math.min(startIndex + dataIndicesPerNode, batchSize);
+          
+          this.partitionMap.set(nodeId, {
+            layers: [],
+            dataIndices: {
+              start: startIndex,
+              end: endIndex,
+            },
+            partialComputation: false,
+          });
+        }
+        
         return;
       }
 
@@ -263,7 +304,19 @@ const EventBus = require("../event-bus");
       const layerIds = Object.keys(this.layerConfig);
 
       if (layerIds.length === 0) {
-        Prime.Logger.warn("No layers provided for partitioning");
+        Prime.Logger.debug("No layers provided for model-parallel partitioning, creating empty partition structure");
+        
+        // Create empty partition structures with balanced distribution
+        for (let nodeIndex = 0; nodeIndex < this.nodeCount; nodeIndex++) {
+          const nodeId = `node_${nodeIndex}`;
+          
+          this.partitionMap.set(nodeId, {
+            layers: [],
+            dataIndices: null,
+            partialComputation: false,
+          });
+        }
+        
         return;
       }
 

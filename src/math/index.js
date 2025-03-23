@@ -13,6 +13,10 @@ Prime.Math = Prime.Math || {};
 require('./vector-core');
 require('./matrix-core');
 
+// Pre-initialize Vector and Matrix objects to prevent circular dependency warnings
+Prime.Math.Vector = {};
+Prime.Math.Matrix = {};
+
 /**
  * Lazy-load modules only when needed
  * This allows for tree-shaking and reduces memory footprint
@@ -41,10 +45,12 @@ const lazyLoadModules = {
 
 // Create getters for lazy loading - with improved circular dependency handling
 Object.keys(lazyLoadModules).forEach((moduleName) => {
-  if (!Prime.Math[moduleName]) {
+  if (!Prime.Math[moduleName] || moduleName === 'Vector' || moduleName === 'Matrix') {
     let moduleLoaded = false;
     let moduleExports = null;
-    const tempPlaceholder = {};
+    
+    // Create a placeholder that will be returned before the module is fully loaded
+    const tempPlaceholder = Prime.Math[moduleName] || {};
 
     // Store placeholder before defining property to avoid recursive gets
     const placeholderMap = new Map();
@@ -65,7 +71,8 @@ Object.keys(lazyLoadModules).forEach((moduleName) => {
               if (
                 typeof Prime.Math[moduleName] === 'object' &&
                 Prime.Math[moduleName] !== null &&
-                Prime.Math[moduleName] !== placeholderMap.get(moduleName)
+                Prime.Math[moduleName] !== placeholderMap.get(moduleName) &&
+                Object.keys(Prime.Math[moduleName]).length > 0
               ) {
                 return Prime.Math[moduleName];
               }
