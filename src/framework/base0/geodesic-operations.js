@@ -465,8 +465,8 @@ const GeodesicOperations = {
     // Implement proper sectional curvature calculation
     // K(v1,v2) = <R(v1,v2)v2,v1> where R is the Riemann curvature tensor
     
-    // Extract point from the manifold
-    const point = Object.values(manifold.getInvariant());
+    // For curvature calculation, use the invariant as additional information
+    const invariantValues = Object.values(manifold.getInvariant());
     
     // Compute the Riemann curvature tensor at this point
     // This is a 4-index tensor that measures the failure of parallel transport
@@ -478,13 +478,12 @@ const GeodesicOperations = {
                           (manifold.getMeta().metricType || 'generic');
       
       // Base curvature from manifold invariants
-      const invariants = Object.values(manifold.getInvariant());
       const meanInvariant =
-        invariants.length > 0
-          ? invariants.reduce(
+        invariantValues.length > 0
+          ? invariantValues.reduce(
             (sum, val) => sum + (typeof val === 'number' ? val : 0),
             0,
-          ) / invariants.length
+          ) / invariantValues.length
           : 0;
           
       // Default curvature scale derived from invariants

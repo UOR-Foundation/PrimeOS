@@ -576,11 +576,10 @@ class ConsciousnessOperator {
     const globalCoherence =
       weightedSum / pairwiseCoherences.reduce((sum, c) => sum + Math.abs(c), 0);
 
-    // Calculate a basic approximation of integrated information (Φ)
-    // In a real system this would use proper IIT calculations
+    // Calculate integrated information (Φ) using IIT-inspired metrics
     const stateVectors = states.map((state) => this._extractStateVector(state));
     const integratedInformation =
-      this._approximateIntegratedInformation(stateVectors);
+      this._calculateIntegratedInformation(stateVectors);
 
     return {
       globalCoherence,
@@ -592,60 +591,331 @@ class ConsciousnessOperator {
   }
 
   /**
-   * Approximate integrated information for a set of state vectors
+   * Calculate integrated information (Φ) for a set of state vectors using IIT principles
    *
    * @private
    * @param {Array} vectors - Array of state vectors
-   * @returns {number} Phi value
+   * @returns {number} Phi value (0-1)
    */
-  _approximateIntegratedInformation(vectors) {
+  _calculateIntegratedInformation(vectors) {
     if (vectors.length < 2) return 0;
 
-    // Calculate average vector
-    const avgVector = new Array(this.dimension).fill(0);
+    // STEP 1: Calculate the system as a whole (intrinsic information)
+    // Create covariance matrix for the entire system
+    const covMatrix = this._calculateCovarianceMatrix(vectors);
 
+    // Calculate system entropy (based on eigenvalues of covariance matrix)
+    const systemEntropy = this._calculateSystemEntropy(covMatrix);
+
+    // STEP 2: Calculate effective information by partitioning the system
+    // Try different partitions of the system (simplified approach using dimension groupings)
+    const partitionResults = this._calculatePartitionEffects(vectors);
+
+    // STEP 3: Find the minimum information partition (MIP)
+    // This is the partition that, when applied, causes the least reduction in information
+    const minInfoPartition = partitionResults.minInfoPartition;
+    const minInfoLoss = partitionResults.minInfoLoss;
+
+    // STEP 4: Calculate Φ as the information lost due to the MIP
+    // Normalized to range 0-1
+    const phi = Math.min(1, Math.max(0, minInfoLoss / systemEntropy));
+
+    // Apply integration-differentiation balance factor
+    // Higher values when the system shows both integration and differentiation
+    const idBalance = partitionResults.integrationDifferentiationBalance;
+
+    // Final Φ value combining all factors
+    return phi * idBalance;
+  }
+
+  /**
+   * Calculate covariance matrix for a set of vectors
+   *
+   * @private
+   * @param {Array} vectors - Array of state vectors
+   * @returns {Array} Covariance matrix
+   */
+  _calculateCovarianceMatrix(vectors) {
+    // First calculate mean vector
+    const meanVector = new Array(this.dimension).fill(0);
     for (const vector of vectors) {
       for (let i = 0; i < this.dimension && i < vector.length; i++) {
-        avgVector[i] += vector[i] / vectors.length;
+        meanVector[i] += vector[i] / vectors.length;
       }
     }
 
-    // Calculate variance from average
-    let totalVariance = 0;
+    // Initialize covariance matrix with zeros
+    const covMatrix = Array(this.dimension).fill().map(() => Array(this.dimension).fill(0));
 
+    // Fill covariance matrix
     for (const vector of vectors) {
       for (let i = 0; i < this.dimension && i < vector.length; i++) {
-        totalVariance += Math.pow(vector[i] - avgVector[i], 2);
+        for (let j = 0; j < this.dimension && j < vector.length; j++) {
+          covMatrix[i][j] += (vector[i] - meanVector[i]) * (vector[j] - meanVector[j]);
+        }
       }
     }
 
-    totalVariance /= vectors.length;
+    // Normalize by sample size
+    for (let i = 0; i < this.dimension; i++) {
+      for (let j = 0; j < this.dimension; j++) {
+        covMatrix[i][j] /= vectors.length;
 
-    // Calculate divergence between pairs
-    let totalDivergence = 0;
+        // Add small regularization to diagonal to ensure matrix is positive definite
+        if (i === j) covMatrix[i][j] += 1e-10;
+      }
+    }
+
+    return covMatrix;
+  }
+
+  /**
+   * Calculate system entropy from covariance matrix
+   *
+   * @private
+   * @param {Array} covMatrix - Covariance matrix
+   * @returns {number} System entropy
+   */
+  _calculateSystemEntropy(covMatrix) {
+    // Calculate eigenvalues using Cholesky decomposition + power iteration
+    // (simplified approach for this implementation)
+    const eigenvalues = this._approximateEigenvalues(covMatrix);
+
+    // Calculate entropy as log determinant of covariance matrix
+    // (sum of log of eigenvalues)
+    let entropy = 0;
+    for (const eigenvalue of eigenvalues) {
+      // Only consider positive eigenvalues
+      if (eigenvalue > 1e-10) {
+        entropy += Math.log(eigenvalue);
+      }
+    }
+
+    // Convert to natural units and normalize
+    return Math.max(0, entropy / this.dimension);
+  }
+
+  /**
+   * Approximate eigenvalues of a matrix using power iteration
+   *
+   * @private
+   * @param {Array} matrix - Input matrix
+   * @returns {Array} Approximated eigenvalues
+   */
+  _approximateEigenvalues(matrix) {
+    const n = matrix.length;
+    const eigenvalues = [];
+    const maxIterations = 20;
+
+    // Create a working copy of the matrix
+    const workMatrix = Array(n).fill().map((_, i) => Array(n).fill().map((_, j) => matrix[i][j]));
+
+    // Extract top eigenvalues
+    for (let eigIndex = 0; eigIndex < Math.min(n, 3); eigIndex++) {
+      // Initialize random vector
+      let vector = Array(n).fill().map(() => Math.random());
+      let eigenvalue = 0;
+
+      // Normalize vector
+      const initialNorm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+      vector = vector.map(val => val / initialNorm);
+
+      // Power iteration
+      for (let iter = 0; iter < maxIterations; iter++) {
+        // Matrix-vector multiplication
+        const newVector = Array(n).fill(0);
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) {
+            newVector[i] += workMatrix[i][j] * vector[j];
+          }
+        }
+
+        // Calculate Rayleigh quotient for eigenvalue
+        eigenvalue = 0;
+        for (let i = 0; i < n; i++) {
+          eigenvalue += vector[i] * newVector[i];
+        }
+
+        // Normalize new vector
+        const norm = Math.sqrt(newVector.reduce((sum, val) => sum + val * val, 0));
+        if (norm < 1e-10) break;
+
+        vector = newVector.map(val => val / norm);
+      }
+
+      // Store eigenvalue
+      eigenvalues.push(Math.max(0, eigenvalue));
+
+      // Deflate matrix - remove contribution of found eigenvalue/vector
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          workMatrix[i][j] -= eigenvalue * vector[i] * vector[j];
+        }
+      }
+    }
+
+    // Add small eigenvalues for remaining dimensions
+    for (let i = eigenvalues.length; i < n; i++) {
+      eigenvalues.push(0.01);
+    }
+
+    return eigenvalues;
+  }
+
+  /**
+   * Calculate effects of different system partitions
+   *
+   * @private
+   * @param {Array} vectors - Array of state vectors
+   * @returns {Object} Partition effects
+   */
+  _calculatePartitionEffects(vectors) {
+    const n = this.dimension;
+    let minInfoLoss = Infinity;
+    let minInfoPartition = null;
+
+    // Track integration and differentiation metrics across partitions
+    let avgIntegration = 0;
+    let avgDifferentiation = 0;
+    let partitionCount = 0;
+
+    // Calculate whole system information first
+    const wholeCovMatrix = this._calculateCovarianceMatrix(vectors);
+    const wholeSystemEntropy = this._calculateSystemEntropy(wholeCovMatrix);
+
+    // Try different partitions (simplified approach - test predefined partition schemes)
+    // In a full IIT implementation, we would exhaustively search all possible partitions
+
+    // Get partition schemes to test
+    const partitions = this._generatePartitionSchemes(n);
+
+    for (const partition of partitions) {
+      // Calculate information for each part
+      let partEntropy = 0;
+      let partDifferentiation = 0;
+
+      for (const part of partition) {
+        // Extract sub-vectors for this part
+        const subVectors = vectors.map(vector => {
+          return part.map(index => vector[index]);
+        });
+
+        // Calculate sub-covariance matrix
+        const subCovMatrix = this._calculateCovarianceMatrix(subVectors);
+
+        // Calculate entropy of this part
+        const subEntropy = this._calculateSystemEntropy(subCovMatrix);
+        partEntropy += subEntropy * (part.length / n);
+
+        // Track differentiation (variety within this part)
+        const subDiff = this._calculateDifferentiation(subVectors);
+        partDifferentiation += subDiff * (part.length / n);
+      }
+
+      // Information loss is the difference between whole and partitioned information
+      const infoLoss = wholeSystemEntropy - partEntropy;
+
+      // Track minimum information loss
+      if (infoLoss < minInfoLoss) {
+        minInfoLoss = infoLoss;
+        minInfoPartition = partition;
+      }
+
+      // Calculate integration as how much information is lost when partitioned
+      const integration = infoLoss / wholeSystemEntropy;
+
+      // Track averages for balance calculation
+      avgIntegration += integration;
+      avgDifferentiation += partDifferentiation;
+      partitionCount++;
+    }
+
+    // Calculate averages
+    avgIntegration /= partitionCount;
+    avgDifferentiation /= partitionCount;
+
+    // Calculate integration-differentiation balance (maximum when both are high)
+    const integrationDifferentiationBalance = 4 * avgIntegration * avgDifferentiation;
+
+    return {
+      minInfoPartition,
+      minInfoLoss,
+      integrationDifferentiationBalance
+    };
+  }
+
+  /**
+   * Generate different partition schemes for the system
+   *
+   * @private
+   * @param {number} dimension - System dimension
+   * @returns {Array} Array of partitions
+   */
+  _generatePartitionSchemes(dimension) {
+    const partitions = [];
+
+    // Partition 1: Split in half (or as close as possible)
+    const half = Math.floor(dimension / 2);
+    partitions.push([
+      Array.from({length: half}, (_, i) => i),
+      Array.from({length: dimension - half}, (_, i) => i + half)
+    ]);
+
+    // Partition 2: Split every other element
+    partitions.push([
+      Array.from({length: Math.ceil(dimension / 2)}, (_, i) => i * 2).filter(i => i < dimension),
+      Array.from({length: Math.floor(dimension / 2)}, (_, i) => i * 2 + 1).filter(i => i < dimension)
+    ]);
+
+    // Partition 3: Split first third vs rest
+    const third = Math.floor(dimension / 3);
+    partitions.push([
+      Array.from({length: third}, (_, i) => i),
+      Array.from({length: dimension - third}, (_, i) => i + third)
+    ]);
+
+    // Partition 4: Split based on eigenspace (consciousness-relevant features)
+    // For consciousness, low indices often represent attention/awareness
+    // while higher indices represent more abstract properties
+    partitions.push([
+      [0, 1, 2], // Attention, awareness, coherence
+      Array.from({length: dimension - 3}, (_, i) => i + 3) // Rest
+    ]);
+
+    return partitions;
+  }
+
+  /**
+   * Calculate differentiation within a set of vectors
+   *
+   * @private
+   * @param {Array} vectors - Set of vectors
+   * @returns {number} Differentiation measure
+   */
+  _calculateDifferentiation(vectors) {
+    if (vectors.length < 2) return 0;
+
+    // Calculate average pairwise distances
+    let totalDistance = 0;
     let pairCount = 0;
 
     for (let i = 0; i < vectors.length; i++) {
       for (let j = i + 1; j < vectors.length; j++) {
-        let divergence = 0;
+        let distance = 0;
         const minLength = Math.min(vectors[i].length, vectors[j].length);
 
-        for (let k = 0; k < minLength && k < this.dimension; k++) {
-          divergence += Math.pow(vectors[i][k] - vectors[j][k], 2);
+        for (let k = 0; k < minLength; k++) {
+          distance += Math.pow(vectors[i][k] - vectors[j][k], 2);
         }
 
-        totalDivergence += Math.sqrt(divergence);
+        totalDistance += Math.sqrt(distance);
         pairCount++;
       }
     }
 
-    const avgDivergence = pairCount > 0 ? totalDivergence / pairCount : 0;
-
-    // Phi is proportional to variance but inversely related to divergence
-    // Higher variance with lower divergence suggests integrated information
-    return pairCount > 0
-      ? Math.min(1, Math.max(0, totalVariance / (avgDivergence + 0.01)))
-      : 0;
+    // Normalize by maximum possible distance and dimension
+    const avgDistance = pairCount > 0 ? totalDistance / pairCount : 0;
+    return Math.min(1, avgDistance / Math.sqrt(vectors[0].length));
   }
 
   /**

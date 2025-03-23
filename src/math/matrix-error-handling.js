@@ -27,7 +27,7 @@ const MatrixErrorHandling = {
       if (error.message.includes('singular') || error.message.includes('condition')) {
         const strategy = options.strategy || 'pseudoinverse';
         const MatrixCore = Prime.Math.MatrixCore;
-        
+
         // Matrix that caused the error
         const matrix = args[0];
 
@@ -38,21 +38,21 @@ const MatrixErrorHandling = {
               return Prime.Math.Matrix.pseudoInverse(matrix);
             }
             break;
-            
+
           case 'regularize':
             // Add a small value to the diagonal (Tikhonov regularization)
             const epsilon = options.epsilon || 1e-10;
             const regularized = MatrixCore.clone(matrix);
             const n = regularized.length;
-            
+
             for (let i = 0; i < n; i++) {
               regularized[i][i] += epsilon;
             }
-            
+
             // Try operation with regularized matrix
             args[0] = regularized;
             return operation.apply(null, args);
-            
+
           case 'truncate':
             // Use truncated SVD if available
             if (Prime.Math.Matrix.truncatedSVD) {
@@ -61,19 +61,19 @@ const MatrixErrorHandling = {
             }
             break;
         }
-        
+
         // If no recovery succeeded, throw enhanced error
         throw new Prime.MathematicalError(
           `Matrix operation failed due to singularity or poor conditioning: ${error.message}. ` +
           `Try scaling the matrix, adding regularization, or using pseudoinverse.`
         );
       }
-      
+
       // For other types of errors, just rethrow
       throw error;
     }
   },
-  
+
   /**
    * Handle numerical stability issues from extreme values with proper scaling and recovery
    * @param {function} operation - The matrix operation function to execute
@@ -85,37 +85,37 @@ const MatrixErrorHandling = {
   handleExtremeValues: function(operation, args, options = {}) {
     const MatrixCore = Prime.Math.MatrixCore;
     const MatrixValidation = Prime.Math.MatrixValidation;
-    
+
     // Extract the matrix from arguments
     const matrix = args[0];
-    
+
     // Input validation
     if (!MatrixValidation.isMatrix(matrix)) {
       throw new Prime.ValidationError('Input must be a valid matrix');
     }
-    
+
     // Check for NaN and Infinity values
     if (MatrixValidation.hasInvalidValues(matrix)) {
       throw new Prime.ValidationError(
         'Matrix contains NaN or Infinity values which cannot be processed'
       );
     }
-    
+
     // Analyze matrix properties for potential numerical issues
     const dims = MatrixCore.dimensions(matrix);
     const rows = dims.rows;
     const cols = dims.cols;
-    
+
     // Calculate matrix statistics for scaling decisions
     let maxAbs = 0;
     let minNonZero = Infinity;
     let sumOfSquares = 0;
-    
+
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
         const value = matrix[i][j];
         const absValue = Math.abs(value);
-        
+
         // Track extremes
         if (absValue > maxAbs) {
           maxAbs = absValue;
@@ -123,18 +123,18 @@ const MatrixErrorHandling = {
         if (absValue > 0 && absValue < minNonZero) {
           minNonZero = absValue;
         }
-        
+
         // Accumulate sum of squares for Frobenius norm
         sumOfSquares += absValue * absValue;
       }
     }
-    
+
     // Check for matrices with extreme value range that may cause numerical instability
-    const valueRatio = maxAbs > 0 && minNonZero < Infinity ? 
-                      maxAbs / minNonZero : 0;
-                      
+    const valueRatio = maxAbs > 0 && minNonZero < Infinity ?
+      maxAbs / minNonZero : 0;
+
     const needsScaling = maxAbs > 1e100 || minNonZero < 1e-100 || valueRatio > 1e200;
-    
+
     if (needsScaling) {
       // Choose appropriate scaling factor based on matrix properties
       let scaleFactor;
@@ -149,29 +149,29 @@ const MatrixErrorHandling = {
         const logMax = Math.log10(maxAbs);
         const logMin = Math.log10(minNonZero);
         const targetLog = (logMax + logMin) / 2;
-        scaleFactor = Math.pow(10, -targetLog); 
+        scaleFactor = Math.pow(10, -targetLog);
       }
-      
+
       try {
         // Apply scaling to create numerically stable matrix
         const scaledMatrix = MatrixCore.scale(matrix, scaleFactor);
-        
+
         // Replace original matrix with scaled version in arguments
         const newArgs = [...args];
         newArgs[0] = scaledMatrix;
-        
+
         // Execute operation on scaled matrix
         const result = operation.apply(null, newArgs);
-        
+
         // Apply inverse scaling based on operation type
-        const operationName = operation.name || "";
-        
+        const operationName = operation.name || '';
+
         // Different operations require different unscaling approaches
         if (typeof result === 'number') {
           // For scalar results like determinant
           const power = operationName.toLowerCase() === 'determinant' ? rows : 1;
           return result * Math.pow(1/scaleFactor, power);
-        } 
+        }
         else if (result && typeof result === 'object') {
           // Handle special return types from matrix decompositions
           if (result.L && result.U) {
@@ -179,7 +179,7 @@ const MatrixErrorHandling = {
             result.L = MatrixCore.clone(result.L);
             result.U = MatrixCore.scale(result.U, 1/scaleFactor);
             return result;
-          } 
+          }
           else if (result.Q && result.R) {
             // QR decomposition
             result.R = MatrixCore.scale(result.R, 1/scaleFactor);
@@ -196,10 +196,10 @@ const MatrixErrorHandling = {
           // Default matrix result
           return MatrixCore.scale(result, 1/scaleFactor);
         }
-        
+
         // Default for other types of results
         return result;
-      } 
+      }
       catch (error) {
         // If scaling fails, provide helpful diagnostic information
         throw new Prime.MathematicalError(
@@ -210,16 +210,16 @@ const MatrixErrorHandling = {
         );
       }
     }
-    
+
     // For matrices in normal range, just execute the operation
     try {
       return operation.apply(null, args);
-    } 
+    }
     catch (error) {
       // Enhance error message with useful diagnostic information
       const normFrobenius = Math.sqrt(sumOfSquares);
       const meanValue = sumOfSquares / (rows * cols);
-      
+
       throw new Prime.MathematicalError(
         `Matrix operation failed: ${error.message}. ` +
         `Matrix properties: size=${rows}x${cols}, Frobenius norm=${normFrobenius.toExponential(5)}, ` +
@@ -228,7 +228,7 @@ const MatrixErrorHandling = {
       );
     }
   },
-  
+
   /**
    * Compute pseudoinverse using SVD for ill-conditioned or singular matrices
    * @param {Array|TypedArray} matrix - Matrix to compute pseudoinverse for
@@ -238,22 +238,22 @@ const MatrixErrorHandling = {
   pseudoInverse: function(matrix, tolerance = 1e-10) {
     const MatrixCore = Prime.Math.MatrixCore;
     const MatrixValidation = Prime.Math.MatrixValidation;
-    
+
     // Input validation
     if (!MatrixCore.isMatrix(matrix)) {
       throw new Prime.ValidationError('Matrix must be valid');
     }
-    
+
     if (MatrixValidation.hasInvalidValues(matrix)) {
       throw new Prime.ValidationError('Matrix contains NaN or Infinity values');
     }
-    
+
     const dim = MatrixCore.dimensions(matrix);
     const rows = dim.rows;
     const cols = dim.cols;
     const useTypedArray = matrix._isTypedArray;
     const arrayType = matrix._arrayType;
-    
+
     // Calculate matrix statistics for adaptive tolerance
     let maxAbs = 0;
     for (let i = 0; i < rows; i++) {
@@ -264,22 +264,22 @@ const MatrixErrorHandling = {
         }
       }
     }
-    
+
     // Adjust tolerance based on matrix magnitude
     const adaptiveTolerance = tolerance * (1 + maxAbs * Number.EPSILON * 100);
-    
+
     try {
       // Import PrimeMath for SVD
       const PrimeMath = require('../framework/math/prime-math.js');
-      
+
       if (!PrimeMath || !PrimeMath.svd) {
         throw new Prime.ValidationError('SVD implementation required for pseudoinverse');
       }
-      
+
       // Decide if scaling is necessary
       let scaleFactor = 1;
       let scaledMatrix = matrix;
-      
+
       if (maxAbs > 1e100) {
         // Scale down for numerical stability
         scaleFactor = 1e-100;
@@ -289,11 +289,11 @@ const MatrixErrorHandling = {
         scaleFactor = 1e100;
         scaledMatrix = MatrixCore.scale(matrix, scaleFactor);
       }
-      
+
       // Create a matrix object and perform SVD
       const matObj = PrimeMath.createMatrix(scaledMatrix);
       const { U, S, V } = PrimeMath.svd(matObj);
-      
+
       // Find the maximum singular value
       let maxSingularValue = 0;
       for (let i = 0; i < Math.min(S.rows, S.cols); i++) {
@@ -301,7 +301,7 @@ const MatrixErrorHandling = {
           maxSingularValue = S.values[i][i];
         }
       }
-      
+
       // Handle the case where all singular values are essentially zero
       if (maxSingularValue < adaptiveTolerance) {
         // Return zero matrix for the case where matrix is effectively zero
@@ -310,10 +310,10 @@ const MatrixErrorHandling = {
           arrayType,
         });
       }
-      
+
       // Compute threshold for zeroing small singular values
       const threshold = maxSingularValue * adaptiveTolerance;
-      
+
       // Create inverse of S with filtering of small values (Tikhonov regularization)
       const SInv = PrimeMath.createMatrix(S.cols, S.rows);
       for (let i = 0; i < Math.min(S.rows, S.cols); i++) {
@@ -327,19 +327,19 @@ const MatrixErrorHandling = {
         }
         // Values below numerical precision are left as zero
       }
-      
+
       // Compute pseudoinverse: V * S^+ * U^T
       const UT = PrimeMath.transposeMatrix(U);
       const VS = PrimeMath.multiplyMatrices(V, SInv);
       const pseudoInv = PrimeMath.multiplyMatrices(VS, UT);
-      
+
       // Adjust for scaling factor
       let resultMatrix;
       if (scaleFactor !== 1) {
         // Need to scale the result to account for input scaling
         const scaledPseudoInv = PrimeMath.createMatrix(pseudoInv.rows, pseudoInv.cols);
         const scaleAdjustment = 1 / scaleFactor;
-        
+
         for (let i = 0; i < pseudoInv.rows; i++) {
           for (let j = 0; j < pseudoInv.cols; j++) {
             scaledPseudoInv.values[i][j] = pseudoInv.values[i][j] * scaleAdjustment;
@@ -349,19 +349,19 @@ const MatrixErrorHandling = {
       } else {
         resultMatrix = pseudoInv;
       }
-      
+
       // Convert back to the original matrix format
       const result = MatrixCore.create(resultMatrix.rows, resultMatrix.cols, 0, {
         useTypedArray,
         arrayType,
       });
-      
+
       for (let i = 0; i < resultMatrix.rows; i++) {
         for (let j = 0; j < resultMatrix.cols; j++) {
           result[i][j] = resultMatrix.values[i][j];
         }
       }
-      
+
       return result;
     } catch (error) {
       // Provide informative error for failed pseudoinverse computation
@@ -372,7 +372,7 @@ const MatrixErrorHandling = {
       );
     }
   },
-  
+
   /**
    * Compute a truncated SVD approximation of a matrix
    * @param {Array|TypedArray} matrix - Matrix to approximate
@@ -381,31 +381,31 @@ const MatrixErrorHandling = {
    */
   truncatedSVD: function(matrix, rank) {
     const MatrixCore = Prime.Math.MatrixCore;
-    
+
     if (!MatrixCore.isMatrix(matrix)) {
       throw new Prime.ValidationError('Matrix must be valid');
     }
-    
+
     const dim = MatrixCore.dimensions(matrix);
     rank = Math.min(rank, Math.min(dim.rows, dim.cols));
-    
+
     // Import PrimeMath for SVD
     const PrimeMath = require('../framework/math/prime-math.js');
-    
+
     if (!PrimeMath || !PrimeMath.svd) {
       throw new Prime.ValidationError('SVD implementation required for truncated SVD');
     }
-    
+
     // Create a matrix object and perform SVD
     const matObj = PrimeMath.createMatrix(matrix);
     const { U, S, V } = PrimeMath.svd(matObj);
-    
+
     // Truncate the singular values
     const ST = PrimeMath.createMatrix(rank, rank);
     for (let i = 0; i < rank; i++) {
       ST.values[i][i] = S.values[i][i];
     }
-    
+
     // Truncate U and V
     const UT = PrimeMath.createMatrix(U.rows, rank);
     for (let i = 0; i < U.rows; i++) {
@@ -413,33 +413,33 @@ const MatrixErrorHandling = {
         UT.values[i][j] = U.values[i][j];
       }
     }
-    
+
     const VT = PrimeMath.createMatrix(V.rows, rank);
     for (let i = 0; i < V.rows; i++) {
       for (let j = 0; j < rank; j++) {
         VT.values[i][j] = V.values[i][j];
       }
     }
-    
+
     // Compute low-rank approximation: U_r * S_r * V_r^T
     const SVT = PrimeMath.multiplyMatrices(ST, PrimeMath.transposeMatrix(VT));
     const approx = PrimeMath.multiplyMatrices(UT, SVT);
-    
+
     // Convert back to the original matrix format
     const result = MatrixCore.create(dim.rows, dim.cols, 0, {
       useTypedArray: matrix._isTypedArray,
       arrayType: matrix._arrayType,
     });
-    
+
     for (let i = 0; i < dim.rows; i++) {
       for (let j = 0; j < dim.cols; j++) {
         result[i][j] = approx.values[i][j];
       }
     }
-    
+
     return result;
   },
-  
+
   /**
    * Validate inputs for matrix operations with enhanced error messages
    * @param {string} operation - Operation name
@@ -450,7 +450,7 @@ const MatrixErrorHandling = {
   validateWithDetails: function(operation, matrices) {
     const MatrixValidation = Prime.Math.MatrixValidation;
     const result = MatrixValidation.validateOperation(operation, matrices);
-    
+
     if (!result.isValid) {
       // Check for specific common issues to provide more helpful messages
       if (matrices.length > 0) {
@@ -463,7 +463,7 @@ const MatrixErrorHandling = {
             );
           }
         }
-        
+
         // For operations requiring square matrices
         const squareOps = ['determinant', 'inverse', 'eigenvalues', 'choleskydecomposition', 'ludecomposition', 'qrdecomposition'];
         if (squareOps.includes(operation.toLowerCase()) && matrices[0].length !== matrices[0][0].length) {
@@ -472,7 +472,7 @@ const MatrixErrorHandling = {
             `Current dimensions: ${matrices[0].length}x${matrices[0][0].length}.`
           );
         }
-        
+
         // For multiplication
         if (operation.toLowerCase() === 'multiply' && matrices.length === 2) {
           throw new Prime.ValidationError(
@@ -483,7 +483,7 @@ const MatrixErrorHandling = {
           );
         }
       }
-      
+
       // If no specific error was thrown, fall back to the generic message
       throw new Prime.ValidationError(result.error);
     }

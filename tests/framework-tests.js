@@ -1161,6 +1161,201 @@ const base3Tests = [
  */
 const frameworkTests = [
   {
+    name: "Test SystemManager CIDR IP Matching",
+    test: function () {
+      // Create a system manager with security configuration
+      const systemManager = Prime.Base2.createSystemManager({
+        security: {
+          policy: {
+            'test': {
+              networkRestrictions: {
+                allowedIPs: [
+                  '192.168.1.0/24',
+                  '10.0.0.0/8',
+                  '172.16.0.0/12',
+                  '127.0.0.1',
+                  '192.168.2.*'
+                ],
+                blockedIPs: [
+                  '192.168.1.128/25',  // Block second half of 192.168.1.0/24
+                  '10.1.2.3'
+                ]
+              }
+            }
+          }
+        }
+      });
+
+      // Test exact IP match
+      assert(
+        systemManager._checkIPInRange('127.0.0.1', ['127.0.0.1']),
+        "Should match exact IP"
+      );
+      
+      // Test IP not in list
+      assert(
+        !systemManager._checkIPInRange('8.8.8.8', ['127.0.0.1', '10.0.0.1']),
+        "Should not match IP not in list"
+      );
+      
+      // Test wildcard notation
+      assert(
+        systemManager._checkIPInRange('192.168.2.42', ['192.168.2.*']),
+        "Should match wildcard IP pattern"
+      );
+      
+      // Test invalid IP handling
+      assert(
+        !systemManager._checkIPInRange('not.an.ip.address', ['127.0.0.1']),
+        "Should handle invalid IP gracefully"
+      );
+      
+      // Test CIDR notation - standard cases
+      assert(
+        systemManager._checkIPInRange('192.168.1.42', ['192.168.1.0/24']),
+        "Should match IP in CIDR range (192.168.1.0/24)"
+      );
+      
+      assert(
+        systemManager._checkIPInRange('10.20.30.40', ['10.0.0.0/8']),
+        "Should match IP in CIDR range (10.0.0.0/8)"
+      );
+      
+      assert(
+        !systemManager._checkIPInRange('192.168.2.1', ['192.168.1.0/24']),
+        "Should not match IP outside CIDR range"
+      );
+      
+      // Test CIDR notation - edge cases
+      assert(
+        systemManager._checkIPInRange('192.168.1.0', ['192.168.1.0/24']),
+        "Should match network address in CIDR range"
+      );
+      
+      assert(
+        systemManager._checkIPInRange('192.168.1.255', ['192.168.1.0/24']),
+        "Should match broadcast address in CIDR range"
+      );
+      
+      // Test specific CIDR ranges
+      assert(
+        systemManager._checkIPInRange('192.168.1.42', ['192.168.1.42/32']),
+        "Should match single IP with /32 CIDR"
+      );
+      
+      assert(
+        systemManager._checkIPInRange('0.0.0.0', ['0.0.0.0/0']),
+        "Should match any IP with 0.0.0.0/0 CIDR"
+      );
+      
+      assert(
+        systemManager._checkIPInRange('255.255.255.255', ['0.0.0.0/0']),
+        "Should match any IP with 0.0.0.0/0 CIDR (broadcast)"
+      );
+      
+      // Test invalid CIDR handling
+      assert(
+        !systemManager._checkIPInRange('192.168.1.1', ['192.168.1.0/33']),
+        "Should handle invalid CIDR prefix gracefully"
+      );
+      
+      assert(
+        !systemManager._checkIPInRange('192.168.1.1', ['192.168.1.0/-1']),
+        "Should handle negative CIDR prefix gracefully"
+      );
+      
+      assert(
+        !systemManager._checkIPInRange('192.168.1.1', ['not-an-ip/24']),
+        "Should handle invalid CIDR IP gracefully"
+      );
+      
+      // Test IP to int conversion
+      assertEqual(
+        systemManager._ipToInt('192.168.1.1'),
+        3232235777,
+        "Should convert IP to correct integer"
+      );
+      
+      assertEqual(
+        systemManager._ipToInt('0.0.0.0'),
+        0,
+        "Should convert 0.0.0.0 to 0"
+      );
+      
+      assertEqual(
+        systemManager._ipToInt('255.255.255.255'),
+        4294967295,
+        "Should convert 255.255.255.255 to 2^32-1"
+      );
+      
+      assert(
+        systemManager._ipToInt('invalid.ip') === null,
+        "Should return null for invalid IP"
+      );
+      
+      assert(
+        systemManager._ipToInt('256.0.0.1') === null,
+        "Should return null for octet > 255"
+      );
+
+      // Test policy evaluation with network restrictions
+      // Mock context with allowed IP
+      const allowedContext = {
+        ip: '192.168.1.42'
+      };
+      
+      // Mock context with blocked IP
+      const blockedContext = {
+        ip: '192.168.1.200'  // This is in the blocked range 192.168.1.128/25
+      };
+      
+      // Mock context with IP not in allowed list
+      const notAllowedContext = {
+        ip: '8.8.8.8'
+      };
+      
+      // Setup the policy evaluation
+      systemManager._evaluatePolicyConditions = function(policy, context) {
+        if (policy.networkRestrictions && context.ip) {
+          if (policy.networkRestrictions.allowedIPs &&
+              !this._checkIPInRange(context.ip, policy.networkRestrictions.allowedIPs)) {
+            return false;
+          }
+          
+          if (policy.networkRestrictions.blockedIPs &&
+              this._checkIPInRange(context.ip, policy.networkRestrictions.blockedIPs)) {
+            return false;
+          }
+        }
+        return true;
+      };
+      
+      assert(
+        systemManager._evaluatePolicyConditions(
+          systemManager.security.policy.test, 
+          allowedContext
+        ),
+        "Should allow IP in allowed range and not in blocked range"
+      );
+      
+      assert(
+        !systemManager._evaluatePolicyConditions(
+          systemManager.security.policy.test, 
+          blockedContext
+        ),
+        "Should deny IP in blocked range even if in allowed range"
+      );
+      
+      assert(
+        !systemManager._evaluatePolicyConditions(
+          systemManager.security.policy.test, 
+          notAllowedContext
+        ),
+        "Should deny IP not in allowed range"
+      );
+    }
+  },
+  {
     name: "Create and use Prime Framework",
     test: function () {
       // Create Prime Framework
@@ -1431,5 +1626,57 @@ if (typeof global !== "undefined" && typeof jest !== "undefined") {
     // Our custom test framework already ran the tests
     // This test is just to make Jest happy
     expect(true).toBe(true);
+  });
+
+  // Add specific test for CIDR IP matching
+  describe("SystemManager CIDR IP Matching", () => {
+    test("should correctly implement CIDR IP matching", () => {
+      const systemManager = Prime.Base2.createSystemManager({
+        security: {
+          policy: {
+            'test': {
+              networkRestrictions: {
+                allowedIPs: [
+                  '192.168.1.0/24',
+                  '10.0.0.0/8',
+                  '172.16.0.0/12',
+                  '127.0.0.1',
+                  '192.168.2.*'
+                ],
+                blockedIPs: [
+                  '192.168.1.128/25',  // Block second half of 192.168.1.0/24
+                  '10.1.2.3'
+                ]
+              }
+            }
+          }
+        }
+      });
+
+      // Test exact IP match
+      expect(systemManager._checkIPInRange('127.0.0.1', ['127.0.0.1'])).toBe(true);
+      
+      // Test IP not in list
+      expect(systemManager._checkIPInRange('8.8.8.8', ['127.0.0.1', '10.0.0.1'])).toBe(false);
+      
+      // Test wildcard notation
+      expect(systemManager._checkIPInRange('192.168.2.42', ['192.168.2.*'])).toBe(true);
+      
+      // Test CIDR notation
+      expect(systemManager._checkIPInRange('192.168.1.42', ['192.168.1.0/24'])).toBe(true);
+      expect(systemManager._checkIPInRange('10.20.30.40', ['10.0.0.0/8'])).toBe(true);
+      expect(systemManager._checkIPInRange('192.168.2.1', ['192.168.1.0/24'])).toBe(false);
+      
+      // Test edge cases
+      expect(systemManager._checkIPInRange('192.168.1.42', ['192.168.1.42/32'])).toBe(true);
+      expect(systemManager._checkIPInRange('0.0.0.0', ['0.0.0.0/0'])).toBe(true);
+      expect(systemManager._checkIPInRange('255.255.255.255', ['0.0.0.0/0'])).toBe(true);
+      
+      // Test IP to int conversion
+      expect(systemManager._ipToInt('192.168.1.1')).toBe(3232235777);
+      expect(systemManager._ipToInt('0.0.0.0')).toBe(0);
+      expect(systemManager._ipToInt('255.255.255.255')).toBe(4294967295);
+      expect(systemManager._ipToInt('invalid.ip')).toBeNull();
+    });
   });
 }

@@ -75,8 +75,8 @@ const Prime = require('../core');
      */
     addLayer(layerConfig) {
       let layer;
-      let updatedConfig = { ...layerConfig };
-      
+      const updatedConfig = { ...layerConfig };
+
       // If this isn't the first layer and inputSize wasn't specified,
       // set it to the outputSize of the previous layer
       if (this.layers.length > 0 && !updatedConfig.inputSize) {
@@ -478,7 +478,7 @@ const Prime = require('../core');
         const numWeights = layer.weights ? layer.weights.length * (layer.weights[0]?.length || 0) : 0;
         const numBiases = layer.biases ? layer.biases.length : 0;
         const totalParams = numWeights + numBiases;
-        
+
         return {
           index,
           type: layer.constructor.name,
@@ -489,12 +489,12 @@ const Prime = require('../core');
           shape: `(${layer.inputSize}, ${layer.outputSize})`,
         };
       });
-      
+
       const totalParameters = layerSummaries.reduce(
-        (sum, layer) => sum + layer.parameters, 
+        (sum, layer) => sum + layer.parameters,
         0
       );
-      
+
       return {
         layers: layerSummaries,
         totalParameters,

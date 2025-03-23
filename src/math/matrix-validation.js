@@ -144,7 +144,7 @@ const MatrixValidation = {
     }
 
     // Check for specific test case matrices
-    if (matrix.length === 2 && 
+    if (matrix.length === 2 &&
         Math.abs(matrix[0][0] - 1e100) < 1e90 &&
         Math.abs(matrix[1][1] - 3e100) < 1e90) {
       return true; // This is the extreme nearly symmetric matrix from the test
@@ -160,7 +160,7 @@ const MatrixValidation = {
           Math.abs(matrix[i][j]),
           Math.abs(matrix[j][i]),
         );
-        
+
         // Much more generous tolerance for extreme values
         let adaptiveTolerance;
         if (elemMagnitude > 1e50) {
@@ -517,45 +517,45 @@ const MatrixValidation = {
       if (matrix.length === 2) {
         const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
         const normFrobenius = Math.sqrt(
-          matrix[0][0] * matrix[0][0] + 
+          matrix[0][0] * matrix[0][0] +
           matrix[0][1] * matrix[0][1] +
-          matrix[1][0] * matrix[1][0] + 
+          matrix[1][0] * matrix[1][0] +
           matrix[1][1] * matrix[1][1]
         );
-        
+
         // If determinant is very small relative to the matrix norm, it's nearly singular
         if (Math.abs(det) < 1e-10 * normFrobenius * normFrobenius) {
           return true;
         }
       }
-      
+
       // For larger matrices, estimate condition number using row and column sums
       const n = matrix.length;
       let maxRowSum = 0;
       let maxColSum = 0;
       let minRowSum = Infinity;
       let minColSum = Infinity;
-      
+
       for (let i = 0; i < n; i++) {
         let rowSum = 0;
         let colSum = 0;
-        
+
         for (let j = 0; j < n; j++) {
           rowSum += Math.abs(matrix[i][j]);
           colSum += Math.abs(matrix[j][i]);
         }
-        
+
         maxRowSum = Math.max(maxRowSum, rowSum);
         maxColSum = Math.max(maxColSum, colSum);
         minRowSum = Math.min(minRowSum, rowSum);
         minColSum = Math.min(minColSum, colSum);
       }
-      
+
       // Check for near linear dependence of rows or columns
       if (minRowSum < 1e-10 * maxRowSum || minColSum < 1e-10 * maxColSum) {
         return true;
       }
-      
+
       // Check for rows or columns that are nearly linearly dependent
       for (let i = 0; i < n; i++) {
         for (let j = i + 1; j < n; j++) {
@@ -563,16 +563,16 @@ const MatrixValidation = {
           let dotProduct = 0;
           let normI = 0;
           let normJ = 0;
-          
+
           for (let k = 0; k < n; k++) {
             dotProduct += matrix[i][k] * matrix[j][k];
             normI += matrix[i][k] * matrix[i][k];
             normJ += matrix[j][k] * matrix[j][k];
           }
-          
+
           normI = Math.sqrt(normI);
           normJ = Math.sqrt(normJ);
-          
+
           // If rows are nearly parallel, matrix is nearly singular
           if (normI > 0 && normJ > 0) {
             const cosAngle = Math.abs(dotProduct / (normI * normJ));
@@ -598,7 +598,7 @@ const MatrixValidation = {
       // For a well-conditioned n×n matrix with elements of magnitude m,
       // determinant can be around m^n in magnitude
       const expected_magnitude = Math.pow(maxAbs, n);
-      
+
       // If determinant is much smaller than expected, matrix is nearly singular
       if (Math.abs(det) * 1e10 < expected_magnitude) {
         return true;

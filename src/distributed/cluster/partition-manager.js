@@ -738,19 +738,441 @@ class LayerWisePartition extends PartitionScheme {
    */
   _createCommunicationOptimizedAssignments(layers, nodeCount) {
     const layerCount = layers.length;
-    const assignments = Array(layerCount).fill(-1);
 
-    // Simplified implementation: group sequential layers together
-    // In a real implementation, this would analyze the computational graph
-    // and group layers to minimize cross-node communication
+    // Step 1: Build layer dependency graph and connectivity matrix
+    const dependencyGraph = this._buildLayerDependencyGraph(layers);
 
-    const layersPerNode = Math.ceil(layerCount / nodeCount);
+    // Step 2: Create initial computational cost estimate for each layer
+    const layerCosts = this._estimateLayerComputationalCosts(layers);
+
+    // Step 3: Calculate communication cost matrix between layers
+    const communicationCosts = this._calculateCommunicationCosts(layers, dependencyGraph);
+
+    // Step 4: Apply graph partitioning algorithm to minimize communication costs
+    // while balancing computational load
+    return this._partitionLayerGraph(
+      dependencyGraph,
+      communicationCosts,
+      layerCosts,
+      nodeCount
+    );
+  }
+
+  /**
+   * Build layer dependency graph based on network topology
+   * @private
+   * @param {Array<Object>} layers - Layer configurations
+   * @returns {Array<Array<number>>} Adjacency matrix representing layer dependencies
+   */
+  _buildLayerDependencyGraph(layers) {
+    const layerCount = layers.length;
+    const dependencyGraph = Array(layerCount).fill().map(() => Array(layerCount).fill(0));
+
+    // Map layer IDs to indices for faster lookups
+    const layerIndexMap = new Map();
+    layers.forEach((layer, idx) => {
+      layerIndexMap.set(layer.id, idx);
+    });
+
+    // For each layer, determine its inputs and outputs
+    for (let i = 0; i < layerCount; i++) {
+      const layer = layers[i];
+
+      // For standard sequential networks, connect adjacent layers
+      if (i < layerCount - 1) {
+        dependencyGraph[i][i + 1] = 1; // Forward connection
+      }
+
+      // Add any explicitly defined connections from layer configuration
+      if (layer.inputs && Array.isArray(layer.inputs)) {
+        for (const inputId of layer.inputs) {
+          const inputIdx = layerIndexMap.get(inputId);
+          if (inputIdx !== undefined) {
+            dependencyGraph[inputIdx][i] = 1; // Connection from input to current layer
+          }
+        }
+      }
+
+      if (layer.outputs && Array.isArray(layer.outputs)) {
+        for (const outputId of layer.outputs) {
+          const outputIdx = layerIndexMap.get(outputId);
+          if (outputIdx !== undefined) {
+            dependencyGraph[i][outputIdx] = 1; // Connection from current layer to output
+          }
+        }
+      }
+
+      // Add residual/skip connections if specified
+      if (layer.skipConnections && Array.isArray(layer.skipConnections)) {
+        for (const skipId of layer.skipConnections) {
+          const skipIdx = layerIndexMap.get(skipId);
+          if (skipIdx !== undefined) {
+            dependencyGraph[i][skipIdx] = 1; // Skip connection
+          }
+        }
+      }
+    }
+
+    return dependencyGraph;
+  }
+
+  /**
+   * Estimate computational cost for each layer
+   * @private
+   * @param {Array<Object>} layers - Layer configurations
+   * @returns {Array<number>} Estimated computational cost for each layer
+   */
+  _estimateLayerComputationalCosts(layers) {
+    return layers.map(layer => {
+      // Base cost based on input and output sizes
+      let cost = (layer.inputSize || 1) * (layer.outputSize || 1);
+
+      // Adjust based on layer type
+      switch (layer.type) {
+        case 'conv':
+          // Convolutional layers are more expensive
+          const kernelSize = layer.kernelSize || 3;
+          const channels = layer.channels || 1;
+          cost *= kernelSize * kernelSize * channels;
+          break;
+
+        case 'recurrent':
+          // Recurrent layers have sequential dependencies
+          const timeSteps = layer.timeSteps || 1;
+          cost *= timeSteps;
+          break;
+
+        case 'attention':
+          // Attention mechanisms are very computation-heavy
+          cost *= 3; // Multiple matrix multiplies + softmax
+          break;
+
+        case 'pooling':
+          // Pooling layers are computationally lighter
+          cost /= 4;
+          break;
+      }
+
+      // Adjust for activation function complexity
+      if (layer.activation) {
+        switch (layer.activation) {
+          case 'relu':
+            // ReLU is computationally simple
+            break;
+          case 'sigmoid':
+          case 'tanh':
+            // These involve exponentials and are more expensive
+            cost *= 1.2;
+            break;
+          case 'softmax':
+            // Softmax involves exponentials and normalization
+            cost *= 1.5;
+            break;
+        }
+      }
+
+      return Math.max(1, cost); // Ensure minimum cost of 1
+    });
+  }
+
+  /**
+   * Calculate communication costs between layers
+   * @private
+   * @param {Array<Object>} layers - Layer configurations
+   * @param {Array<Array<number>>} dependencyGraph - Layer dependency graph
+   * @returns {Array<Array<number>>} Communication costs between layers
+   */
+  _calculateCommunicationCosts(layers, dependencyGraph) {
+    const layerCount = layers.length;
+    const communicationCosts = Array(layerCount).fill().map(() => Array(layerCount).fill(0));
 
     for (let i = 0; i < layerCount; i++) {
-      assignments[i] = Math.floor(i / layersPerNode) % nodeCount;
+      for (let j = 0; j < layerCount; j++) {
+        if (dependencyGraph[i][j]) {
+          // Calculate communication volume based on tensor sizes
+          const sourceLayer = layers[i];
+          const targetLayer = layers[j];
+
+          // Communication volume is proportional to the connecting dimensions
+          // For simplicity, use output size of source layer
+          const volume = sourceLayer.outputSize || 1;
+
+          communicationCosts[i][j] = volume;
+        }
+      }
+    }
+
+    return communicationCosts;
+  }
+
+  /**
+   * Partition layer graph to minimize communication costs while balancing load
+   * @private
+   * @param {Array<Array<number>>} dependencyGraph - Layer dependency graph
+   * @param {Array<Array<number>>} communicationCosts - Communication costs between layers
+   * @param {Array<number>} layerCosts - Computational costs for each layer
+   * @param {number} nodeCount - Number of available nodes
+   * @returns {Array<number>} Node assignments for each layer
+   */
+  _partitionLayerGraph(dependencyGraph, communicationCosts, layerCosts, nodeCount) {
+    const layerCount = layerCosts.length;
+
+    // Initialize with equal distribution of layers across nodes
+    const assignments = Array(layerCount).fill(-1);
+    const nodeCosts = Array(nodeCount).fill(0);
+    const totalCost = layerCosts.reduce((sum, cost) => sum + cost, 0);
+    const targetCostPerNode = totalCost / nodeCount;
+
+    // First pass: group strongly connected components
+    const components = this._identifyStronglyConnectedComponents(dependencyGraph);
+
+    // Sort components by total cost (descending)
+    components.sort((a, b) => {
+      const costA = a.reduce((sum, layerIdx) => sum + layerCosts[layerIdx], 0);
+      const costB = b.reduce((sum, layerIdx) => sum + layerCosts[layerIdx], 0);
+      return costB - costA;
+    });
+
+    // Assign components to nodes using a bin packing approach
+    for (const component of components) {
+      // Calculate component cost
+      const componentCost = component.reduce((sum, layerIdx) => sum + layerCosts[layerIdx], 0);
+
+      // Find best node for this component
+      let bestNodeIdx = 0;
+      let minCost = nodeCosts[0];
+
+      for (let i = 1; i < nodeCount; i++) {
+        if (nodeCosts[i] < minCost) {
+          minCost = nodeCosts[i];
+          bestNodeIdx = i;
+        }
+      }
+
+      // If this component would make the node too unbalanced, try splitting it
+      if (nodeCosts[bestNodeIdx] + componentCost > targetCostPerNode * 1.5 && component.length > 1) {
+        // Find node with second lowest cost
+        let secondBestNodeIdx = bestNodeIdx === 0 ? 1 : 0;
+        let secondMinCost = nodeCosts[secondBestNodeIdx];
+
+        for (let i = 0; i < nodeCount; i++) {
+          if (i !== bestNodeIdx && nodeCosts[i] < secondMinCost) {
+            secondMinCost = nodeCosts[i];
+            secondBestNodeIdx = i;
+          }
+        }
+
+        // Try to split component across these two nodes
+        const sortedLayers = [...component].sort((a, b) => layerCosts[b] - layerCosts[a]);
+        let firstNodeCost = 0;
+        let secondNodeCost = 0;
+
+        for (const layerIdx of sortedLayers) {
+          const cost = layerCosts[layerIdx];
+
+          // Assign to node with lower current cost
+          if (nodeCosts[bestNodeIdx] + firstNodeCost <= nodeCosts[secondBestNodeIdx] + secondNodeCost) {
+            assignments[layerIdx] = bestNodeIdx;
+            firstNodeCost += cost;
+          } else {
+            assignments[layerIdx] = secondBestNodeIdx;
+            secondNodeCost += cost;
+          }
+        }
+
+        // Update node costs
+        nodeCosts[bestNodeIdx] += firstNodeCost;
+        nodeCosts[secondBestNodeIdx] += secondNodeCost;
+      } else {
+        // Assign all layers in this component to the same node
+        for (const layerIdx of component) {
+          assignments[layerIdx] = bestNodeIdx;
+        }
+
+        // Update node cost
+        nodeCosts[bestNodeIdx] += componentCost;
+      }
+    }
+
+    // Second pass: optimize communication by moving individual layers
+    let improvements = true;
+    const maxIterations = Math.min(20, layerCount * 2);
+
+    for (let iteration = 0; iteration < maxIterations && improvements; iteration++) {
+      improvements = false;
+
+      // For each layer, consider moving it to another node
+      for (let layerIdx = 0; layerIdx < layerCount; layerIdx++) {
+        const currentNodeIdx = assignments[layerIdx];
+        const layerCost = layerCosts[layerIdx];
+
+        // Calculate current communication cost for this layer
+        let currentCommCost = 0;
+        for (let otherLayer = 0; otherLayer < layerCount; otherLayer++) {
+          if (otherLayer !== layerIdx) {
+            const otherNodeIdx = assignments[otherLayer];
+            if (currentNodeIdx !== otherNodeIdx) {
+              // Add communication cost if layers are connected and on different nodes
+              if (communicationCosts[layerIdx][otherLayer] > 0) {
+                currentCommCost += communicationCosts[layerIdx][otherLayer];
+              }
+              if (communicationCosts[otherLayer][layerIdx] > 0) {
+                currentCommCost += communicationCosts[otherLayer][layerIdx];
+              }
+            }
+          }
+        }
+
+        // Try moving to each other node
+        for (let targetNodeIdx = 0; targetNodeIdx < nodeCount; targetNodeIdx++) {
+          if (targetNodeIdx === currentNodeIdx) continue;
+
+          // Calculate new communication cost if moved to this node
+          let newCommCost = 0;
+          for (let otherLayer = 0; otherLayer < layerCount; otherLayer++) {
+            if (otherLayer !== layerIdx) {
+              const otherNodeIdx = assignments[otherLayer];
+              if (targetNodeIdx !== otherNodeIdx) {
+                // Add communication cost if layers are connected and would be on different nodes
+                if (communicationCosts[layerIdx][otherLayer] > 0) {
+                  newCommCost += communicationCosts[layerIdx][otherLayer];
+                }
+                if (communicationCosts[otherLayer][layerIdx] > 0) {
+                  newCommCost += communicationCosts[otherLayer][layerIdx];
+                }
+              }
+            }
+          }
+
+          // Consider load balancing factor
+          const currentNodeNewCost = nodeCosts[currentNodeIdx] - layerCost;
+          const targetNodeNewCost = nodeCosts[targetNodeIdx] + layerCost;
+
+          // Move if it improves communication cost without severely unbalancing nodes
+          const commImprovement = currentCommCost - newCommCost;
+          const balanceEffect = Math.abs(targetNodeNewCost - currentNodeNewCost);
+
+          if (commImprovement > 0 && balanceEffect < targetCostPerNode * 0.5) {
+            // Move layer to target node
+            assignments[layerIdx] = targetNodeIdx;
+            nodeCosts[currentNodeIdx] -= layerCost;
+            nodeCosts[targetNodeIdx] += layerCost;
+            improvements = true;
+            break;
+          }
+        }
+      }
+    }
+
+    // Ensure all layers are assigned
+    for (let i = 0; i < layerCount; i++) {
+      if (assignments[i] === -1) {
+        // Find node with minimum load
+        let minLoadNodeIdx = 0;
+        let minLoad = nodeCosts[0];
+
+        for (let j = 1; j < nodeCount; j++) {
+          if (nodeCosts[j] < minLoad) {
+            minLoad = nodeCosts[j];
+            minLoadNodeIdx = j;
+          }
+        }
+
+        // Assign to least loaded node
+        assignments[i] = minLoadNodeIdx;
+        nodeCosts[minLoadNodeIdx] += layerCosts[i];
+      }
     }
 
     return assignments;
+  }
+
+  /**
+   * Identify strongly connected components in the layer graph
+   * @private
+   * @param {Array<Array<number>>} graph - Layer dependency graph
+   * @returns {Array<Array<number>>} Strongly connected components
+   */
+  _identifyStronglyConnectedComponents(graph) {
+    const n = graph.length;
+    const visited = Array(n).fill(false);
+    const stack = [];
+    const components = [];
+
+    // First DFS to fill the stack
+    for (let i = 0; i < n; i++) {
+      if (!visited[i]) {
+        this._fillStack(i, graph, visited, stack);
+      }
+    }
+
+    // Create transposed graph
+    const transposedGraph = Array(n).fill().map(() => Array(n).fill(0));
+
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (graph[i][j] === 1) {
+          transposedGraph[j][i] = 1;
+        }
+      }
+    }
+
+    // Reset visited array
+    for (let i = 0; i < n; i++) {
+      visited[i] = false;
+    }
+
+    // Second DFS to find components
+    while (stack.length > 0) {
+      const v = stack.pop();
+
+      if (!visited[v]) {
+        const component = [];
+        this._collectComponent(v, transposedGraph, visited, component);
+        components.push(component);
+      }
+    }
+
+    return components;
+  }
+
+  /**
+   * Fill stack in DFS order for strongly connected components algorithm
+   * @private
+   * @param {number} vertex - Current vertex
+   * @param {Array<Array<number>>} graph - Dependency graph
+   * @param {Array<boolean>} visited - Visited vertices
+   * @param {Array<number>} stack - Vertex stack
+   */
+  _fillStack(vertex, graph, visited, stack) {
+    visited[vertex] = true;
+
+    for (let i = 0; i < graph.length; i++) {
+      if (graph[vertex][i] === 1 && !visited[i]) {
+        this._fillStack(i, graph, visited, stack);
+      }
+    }
+
+    stack.push(vertex);
+  }
+
+  /**
+   * Collect vertices in a strongly connected component
+   * @private
+   * @param {number} vertex - Current vertex
+   * @param {Array<Array<number>>} graph - Dependency graph
+   * @param {Array<boolean>} visited - Visited vertices
+   * @param {Array<number>} component - Component being built
+   */
+  _collectComponent(vertex, graph, visited, component) {
+    visited[vertex] = true;
+    component.push(vertex);
+
+    for (let i = 0; i < graph.length; i++) {
+      if (graph[vertex][i] === 1 && !visited[i]) {
+        this._collectComponent(i, graph, visited, component);
+      }
+    }
   }
 }
 
@@ -961,6 +1383,8 @@ class PartitionManager {
       scheme = new LayerWisePartition(config);
     } else if (config.type === PartitionType.INTRA_LAYER) {
       scheme = new IntraLayerPartition(config);
+    } else if (config.type === PartitionType.FUNCTIONAL) {
+      scheme = new FunctionalPartition(config);
     } else {
       throw new Prime.ValidationError(
         `Unsupported partition type: ${config.type}`,
@@ -1021,6 +1445,296 @@ class PartitionManager {
   }
 }
 
+/**
+ * Functional partition scheme
+ * Partitions network based on functional components and computational patterns
+ */
+class FunctionalPartition extends PartitionScheme {
+  /**
+   * Create a new functional partition scheme
+   * @param {Object} config - Partition configuration
+   */
+  constructor(config = {}) {
+    super({
+      type: PartitionType.FUNCTIONAL,
+      strategy: config.strategy || PartitionStrategy.BALANCED,
+      ...config,
+    });
+
+    this.specializationMap = config.specializationMap || {};
+    this.patternDetection = config.patternDetection !== false;
+    this.adaptiveMigration = config.adaptiveMigration !== false;
+  }
+
+  /**
+   * Create a functional partition plan
+   * @param {Object} config - Partition config
+   * @param {Array<Object>} config.layers - Layer configurations
+   * @param {Array<string>} config.nodeIds - Available node IDs
+   * @param {Object} [config.nodeCapabilities={}] - Node capabilities
+   * @returns {Object} Partition plan
+   */
+  createPartitionPlan(config) {
+    if (!config.layers || !config.nodeIds || config.nodeIds.length === 0) {
+      throw new Prime.ValidationError('Layers and node IDs are required');
+    }
+
+    // Detect computational patterns in the network
+    const patterns = this._detectComputationalPatterns(config.layers);
+
+    // Group layers by pattern
+    const patternGroups = this._groupLayersByPattern(config.layers, patterns);
+
+    // Match patterns to node specializations
+    const assignments = this._matchPatternsToNodes(
+      patternGroups,
+      config.nodeIds,
+      config.nodeCapabilities || {}
+    );
+
+    // Create layer-node assignments
+    const partitions = [];
+
+    for (let i = 0; i < config.layers.length; i++) {
+      const layer = config.layers[i];
+      const nodeId = config.nodeIds[assignments[i]];
+
+      partitions.push({
+        layerId: layer.id,
+        nodeId,
+        layerType: layer.type,
+        pattern: patterns[i],
+        inputSize: layer.inputSize,
+        outputSize: layer.outputSize,
+      });
+    }
+
+    // Group by pattern for convenience
+    const patternPartitions = {};
+    for (const pattern of Object.keys(patternGroups)) {
+      patternPartitions[pattern] = partitions.filter(p => p.pattern === pattern);
+    }
+
+    return {
+      type: this.type,
+      strategy: this.strategy,
+      partitions,
+      patternPartitions,
+      patterns,
+      nodeCount: config.nodeIds.length,
+      layerCount: config.layers.length,
+      adaptiveMigration: this.adaptiveMigration,
+    };
+  }
+
+  /**
+   * Apply partition plan to layers
+   * @param {Object} plan - Partition plan
+   * @returns {boolean} Whether the partitioning was successful
+   */
+  applyPartitionPlan(plan) {
+    if (!plan || !plan.partitions) {
+      throw new Prime.ValidationError('Valid partition plan is required');
+    }
+
+    // Clear existing assignments
+    this.layerAssignments.clear();
+    this.nodeAssignments.clear();
+
+    // Apply new assignments
+    for (const partition of plan.partitions) {
+      // Configure layer
+      this.configureLayer(partition.layerId, {
+        type: partition.layerType,
+        inputSize: partition.inputSize,
+        outputSize: partition.outputSize,
+        partitioned: true,
+        pattern: partition.pattern,
+      });
+
+      // Assign layer to node
+      this.assignLayerToNodes(partition.layerId, [partition.nodeId]);
+    }
+
+    // Set up sync status tracking
+    for (const partition of plan.partitions) {
+      this.updateSyncStatus(partition.layerId, {
+        lastSyncTimestamp: Date.now(),
+        adaptiveMigration: plan.adaptiveMigration,
+        syncErrors: 0,
+      });
+    }
+
+    // Emit partition applied event
+    this.eventBus.emit('partition:plan-applied', {
+      type: this.type,
+      strategy: this.strategy,
+      layerIds: plan.partitions.map(p => p.layerId),
+      nodeIds: [...new Set(plan.partitions.map(p => p.nodeId))],
+      timestamp: Date.now(),
+    });
+
+    return true;
+  }
+
+  /**
+   * Detect computational patterns in the network
+   * @private
+   * @param {Array<Object>} layers - Layer configurations
+   * @returns {Array<string>} Detected pattern for each layer
+   */
+  _detectComputationalPatterns(layers) {
+    return layers.map(layer => {
+      // Detect pattern based on layer type and properties
+      if (layer.type === 'conv') {
+        return 'convolutional';
+      } else if (layer.type === 'recurrent' || layer.type === 'lstm' || layer.type === 'gru') {
+        return 'recurrent';
+      } else if (layer.type === 'attention' || layer.type === 'transformer') {
+        return 'attention';
+      } else if (layer.type === 'pooling' || layer.type === 'max_pool' || layer.type === 'avg_pool') {
+        return 'pooling';
+      } else if (layer.sparse === true || layer.sparsity > 0.5) {
+        return 'sparse';
+      } else if (layer.activation === 'softmax' && layer.outputSize > 1000) {
+        return 'classification';
+      } else if (layer.activation === 'sigmoid' && layer.outputSize === 1) {
+        return 'binary';
+      } else if (layer.normalization === true || layer.type === 'batchnorm') {
+        return 'normalization';
+      } else {
+        // Default to dense pattern
+        return 'dense';
+      }
+    });
+  }
+
+  /**
+   * Group layers by computational pattern
+   * @private
+   * @param {Array<Object>} layers - Layer configurations
+   * @param {Array<string>} patterns - Detected patterns
+   * @returns {Object} Grouped layers by pattern
+   */
+  _groupLayersByPattern(layers, patterns) {
+    const groups = {};
+
+    // Initialize groups
+    for (let i = 0; i < layers.length; i++) {
+      const pattern = patterns[i];
+      if (!groups[pattern]) {
+        groups[pattern] = [];
+      }
+      groups[pattern].push(i);
+    }
+
+    return groups;
+  }
+
+  /**
+   * Match computational patterns to node specializations
+   * @private
+   * @param {Object} patternGroups - Grouped layers by pattern
+   * @param {Array<string>} nodeIds - Available node IDs
+   * @param {Object} nodeCapabilities - Node capabilities
+   * @returns {Array<number>} Node index assignments for each layer
+   */
+  _matchPatternsToNodes(patternGroups, nodeIds, nodeCapabilities) {
+    const layerCount = Object.values(patternGroups).flat().length;
+    const assignments = Array(layerCount).fill(-1);
+    const nodeCount = nodeIds.length;
+
+    // Calculate node affinities for each pattern
+    const nodeAffinities = {};
+
+    for (const pattern of Object.keys(patternGroups)) {
+      nodeAffinities[pattern] = Array(nodeCount).fill(1); // Default affinity
+
+      for (let nodeIdx = 0; nodeIdx < nodeCount; nodeIdx++) {
+        const nodeId = nodeIds[nodeIdx];
+        const capabilities = nodeCapabilities[nodeId] || {};
+
+        // Adjust affinity based on node capabilities and pattern
+        switch (pattern) {
+          case 'convolutional':
+            // GPUs are good for convolutional operations
+            if (capabilities.gpu) {
+              nodeAffinities[pattern][nodeIdx] *= 2.0;
+            }
+            break;
+
+          case 'recurrent':
+            // Memory bandwidth is important for recurrent layers
+            if (capabilities.memory) {
+              nodeAffinities[pattern][nodeIdx] *= 1.5;
+            }
+            break;
+
+          case 'attention':
+            // Both compute and memory are critical for attention
+            if (capabilities.gpu && capabilities.memory) {
+              nodeAffinities[pattern][nodeIdx] *= 2.5;
+            } else if (capabilities.gpu || capabilities.memory) {
+              nodeAffinities[pattern][nodeIdx] *= 1.3;
+            }
+            break;
+
+          case 'sparse':
+            // CPUs can be better for sparse operations
+            if (capabilities.cpu && !capabilities.gpu) {
+              nodeAffinities[pattern][nodeIdx] *= 1.5;
+            }
+            break;
+
+          case 'dense':
+            // General compute capability
+            if (capabilities.compute) {
+              nodeAffinities[pattern][nodeIdx] *= capabilities.compute;
+            }
+            break;
+        }
+
+        // Consider user-defined specializations
+        if (this.specializationMap[pattern] === nodeId) {
+          nodeAffinities[pattern][nodeIdx] *= 3.0; // Strong preference
+        }
+      }
+    }
+
+    // Track node loads
+    const nodeCosts = Array(nodeCount).fill(0);
+
+    // Assign patterns to nodes based on affinity and load balance
+    for (const [pattern, layerIndices] of Object.entries(patternGroups)) {
+      // Check if this pattern has a strong specialization
+      const affinities = nodeAffinities[pattern];
+
+      // Find the best node for this pattern
+      let bestNodeIdx = 0;
+      let bestScore = -Infinity;
+
+      for (let nodeIdx = 0; nodeIdx < nodeCount; nodeIdx++) {
+        // Score combines affinity and inverse of current load
+        const loadFactor = 1 / (1 + nodeCosts[nodeIdx]); // Decreases as load increases
+        const score = affinities[nodeIdx] * loadFactor;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestNodeIdx = nodeIdx;
+        }
+      }
+
+      // Assign all layers with this pattern to the best node
+      for (const layerIdx of layerIndices) {
+        assignments[layerIdx] = bestNodeIdx;
+        nodeCosts[bestNodeIdx] += 1;
+      }
+    }
+
+    return assignments;
+  }
+}
+
 // Add to Prime namespace
 Prime.Distributed = Prime.Distributed || {};
 Prime.Distributed.Cluster = Prime.Distributed.Cluster || {};
@@ -1031,6 +1745,7 @@ Prime.Distributed.Cluster.Partition = {
   DataParallelPartition,
   LayerWisePartition,
   IntraLayerPartition,
+  FunctionalPartition,
   PartitionManager,
 };
 

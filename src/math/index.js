@@ -159,7 +159,7 @@ Prime.Math.Matrix.determinant = function(matrix) {
     if (!MatrixValidation.isSquare(matrix)) {
       throw new Prime.ValidationError('Matrix must be square');
     }
-    
+
     // Find extreme values for scaling
     let maxAbs = 0;
     let minNonZero = Infinity;
@@ -170,7 +170,7 @@ Prime.Math.Matrix.determinant = function(matrix) {
         if (absVal > 0 && absVal < minNonZero) minNonZero = absVal;
       }
     }
-    
+
     // Apply scaling if needed
     let scaledMatrix = matrix;
     let scaleFactor = 1;
@@ -179,10 +179,10 @@ Prime.Math.Matrix.determinant = function(matrix) {
       scaleFactor = scale;
       scaledMatrix = MatrixCore.scale(matrix, scale);
     }
-    
+
     // Calculate determinant
     const det = MatrixAdvanced.determinant(scaledMatrix);
-    
+
     // Adjust for scaling
     const n = matrix.length;
     return det * Math.pow(1/scaleFactor, n);
@@ -203,12 +203,12 @@ Prime.Math.Matrix.inverse = function(matrix) {
     if (!MatrixValidation.isSquare(matrix)) {
       throw new Prime.ValidationError('Matrix must be square');
     }
-    
+
     // Check if matrix is nearly singular using proper numerical approach
     if (MatrixValidation.isNearlySingular(matrix)) {
       throw new Prime.MathematicalError('Matrix is singular or nearly singular');
     }
-    
+
     // Try regular inverse
     return MatrixAdvanced.inverse(matrix);
   } catch (error) {
@@ -219,7 +219,7 @@ Prime.Math.Matrix.inverse = function(matrix) {
         const PrimeMath = require('../framework/math/prime-math.js');
         const matObj = PrimeMath.createMatrix(matrix);
         const { U, S, V } = PrimeMath.svd(matObj);
-        
+
         // Find max singular value for threshold
         let maxSingularValue = 0;
         for (let i = 0; i < Math.min(S.rows, S.cols); i++) {
@@ -227,10 +227,10 @@ Prime.Math.Matrix.inverse = function(matrix) {
             maxSingularValue = S.values[i][i];
           }
         }
-        
+
         // Compute threshold for zeroing small singular values
         const threshold = maxSingularValue * 1e-10;
-        
+
         // Create inverse of S with filtering
         const SInv = PrimeMath.createMatrix(S.cols, S.rows);
         for (let i = 0; i < Math.min(S.rows, S.cols); i++) {
@@ -238,12 +238,12 @@ Prime.Math.Matrix.inverse = function(matrix) {
             SInv.values[i][i] = 1 / S.values[i][i];
           }
         }
-        
+
         // Compute pseudoinverse: V * S^+ * U^T
         const UT = PrimeMath.transposeMatrix(U);
         const VS = PrimeMath.multiplyMatrices(V, SInv);
         const pseudoInv = PrimeMath.multiplyMatrices(VS, UT);
-        
+
         // Convert to original format
         const result = MatrixCore.create(pseudoInv.cols, pseudoInv.rows);
         for (let i = 0; i < pseudoInv.cols; i++) {
@@ -251,7 +251,7 @@ Prime.Math.Matrix.inverse = function(matrix) {
             result[i][j] = pseudoInv.values[j][i];
           }
         }
-        
+
         return result;
       } catch (e) {
         throw error; // If pseudoinverse fails, throw original error
@@ -271,12 +271,12 @@ Prime.Math.Matrix.luDecomposition = function(matrix) {
   if (!MatrixValidation.isSquare(matrix)) {
     throw new Prime.ValidationError('Matrix must be square');
   }
-  
+
   // Check if matrix is nearly singular using a proper numerical approach
   if (MatrixValidation.isNearlySingular(matrix)) {
     throw new Prime.MathematicalError('Matrix is singular or nearly singular');
   }
-  
+
   return MatrixAdvanced.luDecomposition(matrix);
 };
 
@@ -287,7 +287,7 @@ Prime.Math.Matrix.qrDecomposition = function(matrix) {
   if (MatrixValidation.hasInvalidValues(matrix)) {
     throw new Prime.ValidationError('Matrix contains NaN or Infinity values');
   }
-  
+
   return MatrixAdvanced.qrDecomposition(matrix);
 };
 
@@ -301,7 +301,7 @@ Prime.Math.Matrix.eigenvalues = function(matrix, options = {}) {
   if (!MatrixValidation.isSquare(matrix)) {
     throw new Prime.ValidationError('Matrix must be square');
   }
-  
+
   return MatrixAdvanced.eigenvalues(matrix, options);
 };
 
@@ -318,7 +318,7 @@ Prime.Math.Matrix.choleskyDecomposition = function(matrix) {
   if (!MatrixValidation.isSymmetric(matrix)) {
     throw new Prime.ValidationError('Matrix must be symmetric for Cholesky decomposition');
   }
-  
+
   return MatrixAdvanced.choleskyDecomposition(matrix);
 };
 

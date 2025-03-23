@@ -175,7 +175,7 @@ class SelfReference {
       awarenessTrend: getTrend(awarenessDelta),
     };
   }
-  
+
   /**
    * Create initial self model based on state
    * @param {Object} state - Initial state
@@ -190,13 +190,13 @@ class SelfReference {
       timestamp: Date.now(),
       stateReference: state,
     };
-    
+
     // Store in history
     this._recordStateInHistory();
-    
+
     return selfModel;
   }
-  
+
   /**
    * Update self model with new state information
    * @param {Object} state - Current system state
@@ -211,10 +211,10 @@ class SelfReference {
       awareness: state.awareness || this.currentState.awareness,
       timestamp: Date.now()
     };
-    
+
     // Record the updated state
     this._recordStateInHistory();
-    
+
     // Create updated self model
     return {
       ...selfModel,
@@ -239,7 +239,7 @@ class SelfReference {
       this.stateHistory.shift();
     }
   }
-  
+
   /**
    * Get statistics about self reference module
    * @returns {Object} Stats about self reference operations
@@ -247,16 +247,16 @@ class SelfReference {
   getStats() {
     return {
       historySize: this.stateHistory.length,
-      averageCoherence: this.stateHistory.reduce((sum, state) => sum + state.coherence, 0) / 
+      averageCoherence: this.stateHistory.reduce((sum, state) => sum + state.coherence, 0) /
                         (this.stateHistory.length || 1),
-      averageComplexity: this.stateHistory.reduce((sum, state) => sum + state.complexity, 0) / 
+      averageComplexity: this.stateHistory.reduce((sum, state) => sum + state.complexity, 0) /
                          (this.stateHistory.length || 1),
       currentCoherence: this.currentState.coherence,
       stateChanges: this.stateHistory.length,
       knownLimitationsCount: this.knownLimitations.length
     };
   }
-  
+
   /**
    * Reset self reference module
    */
@@ -268,7 +268,7 @@ class SelfReference {
       awareness: 0.6,
       timestamp: Date.now(),
     };
-    
+
     // Clear history
     this.stateHistory = [];
   }

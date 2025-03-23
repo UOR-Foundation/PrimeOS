@@ -299,41 +299,41 @@ const Prime = require('../../core');
       // 1. High coherence OR
       // 2. Strong connections
       const potentialStartPoints = [];
-      
+
       for (let i = 0; i < this.points.length; i++) {
         // Skip already visited points
         if (visited.has(i)) continue;
-        
+
         const coherence = this.coherenceValues.get(i) || 0;
-        
+
         // Check for strong connections
         const hasStrongConnections = Array.from(
           this.connections.get(i).entries()
         ).some(([_, conn]) => conn.strength >= 0.7);
-        
+
         // Add points with high coherence or strong connections as potential start points
         if (coherence >= this.coherenceThreshold || hasStrongConnections) {
           potentialStartPoints.push(i);
         }
       }
-      
+
       // Process all potential start points
       for (const startPoint of potentialStartPoints) {
         if (visited.has(startPoint)) continue;
-        
+
         const region = this._expandRegion(startPoint, visited);
         if (region) {
           regions.push(region);
         }
       }
-      
+
       // If no regions found, try with lower threshold for connections
       if (regions.length === 0) {
         for (let i = 0; i < this.points.length; i++) {
           if (visited.has(i)) continue;
-          
+
           const hasAnyConnections = this.connections.get(i).size > 0;
-          
+
           if (hasAnyConnections) {
             const region = this._expandRegion(i, visited);
             if (region) {
@@ -489,29 +489,117 @@ const Prime = require('../../core');
     }
 
     /**
-     * Estimate the spectral dimension of the manifold
+     * Estimate the spectral dimension of the manifold using
+     * proper spectral graph theory
      * @private
      * @returns {number} Estimated spectral dimension
      */
     _estimateSpectralDimension() {
-      // A simple estimate based on eigenvalue distribution
-      // In a real implementation, this would use proper spectral graph theory
       if (this.eigenvalues.length < 2) return 0;
 
-      // Use first few eigenvalues to estimate dimension
-      let dimension = 0;
-      const logValues = this.eigenvalues
-        .slice(0, Math.min(this.eigenvalues.length, 5))
-        .map((e) => Math.log(Math.max(e.value, 1e-10)));
+      // Create a sorted array of eigenvalues (in descending order)
+      const sortedEigenvalues = [...this.eigenvalues]
+        .sort((a, b) => b.value - a.value)
+        .map(e => Math.max(e.value, 1e-10));
 
-      // Estimate dimension from slope of log eigenvalues
-      let sum = 0;
-      for (let i = 1; i < logValues.length; i++) {
-        sum += logValues[i - 1] - logValues[i];
+      // The spectral dimension can be estimated using several methods:
+
+      // Method 1: Using the power law relationship in eigenvalue distribution
+      // For many networks and manifolds, eigenvalues follow λi ~ i^(-2/ds)
+      // where ds is the spectral dimension
+
+      // Take log of both indices and eigenvalues
+      const logIndices = [];
+      const logEigenvalues = [];
+
+      // Skip the first eigenvalue (often an outlier in graph Laplacians)
+      // and take a subset of the following eigenvalues for better estimation
+      const maxEvals = Math.min(sortedEigenvalues.length, 20);
+      for (let i = 1; i < maxEvals; i++) {
+        logIndices.push(Math.log(i + 1)); // +1 since we start from second eigenvalue
+        logEigenvalues.push(Math.log(sortedEigenvalues[i]));
       }
 
-      dimension = Math.max(1, (2 * sum) / (logValues.length - 1));
-      return dimension;
+      // Perform linear regression to find the slope
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      const n = logIndices.length;
+
+      for (let i = 0; i < n; i++) {
+        sumX += logIndices[i];
+        sumY += logEigenvalues[i];
+        sumXY += logIndices[i] * logEigenvalues[i];
+        sumX2 += logIndices[i] * logIndices[i];
+      }
+
+      // Calculate the slope of the regression line
+      const slope = n > 1 ? (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX) : 0;
+
+      // The spectral dimension is related to the negative of the slope
+      // ds = -2/slope for the relationship λi ~ i^(-2/ds)
+      const spectralDimension = slope !== 0 ? -2 / slope : 0;
+
+      // Method 2: Alternate calculation using eigenvalue ratios
+      // This method is more robust for small networks
+      let sumRatios = 0;
+      let countRatios = 0;
+
+      // Calculate ratios between consecutive eigenvalues
+      for (let i = 1; i < sortedEigenvalues.length - 1; i++) {
+        if (sortedEigenvalues[i] > 1e-6 && sortedEigenvalues[i+1] > 1e-6) {
+          const ratio = sortedEigenvalues[i] / sortedEigenvalues[i+1];
+          sumRatios += Math.log(ratio);
+          countRatios++;
+        }
+      }
+
+      // Calculate average ratio and derive dimension
+      const avgRatio = countRatios > 0 ? Math.exp(sumRatios / countRatios) : 1;
+      const ratioDimension = Math.log(sortedEigenvalues.length) / Math.log(avgRatio);
+
+      // Method 3: Using the return probability of random walks
+      // The probability of return scales as p(t) ~ t^(-ds/2) for large t
+      // We can simulate this using the eigenvalues of the Laplacian
+
+      // Calculate return probability for different time steps
+      const timeSteps = [1, 2, 4, 8, 16]; // exponentially spaced time steps
+      const returnProbs = timeSteps.map(t => {
+        // Return probability using eigenvalues: p(t) = Σ exp(-λi·t) / n
+        let sum = 0;
+        for (const eigenvalue of sortedEigenvalues) {
+          sum += Math.exp(-eigenvalue * t);
+        }
+        return sum / sortedEigenvalues.length;
+      });
+
+      // Perform regression on log-log data (time vs return probability)
+      const logTimes = timeSteps.map(t => Math.log(t));
+      const logProbs = returnProbs.map(p => Math.log(Math.max(p, 1e-10)));
+
+      // Reset variables for the second regression
+      sumX = 0; sumY = 0; sumXY = 0; sumX2 = 0;
+
+      for (let i = 0; i < logTimes.length; i++) {
+        sumX += logTimes[i];
+        sumY += logProbs[i];
+        sumXY += logTimes[i] * logProbs[i];
+        sumX2 += logTimes[i] * logTimes[i];
+      }
+
+      const walkSlope = (logTimes.length * sumXY - sumX * sumY) /
+                         (logTimes.length * sumX2 - sumX * sumX);
+
+      // Convert slope to dimension: p(t) ~ t^(-ds/2) => slope = -ds/2
+      const walkDimension = walkSlope !== 0 ? -2 * walkSlope : 0;
+
+      // Combine all methods, weighting them by reliability
+      const combinedDimension = (
+        (spectralDimension * 0.4) +
+        (ratioDimension * 0.3) +
+        (walkDimension * 0.3)
+      );
+
+      // Ensure result is reasonable
+      return Math.max(1, Math.min(Math.round(combinedDimension * 10) / 10, this.eigenvalues.length));
     }
 
     /**

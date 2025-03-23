@@ -88,12 +88,102 @@ const InteractionModel = {
           });
         }
 
-        // In a real implementation, this would persist the object
-        // For now, just publish an event with validation information
+        // Persist the object using configurable storage strategy
+        const storage = options.storage || this._storage || {
+          type: 'memory',
+          data: this._storageData = (this._storageData || new Map())
+        };
+
+        // Additional metadata for the save operation
+        const metadata = {
+          timestamp: Date.now(),
+          version: options.version || (object.version ? object.version + 1 : 1),
+          validationResult: {
+            valid: validationResult.valid,
+            failures: validationResult.failures.length
+          }
+        };
+
+        // Execute appropriate storage strategy
+        if (storage.type === 'memory') {
+          // In-memory storage implementation
+          const id = options.id || object.id || Prime.Utils.uuid();
+
+          // Create a versioned deep copy to prevent accidental mutations
+          const storedObject = JSON.parse(JSON.stringify({
+            ...object,
+            id,
+            _metadata: metadata
+          }));
+
+          // Store in the memory map
+          storage.data.set(id, storedObject);
+
+          // Update object with ID if it doesn't have one
+          if (!object.id) {
+            object.id = id;
+          }
+
+          Prime.Logger.info(`Object ${id} saved to memory storage`, {
+            version: metadata.version,
+            valid: validationResult.valid
+          });
+        } else if (storage.type === 'localStorage' && typeof window !== 'undefined') {
+          // Browser localStorage implementation
+          const id = options.id || object.id || Prime.Utils.uuid();
+
+          try {
+            const storageKey = `${this.name}_${id}`;
+            const storedObject = {
+              ...object,
+              id,
+              _metadata: metadata
+            };
+
+            window.localStorage.setItem(storageKey, JSON.stringify(storedObject));
+
+            // Update object with ID if it doesn't have one
+            if (!object.id) {
+              object.id = id;
+            }
+
+            Prime.Logger.info(`Object ${id} saved to localStorage`, {
+              key: storageKey,
+              version: metadata.version
+            });
+          } catch (error) {
+            Prime.Logger.error(`Failed to save object to localStorage: ${error.message}`);
+            throw new Prime.StorageError('Failed to save to localStorage', {
+              context: { error: error.message }
+            });
+          }
+        } else if (storage.type === 'custom' && typeof storage.save === 'function') {
+          // Custom storage implementation
+          try {
+            storage.save(object, metadata, options);
+            Prime.Logger.info('Object saved to custom storage', {
+              storageId: storage.id || 'unknown',
+              valid: validationResult.valid
+            });
+          } catch (error) {
+            Prime.Logger.error(`Failed to save object to custom storage: ${error.message}`);
+            throw new Prime.StorageError('Failed to save to custom storage', {
+              context: { error: error.message, storage: storage.id || 'unknown' }
+            });
+          }
+        } else {
+          Prime.Logger.warn(`Unsupported storage type: ${storage.type}`, {
+            fallback: 'event-only'
+          });
+        }
+
+        // Publish event with storage information
         Prime.EventBus.publish('object:saved', {
           object,
+          id: object.id,
           validationResult,
-          timestamp: Date.now(),
+          storage: storage.type,
+          metadata
         });
 
         return validationResult.valid;

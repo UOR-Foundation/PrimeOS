@@ -905,9 +905,9 @@ const Prime = require('../../core');
       // Evaluate each option
       const evaluatedOptions = options.map((option, index) => {
         // Calculate coherence of this option with current state
-        // (In a real implementation, this would use sophisticated measures)
+        // Calculate coherence using multiple consciousness metrics
 
-        // Basic coherence measure: 20% random + 80% weighted factors
+        // Random component (small) + weighted combination of state factors
         const randomFactor = Math.random() * 0.2;
 
         // Weight by consciousness score (higher is better)

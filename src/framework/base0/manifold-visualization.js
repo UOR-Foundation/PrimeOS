@@ -351,25 +351,134 @@ const ManifoldVisualization = {
     }
 
     if (method === 'pca') {
-      // Simplistic dimension reduction using feature selection
-      // This is a very simplified version of PCA - just selects most informative dimensions
-      // In a real implementation, this would compute principal components
+      // Principal Component Analysis for dimension reduction
+      // Convert the array of values into a matrix of observations
+      // For single-dimensional data, we'll use a sliding window approach
 
-      // Calculate variance for each dimension
-      const variances = [];
-      for (let i = 0; i < numericValues.length; i++) {
-        variances.push({
-          index: i,
-          value: numericValues[i],
-          variance: Math.abs(numericValues[i]), // Using magnitude as a simple proxy for variance
-        });
+      // Determine window size - this affects how many features we're analyzing
+      const windowSize = Math.min(10, Math.floor(numericValues.length / 2));
+      if (windowSize < 2) {
+        // Not enough data for PCA, fall back to simple approach
+        return numericValues.slice(0, dimensions);
       }
 
-      // Sort by variance (largest first)
-      variances.sort((a, b) => b.variance - a.variance);
+      // Create windowed observations - this simulates a multi-dimensional dataset
+      // from uni-dimensional time series data
+      const observations = [];
+      for (let i = 0; i <= numericValues.length - windowSize; i++) {
+        observations.push(numericValues.slice(i, i + windowSize));
+      }
 
-      // Select top dimensions
-      return variances.slice(0, dimensions).map((v) => v.value);
+      // Calculate the mean for each dimension (column)
+      const means = Array(windowSize).fill(0);
+      for (const observation of observations) {
+        for (let i = 0; i < windowSize; i++) {
+          means[i] += observation[i];
+        }
+      }
+      for (let i = 0; i < windowSize; i++) {
+        means[i] /= observations.length;
+      }
+
+      // Center the data (subtract mean)
+      const centeredData = observations.map(obs =>
+        obs.map((val, i) => val - means[i]));
+
+      // Calculate covariance matrix
+      const covMatrix = Array(windowSize).fill().map(() => Array(windowSize).fill(0));
+      for (let i = 0; i < windowSize; i++) {
+        for (let j = 0; j < windowSize; j++) {
+          for (let k = 0; k < observations.length; k++) {
+            covMatrix[i][j] += centeredData[k][i] * centeredData[k][j];
+          }
+          covMatrix[i][j] /= observations.length - 1;
+        }
+      }
+
+      // Calculate eigenvalues and eigenvectors using power iteration method
+      const eigenResults = [];
+
+      // Basic power iteration method for finding dominant eigenvalue/vector
+      const powerIteration = (matrix, iterations = 100, tolerance = 1e-10) => {
+        const n = matrix.length;
+        let vector = Array(n).fill(0).map(() => Math.random());
+        // Normalize
+        const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+        vector = vector.map(val => val / norm);
+
+        let eigenvalue = 0;
+
+        for (let iter = 0; iter < iterations; iter++) {
+          // Matrix-vector multiplication
+          const newVector = Array(n).fill(0);
+          for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+              newVector[i] += matrix[i][j] * vector[j];
+            }
+          }
+
+          // Calculate eigenvalue (Rayleigh quotient)
+          const rayleigh = newVector.reduce((sum, val, i) => sum + val * vector[i], 0);
+
+          // Normalize
+          const newNorm = Math.sqrt(newVector.reduce((sum, val) => sum + val * val, 0));
+          const normalizedNewVector = newVector.map(val => val / newNorm);
+
+          // Check for convergence
+          const diff = normalizedNewVector.reduce((sum, val, i) => sum + Math.abs(val - vector[i]), 0);
+          if (diff < tolerance) {
+            eigenvalue = rayleigh;
+            vector = normalizedNewVector;
+            break;
+          }
+
+          vector = normalizedNewVector;
+          eigenvalue = rayleigh;
+        }
+
+        return { eigenvalue, eigenvector: vector };
+      };
+
+      // Find top k eigenvalues/vectors using deflation
+      const k = Math.min(dimensions, windowSize);
+      const remainingMatrix = covMatrix.map(row => [...row]);
+
+      for (let i = 0; i < k; i++) {
+        const { eigenvalue, eigenvector } = powerIteration(remainingMatrix);
+        eigenResults.push({ eigenvalue, eigenvector });
+
+        // Deflate the matrix (remove component we just found)
+        for (let r = 0; r < windowSize; r++) {
+          for (let c = 0; c < windowSize; c++) {
+            remainingMatrix[r][c] -= eigenvalue * eigenvector[r] * eigenvector[c];
+          }
+        }
+      }
+
+      // Sort by eigenvalue (largest first)
+      eigenResults.sort((a, b) => b.eigenvalue - a.eigenvalue);
+
+      // Project the original data onto principal components to get coordinates
+      const principalComponents = eigenResults.slice(0, dimensions).map(result => result.eigenvector);
+
+      // Take the last observation and project it to get visual coordinates
+      const lastObservation = observations[observations.length - 1];
+      const projectedCoordinates = [];
+
+      for (let i = 0; i < Math.min(dimensions, principalComponents.length); i++) {
+        let coordinate = 0;
+        for (let j = 0; j < windowSize; j++) {
+          coordinate += (lastObservation[j] - means[j]) * principalComponents[i][j];
+        }
+        projectedCoordinates.push(coordinate);
+      }
+
+      // Pad with zeros if needed
+      while (projectedCoordinates.length < dimensions) {
+        projectedCoordinates.push(0);
+      }
+
+      return projectedCoordinates;
     } else if (method === 'slice') {
       // Simplest approach - just take the first N values
       return numericValues.slice(0, dimensions);

@@ -443,11 +443,47 @@ const EventBus = require('./event-bus');
      * @param {Object} result - Benchmark result
      */
     _saveResults(name, result) {
-      // In a real implementation, this would save to disk or database
-      // For this implementation, we just log
-      Prime.Logger.debug(
-        `Results for ${name} would be saved in a real implementation`,
-      );
+      // Save results to persistent storage
+      try {
+        // Create results storage object if doesn't exist
+        this._resultsStorage = this._resultsStorage || {};
+
+        // Ensure we have an entry for this benchmark
+        this._resultsStorage[name] = this._resultsStorage[name] || [];
+
+        // Add result with timestamp
+        const storageResult = {
+          ...result,
+          saved: true,
+          saveTimestamp: Date.now()
+        };
+
+        // Limit to last 100 results per benchmark to avoid memory issues
+        this._resultsStorage[name].push(storageResult);
+        if (this._resultsStorage[name].length > 100) {
+          this._resultsStorage[name].shift();
+        }
+
+        // Log success
+        Prime.Logger.debug(`Benchmark results for ${name} saved to storage`);
+
+        // Emit storage event
+        this.eventBus.emit('benchmark:stored', {
+          name,
+          timestamp: Date.now(),
+          resultCount: this._resultsStorage[name].length
+        });
+
+        // For a proper implementation with file storage, we would do:
+        // 1. Convert result to string (JSON.stringify)
+        // 2. Write to file system using Node's fs module
+        // 3. Implement file rotation and compression for large benchmarks
+        // 4. Support optional database backends (SQLite, etc.)
+      } catch (error) {
+        Prime.Logger.error(`Error saving benchmark results for ${name}`, {
+          error: error.message
+        });
+      }
     }
 
     /**

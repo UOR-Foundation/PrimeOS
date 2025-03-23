@@ -164,7 +164,7 @@ require('./matrix-error-handling');
       if (!Prime.Math.MatrixValidation.isSquare(matrix)) {
         throw new Prime.ValidationError('Matrix must be square to compute inverse');
       }
-      
+
       // Attempt the operation directly with fallback to pseudoinverse
       try {
         const MatrixAdvanced = Prime.Math.MatrixAdvanced;
@@ -238,18 +238,18 @@ require('./matrix-error-handling');
       if (!Prime.Math.MatrixValidation.isSquare(matrix)) {
         throw new Prime.ValidationError('Matrix must be square for LU decomposition');
       }
-      
+
       // Check if matrix is nearly singular using proper numerical approach
       if (Prime.Math.MatrixValidation.isNearlySingular(matrix)) {
         throw new Prime.MathematicalError('Matrix is singular or nearly singular');
       }
-      
+
       // Direct implementation
       const MatrixAdvanced = Prime.Math.MatrixAdvanced;
       if (MatrixAdvanced && typeof MatrixAdvanced.luDecomposition === 'function') {
         return MatrixAdvanced.luDecomposition(matrix);
-      } 
-      
+      }
+
       throw new Error('LU decomposition implementation not available');
     },
 
@@ -262,7 +262,7 @@ require('./matrix-error-handling');
       // Validate input and use error handling for extreme values
       Prime.Math.MatrixErrorHandling.validateWithDetails('qrDecomposition', [matrix]);
       return Prime.Math.MatrixErrorHandling.handleExtremeValues(
-        Prime.Math.MatrixAdvanced.qrDecomposition, 
+        Prime.Math.MatrixAdvanced.qrDecomposition,
         [matrix]
       );
     },
@@ -277,7 +277,7 @@ require('./matrix-error-handling');
       // Validate input and use error handling for extreme values
       Prime.Math.MatrixErrorHandling.validateWithDetails('eigenvalues', [matrix]);
       return Prime.Math.MatrixErrorHandling.handleExtremeValues(
-        Prime.Math.MatrixAdvanced.eigenvalues, 
+        Prime.Math.MatrixAdvanced.eigenvalues,
         [matrix, options]
       );
     },
@@ -291,7 +291,7 @@ require('./matrix-error-handling');
       // Validate input and use error handling for extreme values
       Prime.Math.MatrixErrorHandling.validateWithDetails('choleskyDecomposition', [matrix]);
       return Prime.Math.MatrixErrorHandling.handleExtremeValues(
-        Prime.Math.MatrixAdvanced.choleskyDecomposition, 
+        Prime.Math.MatrixAdvanced.choleskyDecomposition,
         [matrix]
       );
     },

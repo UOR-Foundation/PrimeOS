@@ -429,8 +429,8 @@ class CoherenceGradientDescent {
     for (let i = 0; i < problem.constraints.length; i++) {
       const constraint = problem.constraints[i];
 
-      // This is an approximation - in a real system, we would analyze
-      // the constraint function to determine which variables interact
+      // Use intelligent variable dependency detection to determine which 
+      // variables interact in this constraint
       const involvedVars = this._identifyInvolvedVariables(constraint, n);
 
       for (let j = 0; j < involvedVars.length; j++) {
@@ -468,7 +468,7 @@ class CoherenceGradientDescent {
   }
 
   /**
-   * Identify which variables are involved in a constraint (approximation)
+   * Identify which variables are involved in a constraint through function analysis
    *
    * @private
    * @param {Function} constraint - Constraint function
@@ -476,24 +476,190 @@ class CoherenceGradientDescent {
    * @returns {Array} Indices of involved variables
    */
   _identifyInvolvedVariables(constraint, n) {
-    // This is an approximation - in a real system, we would analyze
-    // the constraint function more thoroughly
-
-    // For demo purposes, we'll use a random subset
-    // In production, we'd determine this by analyzing the constraint function
-
-    // Default to random subset
-    const involved = [];
-    const count = Math.max(2, Math.floor(n / 5));
-
-    while (involved.length < count) {
-      const idx = Math.floor(Math.random() * n);
-      if (!involved.includes(idx)) {
-        involved.push(idx);
+    // Use multiple approaches to identify involved variables
+    
+    // First check if function has metadata about involved variables
+    if (constraint.involvedVariables) {
+      return Array.isArray(constraint.involvedVariables) ? 
+        constraint.involvedVariables.filter(idx => idx >= 0 && idx < n) : [];
+    }
+    
+    // Convert function to string to analyze its structure
+    let fnStr;
+    try {
+      fnStr = constraint.toString();
+    } catch (e) {
+      // If we can't get the function source, use a fallback approach
+      return this._identifyVariablesBySensitivity(constraint, n);
+    }
+    
+    // Try to extract variable references from the function string
+    const involved = new Set();
+    
+    // Check for direct array access patterns like state[0], state[i], etc.
+    const arrayAccessRegex = /state\s*\[\s*(\d+)\s*\]/g;
+    let match;
+    while ((match = arrayAccessRegex.exec(fnStr)) !== null) {
+      const idx = parseInt(match[1], 10);
+      if (idx >= 0 && idx < n) {
+        involved.add(idx);
       }
     }
-
-    return involved;
+    
+    // Check for variable names that might be used like x0, x1, v0, v1, etc.
+    const variableNameRegex = /\b([xvs])(\d+)\b/g;
+    while ((match = variableNameRegex.exec(fnStr)) !== null) {
+      const idx = parseInt(match[2], 10);
+      if (idx >= 0 && idx < n) {
+        involved.add(idx);
+      }
+    }
+    
+    // If we found explicit references, return them
+    if (involved.size > 0) {
+      return Array.from(involved).sort((a, b) => a - b);
+    }
+    
+    // If static analysis didn't work, try sensitivity analysis
+    return this._identifyVariablesBySensitivity(constraint, n);
+  }
+  
+  /**
+   * Identify involved variables using sensitivity analysis
+   * Tests each variable by flipping its value and measuring constraint changes
+   *
+   * @private
+   * @param {Function} constraint - Constraint function
+   * @param {number} n - Number of variables
+   * @returns {Array} Indices of involved variables
+   */
+  _identifyVariablesBySensitivity(constraint, n) {
+    // Create a baseline state vector (all zeros)
+    const baselineState = Array(n).fill(0);
+    let baselineResult;
+    
+    try {
+      // Evaluate constraint with baseline state
+      baselineResult = this._evaluateConstraint(constraint, baselineState);
+    } catch (e) {
+      // If baseline evaluation fails, try a different baseline (all ones)
+      baselineState.fill(1);
+      try {
+        baselineResult = this._evaluateConstraint(constraint, baselineState);
+      } catch (e) {
+        // If both baselines fail, use a random baseline
+        for (let i = 0; i < n; i++) {
+          baselineState[i] = Math.random() < 0.5 ? 0 : 1;
+        }
+        try {
+          baselineResult = this._evaluateConstraint(constraint, baselineState);
+        } catch (e) {
+          // If all evaluations fail, we can't determine sensitivity
+          return this._getFallbackInvolvedVariables(n);
+        }
+      }
+    }
+    
+    // Test each variable by flipping its value and measuring change
+    const involved = [];
+    const sensitivityThreshold = 0.001; // Minimum change to consider variable involved
+    
+    for (let i = 0; i < n; i++) {
+      // Create a modified state with this variable flipped
+      const testState = baselineState.slice();
+      testState[i] = testState[i] === 0 ? 1 : 0;
+      
+      try {
+        // Evaluate constraint with modified state
+        const testResult = this._evaluateConstraint(constraint, testState);
+        
+        // Check if flipping this variable changed the result
+        const difference = Math.abs(testResult - baselineResult);
+        if (difference > sensitivityThreshold) {
+          involved.push(i);
+        }
+      } catch (e) {
+        // If evaluation with this variable flipped causes an error,
+        // consider the variable involved in the constraint
+        involved.push(i);
+      }
+    }
+    
+    // If sensitivity analysis found variables, return them
+    if (involved.length > 0) {
+      return involved;
+    }
+    
+    // If no variables were found to be sensitive, do a second pass
+    // with paired variables (to detect constraints with parity or XOR-like behavior)
+    if (n >= 2) {
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = i + 1; j < n; j++) {
+          // Create a modified state with both variables flipped
+          const testState = baselineState.slice();
+          testState[i] = testState[i] === 0 ? 1 : 0;
+          testState[j] = testState[j] === 0 ? 1 : 0;
+          
+          try {
+            // Evaluate constraint with modified state
+            const testResult = this._evaluateConstraint(constraint, testState);
+            
+            // Check if flipping these variables changed the result
+            const difference = Math.abs(testResult - baselineResult);
+            if (difference > sensitivityThreshold) {
+              involved.push(i, j);
+              break; // Found a sensitive pair, no need to check more pairs with i
+            }
+          } catch (e) {
+            // If evaluation with these variables flipped causes an error,
+            // consider the variables involved in the constraint
+            involved.push(i, j);
+            break; // Found a sensitive pair, no need to check more pairs with i
+          }
+        }
+      }
+    }
+    
+    // Remove duplicates and sort
+    return [...new Set(involved)].sort((a, b) => a - b);
+  },
+  
+  /**
+   * Get fallback involved variables when analysis fails
+   * Uses a deterministic approach based on constraint ID or signature
+   *
+   * @private
+   * @param {number} n - Number of variables
+   * @returns {Array} Indices of involved variables
+   */
+  _getFallbackInvolvedVariables(n) {
+    // Get a deterministic sample size based on problem size
+    // Minimum of 2 variables, maximum of n/3, at least 3 for n > 10
+    const count = Math.max(2, Math.min(Math.ceil(n / 3), Math.ceil(n / 5)));
+    
+    // Deterministically choose variables with good distribution
+    // Use a stride pattern to ensure variables are spread out
+    const involved = [];
+    const stride = Math.max(1, Math.floor(n / count));
+    
+    for (let i = 0, idx = 0; i < count && idx < n; i++, idx += stride) {
+      involved.push(idx);
+    }
+    
+    // Fill in any remaining spots if we didn't get enough variables
+    let start = Math.floor(n / 2); // Start from the middle
+    while (involved.length < count && involved.length < n) {
+      if (!involved.includes(start)) {
+        involved.push(start);
+      }
+      // Alternate between moving up and down from the middle
+      start = start + (involved.length % 2 === 0 ? 1 : -1) * (Math.floor(involved.length / 2) + 1);
+      if (start < 0 || start >= n) {
+        start = Math.floor(Math.random() * n); // Fallback if pattern reaches bounds
+      }
+    }
+    
+    return involved.sort((a, b) => a - b);
   }
 
   /**
@@ -650,7 +816,7 @@ class CoherenceGradientDescent {
   }
 
   /**
-   * Evaluate a constraint (abstract method)
+   * Evaluate a constraint
    *
    * @private
    * @param {Function} constraint - Constraint function
@@ -658,19 +824,52 @@ class CoherenceGradientDescent {
    * @returns {number} Satisfaction level (0-1)
    */
   _evaluateConstraint(constraint, state) {
-    // In a real system, we'd call the constraint function
     if (typeof constraint === 'function') {
-      const result = constraint(state);
-      // Normalize result to 0-1 range if it's not already
-      return typeof result === 'boolean'
-        ? result
-          ? 1
-          : 0
-        : Math.min(1, Math.max(0, result));
+      try {
+        const result = constraint(state);
+        
+        // Normalize result to 0-1 range if it's not already
+        if (typeof result === 'boolean') {
+          return result ? 1 : 0;
+        } else if (typeof result === 'number') {
+          // Handle NaN and Infinity
+          if (!Number.isFinite(result)) {
+            return 0; // Constraint is not satisfied if result is NaN or Infinity
+          }
+          return Math.min(1, Math.max(0, result));
+        } else if (result === undefined || result === null) {
+          return 0; // Constraint is not satisfied if no result
+        } else {
+          // Try to coerce other types to number
+          const numericResult = Number(result);
+          if (Number.isFinite(numericResult)) {
+            return Math.min(1, Math.max(0, numericResult));
+          }
+          return 0;
+        }
+      } catch (error) {
+        // If constraint evaluation throws, consider it not satisfied
+        return 0;
+      }
+    } else if (typeof constraint === 'object' && constraint !== null) {
+      // Handle constraint objects with a check method
+      if (typeof constraint.check === 'function') {
+        try {
+          return this._evaluateConstraint(constraint.check, state);
+        } catch (error) {
+          return 0;
+        }
+      } else if (typeof constraint.evaluate === 'function') {
+        try {
+          return this._evaluateConstraint(constraint.evaluate, state);
+        } catch (error) {
+          return 0;
+        }
+      }
     }
 
-    // For demo purposes, return a random value if constraint isn't a function
-    return Math.random();
+    // Return 0 for any constraint that's not properly defined
+    return 0;
   }
 
   /**
