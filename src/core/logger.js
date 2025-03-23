@@ -57,59 +57,59 @@ const Prime = require('./prime');
      * Format a log message
      * @private
      * @param {string} level - Log level
-     * @param {string} message - Log message
-     * @param {Object} [context] - Additional context information
+     * @param {string} message - The message to format
+     * @param {Object} [context] - Optional context object for structured logging
      * @returns {string} Formatted log message
      */
     format: function (level, message, context) {
-      let output = `[Prime] [${level}] ${message}`;
-      if (context) {
-        output += `\nContext: ${JSON.stringify(context)}`;
+      // Format message with optional context
+      let formattedMessage = `[Prime] [${level}] ${message}`;
+      
+      // Add context if available
+      if (context && typeof context === 'object') {
+        formattedMessage += `\nContext: ${JSON.stringify(context)}`;
       }
-      return output;
+      
+      return formattedMessage;
     },
 
     /**
      * Log a debug message
-     * @param {string} message - Log message
-     * @param {Object} [context] - Additional context information
+     * @param {...any} args - Log arguments
      */
-    debug: function (message, context) {
+    debug: function (...args) {
       if (this.shouldLog('DEBUG')) {
-        console.debug(this.format('DEBUG', message, context));
+        console.debug(this.format('DEBUG', args[0]), ...(args.length > 1 ? args.slice(1) : []));
       }
     },
 
     /**
      * Log an info message
-     * @param {string} message - Log message
-     * @param {Object} [context] - Additional context information
+     * @param {...any} args - Log arguments
      */
-    info: function (message, context) {
+    info: function (...args) {
       if (this.shouldLog('INFO')) {
-        console.info(this.format('INFO', message, context));
+        console.info(this.format('INFO', args[0]), ...(args.length > 1 ? args.slice(1) : []));
       }
     },
 
     /**
      * Log a warning message
-     * @param {string} message - Log message
-     * @param {Object} [context] - Additional context information
+     * @param {...any} args - Log arguments
      */
-    warn: function (message, context) {
+    warn: function (...args) {
       if (this.shouldLog('WARN')) {
-        console.warn(this.format('WARN', message, context));
+        console.warn(this.format('WARN', args[0]), ...(args.length > 1 ? args.slice(1) : []));
       }
     },
 
     /**
      * Log an error message
-     * @param {string} message - Log message
-     * @param {Object} [context] - Additional context information
+     * @param {...any} args - Log arguments
      */
-    error: function (message, context) {
+    error: function (...args) {
       if (this.shouldLog('ERROR')) {
-        console.error(this.format('ERROR', message, context));
+        console.error(this.format('ERROR', args[0]), ...(args.length > 1 ? args.slice(1) : []));
       }
     },
   };

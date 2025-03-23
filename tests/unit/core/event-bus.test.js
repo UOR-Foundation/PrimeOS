@@ -173,7 +173,7 @@ describe('EventBus', () => {
       Assertions.assertThrows(
         () => Prime.EventBus.subscribe(123, () => {}),
         Prime.ValidationError,
-        'subscribe should validate event name'
+        'Event name must be a string'
       );
     });
     
@@ -181,7 +181,7 @@ describe('EventBus', () => {
       Assertions.assertThrows(
         () => Prime.EventBus.subscribe('test-event', 'not a function'),
         Prime.ValidationError,
-        'subscribe should validate callback'
+        'Callback must be a function'
       );
     });
   });

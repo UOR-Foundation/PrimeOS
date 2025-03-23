@@ -10,6 +10,8 @@ A neural network-based operating system built on the Prime Framework, representi
 - **Neural Computation**: All components implemented as neural network models
 - **Resource Optimization**: Intelligent allocation based on coherence requirements
 - **Extreme Condition Handling**: Robust numerical computations for demanding scientific applications (e.g., RNA folding)
+  - Enhanced SVD implementation handles extreme values (>1e100 or <1e-100) with dynamic algorithm selection
+  - Adaptive scaling for numerical stability in matrix operations
 - **Storage Provider**: Persistent storage with support for data larger than available memory
 
 ## Mathematical Foundation
@@ -19,6 +21,11 @@ PrimeOS is built on the Universal Object Reference (UOR) framework, which provid
 - **Clifford Algebras**: Geometric algebras serve as the mathematical foundation for representing data and operations
 - **Coherence and Inner Product Norms**: Mathematical coherence measures how well system components satisfy constraints
 - **Lie Groups**: Employed as symmetry operations that transform elements in the system
+- **Robust Matrix Operations**: Specialized numerical implementations with extreme value handling
+  - SVD with multi-algorithm approach (Jacobi, QR, Power Iteration)
+  - Adaptive tolerance calculation for precision control
+  - Automatic scaling for matrices with extreme value ranges
+  - Pairwise and compensated summation for numerical stability
 
 ## Prime Framework Architecture
 

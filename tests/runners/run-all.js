@@ -18,7 +18,7 @@ const config = {
     {
       name: 'Unit Tests',
       dir: 'unit',
-      pattern: 'tests/unit/**/*.test.js',
+      pattern: 'unit',
       memoryLimit: 4096,
       timeout: 60000,
       workers: 4
@@ -26,7 +26,7 @@ const config = {
     {
       name: 'Integration Tests',
       dir: 'integration',
-      pattern: 'tests/integration/**/*.test.js',
+      pattern: 'integration',
       memoryLimit: 6144,
       timeout: 90000,
       workers: 2
@@ -34,7 +34,7 @@ const config = {
     {
       name: 'Extreme Tests',
       dir: 'extreme',
-      pattern: 'tests/extreme/**/*.test.js',
+      pattern: 'extreme',
       memoryLimit: 8192,
       timeout: 120000,
       workers: 1
@@ -42,7 +42,7 @@ const config = {
     {
       name: 'Performance Tests',
       dir: 'performance',
-      pattern: 'tests/performance/**/*.test.js',
+      pattern: 'performance',
       memoryLimit: 6144,
       timeout: 180000,
       workers: 1
@@ -68,56 +68,141 @@ function runTests(testType) {
   return new Promise((resolve, reject) => {
     console.log(`\n=== Running ${testType.name} ===`);
     
-    // Build Jest command
-    const command = `node --max-old-space-size=${testType.memoryLimit} ./node_modules/.bin/jest --config build/jest.config.js --testMatch="${testType.pattern}" --testTimeout=${testType.timeout} --maxWorkers=${testType.workers} --json`;
+    // Build Jest command - fixed to use correct testPathPattern and output format
+    const command = `node --max-old-space-size=${testType.memoryLimit} ./node_modules/.bin/jest --config build/jest.config.js --testPathPattern="${testType.pattern}" --testTimeout=${testType.timeout} --maxWorkers=${testType.workers}`;
     
     console.log(`Command: ${command}\n`);
     
     // Execute command
-    exec(command, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+    exec(command, { maxBuffer: 100 * 1024 * 1024 }, (error, stdout, stderr) => {
       if (stderr) {
         console.error(stderr);
       }
       
       try {
-        // Try to parse test results
-        const results = JSON.parse(stdout);
+        // Extract the JSON part from stdout which might contain other output
+        let jsonStartIdx = stdout.indexOf('{');
+        let jsonEndIdx = stdout.lastIndexOf('}');
+        let jsonOutput = '';
         
-        // Write results to file
-        const resultsPath = path.join(config.resultsDir, `${testType.dir}-results.json`);
-        fs.writeFileSync(resultsPath, JSON.stringify(results, null, 2));
-        
-        // Log summary
-        console.log(`\n${testType.name} Summary:`);
-        console.log(`- Tests: ${results.numTotalTests}`);
-        console.log(`- Passed: ${results.numPassedTests}`);
-        console.log(`- Failed: ${results.numFailedTests}`);
-        console.log(`- Pending: ${results.numPendingTests}`);
-        
-        if (results.numFailedTests > 0) {
-          console.log('\nFailed Tests:');
-          results.testResults.forEach(testFile => {
-            if (testFile.numFailingTests > 0) {
-              console.log(`- ${testFile.name}`);
-              testFile.assertionResults
-                .filter(assertion => assertion.status === 'failed')
-                .forEach(assertion => {
-                  console.log(`  • ${assertion.fullName}: ${assertion.failureMessages[0]}`);
-                });
-            }
+        if (jsonStartIdx >= 0 && jsonEndIdx >= 0 && jsonEndIdx > jsonStartIdx) {
+          jsonOutput = stdout.substring(jsonStartIdx, jsonEndIdx + 1);
+          
+          // Try to parse test results
+          const results = JSON.parse(jsonOutput);
+          
+          // Write results to file
+          const resultsPath = path.join(config.resultsDir, `${testType.dir}-results.json`);
+          fs.writeFileSync(resultsPath, JSON.stringify(results, null, 2));
+          
+          // Log summary
+          console.log(`\n${testType.name} Summary:`);
+          console.log(`- Tests: ${results.numTotalTests}`);
+          console.log(`- Passed: ${results.numPassedTests}`);
+          console.log(`- Failed: ${results.numFailedTests}`);
+          console.log(`- Pending: ${results.numPendingTests}`);
+          
+          if (results.numFailedTests > 0) {
+            console.log('\nFailed Tests:');
+            results.testResults.forEach(testFile => {
+              if (testFile.numFailingTests > 0) {
+                console.log(`- ${testFile.name}`);
+                testFile.assertionResults
+                  .filter(assertion => assertion.status === 'failed')
+                  .forEach(assertion => {
+                    console.log(`  • ${assertion.fullName}: ${assertion.failureMessages[0]}`);
+                  });
+              }
+            });
+          }
+          
+          resolve({
+            type: testType.name,
+            passed: results.numPassedTests,
+            failed: results.numFailedTests,
+            pending: results.numPendingTests,
+            total: results.numTotalTests
           });
+        } else {
+          // If we can't find valid JSON, extract test summary from text output
+          const testSummaryMatch = stdout.match(/Test Suites:\s+(\d+)\s+failed,\s+(\d+)\s+passed,\s+(\d+)\s+total/);
+          
+          if (testSummaryMatch) {
+            const [, failedSuites, passedSuites, totalSuites] = testSummaryMatch;
+            
+            // Also extract tests count
+            const testCountMatch = stdout.match(/Tests:\s+(\d+)\s+failed,\s+(\d+)\s+skipped,\s+(\d+)\s+passed,\s+(\d+)\s+total/);
+            let failedTests = 0, skippedTests = 0, passedTests = 0, totalTests = 0;
+            
+            if (testCountMatch) {
+              [, failedTests, skippedTests, passedTests, totalTests] = testCountMatch;
+            }
+            
+            console.log(`\n${testType.name} Summary (parsed from stdout):`);
+            console.log(`- Test Suites: ${failedSuites} failed, ${passedSuites} passed, ${totalSuites} total`);
+            console.log(`- Tests: ${totalTests} total, ${passedTests} passed, ${failedTests} failed, ${skippedTests} skipped`);
+            
+            // Create a simulated results object
+            const simulatedResults = {
+              numFailedTestSuites: parseInt(failedSuites),
+              numPassedTestSuites: parseInt(passedSuites),
+              numTotalTestSuites: parseInt(totalSuites),
+              numTotalTests: parseInt(totalTests),
+              numPassedTests: parseInt(passedTests),
+              numFailedTests: parseInt(failedTests),
+              numPendingTests: parseInt(skippedTests),
+              testResults: []
+            };
+            
+            // Write simulated results to file
+            const resultsPath = path.join(config.resultsDir, `${testType.dir}-results.json`);
+            fs.writeFileSync(resultsPath, JSON.stringify(simulatedResults, null, 2));
+            
+            resolve({
+              type: testType.name,
+              passed: parseInt(passedTests),
+              failed: parseInt(failedTests),
+              pending: parseInt(skippedTests),
+              total: parseInt(totalTests)
+            });
+          } else {
+            // If we still can't parse anything useful
+            console.error('Could not parse test results in any format.');
+            console.error('Test output:', stdout.substring(0, 1000) + '...');
+            
+            resolve({
+              type: testType.name,
+              passed: 0,
+              failed: 1,
+              pending: 0,
+              total: 0,
+              error: 'Could not parse test results'
+            });
+          }
         }
-        
-        resolve({
-          type: testType.name,
-          passed: results.numPassedTests,
-          failed: results.numFailedTests,
-          pending: results.numPendingTests,
-          total: results.numTotalTests
-        });
       } catch (e) {
         console.error(`Error parsing test results: ${e.message}`);
-        reject(error || new Error('Could not parse test results'));
+        console.error(e.stack);
+        
+        // Try to extract simple test summary from text output
+        const testSummaryMatch = stdout.match(/Test Suites:\s+(\d+)\s+failed,\s+(\d+)\s+passed,\s+(\d+)\s+total/);
+        
+        if (testSummaryMatch) {
+          const [, failedSuites, passedSuites, totalSuites] = testSummaryMatch;
+          console.log(`\n${testType.name} Summary (parsed from stdout after JSON parse error):`);
+          console.log(`- Test Suites: ${failedSuites} failed, ${passedSuites} passed, ${totalSuites} total`);
+          
+          resolve({
+            type: testType.name,
+            passed: parseInt(passedSuites),
+            failed: parseInt(failedSuites),
+            pending: 0,
+            total: parseInt(totalSuites),
+            error: e.message
+          });
+        } else {
+          reject(error || new Error('Could not parse test results: ' + e.message));
+        }
       }
     });
   });

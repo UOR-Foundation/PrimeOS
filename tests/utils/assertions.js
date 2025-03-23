@@ -84,7 +84,36 @@ const Assertions = {
       currentInputs = [result, ...currentInputs.slice(1)];
     }
 
-    // Analyze error growth pattern
+    // Handle special case for matrix results
+    if (Array.isArray(results[0]) && Array.isArray(results[0][0])) {
+      // For matrix results, compute Frobenius norm of difference
+      for (let i = 1; i < results.length; i++) {
+        const bound = boundsFunc(i, results[0]);
+        
+        // Compute Frobenius norm of the difference between matrices
+        let sumSquaredDiff = 0;
+        const matrix1 = results[0];
+        const matrix2 = results[i];
+        
+        for (let r = 0; r < matrix1.length && r < matrix2.length; r++) {
+          for (let c = 0; c < matrix1[r].length && c < matrix2[r].length; c++) {
+            const diff = matrix1[r][c] - matrix2[r][c];
+            sumSquaredDiff += diff * diff;
+          }
+        }
+        
+        const error = Math.sqrt(sumSquaredDiff);
+        
+        assert.ok(
+          error <= bound,
+          `${message || "Stability bound exceeded"}: iteration ${i} error ${error} > ${bound}`
+        );
+      }
+      
+      return results;
+    }
+    
+    // For scalar results, use simple absolute difference
     for (let i = 1; i < results.length; i++) {
       const bound = boundsFunc(i, results[0]);
       const error = Math.abs(results[i] - results[0]);

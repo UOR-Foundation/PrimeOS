@@ -90,8 +90,28 @@
     <!-- Load PrimeOS library -->
     <script src="dist/primeos.js"></script>
     
-    <!-- Load Storage Browser Tests -->
-    <script src="tests/storage/browser-matrix-storage-tests.js"></script>
+    <!-- Load test scripts with error handling -->
+    <script>
+      // Helper function to load scripts with error handling
+      function loadScript(src, callback) {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = function() {
+          if (callback) callback(true);
+        };
+        script.onerror = function() {
+          console.warn('Failed to load script:', src);
+          if (callback) callback(false);
+        };
+        document.head.appendChild(script);
+      }
+      
+      // Load storage tests
+      loadScript('tests/storage/browser-matrix-storage-tests.js');
+      
+      // Load core tests
+      loadScript('tests/browser/core/index.js');
+    </script>
     
     <!-- Test Runner Script -->
     <script>
@@ -883,8 +903,15 @@ Time:    ${this.results.timings.duration}ms
             // Run specific test suites
             document.getElementById('run-core').addEventListener('click', async function() {
                 TestRunner.reset();
-                defineCoreTests();
-                await TestRunner.run({ suite: 'Core' });
+                // Use the defineCoreTests function from our core browser tests
+                if (typeof window.defineCoreTests === 'function') {
+                    window.defineCoreTests();
+                    await TestRunner.run();
+                } else {
+                    // Fallback to old implementation if our script didn't load
+                    defineCoreTests();
+                    await TestRunner.run({ suite: 'Core' });
+                }
             });
 
             document.getElementById('run-component').addEventListener('click', async function() {

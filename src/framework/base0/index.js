@@ -2,14 +2,17 @@
  * PrimeOS JavaScript Library - Framework
  * Base 0: Neural Network Specification
  * Abstract mathematical foundation for the entire system
+ * 
+ * This is the foundational layer of the PrimeOS framework, providing
+ * mathematical abstractions and models that higher layers build upon.
  */
 
 // Import core
-const Prime = require('../../core.js');
+const Prime = require('../../core/prime.js');
 const MathUtils = require('../math');
 
-// Import Manifold mock for testing
-require('./manifold-mock');
+// Import Manifold implementation
+require('./manifold.js');
 
 /**
  * Base 0: Neural Network Specification

@@ -4,7 +4,18 @@
  */
 
 const Prime = require('../../core');
-const { StorageError } = require('../index');
+
+// Direct StorageError import to avoid circular dependencies
+// This is a workaround since we can't import StorageError from ../index
+// because it would create a circular dependency
+class StorageError extends Error {
+  constructor(message, details = {}, code = 'STORAGE_ERROR') {
+    super(message);
+    this.name = 'StorageError';
+    this.details = details;
+    this.code = code;
+  }
+}
 
 /**
  * Matrix implementation that keeps part of the data in memory
@@ -183,17 +194,27 @@ class SwappableMatrix {
    * @returns {Promise<Array>} Block data
    */
   async _loadBlock(blockId) {
+    // Initialize tracking variables if not already set
+    this.cacheHits = this.cacheHits || 0;
+    this.cacheMisses = this.cacheMisses || 0;
+    this.cacheEvictions = this.cacheEvictions || 0;
+    
     // If block is in cache, update access order and return it
     if (this.blockCache.has(blockId)) {
       this._updateAccessOrder(blockId);
+      this.cacheHits++;
       return this.blockCache.get(blockId);
     }
+    
+    // Record cache miss
+    this.cacheMisses++;
     
     // Load block from storage
     const blockData = await this.storageManager.load(`${this.id}_block_${blockId}`);
     
     // Evict blocks if cache is full
     if (this.blockCache.size >= this.options.maxCachedBlocks) {
+      // Make sure we evict a block before adding a new one
       this._evictBlock();
     }
     
@@ -252,6 +273,9 @@ class SwappableMatrix {
     
     // Remove from cache
     this.blockCache.delete(blockToEvict);
+    
+    // Track eviction
+    this.cacheEvictions = (this.cacheEvictions || 0) + 1;
   }
 
   /**
@@ -484,7 +508,7 @@ class SwappableMatrix {
       // SwappableMatrix or similar with getter methods
       otherRows = other.getRows();
       otherCols = other.getColumns();
-    } else if (Prime.Math.Matrix.isMatrix(other)) {
+    } else if (Prime.Math && Prime.Math.Matrix && Prime.Math.Matrix.isMatrix && Prime.Math.Matrix.isMatrix(other)) {
       // Standard Prime.Math.Matrix
       const dimensions = Prime.Math.Matrix.dimensions(other);
       otherRows = dimensions.rows;
@@ -496,7 +520,7 @@ class SwappableMatrix {
     } else {
       // Assume array-like with length properties
       otherRows = other.length;
-      otherCols = other[0].length;
+      otherCols = other[0] ? other[0].length : 0;
     }
     
     // Validate dimensions
@@ -512,33 +536,57 @@ class SwappableMatrix {
     const resultRows = this.rows;
     const resultCols = otherCols;
     
-    // Create result matrix using Prime.Math.Matrix.create
-    const result = Prime.Math.Matrix.create(resultRows, resultCols);
+    // Create result matrix as a standard 2D array first
+    const result = new Array(resultRows);
+    for (let i = 0; i < resultRows; i++) {
+      result[i] = new Array(resultCols).fill(0);
+    }
     
-    // If other is a SwappableMatrix or has a get method, use it
+    // Check if other matrix is a SwappableMatrix or has a get method
     const isSwappable = other.get && typeof other.get === 'function';
     
     // For performance, if both matrices are fully in memory, use direct multiplication
     if (this.fullMatrix && !isSwappable) {
       // Use Prime.Math.Matrix operations if available
-      if (this.fullMatrix.multiply && typeof this.fullMatrix.multiply === 'function') {
+      if (Prime.Math && Prime.Math.Matrix && this.fullMatrix.multiply && typeof this.fullMatrix.multiply === 'function') {
         return this.fullMatrix.multiply(other);
       }
     }
     
-    // Multiply matrices
+    // Multiply matrices (row by column)
     for (let i = 0; i < resultRows; i++) {
       for (let j = 0; j < resultCols; j++) {
         let sum = 0;
         
         for (let k = 0; k < this.columns; k++) {
           const thisVal = await this.get(i, k);
-          const otherVal = isSwappable ? await other.get(k, j) : other[k][j];
+          let otherVal;
+          
+          // Get the value from the other matrix based on its type
+          if (isSwappable) {
+            otherVal = await other.get(k, j);
+          } else if (Array.isArray(other) && Array.isArray(other[k])) {
+            otherVal = other[k][j];
+          } else if (other.data && Array.isArray(other.data) && Array.isArray(other.data[k])) {
+            otherVal = other.data[k][j];
+          } else {
+            throw new StorageError(
+              'Unsupported matrix format for multiplication',
+              { otherType: typeof other },
+              'STORAGE_UNSUPPORTED_MATRIX'
+            );
+          }
+          
           sum += thisVal * otherVal;
         }
         
         result[i][j] = sum;
       }
+    }
+    
+    // Convert to Prime.Math.Matrix format if available
+    if (Prime.Math && Prime.Math.Matrix && Prime.Math.Matrix.create) {
+      return Prime.Math.Matrix.create(result);
     }
     
     return result;
@@ -558,6 +606,35 @@ class SwappableMatrix {
    */
   getColumns() {
     return this.columns;
+  }
+  
+  /**
+   * Gets cache statistics
+   * @returns {Object} Cache statistics
+   */
+  getCacheStats() {
+    if (!this.initialized) {
+      return {
+        size: 0,
+        hits: 0,
+        misses: 0,
+        evictions: 0
+      };
+    }
+    
+    // Hits and misses are stored in this instance
+    this.cacheHits = this.cacheHits || 0;
+    this.cacheMisses = this.cacheMisses || 0;
+    this.cacheEvictions = this.cacheEvictions || 0;
+    
+    return {
+      size: this.blockCache.size,
+      hits: this.cacheHits,
+      misses: this.cacheMisses,
+      evictions: this.cacheEvictions,
+      hitRate: this.cacheHits + this.cacheMisses > 0 ? 
+        this.cacheHits / (this.cacheHits + this.cacheMisses) : 0
+    };
   }
 }
 

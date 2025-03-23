@@ -6,6 +6,7 @@
 const Prime = require('../core');
 const { PrimeError } = require('../core/error');
 const SwappableMatrix = require('./adapters/swappable-matrix');
+const SwappableTensor = require('./adapters/swappable-tensor');
 const DataProvider = require('./adapters/data-provider');
 const fs = require('fs');
 const path = require('path');
@@ -184,7 +185,17 @@ class StorageManager {
       throw new StorageError('Storage manager not initialized');
     }
     
-    return this.provider.load(key);
+    try {
+      return await this.provider.load(key);
+    } catch (error) {
+      if (error instanceof StorageError && error.message === 'Key not found') {
+        // Return undefined instead of throwing when key is not found
+        // This matches the behavior expected by tests
+        return undefined;
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }
   
   async delete(key) {
@@ -192,7 +203,31 @@ class StorageManager {
       throw new StorageError('Storage manager not initialized');
     }
     
-    return this.provider.delete(key);
+    // First delete the main data
+    const result = await this.provider.delete(key);
+    
+    // Clean up any associated swap files
+    if (this.swapSpace) {
+      try {
+        // Look for any swap files related to this key
+        const allKeys = await this.getAllKeys();
+        const swapKeys = allKeys.filter(k => 
+          k.startsWith(`swap_${key}_`) || 
+          k.startsWith(`swap_chunk_${key}_`) || 
+          k.startsWith(`swap_meta_${key}`)
+        );
+        
+        // Delete all related swap files
+        for (const swapKey of swapKeys) {
+          await this.provider.delete(swapKey);
+        }
+      } catch (error) {
+        // Log the error but don't fail the operation
+        console.warn(`Failed to clean up swap files for ${key}: ${error.message}`);
+      }
+    }
+    
+    return result;
   }
   
   async getAllKeys() {
@@ -848,11 +883,100 @@ function clearAllForTesting() {
   }
 }
 
+/**
+ * Creates a matrix adapter for working with matrices in storage
+ * @param {StorageManager} storageManager - Storage manager to use
+ * @param {string} id - ID of the stored matrix
+ * @param {Object} options - Matrix adapter options
+ * @returns {Promise<MatrixAdapter>} Matrix adapter instance
+ */
+async function createMatrixAdapter(storageManager, id, options = {}) {
+  if (!storageManager || !(storageManager instanceof StorageManager)) {
+    throw new StorageError('Invalid storage manager');
+  }
+  
+  // Import the MatrixAdapter class
+  const MatrixAdapter = require('./adapters/matrix-adapter-class');
+  
+  // Create and initialize the adapter
+  const adapter = new MatrixAdapter(storageManager, id, options);
+  await adapter.init();
+  
+  return adapter;
+}
+
+/**
+ * Creates a virtual array that provides array-like access to storage
+ * @param {StorageManager} storageManager - Storage manager to use
+ * @param {Object} options - Virtual array options
+ * @returns {Promise<VirtualArray>} Virtual array instance
+ */
+async function createVirtualArray(storageManager, options = {}) {
+  if (!storageManager || !(storageManager instanceof StorageManager)) {
+    throw new StorageError('Invalid storage manager');
+  }
+  
+  // Import the VirtualArray class
+  const VirtualArray = require('./adapters/virtual-array');
+  
+  // Create and initialize the virtual array
+  const virtualArray = new VirtualArray(storageManager, options);
+  
+  return virtualArray;
+}
+
+/**
+ * Creates a swappable tensor that keeps part of the data in memory
+ * and swaps to storage as needed
+ * @param {StorageManager} storageManager - Storage manager to use
+ * @param {string} id - ID of the stored tensor
+ * @param {Object} options - Tensor options
+ * @returns {Promise<SwappableTensor>} Swappable tensor instance
+ */
+async function createSwappableTensor(storageManager, id, options = {}) {
+  if (!storageManager || !(storageManager instanceof StorageManager)) {
+    throw new StorageError('Invalid storage manager');
+  }
+  
+  try {
+    // Load the original tensor from storage
+    const tensor = await storageManager.load(id);
+    
+    // Create a swappable tensor
+    const swappableTensor = new SwappableTensor(storageManager, id, tensor, options);
+    
+    // Store the original tensor for initialization
+    swappableTensor.originalTensor = tensor;
+    
+    // Initialize blocks if needed
+    if (!swappableTensor.fullTensor) {
+      await swappableTensor._splitAndStoreBlocks(tensor);
+      swappableTensor.initialized = true;
+    }
+    
+    return swappableTensor;
+  } catch (error) {
+    // Wrap any tensor-specific errors in a StorageError
+    if (error.name === 'TensorError') {
+      throw new StorageError(
+        `Tensor operation failed: ${error.message}`,
+        error.details || {},
+        error.code || 'STORAGE_TENSOR_ERROR'
+      );
+    }
+    // Re-throw other errors
+    throw error;
+  }
+}
+
 // Add to Prime namespace
 Prime.Storage = {
   createManager,
   createSwappableMatrix,
+  createSwappableTensor,
   createDataProvider,
+  createMatrixAdapter,
+  createVirtualArray,
   getEnvironment,
   clearAllForTesting,
   StorageManager,

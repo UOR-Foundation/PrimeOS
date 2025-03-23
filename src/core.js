@@ -1546,6 +1546,11 @@ const Prime = (function () {
 
     // Version compatibility system
     isCompatible: function (requirements) {
+      // Basic validation
+      if (!requirements) {
+        return false;
+      }
+      
       const features = requirements.features || [];
       const minVersion = requirements.minVersion || '0.0.0';
 

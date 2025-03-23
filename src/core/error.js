@@ -22,7 +22,13 @@ const Prime = require('./prime.js');
     constructor(message, context = {}, code = 'PRIME_ERROR', cause = null) {
       super(message);
       this.name = this.constructor.name;
-      this.context = context;
+      this.timestamp = new Date().toISOString();
+      
+      // Ensure context is a plain object
+      this.context = (context && typeof context === 'object') 
+        ? Object.assign({}, context) 
+        : {};
+        
       this.code = code;
       this.cause = cause;
 
@@ -195,6 +201,36 @@ const Prime = require('./prime.js');
       super(message, context, code, cause);
     }
   }
+  
+  /**
+   * Error for specific coherence violations with constraint and magnitude
+   */
+  class CoherenceViolationError extends PrimeError {
+    /**
+     * Creates a new CoherenceViolationError
+     * @param {string} message - Error message
+     * @param {Object} constraint - The constraint that was violated
+     * @param {number} magnitude - The magnitude of the violation
+     * @param {Object} [context] - Additional context
+     * @param {string} [code] - Error code
+     * @param {Error} [cause] - Cause of the error
+     */
+    constructor(
+      message,
+      constraint,
+      magnitude,
+      context = {},
+      code = 'COHERENCE_VIOLATION',
+      cause = null,
+    ) {
+      // Copy the context to avoid modifying the original
+      const contextCopy = Object.assign({}, context);
+      
+      super(message, contextCopy, code, cause);
+      this.constraint = constraint;
+      this.magnitude = magnitude;
+    }
+  }
 
   /**
    * Error for component lifecycle issues
@@ -214,7 +250,28 @@ const Prime = require('./prime.js');
     }
   }
 
-  // Attach error classes to Prime
+  // Create Errors object if it doesn't exist already
+  Prime.Errors = Prime.Errors || {};
+  
+  // Attach error classes to Prime.Errors namespace
+  Prime.Errors.PrimeError = PrimeError;
+  Prime.Errors.ValidationError = ValidationError;
+  Prime.Errors.ConfigurationError = ConfigurationError;
+  Prime.Errors.InvalidOperationError = InvalidOperationError;
+  Prime.Errors.UnsupportedOperationError = UnsupportedOperationError;
+  Prime.Errors.TimeoutError = TimeoutError;
+  Prime.Errors.ResourceExhaustionError = ResourceExhaustionError;
+  Prime.Errors.SecurityError = SecurityError;
+  Prime.Errors.NetworkError = NetworkError;
+  Prime.Errors.DependencyError = DependencyError;
+  Prime.Errors.SerializationError = SerializationError;
+  Prime.Errors.StateError = StateError;
+  Prime.Errors.CoherenceError = CoherenceError;
+  Prime.Errors.CoherenceViolationError = CoherenceViolationError;
+  Prime.Errors.ComponentError = ComponentError;
+  Prime.Errors.MathError = MathError;
+  
+  // For backward compatibility, also attach directly to Prime
   Prime.PrimeError = PrimeError;
   Prime.ValidationError = ValidationError;
   Prime.ConfigurationError = ConfigurationError;
@@ -228,6 +285,7 @@ const Prime = require('./prime.js');
   Prime.SerializationError = SerializationError;
   Prime.StateError = StateError;
   Prime.CoherenceError = CoherenceError;
+  Prime.CoherenceViolationError = CoherenceViolationError;
   Prime.ComponentError = ComponentError;
   Prime.MathError = MathError;
 })(Prime);

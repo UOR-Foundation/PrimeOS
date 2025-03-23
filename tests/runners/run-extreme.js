@@ -69,6 +69,12 @@ const testBatches = [
     testMatch: ['**/tests/extreme/distributed/**/*.test.js'],
     outputFile: 'extreme-distributed-report.json',
   },
+  {
+    name: 'tensor-operations-extreme',
+    description: 'Tensor operations extreme value tests',
+    testMatch: ['**/tests/extreme/math/tensor-operations.test.js'],
+    outputFile: 'extreme-tensor-report.json',
+  },
 ];
 
 // Create output directory for test results

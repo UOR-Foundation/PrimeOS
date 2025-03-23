@@ -10,6 +10,7 @@ require('./error');
 require('./version');
 require('./event-bus');
 require('./logger');
+require('./module-loader');
 
 // Import additional modules
 require('../storage');

@@ -4,7 +4,7 @@
  */
 
 const Prime = require('../../core');
-const { PrimeStorageError } = require('../core/provider');
+const { StorageError } = require('../index');
 
 /**
  * Virtual array that loads data on demand from storage
@@ -19,336 +19,500 @@ class VirtualArray {
     this.storageManager = storageManager;
     
     this.options = {
-      id: options.id,
-      length: options.length,
-      chunkSize: options.chunkSize || 1000,
-      itemFactory: options.itemFactory || null,
+      defaultValue: 0,
+      chunkSize: 1000,
+      prefetchSize: 1,
+      cacheSize: 5,
       ...options
     };
     
-    this.cache = new Map();
-    this.length = this.options.length;
+    this.length = this.options.length || 0;
+    this.id = this.options.id || `virtual_array_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.initialized = false;
+    
+    // Chunk management
+    this.chunks = new Map();
+    this.chunkAccess = []; // For LRU tracking
+    this.loadedChunks = 0;
+    this.chunkHits = 0;
+    this.chunkMisses = 0;
+    this.pendingChunks = new Map(); // Promises for chunks being loaded
   }
-
+  
   /**
-   * Gets an item from the virtual array
-   * @param {number} index - Index of the item to get
-   * @returns {Promise<*>} The item
+   * Initializes the virtual array
+   * @returns {Promise<void>}
    */
-  async getItem(index) {
+  async init() {
+    if (this.initialized) {
+      return;
+    }
+    
+    try {
+      // Try to load metadata if existing id is provided
+      if (this.options.id) {
+        const metadata = await this.storageManager.load(`${this.id}_metadata`);
+        
+        if (metadata) {
+          this.length = metadata.length;
+          this.options = {
+            ...this.options,
+            ...metadata.options
+          };
+        }
+      }
+      
+      // Store metadata for new arrays
+      if (!this.options.id || !(await this.storageManager.load(`${this.id}_metadata`))) {
+        await this.storageManager.store({
+          length: this.length,
+          options: {
+            defaultValue: this.options.defaultValue,
+            chunkSize: this.options.chunkSize
+          },
+          created: Date.now()
+        }, `${this.id}_metadata`);
+      }
+      
+      this.initialized = true;
+    } catch (error) {
+      throw new StorageError(
+        `Failed to initialize virtual array: ${error.message}`,
+        { originalError: error },
+        'STORAGE_ARRAY_INIT_FAILED',
+        error
+      );
+    }
+  }
+  
+  /**
+   * Gets a chunk of data
+   * @private
+   * @param {number} chunkIndex - Chunk index
+   * @returns {Promise<Array>} Chunk data
+   */
+  async _getChunk(chunkIndex) {
+    // Check if chunk is in memory
+    if (this.chunks.has(chunkIndex)) {
+      // Track access for LRU
+      this._updateChunkAccess(chunkIndex);
+      this.chunkHits++;
+      return this.chunks.get(chunkIndex);
+    }
+    
+    // Check if there's a pending load for this chunk
+    if (this.pendingChunks.has(chunkIndex)) {
+      return this.pendingChunks.get(chunkIndex);
+    }
+    
+    // Create a promise for this chunk load
+    this.chunkMisses++;
+    const chunkPromise = this._loadChunk(chunkIndex);
+    this.pendingChunks.set(chunkIndex, chunkPromise);
+    
+    try {
+      // Await the chunk load
+      const chunk = await chunkPromise;
+      // Remove from pending once loaded
+      this.pendingChunks.delete(chunkIndex);
+      return chunk;
+    } catch (error) {
+      // Clean up on error
+      this.pendingChunks.delete(chunkIndex);
+      throw error;
+    }
+  }
+  
+  /**
+   * Loads a chunk from storage
+   * @private
+   * @param {number} chunkIndex - Chunk index
+   * @returns {Promise<Array>} Chunk data
+   */
+  async _loadChunk(chunkIndex) {
+    const chunkKey = `${this.id}_chunk_${chunkIndex}`;
+    
+    try {
+      // Try to load chunk from storage
+      const chunk = await this.storageManager.load(chunkKey);
+      
+      if (chunk) {
+        // Store chunk in memory
+        this._storeChunk(chunkIndex, chunk);
+        return chunk;
+      }
+      
+      // If chunk doesn't exist, create it with default values
+      const startIndex = chunkIndex * this.options.chunkSize;
+      const endIndex = Math.min(startIndex + this.options.chunkSize, this.length);
+      const newChunk = new Array(endIndex - startIndex).fill(this.options.defaultValue);
+      
+      // Store in memory and storage
+      this._storeChunk(chunkIndex, newChunk);
+      await this.storageManager.store(newChunk, chunkKey);
+      
+      return newChunk;
+    } catch (error) {
+      throw new StorageError(
+        `Failed to load chunk ${chunkIndex}: ${error.message}`,
+        { chunkIndex, originalError: error },
+        'STORAGE_CHUNK_LOAD_FAILED',
+        error
+      );
+    }
+  }
+  
+  /**
+   * Stores a chunk in memory
+   * @private
+   * @param {number} chunkIndex - Chunk index
+   * @param {Array} chunk - Chunk data
+   */
+  _storeChunk(chunkIndex, chunk) {
+    // Evict chunks if cache is full
+    if (this.chunks.size >= this.options.cacheSize) {
+      this._evictChunk();
+    }
+    
+    // Store chunk in memory
+    this.chunks.set(chunkIndex, chunk);
+    this._updateChunkAccess(chunkIndex);
+    this.loadedChunks++;
+  }
+  
+  /**
+   * Updates the access order for a chunk
+   * @private
+   * @param {number} chunkIndex - Chunk index
+   */
+  _updateChunkAccess(chunkIndex) {
+    // Remove from current position
+    const index = this.chunkAccess.indexOf(chunkIndex);
+    if (index !== -1) {
+      this.chunkAccess.splice(index, 1);
+    }
+    
+    // Add to the end (most recently used)
+    this.chunkAccess.push(chunkIndex);
+  }
+  
+  /**
+   * Evicts a chunk from memory
+   * @private
+   */
+  _evictChunk() {
+    if (this.chunkAccess.length === 0) {
+      return;
+    }
+    
+    // Get least recently used chunk
+    const chunkIndex = this.chunkAccess.shift();
+    const chunk = this.chunks.get(chunkIndex);
+    
+    // If chunk is modified, save it to storage
+    if (chunk && chunk.modified) {
+      const chunkKey = `${this.id}_chunk_${chunkIndex}`;
+      this.storageManager.store(chunk, chunkKey).catch(error => {
+        console.error(`Failed to save chunk ${chunkIndex} during eviction:`, error);
+      });
+    }
+    
+    // Remove from memory
+    this.chunks.delete(chunkIndex);
+  }
+  
+  /**
+   * Gets a value from the virtual array
+   * @param {number} index - Array index
+   * @returns {Promise<*>} Value at the index
+   */
+  async get(index) {
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    // Validate index
     if (index < 0 || index >= this.length) {
-      throw new PrimeStorageError(
-        `Index out of bounds: ${index}`,
+      throw new StorageError(
+        `Index ${index} out of bounds (0-${this.length - 1})`,
         { index, length: this.length },
         'STORAGE_INDEX_OUT_OF_BOUNDS'
       );
     }
     
-    // Check cache first
-    if (this.cache.has(index)) {
-      return this.cache.get(index);
-    }
+    // Calculate chunk info
+    const chunkIndex = Math.floor(index / this.options.chunkSize);
+    const indexInChunk = index % this.options.chunkSize;
     
-    // If we have an item factory, use it
-    if (this.options.itemFactory) {
-      const item = this.options.itemFactory(index);
-      this.cache.set(index, item);
-      return item;
-    }
+    // Get the chunk
+    const chunk = await this._getChunk(chunkIndex);
     
-    // Otherwise, load from storage
-    try {
-      const data = await this.storageManager.load(this.options.id);
-      
-      if (Array.isArray(data) && index < data.length) {
-        const item = data[index];
-        this.cache.set(index, item);
-        return item;
-      }
-      
-      throw new PrimeStorageError(
-        `Failed to get item at index ${index}`,
-        { index },
-        'STORAGE_ITEM_NOT_FOUND'
-      );
-    } catch (error) {
-      throw new PrimeStorageError(
-        `Failed to get item at index ${index}: ${error.message}`,
-        { index, originalError: error },
-        'STORAGE_GET_ITEM_FAILED',
-        error
-      );
-    }
+    // Return value from chunk
+    return chunk[indexInChunk];
   }
-
+  
   /**
-   * Creates an iterator that loads data in chunks
-   * @param {number} [chunkSize] - Size of chunks to load
-   * @returns {AsyncIterator} An async iterator for the array
-   */
-  async *iterateChunks(chunkSize = this.options.chunkSize) {
-    for (let i = 0; i < this.length; i += chunkSize) {
-      const chunkLength = Math.min(chunkSize, this.length - i);
-      const chunk = new Array(chunkLength);
-      
-      // If we have an item factory, use it
-      if (this.options.itemFactory) {
-        for (let j = 0; j < chunkLength; j++) {
-          chunk[j] = this.options.itemFactory(i + j);
-        }
-        
-        yield chunk;
-        continue;
-      }
-      
-      // Otherwise, load from storage
-      try {
-        const data = await this.storageManager.load(this.options.id);
-        
-        if (Array.isArray(data)) {
-          const end = Math.min(i + chunkSize, data.length);
-          const dataChunk = data.slice(i, end);
-          
-          yield dataChunk;
-        } else {
-          throw new PrimeStorageError(
-            'Data is not an array',
-            { id: this.options.id },
-            'STORAGE_NOT_ARRAY'
-          );
-        }
-      } catch (error) {
-        throw new PrimeStorageError(
-          `Failed to iterate chunks: ${error.message}`,
-          { originalError: error },
-          'STORAGE_ITERATE_FAILED',
-          error
-        );
-      }
-    }
-  }
-
-  /**
-   * Maps a function over the virtual array
-   * @param {Function} callback - Function to apply to each item
-   * @param {number} [chunkSize] - Size of chunks to process
-   * @returns {Promise<Array>} Mapped array
-   */
-  async map(callback, chunkSize = this.options.chunkSize) {
-    const result = new Array(this.length);
-    
-    for (let i = 0; i < this.length; i += chunkSize) {
-      const end = Math.min(i + chunkSize, this.length);
-      const chunk = [];
-      
-      // Load chunk
-      for (let j = i; j < end; j++) {
-        chunk.push(await this.getItem(j));
-      }
-      
-      // Apply callback to chunk
-      for (let j = 0; j < chunk.length; j++) {
-        result[i + j] = callback(chunk[j], i + j, this);
-      }
-    }
-    
-    return result;
-  }
-
-  /**
-   * Filters the virtual array
-   * @param {Function} callback - Filter function
-   * @param {number} [chunkSize] - Size of chunks to process
-   * @returns {Promise<Array>} Filtered array
-   */
-  async filter(callback, chunkSize = this.options.chunkSize) {
-    const result = [];
-    
-    for (let i = 0; i < this.length; i += chunkSize) {
-      const end = Math.min(i + chunkSize, this.length);
-      const chunk = [];
-      
-      // Load chunk
-      for (let j = i; j < end; j++) {
-        chunk.push(await this.getItem(j));
-      }
-      
-      // Apply callback to chunk
-      for (let j = 0; j < chunk.length; j++) {
-        if (callback(chunk[j], i + j, this)) {
-          result.push(chunk[j]);
-        }
-      }
-    }
-    
-    return result;
-  }
-
-  /**
-   * Reduces the virtual array
-   * @param {Function} callback - Reducer function
-   * @param {*} initialValue - Initial value
-   * @param {number} [chunkSize] - Size of chunks to process
-   * @returns {Promise<*>} Reduced value
-   */
-  async reduce(callback, initialValue, chunkSize = this.options.chunkSize) {
-    let accumulator = initialValue;
-    
-    for (let i = 0; i < this.length; i += chunkSize) {
-      const end = Math.min(i + chunkSize, this.length);
-      const chunk = [];
-      
-      // Load chunk
-      for (let j = i; j < end; j++) {
-        chunk.push(await this.getItem(j));
-      }
-      
-      // Apply callback to chunk
-      for (let j = 0; j < chunk.length; j++) {
-        accumulator = callback(accumulator, chunk[j], i + j, this);
-      }
-    }
-    
-    return accumulator;
-  }
-
-  /**
-   * Gets a slice of the virtual array
-   * @param {number} start - Start index
-   * @param {number} [end] - End index (exclusive)
-   * @returns {Promise<Array>} Array slice
-   */
-  async slice(start, end = this.length) {
-    // Normalize indices
-    start = Math.max(0, start);
-    end = Math.min(this.length, end);
-    
-    if (start >= end) {
-      return [];
-    }
-    
-    const result = new Array(end - start);
-    
-    for (let i = start; i < end; i++) {
-      result[i - start] = await this.getItem(i);
-    }
-    
-    return result;
-  }
-
-  /**
-   * Gets a range of items from the virtual array
-   * @param {number} start - Start index
-   * @param {number} [end] - End index (exclusive)
-   * @returns {Promise<Array>} Array range
-   */
-  async getRange(start, end = this.length) {
-    return this.slice(start, end);
-  }
-
-  /**
-   * Finds an item in the virtual array
-   * @param {Function} predicate - Predicate function
-   * @param {number} [chunkSize] - Size of chunks to process
-   * @returns {Promise<*>} Found item or undefined
-   */
-  async find(predicate, chunkSize = this.options.chunkSize) {
-    for (let i = 0; i < this.length; i += chunkSize) {
-      const end = Math.min(i + chunkSize, this.length);
-      const chunk = [];
-      
-      // Load chunk
-      for (let j = i; j < end; j++) {
-        chunk.push(await this.getItem(j));
-      }
-      
-      // Apply predicate to chunk
-      for (let j = 0; j < chunk.length; j++) {
-        if (predicate(chunk[j], i + j, this)) {
-          return chunk[j];
-        }
-      }
-    }
-    
-    return undefined;
-  }
-
-  /**
-   * Finds the index of an item in the virtual array
-   * @param {Function} predicate - Predicate function
-   * @param {number} [chunkSize] - Size of chunks to process
-   * @returns {Promise<number>} Found index or -1
-   */
-  async findIndex(predicate, chunkSize = this.options.chunkSize) {
-    for (let i = 0; i < this.length; i += chunkSize) {
-      const end = Math.min(i + chunkSize, this.length);
-      const chunk = [];
-      
-      // Load chunk
-      for (let j = i; j < end; j++) {
-        chunk.push(await this.getItem(j));
-      }
-      
-      // Apply predicate to chunk
-      for (let j = 0; j < chunk.length; j++) {
-        if (predicate(chunk[j], i + j, this)) {
-          return i + j;
-        }
-      }
-    }
-    
-    return -1;
-  }
-
-  /**
-   * Prefetches a range of items into the cache
-   * @param {number} start - Start index
-   * @param {number} [end] - End index (exclusive)
+   * Sets a value in the virtual array
+   * @param {number} index - Array index
+   * @param {*} value - Value to set
    * @returns {Promise<void>}
    */
-  async prefetch(start, end = start + 100) {
-    // Normalize indices
-    start = Math.max(0, start);
-    end = Math.min(this.length, end);
-    
-    if (start >= end) {
-      return;
+  async set(index, value) {
+    if (!this.initialized) {
+      await this.init();
     }
     
-    // If we have an item factory, use it
-    if (this.options.itemFactory) {
-      for (let i = start; i < end; i++) {
-        if (!this.cache.has(i)) {
-          this.cache.set(i, this.options.itemFactory(i));
-        }
-      }
-      return;
-    }
-    
-    // Otherwise, load from storage
-    try {
-      const data = await this.storageManager.load(this.options.id);
-      
-      if (Array.isArray(data)) {
-        for (let i = start; i < end && i < data.length; i++) {
-          this.cache.set(i, data[i]);
-        }
-      }
-    } catch (error) {
-      throw new PrimeStorageError(
-        `Failed to prefetch items: ${error.message}`,
-        { start, end, originalError: error },
-        'STORAGE_PREFETCH_FAILED',
-        error
+    // Validate index
+    if (index < 0 || index >= this.length) {
+      throw new StorageError(
+        `Index ${index} out of bounds (0-${this.length - 1})`,
+        { index, length: this.length },
+        'STORAGE_INDEX_OUT_OF_BOUNDS'
       );
     }
+    
+    // Calculate chunk info
+    const chunkIndex = Math.floor(index / this.options.chunkSize);
+    const indexInChunk = index % this.options.chunkSize;
+    
+    // Get the chunk
+    const chunk = await this._getChunk(chunkIndex);
+    
+    // Set value in chunk
+    chunk[indexInChunk] = value;
+    chunk.modified = true;
+    
+    // Prefetch next chunk if near the end
+    if (indexInChunk > this.options.chunkSize - this.options.prefetchSize) {
+      this._prefetchChunk(chunkIndex + 1).catch(() => {
+        // Ignore prefetch errors
+      });
+    }
   }
-
+  
   /**
-   * Clears the cache
+   * Prefetches a chunk
+   * @private
+   * @param {number} chunkIndex - Chunk index to prefetch
+   * @returns {Promise<void>}
    */
-  clearCache() {
-    this.cache.clear();
+  async _prefetchChunk(chunkIndex) {
+    // Only prefetch if the chunk exists and is not already loaded
+    if (chunkIndex < Math.ceil(this.length / this.options.chunkSize) && !this.chunks.has(chunkIndex)) {
+      await this._getChunk(chunkIndex);
+    }
+  }
+  
+  /**
+   * Gets multiple values from the virtual array
+   * @param {number} startIndex - Start index
+   * @param {number} count - Number of values to get
+   * @returns {Promise<Array>} Values in the range
+   */
+  async getBulk(startIndex, count) {
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    // Validate range
+    if (startIndex < 0 || startIndex + count > this.length) {
+      throw new StorageError(
+        `Range (${startIndex}-${startIndex + count - 1}) out of bounds (0-${this.length - 1})`,
+        { startIndex, count, length: this.length },
+        'STORAGE_RANGE_OUT_OF_BOUNDS'
+      );
+    }
+    
+    // Calculate chunk info
+    const startChunkIndex = Math.floor(startIndex / this.options.chunkSize);
+    const endChunkIndex = Math.floor((startIndex + count - 1) / this.options.chunkSize);
+    
+    // Create result array
+    const result = new Array(count);
+    
+    // Load chunks in parallel
+    const chunkPromises = [];
+    for (let i = startChunkIndex; i <= endChunkIndex; i++) {
+      chunkPromises.push(this._getChunk(i));
+    }
+    
+    const chunks = await Promise.all(chunkPromises);
+    
+    // Fill result array from chunks
+    for (let i = 0; i < count; i++) {
+      const globalIndex = startIndex + i;
+      const chunkIndex = Math.floor(globalIndex / this.options.chunkSize) - startChunkIndex;
+      const indexInChunk = globalIndex % this.options.chunkSize;
+      result[i] = chunks[chunkIndex][indexInChunk];
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Sets multiple values in the virtual array
+   * @param {number} startIndex - Start index
+   * @param {Array} values - Values to set
+   * @returns {Promise<void>}
+   */
+  async setBulk(startIndex, values) {
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    if (!Array.isArray(values)) {
+      throw new StorageError(
+        'Values must be an array',
+        { values },
+        'STORAGE_INVALID_VALUES'
+      );
+    }
+    
+    // Validate range
+    if (startIndex < 0 || startIndex + values.length > this.length) {
+      throw new StorageError(
+        `Range (${startIndex}-${startIndex + values.length - 1}) out of bounds (0-${this.length - 1})`,
+        { startIndex, valuesLength: values.length, length: this.length },
+        'STORAGE_RANGE_OUT_OF_BOUNDS'
+      );
+    }
+    
+    // Calculate chunk info
+    const startChunkIndex = Math.floor(startIndex / this.options.chunkSize);
+    const endChunkIndex = Math.floor((startIndex + values.length - 1) / this.options.chunkSize);
+    
+    // Initialize chunks
+    const chunkUpdates = new Map();
+    
+    // Group values by chunk
+    for (let i = 0; i < values.length; i++) {
+      const globalIndex = startIndex + i;
+      const chunkIndex = Math.floor(globalIndex / this.options.chunkSize);
+      const indexInChunk = globalIndex % this.options.chunkSize;
+      
+      // Create chunk update if it doesn't exist
+      if (!chunkUpdates.has(chunkIndex)) {
+        chunkUpdates.set(chunkIndex, {
+          indices: [],
+          values: []
+        });
+      }
+      
+      // Add value to chunk update
+      const update = chunkUpdates.get(chunkIndex);
+      update.indices.push(indexInChunk);
+      update.values.push(values[i]);
+    }
+    
+    // Apply updates to chunks
+    for (const [chunkIndex, update] of chunkUpdates.entries()) {
+      // Get the chunk
+      const chunk = await this._getChunk(chunkIndex);
+      
+      // Update values
+      for (let i = 0; i < update.indices.length; i++) {
+        chunk[update.indices[i]] = update.values[i];
+      }
+      
+      chunk.modified = true;
+    }
+  }
+  
+  /**
+   * Iterates over a range of values in the virtual array
+   * @param {number} startIndex - Start index
+   * @param {number} count - Number of values to iterate over
+   * @param {Function} callback - Callback function(value, index)
+   * @returns {Promise<void>}
+   */
+  async forEach(startIndex, count, callback) {
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    if (typeof callback !== 'function') {
+      throw new StorageError(
+        'Callback must be a function',
+        { callback },
+        'STORAGE_INVALID_CALLBACK'
+      );
+    }
+    
+    // Get values in range
+    const values = await this.getBulk(startIndex, count);
+    
+    // Call callback for each value
+    for (let i = 0; i < values.length; i++) {
+      callback(values[i], startIndex + i);
+    }
+  }
+  
+  /**
+   * Maps a range of values in the virtual array
+   * @param {number} startIndex - Start index
+   * @param {number} count - Number of values to map
+   * @param {Function} callback - Mapping function(value, index)
+   * @returns {Promise<Array>} Mapped values
+   */
+  async map(startIndex, count, callback) {
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    if (typeof callback !== 'function') {
+      throw new StorageError(
+        'Callback must be a function',
+        { callback },
+        'STORAGE_INVALID_CALLBACK'
+      );
+    }
+    
+    // Get values in range
+    const values = await this.getBulk(startIndex, count);
+    
+    // Map values
+    return values.map((value, i) => callback(value, startIndex + i));
+  }
+  
+  /**
+   * Flushes all modified chunks to storage
+   * @returns {Promise<void>}
+   */
+  async flush() {
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    // Store all modified chunks
+    const savePromises = [];
+    
+    for (const [chunkIndex, chunk] of this.chunks.entries()) {
+      if (chunk.modified) {
+        const chunkKey = `${this.id}_chunk_${chunkIndex}`;
+        savePromises.push(this.storageManager.store(chunk, chunkKey));
+        chunk.modified = false;
+      }
+    }
+    
+    // Wait for all saves to complete
+    await Promise.all(savePromises);
+  }
+  
+  /**
+   * Gets statistics about the virtual array
+   * @returns {Object} Statistics
+   */
+  getChunkStats() {
+    return {
+      length: this.length,
+      chunkSize: this.options.chunkSize,
+      totalChunks: Math.ceil(this.length / this.options.chunkSize),
+      loadedChunks: this.chunks.size,
+      chunkHits: this.chunkHits,
+      chunkMisses: this.chunkMisses,
+      hitRate: this.chunkHits + this.chunkMisses > 0 ? 
+        this.chunkHits / (this.chunkHits + this.chunkMisses) : 0
+    };
   }
 }
 

@@ -38,416 +38,131 @@ function detectEnvironment() {
 }
 
 /**
- * Create a bridge for cross-environment testing
- * 
- * @returns {Object} Environment bridge object with methods for cross-environment communication
- */
-function createEnvironmentBridge() {
-  const environment = detectEnvironment();
-  
-  // In a real testing scenario, this would use environment-specific mechanisms
-  // to communicate between Node.js and browser environments
-  
-  // For Node.js environment
-  if (environment === 'node') {
-    return {
-      /**
-       * Run test code in the browser environment
-       * 
-       * @param {string} testName - Name of the test to run
-       * @param {Object} testData - Test data to send to browser
-       * @returns {Promise<any>} Results from browser environment
-       */
-      runInOtherEnvironment: async (testName, testData) => {
-        // This would launch or communicate with a browser instance
-        // For this simulation, we'll return compatible results
-        
-        // Framework Base0 test
-        if (testName === 'frameworkBase0Test') {
-          const Base0 = require('../../src/framework/base0');
-          const base0 = new Base0();
-          return testData.patterns.map(pattern => base0.processData(pattern));
-        }
-        
-        // Framework Base1 test
-        if (testName === 'frameworkBase1Test') {
-          const Base1 = require('../../src/framework/base1');
-          const base1 = new Base1();
-          return testData.patterns.map(data => base1.recognizePattern(data));
-        }
-        
-        // Framework Base2 test
-        if (testName === 'frameworkBase2Test') {
-          const Base2 = require('../../src/framework/base2');
-          const base2 = new Base2();
-          return base2.integratePatterns(testData.patterns);
-        }
-        
-        // Framework Base3 test
-        if (testName === 'frameworkBase3Test') {
-          const Base3 = require('../../src/framework/base3');
-          const base3 = new Base3();
-          return base3.transformResult(testData.input);
-        }
-        
-        // Framework Math test
-        if (testName === 'frameworkMathTest') {
-          const FrameworkMath = require('../../src/framework/math');
-          return FrameworkMath.calculateCoherence(testData.vectors);
-        }
-        
-        // Framework Pattern Recognition test
-        if (testName === 'frameworkPatternTest') {
-          const FrameworkMath = require('../../src/framework/math');
-          return FrameworkMath.recognizePatterns(testData.pattern);
-        }
-        
-        // Framework Pipeline test
-        if (testName === 'frameworkPipelineTest') {
-          const Base0 = require('../../src/framework/base0');
-          const Base1 = require('../../src/framework/base1');
-          const Base2 = require('../../src/framework/base2');
-          const Base3 = require('../../src/framework/base3');
-          
-          const base0 = new Base0();
-          const base1 = new Base1();
-          const base2 = new Base2();
-          const base3 = new Base3();
-          
-          // Process through all layers
-          const base0Results = testData.testData.map(data => base0.processData(data));
-          const base1Results = base0Results.map(result => base1.recognizePattern(result));
-          const base2Result = base2.integratePatterns(base1Results);
-          const base3Result = base3.transformResult(base2Result);
-          
-          return {
-            finalCoherence: base3Result.transformationCoherence,
-            transformationType: base3Result.transformationType,
-            transformed: base3Result.transformed
-          };
-        }
-        
-        return null;
-      }
-    };
-  }
-  
-  // For browser environment
-  if (environment === 'browser') {
-    return {
-      /**
-       * Run test code in the Node.js environment
-       * 
-       * @param {string} testName - Name of the test to run
-       * @param {Object} testData - Test data to send to Node.js
-       * @returns {Promise<any>} Results from Node.js environment
-       */
-      runInOtherEnvironment: async (testName, testData) => {
-        // This would communicate with a Node.js process
-        // For this simulation, we'll create browser-compatible results
-        
-        // Similar implementations to above but optimized for browser
-        // In a real implementation, this would make XHR/fetch requests to a test server
-        
-        return null; // Placeholder
-      }
-    };
-  }
-  
-  // Default no-op implementation
-  return null;
-}
-
-/**
  * Create an isolated test environment
- * 
- * @param {Object} options - Environment configuration options
- * @returns {Object} Isolated environment context
+ * @param {Object} options - Configuration options
+ * @returns {Object} Isolated environment object
  */
 function createIsolatedTestEnvironment(options = {}) {
-  const environment = options.environment || detectEnvironment();
-  
-  // Create a clean context for testing
-  const context = {
-    environment,
-    globals: {},
-    modules: {},
-    cleanup: []
-  };
-  
-  // Store original global values
-  const originalGlobals = saveGlobalState();
-  
-  // Setup isolation
-  if (environment === 'node') {
-    // Node.js-specific isolation
-    setupNodeIsolation(context);
-  } else if (environment === 'browser') {
-    // Browser-specific isolation
-    setupBrowserIsolation(context);
+  // Implementation depends on the environment
+  if (detectEnvironment() === 'node') {
+    // For Node.js, we can use vm module to create isolated contexts
+    const vm = require('vm');
+    const sandbox = { ...options.globals };
+    return vm.createContext(sandbox);
+  } else if (detectEnvironment() === 'browser') {
+    // For browsers, we can use iframes
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    
+    // Clean up function
+    const cleanup = () => {
+      document.body.removeChild(iframe);
+    };
+    
+    // Return environment with cleanup
+    return {
+      window: iframe.contentWindow,
+      document: iframe.contentDocument,
+      cleanup
+    };
   }
   
-  // Return environment with cleanup function
-  return {
-    context,
-    restore: () => {
-      // Run cleanup functions
-      context.cleanup.forEach(cleanup => {
-        if (typeof cleanup === 'function') {
-          cleanup();
-        }
-      });
-      
-      // Restore original global state
-      restoreGlobalState(originalGlobals);
-    }
-  };
+  // Fallback for unsupported environments
+  return { unsupported: true };
 }
 
 /**
- * Save the current global state
- * 
- * @returns {Object} Snapshot of global state
+ * Create a test environment bridge for cross-environment testing
+ * @returns {Object} Environment bridge
  */
-function saveGlobalState() {
-  const globals = {};
-  
-  // Detect environment
-  const environment = detectEnvironment();
-  
-  if (environment === 'node') {
-    // Save Node.js globals
-    Object.keys(global).forEach(key => {
-      if (typeof global[key] !== 'function' && key !== 'global') {
-        try {
-          globals[key] = JSON.parse(JSON.stringify(global[key]));
-        } catch (e) {
-          // Skip non-serializable objects
-        }
-      }
-    });
-  } else if (environment === 'browser') {
-    // Save browser globals
-    Object.keys(window).forEach(key => {
-      if (typeof window[key] !== 'function' && !key.startsWith('webkit')) {
-        try {
-          globals[key] = JSON.parse(JSON.stringify(window[key]));
-        } catch (e) {
-          // Skip non-serializable objects
-        }
-      }
-    });
+function createEnvironmentBridge() {
+  // Implementation depends on the environment
+  if (detectEnvironment() === 'node') {
+    // For Node.js
+    return {
+      getGlobal: (name) => global[name],
+      setGlobal: (name, value) => { global[name] = value; },
+      environment: 'node'
+    };
+  } else if (detectEnvironment() === 'browser') {
+    // For browsers
+    return {
+      getGlobal: (name) => window[name],
+      setGlobal: (name, value) => { window[name] = value; },
+      environment: 'browser'
+    };
   }
   
-  return {
-    environment,
-    globals
-  };
-}
-
-/**
- * Restore the global state from a snapshot
- * 
- * @param {Object} snapshot - Global state snapshot
- */
-function restoreGlobalState(snapshot) {
-  // Detect environment
-  const environment = detectEnvironment();
-  
-  if (environment !== snapshot.environment) {
-    throw new Error(`Cannot restore state from ${snapshot.environment} in ${environment} environment`);
-  }
-  
-  if (environment === 'node') {
-    // Restore Node.js globals
-    Object.keys(snapshot.globals).forEach(key => {
-      global[key] = snapshot.globals[key];
-    });
-  } else if (environment === 'browser') {
-    // Restore browser globals
-    Object.keys(snapshot.globals).forEach(key => {
-      if (key !== 'location' && key !== 'history') {
-        window[key] = snapshot.globals[key];
-      }
-    });
-  }
-}
-
-/**
- * Setup Node.js-specific isolation
- * 
- * @param {Object} context - Environment context
- */
-function setupNodeIsolation(context) {
-  // Save original require
-  const originalRequire = require;
-  
-  // Create module cache
-  const moduleCache = {};
-  
-  // Mock require
-  global.require = function(modulePath) {
-    // Check for cached module
-    if (moduleCache[modulePath]) {
-      return moduleCache[modulePath];
-    }
-    
-    // Call original require
-    return originalRequire(modulePath);
-  };
-  
-  // Add cleanup function
-  context.cleanup.push(() => {
-    global.require = originalRequire;
-  });
-}
-
-/**
- * Setup browser-specific isolation
- * 
- * @param {Object} context - Environment context
- */
-function setupBrowserIsolation(context) {
-  // Save original XMLHttpRequest
-  const originalXHR = window.XMLHttpRequest;
-  
-  // Mock XMLHttpRequest
-  window.XMLHttpRequest = function() {
-    const xhr = new originalXHR();
-    
-    // Save XHR instance for cleanup
-    context.globals.xhrInstances = context.globals.xhrInstances || [];
-    context.globals.xhrInstances.push(xhr);
-    
-    return xhr;
-  };
-  
-  // Add cleanup function
-  context.cleanup.push(() => {
-    window.XMLHttpRequest = originalXHR;
-    
-    // Abort any pending requests
-    if (context.globals.xhrInstances) {
-      context.globals.xhrInstances.forEach(xhr => {
-        try {
-          xhr.abort();
-        } catch (e) {
-          // Ignore errors
-        }
-      });
-    }
-  });
+  // Fallback
+  return { environment: detectEnvironment() };
 }
 
 /**
  * Setup a clean test state
- * 
  * @returns {Function} Function to restore original state
  */
 function setupCleanTestState() {
-  // Create isolated environment
-  const isolatedEnv = createIsolatedTestEnvironment();
+  const env = detectEnvironment();
+  let restore;
   
-  // Return cleanup function
-  return () => isolatedEnv.restore();
+  if (env === 'node') {
+    // For Node.js, capture module cache state
+    const originalModuleCache = { ...require.cache };
+    restore = () => {
+      // Restore original module cache
+      Object.keys(require.cache).forEach(key => {
+        if (!originalModuleCache[key]) {
+          delete require.cache[key];
+        }
+      });
+    };
+  } else if (env === 'browser') {
+    // For browsers, capture global properties
+    const originalProps = {};
+    const testProps = ['__TEST_GLOBALS', '__TEST_STATE']; // Example test globals to track
+    
+    testProps.forEach(prop => {
+      originalProps[prop] = window[prop];
+    });
+    
+    restore = () => {
+      // Restore original properties
+      testProps.forEach(prop => {
+        if (originalProps[prop] === undefined) {
+          delete window[prop];
+        } else {
+          window[prop] = originalProps[prop];
+        }
+      });
+    };
+  } else {
+    // Fallback
+    restore = () => {};
+  }
+  
+  return restore;
 }
 
-/**
- * Environment handling utilities for cross-platform testing
- */
+// Export the Environments module
 const Environments = {
   /**
-   * Check if code is running in a browser environment
-   * 
-   * @returns {boolean} - True if running in browser
+   * Check if running in Node.js
+   * @returns {boolean} True if running in Node.js
    */
-  isBrowser: () => {
-    return typeof window !== 'undefined' && typeof document !== 'undefined';
-  },
+  isNode: () => detectEnvironment() === 'node',
   
   /**
-   * Check if code is running in a Node.js environment
-   * 
-   * @returns {boolean} - True if running in Node.js
+   * Check if running in browser
+   * @returns {boolean} True if running in browser
    */
-  isNode: () => {
-    return typeof process !== 'undefined' && 
-      process.versions && 
-      process.versions.node;
-  },
+  isBrowser: () => detectEnvironment() === 'browser',
   
   /**
-   * Check if code is running in a Jest test environment
-   * 
-   * @returns {boolean} - True if running in Jest
+   * Check if running in worker
+   * @returns {boolean} True if running in worker
    */
-  isJest: () => {
-    return typeof jest !== 'undefined';
-  },
-  
-  /**
-   * Run tests only in a specific environment
-   * 
-   * @param {string} env - Target environment ('node', 'browser', or 'any')
-   * @param {Function} testFn - Test function to run
-   * @returns {Function} - Function that conditionally runs the test
-   */
-  runIn: (env, testFn) => {
-    return (...args) => {
-      if (env === 'any') {
-        return testFn(...args);
-      }
-      
-      if (env === 'node' && Environments.isNode()) {
-        return testFn(...args);
-      }
-      
-      if (env === 'browser' && Environments.isBrowser()) {
-        return testFn(...args);
-      }
-      
-      // If environment doesn't match, return a dummy function
-      return function() {
-        if (typeof it === 'function' && typeof it.skip === 'function') {
-          it.skip(`Test skipped - requires ${env} environment`);
-        } else {
-          console.log(`Test skipped - requires ${env} environment`);
-        }
-      };
-    };
-  },
-  
-  /**
-   * Skip tests in specific environments
-   * 
-   * @param {string} env - Environment to skip ('node', 'browser')
-   * @param {Function} testFn - Test function
-   * @returns {Function} - Function that conditionally runs the test
-   */
-  skipIn: (env, testFn) => {
-    return (...args) => {
-      if (env === 'node' && Environments.isNode()) {
-        if (typeof it === 'function' && typeof it.skip === 'function') {
-          it.skip(`Test skipped in node environment`);
-        } else {
-          console.log(`Test skipped in node environment`);
-        }
-        return;
-      }
-      
-      if (env === 'browser' && Environments.isBrowser()) {
-        if (typeof it === 'function' && typeof it.skip === 'function') {
-          it.skip(`Test skipped in browser environment`);
-        } else {
-          console.log(`Test skipped in browser environment`);
-        }
-        return;
-      }
-      
-      // Run the test if not in the skipped environment
-      return testFn(...args);
-    };
-  },
+  isWorker: () => ['worker', 'serviceWorker'].includes(detectEnvironment()),
   
   /**
    * Configure environment-specific test setup
@@ -498,9 +213,8 @@ const Environments = {
     }
     
     return result;
-  }
-};
-
+  },
+  
   /**
    * Get the current environment name
    * 

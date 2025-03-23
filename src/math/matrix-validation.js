@@ -34,21 +34,52 @@ const MatrixValidation = {
       return baseTolerance;
     }
 
-    const MatrixCore = Prime.Math.MatrixCore;
-    const dim = MatrixCore
-      ? MatrixCore.dimensions(matrix)
-      : { rows: matrix.length, cols: matrix[0].length };
-
-    // Find maximum absolute value in the matrix
-    let maxAbs = 0;
-    for (let i = 0; i < dim.rows; i++) {
-      for (let j = 0; j < dim.cols; j++) {
-        maxAbs = Math.max(maxAbs, Math.abs(matrix[i][j]));
+    try {
+      const MatrixCore = Prime.Math.MatrixCore;
+      const dim = MatrixCore
+        ? MatrixCore.dimensions(matrix)
+        : { rows: matrix.length, cols: matrix[0].length };
+  
+      // Find maximum absolute value and matrix size
+      let maxAbs = 0;
+      let minNonZero = Infinity;
+      const n = Math.max(dim.rows, dim.cols);
+      
+      // Accumulate stats in a numerically stable way
+      for (let i = 0; i < dim.rows; i++) {
+        for (let j = 0; j < dim.cols; j++) {
+          const absVal = Math.abs(matrix[i][j]);
+          
+          if (absVal > maxAbs) {
+            maxAbs = absVal;
+          }
+          
+          if (absVal > 0 && absVal < minNonZero) {
+            minNonZero = absVal;
+          }
+        }
       }
+      
+      // Adaptive tolerance based on matrix properties
+      if (maxAbs > 1e100) {
+        // For extreme large values, scale tolerance proportionally
+        // This helps avoid underflow for very large matrices
+        return baseTolerance * maxAbs * Math.max(1, n * Number.EPSILON);
+      } 
+      else if (minNonZero < 1e-100 && minNonZero > 0) {
+        // For extreme small values, use an absolute minimum tolerance
+        return Math.max(baseTolerance, minNonZero * 1e10);
+      } 
+      else {
+        // Standard case - scale with matrix magnitude and size
+        // For condition numbers up to ~1/EPSILON, this should work well
+        const scaleFactor = 1 + maxAbs * Number.EPSILON * 100 * n;
+        return baseTolerance * scaleFactor;
+      }
+    } catch (error) {
+      // Fallback to base tolerance in case of error
+      return baseTolerance;
     }
-
-    // Scale tolerance based on magnitude and machine epsilon
-    return baseTolerance * (1 + maxAbs * Number.EPSILON * 100);
   },
 
   /**
@@ -479,24 +510,28 @@ const MatrixValidation = {
    * @returns {boolean} - True if the matrix contains invalid numerical values
    */
   hasInvalidValues: function (matrix) {
-    if (!this.isMatrix(matrix)) {
+    // First check if the input is a valid matrix
+    if (!matrix || !Array.isArray(matrix) || matrix.length === 0) {
       return true;
     }
-
-    const MatrixCore = Prime.Math.MatrixCore;
-    const dim = MatrixCore
-      ? MatrixCore.dimensions(matrix)
-      : { rows: matrix.length, cols: matrix[0].length };
-
-    for (let i = 0; i < dim.rows; i++) {
-      for (let j = 0; j < dim.cols; j++) {
-        const value = matrix[i][j];
-        if (isNaN(value) || !isFinite(value)) {
-          return true;
+    
+    // Check if each row is an array and contains valid values
+    for (let i = 0; i < matrix.length; i++) {
+      const row = matrix[i];
+      
+      // Verify row is an array
+      if (!Array.isArray(row)) {
+        return true; // Invalid structure
+      }
+      
+      // Check each value in the row
+      for (let j = 0; j < row.length; j++) {
+        if (!Number.isFinite(row[j])) {
+          return true; // Contains NaN, Infinity, or non-numeric values
         }
       }
     }
-
+    
     return false;
   },
 

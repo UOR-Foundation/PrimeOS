@@ -16,9 +16,10 @@ const Prime = (function () {
    */
   return {
     /**
-     * Public version identifier
+     * Public version identifiers
      */
     VERSION,
+    version: VERSION,
 
     /**
      * Utility container - populated by utils.js
@@ -38,7 +39,7 @@ const Prime = (function () {
     /**
      * Logger container - populated by logger.js
      */
-    ModuleLogger: null,
+    Logger: null,
 
     /**
      * Placeholder for other modules to be attached

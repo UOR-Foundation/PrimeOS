@@ -55,6 +55,48 @@ Prime.Math = Prime.Math || {};
     },
 
     /**
+     * Create a vector of zeros with specified dimensions
+     * @param {number} dimensions - Number of dimensions
+     * @returns {Array} - Vector filled with zeros
+     */
+    zeros: function (dimensions) {
+      return this.create(dimensions, 0);
+    },
+
+    /**
+     * Create a vector of ones with specified dimensions
+     * @param {number} dimensions - Number of dimensions
+     * @returns {Array} - Vector filled with ones
+     */
+    ones: function (dimensions) {
+      return this.create(dimensions, 1);
+    },
+
+    /**
+     * Create a vector filled with a specific value
+     * @param {number} dimensions - Number of dimensions
+     * @param {number} value - Value to fill the vector with
+     * @returns {Array} - Filled vector
+     */
+    fill: function (dimensions, value) {
+      return this.create(dimensions, value);
+    },
+
+    /**
+     * Create a vector using TypedArray for improved memory efficiency
+     * @param {number} dimensions - Number of dimensions
+     * @param {number} initialValue - Initial value for all elements
+     * @param {string} arrayType - Type of TypedArray ('float64', 'float32', etc.)
+     * @returns {TypedArray} - New vector with specified dimensions
+     */
+    createTyped: function (dimensions, initialValue, arrayType) {
+      return VectorCore.create(dimensions, initialValue, {
+        useTypedArray: true,
+        arrayType: arrayType || 'float64',
+      });
+    },
+
+    /**
      * Add two vectors element-wise
      * @param {Array} a - First vector
      * @param {Array} b - Second vector
@@ -100,27 +142,54 @@ Prime.Math = Prime.Math || {};
      * @returns {number} - Vector magnitude
      */
     magnitude: function (vector) {
-      return VectorCore.magnitude(vector);
+      // Use Kahan summation for better precision
+      let sum = 0;
+      let compensation = 0;
+      
+      for (let i = 0; i < vector.length; i++) {
+        const squared = vector[i] * vector[i];
+        const y = squared - compensation;
+        const t = sum + y;
+        compensation = (t - sum) - y;
+        sum = t;
+      }
+      
+      return Math.sqrt(sum);
     },
 
     /**
-     * Normalize a vector to unit length
-     * @param {Array} vector - Vector to normalize
+     * Normalize a vector (create a unit vector in the same direction)
+     * @param {Array} vector - Input vector
      * @returns {Array} - Normalized vector
      */
     normalize: function (vector) {
-      return VectorCore.normalize(vector);
+      const mag = this.magnitude(vector);
+      
+      // Check for zero magnitude to avoid division by zero
+      if (mag < Number.EPSILON) {
+        throw new Error('Cannot normalize a zero vector');
+      }
+      
+      return this.scale(vector, 1 / mag);
     },
 
     /**
      * Calculate the cross product of two 3D vectors
      * @param {Array} a - First 3D vector
      * @param {Array} b - Second 3D vector
-     * @returns {Array} - Cross product
+     * @returns {Array} - Cross product vector
      */
     cross: function (a, b) {
-      const VectorAdvanced = getVectorModule('VectorAdvanced');
-      return VectorAdvanced.cross ? VectorAdvanced.cross(a, b) : [];
+      // Ensure vectors are 3D
+      if (a.length !== 3 || b.length !== 3) {
+        throw new Error('Cross product requires 3D vectors');
+      }
+      
+      return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+      ];
     },
 
     /**
@@ -130,177 +199,134 @@ Prime.Math = Prime.Math || {};
      * @returns {number} - Angle in radians
      */
     angle: function (a, b) {
-      const VectorAdvanced = getVectorModule('VectorAdvanced');
-      return VectorAdvanced.angle ? VectorAdvanced.angle(a, b) : 0;
+      const magA = this.magnitude(a);
+      const magB = this.magnitude(b);
+      
+      // Check for zero vectors
+      if (magA < Number.EPSILON || magB < Number.EPSILON) {
+        throw new Error('Cannot calculate angle with zero vector');
+      }
+      
+      const dotProduct = this.dot(a, b);
+      // Clamp the value to avoid numerical precision issues
+      const cosAngle = Math.max(-1, Math.min(1, dotProduct / (magA * magB)));
+      
+      return Math.acos(cosAngle);
     },
 
     /**
      * Project vector a onto vector b
      * @param {Array} a - Vector to project
      * @param {Array} b - Vector to project onto
-     * @returns {Array} - Projection result
+     * @returns {Array} - Projection of a onto b
      */
     project: function (a, b) {
-      const VectorAdvanced = getVectorModule('VectorAdvanced');
-      return VectorAdvanced.project ? VectorAdvanced.project(a, b) : [];
+      const magBSquared = this.dot(b, b);
+      
+      if (magBSquared < Number.EPSILON) {
+        throw new Error('Cannot project onto a zero vector');
+      }
+      
+      const scalar = this.dot(a, b) / magBSquared;
+      return this.scale(b, scalar);
     },
 
     /**
-     * Calculate the distance between two vectors
+     * Calculate the Euclidean distance between two vectors
      * @param {Array} a - First vector
      * @param {Array} b - Second vector
-     * @returns {number} - Distance between vectors
+     * @returns {number} - Euclidean distance
      */
     distance: function (a, b) {
-      return VectorCore.distance(a, b);
-    },
-
-    /**
-     * Linear interpolation between two vectors
-     * @param {Array} a - Start vector
-     * @param {Array} b - End vector
-     * @param {number} t - Interpolation parameter (0-1)
-     * @returns {Array} - Interpolated vector
-     */
-    lerp: function (a, b, t) {
-      const VectorAdvanced = getVectorModule('VectorAdvanced');
-      return VectorAdvanced.lerp ? VectorAdvanced.lerp(a, b, t) : [];
-    },
-
-    /**
-     * Calculate the norm (magnitude) of a vector
-     * @param {Array} vector - Input vector
-     * @returns {number} - Vector norm
-     */
-    norm: function (vector) {
-      return VectorCore.magnitude(vector);
-    },
-
-    // Add new methods not in the original API
-
-    /**
-     * Create a vector using TypedArray for improved memory efficiency
-     * @param {number} dimensions - Number of dimensions
-     * @param {number} [initialValue=0] - Initial value for all elements
-     * @param {string} [arrayType='float64'] - Type of TypedArray ('float64', 'float32', etc.)
-     * @returns {TypedArray} - New vector with specified dimensions
-     */
-    createTyped: function (
-      dimensions,
-      initialValue = 0,
-      arrayType = 'float64',
-    ) {
-      return VectorCore.create(dimensions, initialValue, {
-        useTypedArray: true,
-        arrayType,
-      });
-    },
-
-    /**
-     * Apply an operation to vector(s) in-place to avoid memory allocation
-     * @param {string} operation - Operation name ('add', 'subtract', 'scale', etc.)
-     * @param {...any} args - Arguments for the operation
-     * @param {Array|TypedArray} result - Vector to store the result in
-     * @returns {Array|TypedArray} - The result vector (same as the last argument)
-     */
-    applyInPlace: function (operation, ...args) {
-      const result = args.pop(); // Last argument is the result vector
-
-      if (!VectorCore.isVector(result)) {
-        throw new Prime.ValidationError(
-          'Last argument must be a vector to store the result',
-        );
+      if (a.length !== b.length) {
+        throw new Error('Vectors must have the same dimensions');
       }
+      
+      // Create a difference vector and calculate its magnitude
+      const diff = this.subtract(a, b);
+      return this.magnitude(diff);
+    },
 
-      switch (operation) {
-        case 'add':
-          if (args.length !== 2) {
-            throw new Prime.ValidationError(
-              'Add operation requires two vectors',
-            );
-          }
-          return VectorCore.add(args[0], args[1], result);
+    /**
+     * Calculate the Manhattan distance (L1 norm) between two vectors
+     * @param {Array} a - First vector
+     * @param {Array} b - Second vector
+     * @returns {number} - Manhattan distance
+     */
+    manhattanDistance: function (a, b) {
+      if (a.length !== b.length) {
+        throw new Error('Vectors must have the same dimensions');
+      }
+      
+      let sum = 0;
+      for (let i = 0; i < a.length; i++) {
+        sum += Math.abs(a[i] - b[i]);
+      }
+      
+      return sum;
+    },
 
-        case 'subtract':
-          if (args.length !== 2) {
-            throw new Prime.ValidationError(
-              'Subtract operation requires two vectors',
-            );
-          }
-          return VectorCore.subtract(args[0], args[1], result);
+    /**
+     * Elementwise multiplication of two vectors (Hadamard product)
+     * @param {Array} a - First vector
+     * @param {Array} b - Second vector
+     * @returns {Array} - Result of elementwise multiplication
+     */
+    elementWiseMultiply: function (a, b) {
+      if (a.length !== b.length) {
+        throw new Error('Vectors must have the same dimensions');
+      }
+      
+      const result = new Array(a.length);
+      for (let i = 0; i < a.length; i++) {
+        result[i] = a[i] * b[i];
+      }
+      
+      return result;
+    },
 
-        case 'scale':
-          if (args.length !== 2) {
-            throw new Prime.ValidationError(
-              'Scale operation requires a vector and a scalar',
-            );
-          }
-          return VectorCore.scale(args[0], args[1], result);
+    /**
+     * Check if a value is a vector
+     * @param {*} value - Value to check
+     * @returns {boolean} - True if the value is a vector
+     */
+    isVector: function (value) {
+      return Array.isArray(value);
+    },
 
-        case 'normalize':
-          if (args.length !== 1) {
-            throw new Prime.ValidationError(
-              'Normalize operation requires one vector',
-            );
-          }
-          return VectorCore.normalize(args[0], result);
+    /**
+     * Check if two vectors have the same dimensions
+     * @param {Array} a - First vector
+     * @param {Array} b - Second vector
+     * @returns {boolean} - True if vectors have the same dimensions
+     */
+    sameDimensions: function (a, b) {
+      return a.length === b.length;
+    },
 
-        case 'lerp': {
-          if (args.length !== 3) {
-            throw new Prime.ValidationError(
-              'Lerp operation requires two vectors and a parameter',
-            );
-          }
-          const VectorAdvanced = getVectorModule('VectorAdvanced');
-          if (VectorAdvanced.lerp) {
-            return VectorAdvanced.lerp(args[0], args[1], args[2], result);
-          } else {
-            throw new Prime.ValidationError(
-              'VectorAdvanced module not properly loaded',
-            );
-          }
+    /**
+     * Calculate the outer product of two vectors
+     * @param {Array} a - First vector
+     * @param {Array} b - Second vector
+     * @returns {Array} - Matrix result of outer product
+     */
+    outerProduct: function (a, b) {
+      const result = new Array(a.length);
+      
+      for (let i = 0; i < a.length; i++) {
+        result[i] = new Array(b.length);
+        for (let j = 0; j < b.length; j++) {
+          result[i][j] = a[i] * b[j];
         }
-
-        default:
-          throw new Prime.ValidationError(`Unknown operation: ${operation}`);
       }
-    },
-
-    /**
-     * Check if a value is a valid vector
-     * @param {*} v - Value to check
-     * @returns {boolean} - True if v is a valid vector
-     */
-    isVector: VectorCore.isVector,
-
-    /**
-     * Get detailed diagnostics about a vector
-     * @param {*} v - Vector to diagnose
-     * @returns {Object} - Diagnostic information
-     */
-    getDiagnostics: function (v) {
-      // Load VectorValidation on demand
-      const VectorValidation = getVectorModule('VectorValidation');
-      if (VectorValidation.getDiagnostics) {
-        return VectorValidation.getDiagnostics(v);
-      } else {
-        return { error: 'VectorValidation module not properly loaded' };
-      }
-    },
+      
+      return result;
+    }
   };
 
   // Add Vector to the Prime.Math namespace
   Prime.Math = Prime.Math || {};
-
-  // Safely update the Vector module to avoid overwriting any existing properties
-  if (!Prime.Math.Vector) {
-    Prime.Math.Vector = Vector;
-  } else {
-    // If Vector already exists, update it with our implementation
-    Object.keys(Vector).forEach((key) => {
-      Prime.Math.Vector[key] = Vector[key];
-    });
-  }
+  Prime.Math.Vector = Vector;
 })();
 
 // Export the enhanced Prime object

@@ -20,10 +20,10 @@ coverage/
 .DS_Store
 
 # Documentation
-docs/
 
 # Temporary files
 tmp/
 temp/
 *.log
 CLAUDE.md
+venv/

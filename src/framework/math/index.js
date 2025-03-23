@@ -1734,13 +1734,11 @@ try {
   // First try to import from new modular structure - import Prime object
   const Prime = require('../../core');
 
-  // Ensure math modules are loaded - this will trigger lazy loading
-  require('../../math/index');
-
-  // Access through the Prime.Math namespace which should now have the modules
-  vectorCore = Prime.Math.VectorCore || null;
-  vectorAdvanced = Prime.Math.VectorAdvanced || null;
-  vectorValidation = Prime.Math.VectorValidation || null;
+  // Access through the Prime.Math namespace directly
+  // Remove circular dependency by not requiring '../../math/index'
+  vectorCore = Prime.Math && Prime.Math.VectorCore || null;
+  vectorAdvanced = Prime.Math && Prime.Math.VectorAdvanced || null;
+  vectorValidation = Prime.Math && Prime.Math.VectorValidation || null;
 } catch (e) {
   // Fallback to legacy implementation
   vectorCore = null;
@@ -1773,6 +1771,14 @@ if (vectorCore && vectorAdvanced && vectorValidation) {
   vector.getDiagnostics = vectorValidation.getDiagnostics;
 }
 
+// Import tensor operations module with numerical stability enhancements
+let tensorOps;
+try {
+  tensorOps = require('./tensor-operations.js');
+} catch (e) {
+  tensorOps = {};
+}
+
 // Export the math utilities
 module.exports = {
   CONSTANTS,
@@ -1787,6 +1793,7 @@ module.exports = {
   coherence,
   linalg,
   primeMath,
+  tensor: tensorOps,
 
   // Export refactored modules if available
   vectorCore,

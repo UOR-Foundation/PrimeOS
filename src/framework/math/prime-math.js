@@ -5,7 +5,15 @@
  */
 
 // Import dependencies
-const Prime = require('../../mathematics.js');
+// Use dynamic loading to avoid circular dependencies
+let Prime;
+try {
+  Prime = require('../../core.js');
+} catch (e) {
+  Prime = {};
+  console.error('Failed to import core module:', e.message);
+}
+
 const { Vector, Matrix } = require('./linalg.js');
 
 // Define isNumber function if not available
@@ -309,6 +317,15 @@ const PrimeMath = {
    */
   diagonalMatrix: function (diagonal) {
     return Matrix.diagonal(diagonal);
+  },
+  
+  /**
+   * Create a diagonal matrix or extract diagonal from matrix
+   * @param {Array<number>|Vector|Matrix} input - Diagonal elements or matrix
+   * @returns {Matrix|Array} Diagonal matrix or diagonal elements
+   */
+  diag: function (input) {
+    return Matrix.diag(input);
   },
 
   /**
@@ -1067,6 +1084,263 @@ const PrimeMath = {
     }
 
     return (radians * 180) / Math.PI;
+  },
+
+  /**
+   * Compute the Singular Value Decomposition (SVD) of a matrix with enhanced numerical stability
+   * Decomposes matrix M into U * S * V^T where:
+   * - U is an orthogonal matrix with left singular vectors
+   * - S is a diagonal matrix with singular values in descending order
+   * - V is an orthogonal matrix with right singular vectors
+   * 
+   * @param {Matrix|Array<Array<number>>} matrix - Input matrix
+   * @param {Object} [options={}] - Additional options
+   * @param {boolean} [options.thin=false] - Whether to compute thin SVD (U and V have size reduced to match S)
+   * @param {boolean} [options.useScaling=true] - Whether to use scaling for extreme values
+   * @param {number} [options.maxIterations=100] - Maximum number of iterations for convergence
+   * @param {number} [options.tolerance=1e-10] - Convergence tolerance
+   * @returns {Object} Object with U, S, V matrices
+   */
+  svd: function(matrix, options = {}) {
+    // Ensure input is a Matrix object
+    const mat = matrix instanceof Matrix ? matrix : new Matrix(matrix);
+    const m = mat.rows;
+    const n = mat.cols;
+    const thin = options.thin || false;
+    const useScaling = options.useScaling !== false;
+    const maxIterations = options.maxIterations || 100;
+    const tolerance = options.tolerance || 1e-10;
+    
+    // Analyze matrix for extreme values and scaling needs
+    let maxAbs = 0;
+    let minNonZero = Infinity;
+    
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < n; j++) {
+        const absVal = Math.abs(mat.get(i, j));
+        maxAbs = Math.max(maxAbs, absVal);
+        if (absVal > 0) {
+          minNonZero = Math.min(minNonZero, absVal);
+        }
+      }
+    }
+    
+    // Determine if scaling is needed for numerical stability
+    const needsScaling = useScaling && (maxAbs > 1e100 || minNonZero < 1e-100 || (maxAbs > 0 && minNonZero < Infinity && maxAbs/minNonZero > 1e200));
+    let scaledMatrix = mat;
+    let scaleFactor = 1;
+    
+    if (needsScaling) {
+      if (maxAbs > 1e100) {
+        // Scale down for very large values
+        scaleFactor = 1e-100;
+      } else if (minNonZero < 1e-100 && minNonZero > 0) {
+        // Scale up for very small values
+        scaleFactor = 1e100;
+      } else {
+        // Balance the extreme values
+        const logMax = Math.log10(maxAbs);
+        const logMin = minNonZero > 0 ? Math.log10(minNonZero) : -logMax;
+        const centerLog = (logMax + logMin) / 2;
+        scaleFactor = Math.pow(10, -centerLog);
+      }
+      
+      // Apply scaling
+      scaledMatrix = mat.scale(scaleFactor);
+    }
+    
+    // Implementation using the two-sided Jacobi algorithm
+    // This is slower but more numerically stable for extreme values
+    
+    // Create initial matrices
+    let U = Matrix.identity(m);
+    let V = Matrix.identity(n);
+    let S = scaledMatrix.clone();
+    
+    // Helper function for SVD step using Jacobi rotations
+    const svdStep = () => {
+      let totalChange = 0;
+      
+      // Process all possible pairs of columns
+      for (let p = 0; p < n - 1; p++) {
+        for (let q = p + 1; q < n; q++) {
+          // Calculate parameters for Jacobi rotation
+          let sqSum = 0;
+          let spSum = 0;
+          
+          for (let i = 0; i < m; i++) {
+            const spVal = S.get(i, p);
+            const sqVal = S.get(i, q);
+            spSum += spVal * spVal;
+            sqSum += sqVal * sqVal;
+          }
+          
+          if (Math.sqrt(spSum * sqSum) < 1e-12 * maxAbs) {
+            continue; // Skip if columns are effectively zero
+          }
+          
+          // Compute off-diagonal sum
+          let spq = 0;
+          for (let i = 0; i < m; i++) {
+            spq += S.get(i, p) * S.get(i, q);
+          }
+          
+          // Check if rotation is needed
+          if (Math.abs(spq) <= tolerance * Math.sqrt(spSum * sqSum)) {
+            continue;
+          }
+          
+          // Compute Jacobi rotation parameters
+          const theta = 0.5 * Math.atan2(2 * spq, spSum - sqSum);
+          const cosTheta = Math.cos(theta);
+          const sinTheta = Math.sin(theta);
+          
+          // Apply rotation to S
+          for (let i = 0; i < m; i++) {
+            const Sip = S.get(i, p);
+            const Siq = S.get(i, q);
+            S.set(i, p, Sip * cosTheta + Siq * sinTheta);
+            S.set(i, q, -Sip * sinTheta + Siq * cosTheta);
+          }
+          
+          // Apply rotation to V
+          for (let i = 0; i < n; i++) {
+            const Vip = V.get(i, p);
+            const Viq = V.get(i, q);
+            V.set(i, p, Vip * cosTheta + Viq * sinTheta);
+            V.set(i, q, -Vip * sinTheta + Viq * cosTheta);
+          }
+          
+          totalChange += Math.abs(spq);
+        }
+      }
+      
+      return totalChange;
+    };
+    
+    // Iterate until convergence or max iterations
+    let iter = 0;
+    let totalChange = 0;
+    do {
+      totalChange = svdStep();
+      iter++;
+    } while (totalChange > tolerance && iter < maxIterations);
+    
+    // Compute U and singular values from S using QR decomposition
+    const singularValues = [];
+    const columnNorms = [];
+    
+    // Calculate column norms
+    for (let j = 0; j < n; j++) {
+      let colNorm = 0;
+      for (let i = 0; i < m; i++) {
+        colNorm += S.get(i, j) * S.get(i, j);
+      }
+      columnNorms[j] = Math.sqrt(colNorm);
+      singularValues[j] = columnNorms[j];
+    }
+    
+    // Sort singular values and rearrange matrices
+    const indices = singularValues.map((_, i) => i);
+    indices.sort((a, b) => singularValues[b] - singularValues[a]);
+    
+    // Create sorted matrices
+    const sortedS = Matrix.zeros(m, n);
+    const sortedU = Matrix.zeros(m, m);
+    const sortedV = Matrix.zeros(n, n);
+    
+    for (let j = 0; j < n; j++) {
+      if (j < Math.min(m, n)) {
+        sortedS.set(j, j, singularValues[indices[j]]);
+      }
+      
+      // Rearrange V columns
+      for (let i = 0; i < n; i++) {
+        sortedV.set(i, j, V.get(i, indices[j]));
+      }
+      
+      // Create U columns from normalized S columns
+      if (columnNorms[indices[j]] > 1e-12 * maxAbs) {
+        for (let i = 0; i < m; i++) {
+          sortedU.set(i, j, S.get(i, indices[j]) / columnNorms[indices[j]]);
+        }
+      } else {
+        // Handle numerically zero singular values
+        if (j < m) {
+          sortedU.set(j, j, 1);
+        }
+      }
+    }
+    
+    // Complete orthogonalization of U if needed
+    for (let j = n; j < m; j++) {
+      // Find a vector orthogonal to all existing columns
+      let tempCol = new Array(m).fill(0);
+      tempCol[j % m] = 1;
+      
+      // Orthogonalize against existing columns
+      for (let k = 0; k < j; k++) {
+        let dotProd = 0;
+        for (let i = 0; i < m; i++) {
+          dotProd += tempCol[i] * sortedU.get(i, k);
+        }
+        
+        for (let i = 0; i < m; i++) {
+          tempCol[i] -= dotProd * sortedU.get(i, k);
+        }
+      }
+      
+      // Normalize
+      let norm = 0;
+      for (let i = 0; i < m; i++) {
+        norm += tempCol[i] * tempCol[i];
+      }
+      norm = Math.sqrt(norm);
+      
+      if (norm > 1e-12) {
+        for (let i = 0; i < m; i++) {
+          sortedU.set(i, j, tempCol[i] / norm);
+        }
+      } else {
+        // Fallback for numerical stability
+        sortedU.set(j, j, 1);
+      }
+    }
+    
+    // Scale back if we applied scaling
+    if (needsScaling && scaleFactor !== 1) {
+      for (let i = 0; i < Math.min(m, n); i++) {
+        sortedS.set(i, i, sortedS.get(i, i) / scaleFactor);
+      }
+    }
+    
+    // Compute thin SVD if requested
+    if (thin) {
+      const minDim = Math.min(m, n);
+      const thinU = Matrix.zeros(m, minDim);
+      const thinS = Matrix.zeros(minDim, minDim);
+      const thinV = Matrix.zeros(n, minDim);
+      
+      for (let i = 0; i < m; i++) {
+        for (let j = 0; j < minDim; j++) {
+          thinU.set(i, j, sortedU.get(i, j));
+        }
+      }
+      
+      for (let i = 0; i < minDim; i++) {
+        thinS.set(i, i, sortedS.get(i, i));
+      }
+      
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < minDim; j++) {
+          thinV.set(i, j, sortedV.get(i, j));
+        }
+      }
+      
+      return { U: thinU, S: thinS, V: thinV };
+    }
+    
+    return { U: sortedU, S: sortedS, V: sortedV };
   },
 };
 

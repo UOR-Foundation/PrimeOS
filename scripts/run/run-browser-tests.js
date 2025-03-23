@@ -3,37 +3,42 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-// Simple HTTP server to serve test.html
+// Simple HTTP server to serve test.html and all necessary files
 async function startServer() {
   const server = http.createServer((req, res) => {
-    if (req.url === '/') {
-      fs.readFile(path.join(__dirname, '../../test.html'), (err, data) => {
-        if (err) {
-          res.writeHead(500);
-          res.end('Error loading test.html');
-          return;
-        }
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(data);
-      });
-    } else if (req.url === '/dist/primeos.js') {
-      fs.readFile(
-        path.join(__dirname, '../../dist/primeos.js'),
-        (err, data) => {
-          if (err) {
-            res.writeHead(500);
-            res.end('Error loading primeos.js');
-            return;
-          }
-          res.writeHead(200, { 'Content-Type': 'application/javascript' });
-          res.end(data);
-        },
-      );
+    const rootDir = path.join(__dirname, '../..');
+    let filePath = '';
+    
+    if (req.url === '/' || req.url === '/test.html') {
+      filePath = path.join(rootDir, 'test.html');
+      serveFile(filePath, 'text/html', res);
+    } else if (req.url.startsWith('/dist/')) {
+      // Serve files from dist directory
+      filePath = path.join(rootDir, req.url);
+      serveFile(filePath, 'application/javascript', res);
+    } else if (req.url.startsWith('/tests/')) {
+      // Serve files from tests directory
+      filePath = path.join(rootDir, req.url);
+      serveFile(filePath, 'application/javascript', res);
     } else {
       res.writeHead(404);
-      res.end('Not found');
+      res.end('Not found: ' + req.url);
     }
   });
+  
+  // Helper function to serve files
+  function serveFile(filePath, contentType, res) {
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        console.error('Error loading file:', filePath, err);
+        res.writeHead(500);
+        res.end('Error loading file: ' + filePath);
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(data);
+    });
+  }
 
   return new Promise((resolve) => {
     server.listen(8081, () => {
@@ -78,6 +83,38 @@ async function runTests() {
       { timeout: 10000 },
     );
 
+    // Clear output
+    await page.click('#clear-output');
+    
+    // Run core tests
+    console.log('Running core tests...');
+    await page.click('#run-core');
+    
+    // Wait for core tests to complete
+    try {
+      await page.waitForFunction(
+        () => {
+          const output = document.getElementById('test-output');
+          return output && output.textContent.includes('Test Summary');
+        },
+        { timeout: 10000 },
+      );
+      
+      // Extract just the core test results
+      const coreResults = await page.evaluate(() => {
+        return document.getElementById('test-output').textContent;
+      });
+      
+      console.log('\nCore Test Results:');
+      console.log('-----------------');
+      console.log(coreResults);
+    } catch (e) {
+      console.error('Error waiting for core tests to complete:', e.message);
+    }
+
+    // Clear output
+    await page.click('#clear-output');
+    
     // Run storage tests as well
     console.log('Running storage tests...');
     await page.click('#run-storage');

@@ -2914,7 +2914,14 @@ const Prime = require('./core.js');
     createFiberAnalyzer: function (options = {}) {
       try {
         // Check if framework module with pattern recognition is available
-        const framework = require('./framework/math/patternRecognition.js');
+        // Import safely to avoid circular dependencies
+        let framework;
+        try {
+          framework = require('./framework/math/patternRecognition.js');
+        } catch (e) {
+          framework = {};
+          console.warn('Failed to import pattern recognition module (FiberAlgebra):', e.message);
+        }
         if (framework && framework.FiberAlgebraPatternRecognition) {
           return new framework.FiberAlgebraPatternRecognition(options);
         }
@@ -2938,7 +2945,14 @@ const Prime = require('./core.js');
     createSequenceAnalyzer: function (options = {}) {
       try {
         // Check if framework module with pattern recognition is available
-        const framework = require('./framework/math/patternRecognition.js');
+        // Import safely to avoid circular dependencies
+        let framework;
+        try {
+          framework = require('./framework/math/patternRecognition.js');
+        } catch (e) {
+          framework = {};
+          console.warn('Failed to import pattern recognition module (Sequence):', e.message);
+        }
         if (framework && framework.SequencePatternRecognition) {
           return new framework.SequencePatternRecognition(options);
         }
@@ -3257,11 +3271,25 @@ Prime.ExtremePrecision = {
 
 // Add Prime.math namespace
 try {
-  const mathModule = require('./framework/math/prime-math.js');
+  // Import math modules safely using try/catch to avoid circular dependencies
+  let mathModule;
+  try {
+    mathModule = require('./framework/math/prime-math.js');
+  } catch (e) {
+    mathModule = {};
+    console.warn('Failed to import prime-math module:', e.message);
+  }
   Prime.math = mathModule;
 } catch (e) {
   console.warn('Could not load Prime.math module:', e.message);
   Prime.math = {};
+}
+
+// Load math modules including Matrix and Vector implementations
+try {
+  require('./math/index.js');
+} catch (e) {
+  console.warn('Could not load Prime.Math modules:', e.message);
 }
 
 // For browser global scope

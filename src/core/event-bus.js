@@ -64,10 +64,16 @@ const Prime = require('./prime.js');
        * @param {string} topic - Topic to subscribe to
        * @param {Function} callback - Function to call when topic is published to
        * @returns {string} Subscription token
+       * @throws {ValidationError} If topic is not a string or callback is not a function
        */
       subscribe: function (topic, callback) {
-        if (!topic || typeof callback !== 'function') {
-          return null;
+        // Validate parameters
+        if (!Prime.Utils.isString(topic)) {
+          throw new Prime.ValidationError('Event name must be a string', { topic });
+        }
+        
+        if (!Prime.Utils.isFunction(callback)) {
+          throw new Prime.ValidationError('Callback must be a function', { callback });
         }
 
         // Create topic array if it doesn't exist

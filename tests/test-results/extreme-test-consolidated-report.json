@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-03-23T19:44:13.220Z",
+  "summary": {
+    "totalTests": 46,
+    "passedTests": 46,
+    "failedTests": 0,
+    "allSuccessful": true
+  },
+  "batches": [
+    {
+      "name": "tensor-operations-extreme",
+      "description": "Tensor operations extreme value tests",
+      "success": true,
+      "totalTests": 46,
+      "passedTests": 46,
+      "failedTests": 0
+    }
+  ]
+}

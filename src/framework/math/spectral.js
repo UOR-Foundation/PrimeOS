@@ -3,14 +3,8 @@
  * Implements concepts from the Prime Operator's spectral decomposition
  */
 
-// Import core if available
-let Prime;
-try {
-  Prime = require('../../core.js');
-} catch (e) {
-  // Handle case where core isn't available yet
-  Prime = {};
-}
+// Import Prime directly from core/prime
+const Prime = require('../../core/prime.js');
 
 /**
  * Spectral Prime Decomposition implementation based on the Prime Framework

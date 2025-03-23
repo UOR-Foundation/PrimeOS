@@ -1,0 +1,238 @@
+{
+  "numFailedTestSuites": 0,
+  "numFailedTests": 0,
+  "numPassedTestSuites": 1,
+  "numPassedTests": 11,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 0,
+  "numRuntimeErrorTestSuites": 0,
+  "numTodoTests": 0,
+  "numTotalTestSuites": 1,
+  "numTotalTests": 11,
+  "openHandles": [],
+  "snapshot": {
+    "added": 0,
+    "didUpdate": false,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0
+  },
+  "startTime": 1742759045590,
+  "success": true,
+  "testResults": [
+    {
+      "leaks": false,
+      "numFailingTests": 0,
+      "numPassingTests": 11,
+      "numPendingTests": 0,
+      "numTodoTests": 0,
+      "openHandles": [],
+      "perfStats": {
+        "end": 1742759046825,
+        "runtime": 1212,
+        "slow": false,
+        "start": 1742759045613
+      },
+      "skipped": false,
+      "snapshot": {
+        "added": 0,
+        "fileDeleted": false,
+        "matched": 0,
+        "unchecked": 0,
+        "uncheckedKeys": [],
+        "unmatched": 0,
+        "updated": 0
+      },
+      "testFilePath": "/workspaces/PrimeOS/tests/extreme/math/matrix-extreme.test.js",
+      "testResults": [
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Creation with Extreme Values"
+          ],
+          "duration": 19,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Creation with Extreme Values creates matrices with extremely large values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 25,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "creates matrices with extremely large values"
+        },
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Creation with Extreme Values"
+          ],
+          "duration": 3,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Creation with Extreme Values creates matrices with extremely small values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 25,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "creates matrices with extremely small values"
+        },
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Creation with Extreme Values"
+          ],
+          "duration": 2,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Creation with Extreme Values creates matrices with mixed extreme values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 18,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "creates matrices with mixed extreme values"
+        },
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Basic Operations with Extreme Values"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Basic Operations with Extreme Values adds matrices with extreme values correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "adds matrices with extreme values correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Basic Operations with Extreme Values"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Basic Operations with Extreme Values subtracts matrices with extreme values correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "subtracts matrices with extreme values correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Basic Operations with Extreme Values"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Basic Operations with Extreme Values multiplies matrices with extreme values correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "multiplies matrices with extreme values correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Advanced Operations with Extreme Values"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Advanced Operations with Extreme Values computes determinant with extreme values correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "computes determinant with extreme values correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Advanced Operations with Extreme Values"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Advanced Operations with Extreme Values computes inverse with extreme values correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 2,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "computes inverse with extreme values correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Advanced Operations with Extreme Values"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Advanced Operations with Extreme Values handles catastrophic cancellation in matrix operations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "handles catastrophic cancellation in matrix operations"
+        },
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Stability Tests with Extreme Values"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Stability Tests with Extreme Values maintains numerical stability in repeated operations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "maintains numerical stability in repeated operations"
+        },
+        {
+          "ancestorTitles": [
+            "Matrix Extreme Value Handling",
+            "Matrix Stability Tests with Extreme Values"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Matrix Extreme Value Handling Matrix Stability Tests with Extreme Values handles extreme value matrices with special properties",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "handles extreme value matrices with special properties"
+        }
+      ],
+      "failureMessage": null
+    }
+  ],
+  "wasInterrupted": false
+}

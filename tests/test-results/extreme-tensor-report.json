@@ -1,0 +1,798 @@
+{
+  "numFailedTestSuites": 0,
+  "numFailedTests": 0,
+  "numPassedTestSuites": 1,
+  "numPassedTests": 46,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 0,
+  "numRuntimeErrorTestSuites": 0,
+  "numTodoTests": 0,
+  "numTotalTestSuites": 1,
+  "numTotalTests": 46,
+  "openHandles": [],
+  "snapshot": {
+    "added": 0,
+    "didUpdate": false,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0
+  },
+  "startTime": 1742759050992,
+  "success": true,
+  "testResults": [
+    {
+      "leaks": false,
+      "numFailingTests": 0,
+      "numPassingTests": 46,
+      "numPendingTests": 0,
+      "numTodoTests": 0,
+      "openHandles": [],
+      "perfStats": {
+        "end": 1742759052187,
+        "runtime": 1171,
+        "slow": false,
+        "start": 1742759051016
+      },
+      "skipped": false,
+      "snapshot": {
+        "added": 0,
+        "fileDeleted": false,
+        "matched": 0,
+        "unchecked": 0,
+        "uncheckedKeys": [],
+        "unmatched": 0,
+        "updated": 0
+      },
+      "testFilePath": "/workspaces/PrimeOS/tests/extreme/math/tensor-operations.test.js",
+      "testResults": [
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Creation"
+          ],
+          "duration": 5,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Creation should create tensors with the correct shape",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should create tensors with the correct shape"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Creation"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Creation should create tensors with function-generated values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should create tensors with function-generated values"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Shape Detection"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Shape Detection should correctly identify tensor shapes",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should correctly identify tensor shapes"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Shape Detection"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Shape Detection should handle empty tensors",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle empty tensors"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Shape Detection"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Shape Detection should handle non-array inputs",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle non-array inputs"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Extreme Value Detection"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Extreme Value Detection should detect large values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should detect large values"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Extreme Value Detection"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Extreme Value Detection should detect small values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should detect small values"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Extreme Value Detection"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Extreme Value Detection should detect non-extreme values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should detect non-extreme values"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Extreme Value Detection"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Extreme Value Detection should detect extreme values in tensors",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should detect extreme values in tensors"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Mapping"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Mapping should apply a function to each element",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should apply a function to each element"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Mapping"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Mapping should handle scalar inputs",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle scalar inputs"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Scaling"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Scaling should find appropriate scaling factor for extreme values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should find appropriate scaling factor for extreme values"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Scaling"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Scaling should scale a tensor by a factor",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should scale a tensor by a factor"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Flatten and Reshape"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Flatten and Reshape should flatten nested tensors",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should flatten nested tensors"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Flatten and Reshape"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Flatten and Reshape should reshape flat arrays into tensors",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should reshape flat arrays into tensors"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Addition"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Addition should add tensors correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should add tensors correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Addition"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Addition should handle tensors with different shapes",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle tensors with different shapes"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Addition"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Addition should handle extreme values with scaling",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme values with scaling"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Addition"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Addition should handle mixed extreme values with scaling",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle mixed extreme values with scaling"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Subtraction"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Subtraction should subtract tensors correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should subtract tensors correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Subtraction"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Subtraction should handle extreme values with scaling",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme values with scaling"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Element-wise Multiplication"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Element-wise Multiplication should multiply tensors element-wise",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should multiply tensors element-wise"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Element-wise Multiplication"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Element-wise Multiplication should handle extreme values with scaling",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme values with scaling"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Element-wise Multiplication"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Element-wise Multiplication should handle extremely small values with scaling",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extremely small values with scaling"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Matrix Multiplication"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Matrix Multiplication should multiply matrices correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should multiply matrices correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Matrix Multiplication"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Matrix Multiplication should handle incompatible dimensions",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle incompatible dimensions"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Matrix Multiplication"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Matrix Multiplication should handle 3D tensor matrix multiplication",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle 3D tensor matrix multiplication"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Matrix Multiplication"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Matrix Multiplication should handle extreme values with scaling",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme values with scaling"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Inner Product"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Inner Product should compute inner product correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should compute inner product correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Inner Product"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Inner Product should handle higher dimensional tensors",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle higher dimensional tensors"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Inner Product"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Inner Product should handle extreme values with scaling",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme values with scaling"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Inner Product"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Inner Product should handle mixed extreme values with separate summation",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle mixed extreme values with separate summation"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Norm"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Norm should compute Frobenius norm correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should compute Frobenius norm correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Norm"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Norm should compute L1 norm correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should compute L1 norm correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Norm"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Norm should compute L-infinity norm correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should compute L-infinity norm correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Norm"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Norm should handle extreme values with scaling",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme values with scaling"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Normalization"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Normalization should normalize a tensor correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should normalize a tensor correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Normalization"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Normalization should handle zero tensors",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle zero tensors"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Tensor Normalization"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Tensor Normalization should handle extreme values with scaling",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme values with scaling"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Special Functions"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Special Functions should apply softmax correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should apply softmax correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Special Functions"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Special Functions should apply ReLU correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should apply ReLU correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Special Functions"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Special Functions should apply sigmoid correctly",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should apply sigmoid correctly"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Special Functions"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Special Functions should handle extreme values in sigmoid",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme values in sigmoid"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Edge Cases"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Edge Cases should handle NaN values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle NaN values"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Edge Cases"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Edge Cases should handle Infinity values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle Infinity values"
+        },
+        {
+          "ancestorTitles": [
+            "Tensor Operations with Extreme Values",
+            "Edge Cases"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Tensor Operations with Extreme Values Edge Cases should handle mixed extreme values in operations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle mixed extreme values in operations"
+        }
+      ],
+      "failureMessage": null
+    }
+  ],
+  "wasInterrupted": false
+}

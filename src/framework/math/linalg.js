@@ -4,8 +4,14 @@
  * Extends the Prime.math namespace
  */
 
-// Import required modules
-const Prime = require('../../mathematics.js');
+// Use dynamic loading to avoid circular dependencies
+let Prime;
+try {
+  Prime = require('../../core.js');
+} catch (e) {
+  Prime = {};
+  console.error('Failed to import core module:', e.message);
+}
 
 /**
  * Vector operations with enhanced numerical stability
@@ -590,6 +596,29 @@ class Matrix {
       );
 
     return new Matrix(values);
+  }
+  
+  /**
+   * Alias for diagonal. Create a diagonal matrix or extract diagonal from a matrix
+   * @param {Array<number>|Vector|Matrix} input - Diagonal elements or matrix
+   * @returns {Matrix|Array} Diagonal matrix or vector of diagonal elements
+   */
+  static diag(input) {
+    // Check if input is a matrix
+    if (input instanceof Matrix) {
+      // Extract diagonal elements from matrix
+      const n = Math.min(input.rows, input.cols);
+      const diag = new Array(n);
+      
+      for (let i = 0; i < n; i++) {
+        diag[i] = input.get(i, i);
+      }
+      
+      return diag;
+    } else {
+      // Create a diagonal matrix (reuse the diagonal method)
+      return this.diagonal(input);
+    }
   }
 
   /**

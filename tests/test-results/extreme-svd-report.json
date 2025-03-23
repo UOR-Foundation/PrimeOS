@@ -1,0 +1,174 @@
+{
+  "numFailedTestSuites": 0,
+  "numFailedTests": 0,
+  "numPassedTestSuites": 1,
+  "numPassedTests": 7,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 0,
+  "numRuntimeErrorTestSuites": 0,
+  "numTodoTests": 0,
+  "numTotalTestSuites": 1,
+  "numTotalTests": 7,
+  "openHandles": [],
+  "snapshot": {
+    "added": 0,
+    "didUpdate": false,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0
+  },
+  "startTime": 1742757643679,
+  "success": true,
+  "testResults": [
+    {
+      "leaks": false,
+      "numFailingTests": 0,
+      "numPassingTests": 7,
+      "numPendingTests": 0,
+      "numTodoTests": 0,
+      "openHandles": [],
+      "perfStats": {
+        "end": 1742757644210,
+        "runtime": 527,
+        "slow": false,
+        "start": 1742757643683
+      },
+      "skipped": false,
+      "snapshot": {
+        "added": 0,
+        "fileDeleted": false,
+        "matched": 0,
+        "unchecked": 0,
+        "uncheckedKeys": [],
+        "unmatched": 0,
+        "updated": 0
+      },
+      "testFilePath": "/workspaces/PrimeOS/tests/extreme/math/svd-extreme.test.js",
+      "testResults": [
+        {
+          "ancestorTitles": [
+            "SVD Extreme Values",
+            "SVD with Extreme Values"
+          ],
+          "duration": 71,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "SVD Extreme Values SVD with Extreme Values computes SVD for matrix with extremely large values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 7,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "computes SVD for matrix with extremely large values"
+        },
+        {
+          "ancestorTitles": [
+            "SVD Extreme Values",
+            "SVD with Extreme Values"
+          ],
+          "duration": 23,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "SVD Extreme Values SVD with Extreme Values computes SVD for matrix with extremely small values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 15,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "computes SVD for matrix with extremely small values"
+        },
+        {
+          "ancestorTitles": [
+            "SVD Extreme Values",
+            "SVD with Extreme Values"
+          ],
+          "duration": 2,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "SVD Extreme Values SVD with Extreme Values computes SVD for ill-conditioned matrix",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 10,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "computes SVD for ill-conditioned matrix"
+        },
+        {
+          "ancestorTitles": [
+            "SVD Extreme Values",
+            "SVD with Extreme Values"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "SVD Extreme Values SVD with Extreme Values handles matrices with zero singular values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 4,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "handles matrices with zero singular values"
+        },
+        {
+          "ancestorTitles": [
+            "SVD Extreme Values",
+            "SVD with Extreme Values"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "SVD Extreme Values SVD with Extreme Values handles matrices with mixed extreme values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 2,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "handles matrices with mixed extreme values"
+        },
+        {
+          "ancestorTitles": [
+            "SVD Extreme Values",
+            "SVD Catastrophic Cancellation"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "SVD Extreme Values SVD Catastrophic Cancellation avoids catastrophic cancellation in SVD computations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 2,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "avoids catastrophic cancellation in SVD computations"
+        },
+        {
+          "ancestorTitles": [
+            "SVD Extreme Values",
+            "SVD Performance with Extreme Values"
+          ],
+          "duration": 2,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "SVD Extreme Values SVD Performance with Extreme Values maintains reasonable performance with extreme values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 14,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "maintains reasonable performance with extreme values"
+        }
+      ],
+      "failureMessage": null
+    }
+  ],
+  "wasInterrupted": false
+}

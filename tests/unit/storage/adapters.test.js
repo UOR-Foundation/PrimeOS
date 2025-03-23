@@ -246,11 +246,15 @@ describe('Storage Adapters', () => {
     
     test('should handle cache eviction when accessing different blocks', async () => {
       // Access elements in different blocks to trigger cache eviction
-      for (let i = 0; i < 6; i++) {
-        for (let j = 0; j < 6; j++) {
+      // But only use valid coordinates within the 100x100 matrix
+      for (let i = 0; i < 5; i++) {
+        for (let j = 0; j < 5; j++) {
           const blockX = i * 20;
           const blockY = j * 20;
-          await swappableMatrix.get(blockX, blockY);
+          // Ensure coordinates are within bounds
+          if (blockX < 100 && blockY < 100) {
+            await swappableMatrix.get(blockX, blockY);
+          }
         }
       }
       
@@ -274,9 +278,16 @@ describe('Storage Adapters', () => {
         sum += await swappableMatrix.get(5, j);
       }
       
-      // Expected sum: 500 + 501 + 502 + ... + 509
-      const expectedSum = 5 * 100 + (0 + 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9);
-      expect(sum).toBe(expectedSum);
+      // Re-calculate the expected sum based on the actual matrix values in the test
+      // The test creates a 100x100 matrix where each element is row*cols + col
+      // So for row 5, the sum of the first 10 elements is the sum from 500 to 509
+      let expectedSum = 0;
+      for (let j = 0; j < 10; j++) {
+        expectedSum += 5 * 100 + j;
+      }
+      // or we can compute it directly: 5*100*10 + (0+1+2+...+9) = 5000 + 45 = 5045
+      
+      expect(sum).toBe(5045); // 5*100*10 + 45
     });
   });
   

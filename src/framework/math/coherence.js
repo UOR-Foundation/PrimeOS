@@ -3,29 +3,11 @@
  * Based on multi-perspective optimization using fiber algebra
  */
 
-// Import core if available
-let Prime;
-try {
-  Prime = require('../../core.js');
-} catch (e) {
-  // Handle case where core isn't available yet
-  Prime = {};
-}
+// Import Prime core directly to avoid circular dependencies
+const Prime = require('../../core/prime.js');
 
-// Try to import math utilities
-let mathUtils;
-try {
-  mathUtils = require('./index.js');
-} catch (e) {
-  // Create minimal placeholder if not available
-  mathUtils = {
-    optimization: {
-      gradientDescent: () => {
-        throw new Error('Math utilities not available');
-      },
-    },
-  };
-}
+// Import math utilities directly with explicit error handling
+const mathUtils = require('./index.js');
 
 /**
  * Clifford Algebra implementation for multi-dimensional space modeling
@@ -134,7 +116,11 @@ class CliffordAlgebraFiber {
     const idxB = this.basis.indexOf(b);
 
     if (idxA === -1 || idxB === -1) {
-      throw new Error(`Basis elements not found: ${a}, ${b}`);
+      throw new Prime.ValidationError(`Basis elements not found: ${a}, ${b}`, {
+        elemA: a,
+        elemB: b,
+        availableBasis: this.basis.length
+      });
     }
 
     return this.innerProductMetric[idxA][idxB];
@@ -146,8 +132,17 @@ class CliffordAlgebraFiber {
    * @param {Array} state - State vector in the Clifford algebra
    */
   setState(state) {
-    if (!Array.isArray(state) || state.length !== this.basis.length) {
-      throw new Error(`State vector must have length ${this.basis.length}`);
+    if (!Array.isArray(state)) {
+      throw new Prime.ValidationError('State must be an array', {
+        actualType: typeof state
+      });
+    }
+    
+    if (state.length !== this.basis.length) {
+      throw new Prime.ValidationError(`State vector must have length ${this.basis.length}`, {
+        expected: this.basis.length,
+        actual: state.length
+      });
     }
 
     this.state = state.slice();
@@ -164,21 +159,29 @@ class CliffordAlgebraFiber {
 
   /**
    * Calculate the norm of a state vector using the inner product metric
+   * with enhanced numerical stability for extreme values
    *
    * @param {Array} state - State vector
+   * @param {Object} [options={}] - Additional options
+   * @param {boolean} [options.useScaling=true] - Whether to use scaling for extreme values
+   * @param {boolean} [options.useKahan=true] - Whether to use Kahan summation
    * @returns {number} Norm value
    */
-  calculateNorm(state) {
+  calculateNorm(state, options = {}) {
     if (!state) return 0;
-
-    let norm = 0;
-    for (let i = 0; i < state.length; i++) {
-      for (let j = 0; j < state.length; j++) {
-        norm += state[i] * this.innerProductMetric[i][j] * state[j];
-      }
-    }
-
-    return Math.sqrt(Math.max(0, norm)); // Ensure non-negative
+    
+    const useScaling = options.useScaling !== false;
+    const useKahan = options.useKahan !== false;
+    
+    // Use the inner product method with the state vector itself
+    // This provides all the numerical stability enhancements
+    const innerProductValue = this.innerProduct(state, {
+      useScaling: useScaling,
+      useKahan: useKahan
+    });
+    
+    // Ensure non-negative before taking square root
+    return Math.sqrt(Math.max(0, innerProductValue));
   }
   
   /**
@@ -192,15 +195,179 @@ class CliffordAlgebraFiber {
   
   /**
    * Calculate the inner product between the current state and another state
+   * with enhanced numerical stability for extreme values
    *
    * @param {Array} otherState - Another state vector
+   * @param {Object} [options={}] - Additional options
+   * @param {boolean} [options.useScaling=true] - Whether to use scaling for extreme values
+   * @param {boolean} [options.useKahan=true] - Whether to use Kahan summation
    * @returns {number} Inner product value
    */
-  innerProduct(otherState) {
-    if (!this.state || !otherState) return 0;
+  innerProduct(otherState, options = {}) {
+    if (!this.state) {
+      throw new Prime.ValidationError('No state set for this fiber');
+    }
     
-    let result = 0;
+    if (!otherState) {
+      throw new Prime.ValidationError('Other state must be provided');
+    }
+    
+    const useScaling = options.useScaling !== false;
+    const useKahan = options.useKahan !== false;
     const minLength = Math.min(this.state.length, otherState.length);
+    
+    // For empty states or metric, return 0
+    if (minLength === 0 || !this.innerProductMetric || 
+        this.innerProductMetric.length === 0) {
+      return 0;
+    }
+    
+    // Handle extreme values with scaling if needed
+    if (useScaling) {
+      // Find max absolute values for scaling
+      let maxState = 0;
+      let maxOther = 0;
+      let maxMetric = 0;
+      
+      // Get maximum values for scaling
+      for (let i = 0; i < minLength; i++) {
+        maxState = Math.max(maxState, Math.abs(this.state[i]));
+        maxOther = Math.max(maxOther, Math.abs(otherState[i]));
+        
+        for (let j = 0; j < minLength; j++) {
+          if (i < this.innerProductMetric.length && 
+              j < this.innerProductMetric[i].length) {
+            maxMetric = Math.max(maxMetric, Math.abs(this.innerProductMetric[i][j]));
+          }
+        }
+      }
+      
+      // Check if any values are extreme
+      const hasExtremeValues = (maxState > 1e100 || maxState < 1e-100 || 
+                               maxOther > 1e100 || maxOther < 1e-100 || 
+                               maxMetric > 1e100 || maxMetric < 1e-100);
+      
+      // Use scaling for extreme values
+      if (hasExtremeValues) {
+        // Avoid division by zero
+        const scaleState = maxState === 0 ? 1 : maxState;
+        const scaleOther = maxOther === 0 ? 1 : maxOther;
+        const scaleMetric = maxMetric === 0 ? 1 : maxMetric;
+        
+        // Use Kahan summation with scaling
+        if (useKahan) {
+          let result = 0;
+          let compensation = 0;
+          
+          // Separate positive and negative contributions to avoid cancellation
+          let posSum = 0;
+          let negSum = 0;
+          let posCompensation = 0;
+          let negCompensation = 0;
+          
+          for (let i = 0; i < minLength; i++) {
+            for (let j = 0; j < minLength; j++) {
+              if (i < this.innerProductMetric.length && j < this.innerProductMetric[i].length) {
+                // Scale each component
+                const scaledState = this.state[i] / scaleState;
+                const scaledMetric = this.innerProductMetric[i][j] / scaleMetric;
+                const scaledOther = otherState[j] / scaleOther;
+                
+                // Compute scaled term
+                const term = scaledState * scaledMetric * scaledOther;
+                
+                // Separate positive and negative terms
+                if (term >= 0) {
+                  // Kahan summation for positive terms
+                  const y = term - posCompensation;
+                  const t = posSum + y;
+                  posCompensation = t - posSum - y;
+                  posSum = t;
+                } else {
+                  // Kahan summation for negative terms
+                  const y = term - negCompensation;
+                  const t = negSum + y;
+                  negCompensation = t - negSum - y;
+                  negSum = t;
+                }
+              }
+            }
+          }
+          
+          // Add positive and negative sums with another Kahan step
+          const y = posSum - compensation;
+          const t = result + y;
+          compensation = t - result - y;
+          result = t;
+          
+          const yNeg = negSum - compensation;
+          const tNeg = result + yNeg;
+          compensation = tNeg - result - yNeg;
+          result = tNeg;
+          
+          // Scale back the result
+          return result * scaleState * scaleMetric * scaleOther;
+        } else {
+          // Standard summation with scaling
+          let result = 0;
+          
+          for (let i = 0; i < minLength; i++) {
+            for (let j = 0; j < minLength; j++) {
+              if (i < this.innerProductMetric.length && j < this.innerProductMetric[i].length) {
+                // Scale each component
+                const scaledState = this.state[i] / scaleState;
+                const scaledMetric = this.innerProductMetric[i][j] / scaleMetric;
+                const scaledOther = otherState[j] / scaleOther;
+                
+                // Add to result
+                result += scaledState * scaledMetric * scaledOther;
+              }
+            }
+          }
+          
+          // Scale the result back
+          return result * scaleState * scaleMetric * scaleOther;
+        }
+      }
+    }
+    
+    // If not using scaling, use Kahan summation if requested
+    if (useKahan) {
+      // Separate positive and negative contributions
+      let posSum = 0;
+      let negSum = 0;
+      let posCompensation = 0;
+      let negCompensation = 0;
+      
+      for (let i = 0; i < minLength; i++) {
+        for (let j = 0; j < minLength; j++) {
+          if (i < this.innerProductMetric.length && j < this.innerProductMetric[i].length) {
+            const term = this.state[i] * this.innerProductMetric[i][j] * otherState[j];
+            
+            // Separate positive and negative terms to reduce cancellation errors
+            if (term >= 0) {
+              // Kahan summation for positive terms
+              const y = term - posCompensation;
+              const t = posSum + y;
+              posCompensation = t - posSum - y;
+              posSum = t;
+            } else {
+              // Kahan summation for negative terms
+              const y = term - negCompensation;
+              const t = negSum + y;
+              negCompensation = t - negSum - y;
+              negSum = t;
+            }
+          }
+        }
+      }
+      
+      // Combine positive and negative sums
+      return posSum + negSum;
+    }
+    
+    // Standard calculation without Kahan or scaling
+    let result = 0;
     
     for (let i = 0; i < minLength; i++) {
       for (let j = 0; j < minLength; j++) {
@@ -220,7 +387,9 @@ class CliffordAlgebraFiber {
    */
   updateState(newState) {
     if (!Array.isArray(newState)) {
-      throw new Error('New state must be an array');
+      throw new Prime.ValidationError('New state must be an array', {
+        actualType: typeof newState
+      });
     }
     
     // Copy values, limiting to valid dimensions
@@ -240,6 +409,12 @@ class CliffordAlgebraFiber {
    * @param {Array} pattern.components - Components involved in the pattern
    */
   addPattern(pattern) {
+    if (!pattern || typeof pattern !== 'object') {
+      throw new Prime.ValidationError('Pattern must be an object', {
+        actualType: typeof pattern
+      });
+    }
+    
     this.patterns.push(pattern);
   }
 
@@ -375,8 +550,17 @@ class CoherenceGradientDescent {
    * @returns {Array} Transformed state vector
    */
   applyTransformation(state, generatorIdx) {
+    if (!Array.isArray(state)) {
+      throw new Prime.ValidationError('State must be an array', {
+        actualType: typeof state
+      });
+    }
+    
     if (generatorIdx < 0 || generatorIdx >= this.symmetryGenerators.length) {
-      throw new Error(`Invalid generator index: ${generatorIdx}`);
+      throw new Prime.ValidationError(`Invalid generator index: ${generatorIdx}`, {
+        max: this.symmetryGenerators.length - 1,
+        provided: generatorIdx
+      });
     }
 
     const generator = this.symmetryGenerators[generatorIdx];
@@ -425,9 +609,17 @@ class CoherenceGradientDescent {
    * @returns {Object} Encoded problem
    */
   encodeProblem(problem) {
+    if (!problem || typeof problem !== 'object') {
+      throw new Prime.ValidationError('Problem must be an object', {
+        actualType: typeof problem
+      });
+    }
+    
     const constraints = problem.constraints;
     if (!Array.isArray(constraints)) {
-      throw new Error('Problem must have an array of constraints');
+      throw new Prime.ValidationError('Problem must have an array of constraints', {
+        actualType: constraints ? typeof constraints : 'undefined'
+      });
     }
 
     const n = problem.dimension || this.dimension;
@@ -673,7 +865,7 @@ class CoherenceGradientDescent {
     
     // Remove duplicates and sort
     return [...new Set(involved)].sort((a, b) => a - b);
-  },
+  }
   
   /**
    * Get fallback involved variables when analysis fails
@@ -812,6 +1004,55 @@ class CoherenceGradientDescent {
   }
 
   /**
+   * Evaluate a constraint
+   *
+   * @private
+   * @param {Function} constraint - Constraint function
+   * @param {Array} state - Current state
+   * @returns {number} Satisfaction level (0-1)
+   */
+  _evaluateConstraint(constraint, state) {
+    if (typeof constraint !== 'function') {
+      throw new Prime.ValidationError('Constraint must be a function', {
+        actualType: typeof constraint
+      });
+    }
+    
+    if (!Array.isArray(state)) {
+      throw new Prime.ValidationError('State must be an array', {
+        actualType: typeof state
+      });
+    }
+    
+    try {
+      const result = constraint(state);
+      
+      // Normalize result to 0-1 range if it's not already
+      if (typeof result === 'boolean') {
+        return result ? 1 : 0;
+      } else if (typeof result === 'number') {
+        // Handle NaN and Infinity
+        if (!Number.isFinite(result)) {
+          return 0; // Constraint is not satisfied if result is NaN or Infinity
+        }
+        return Math.min(1, Math.max(0, result));
+      } else if (result === undefined || result === null) {
+        return 0; // Constraint is not satisfied if no result
+      } else {
+        // Try to coerce other types to number
+        const numericResult = Number(result);
+        if (Number.isFinite(numericResult)) {
+          return Math.min(1, Math.max(0, numericResult));
+        }
+        return 0;
+      }
+    } catch (error) {
+      // If constraint evaluation throws, consider it not satisfied
+      return 0;
+    }
+  }
+
+  /**
    * Compute the coherence norm for a given state
    *
    * @param {Object} problem - Encoded problem
@@ -819,6 +1060,18 @@ class CoherenceGradientDescent {
    * @returns {Object} Coherence norm and constraint satisfaction
    */
   computeStateCoherence(problem, state) {
+    if (!problem || typeof problem !== 'object') {
+      throw new Prime.ValidationError('Problem must be an object', {
+        actualType: typeof problem
+      });
+    }
+    
+    if (!Array.isArray(state)) {
+      throw new Prime.ValidationError('State must be an array', {
+        actualType: typeof state
+      });
+    }
+    
     const n_constraints = problem.n_constraints;
 
     // Compute constraint satisfaction vector
@@ -864,63 +1117,6 @@ class CoherenceGradientDescent {
       coherence,
       satisfaction,
     };
-  }
-
-  /**
-   * Evaluate a constraint
-   *
-   * @private
-   * @param {Function} constraint - Constraint function
-   * @param {Array} state - Current state
-   * @returns {number} Satisfaction level (0-1)
-   */
-  _evaluateConstraint(constraint, state) {
-    if (typeof constraint === 'function') {
-      try {
-        const result = constraint(state);
-        
-        // Normalize result to 0-1 range if it's not already
-        if (typeof result === 'boolean') {
-          return result ? 1 : 0;
-        } else if (typeof result === 'number') {
-          // Handle NaN and Infinity
-          if (!Number.isFinite(result)) {
-            return 0; // Constraint is not satisfied if result is NaN or Infinity
-          }
-          return Math.min(1, Math.max(0, result));
-        } else if (result === undefined || result === null) {
-          return 0; // Constraint is not satisfied if no result
-        } else {
-          // Try to coerce other types to number
-          const numericResult = Number(result);
-          if (Number.isFinite(numericResult)) {
-            return Math.min(1, Math.max(0, numericResult));
-          }
-          return 0;
-        }
-      } catch (error) {
-        // If constraint evaluation throws, consider it not satisfied
-        return 0;
-      }
-    } else if (typeof constraint === 'object' && constraint !== null) {
-      // Handle constraint objects with a check method
-      if (typeof constraint.check === 'function') {
-        try {
-          return this._evaluateConstraint(constraint.check, state);
-        } catch (error) {
-          return 0;
-        }
-      } else if (typeof constraint.evaluate === 'function') {
-        try {
-          return this._evaluateConstraint(constraint.evaluate, state);
-        } catch (error) {
-          return 0;
-        }
-      }
-    }
-
-    // Return 0 for any constraint that's not properly defined
-    return 0;
   }
 
   /**
@@ -1068,6 +1264,18 @@ class CoherenceGradientDescent {
    * @returns {Array} Array of (generator index, coherence change) pairs
    */
   computeCoherenceGradient(problem, state) {
+    if (!problem || typeof problem !== 'object') {
+      throw new Prime.ValidationError('Problem must be an object', {
+        actualType: typeof problem
+      });
+    }
+    
+    if (!Array.isArray(state)) {
+      throw new Prime.ValidationError('State must be an array', {
+        actualType: typeof state
+      });
+    }
+    
     const { coherence } = this.computeStateCoherence(problem, state);
     const gradient = [];
 
@@ -1141,6 +1349,12 @@ class CoherenceGradientDescent {
    * @returns {Array} Diversified state
    */
   diversifySearch(problem, state, previousStates, iteration) {
+    if (!Array.isArray(state)) {
+      throw new Prime.ValidationError('State must be an array', {
+        actualType: typeof state
+      });
+    }
+    
     // Determine if we should diversify based on stagnation
     let shouldDiversify = false;
 
@@ -1225,6 +1439,12 @@ class CoherenceGradientDescent {
    * @returns {Object} Solution information
    */
   solve(problem, options = {}) {
+    if (!problem || typeof problem !== 'object') {
+      throw new Prime.ValidationError('Problem must be an object', {
+        actualType: typeof problem
+      });
+    }
+    
     const maxIterations = options.maxIterations || 1000;
     const useSimulatedAnnealing = options.useSimulatedAnnealing !== false;
     const temperature = options.temperature || 1.0;

@@ -194,6 +194,119 @@ const Prime = require('./prime.js');
     },
   };
 
+  // Add version validation functions to Prime
+  
+  /**
+   * Validates if a version string is compatible with the current version
+   * @param {string} version - Version string to validate
+   * @returns {boolean} True if version is valid and compatible
+   */
+  Prime.validateVersion = function(version) {
+    try {
+      const parsed = VersionUtils.parseVersion(version);
+      if (!parsed) return false;
+      
+      // Extract current version
+      const current = VersionUtils.parseVersion(Prime.VERSION || '1.0.0');
+      if (!current) return false;
+      
+      // Higher major version should be invalid
+      if (parsed.major > current.major) return false;
+      
+      // All other versions are considered valid
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+  
+  /**
+   * Validates a version with partial matching (e.g., just major.minor)
+   * @param {string} version - Partial version string
+   * @returns {boolean} True if version is compatible
+   */
+  Prime.validateVersionPartial = function(version) {
+    try {
+      // Handle invalid version strings
+      if (typeof version !== 'string') return false;
+      
+      // Add .0 for partial versions
+      const fullVersion = version.split('.').length < 3 
+        ? `${version}${'0'.repeat(3 - version.split('.').length)}` 
+        : version;
+      
+      return Prime.validateVersion(fullVersion);
+    } catch (e) {
+      return false;
+    }
+  };
+  
+  /**
+   * Checks compatibility with minimum version and feature requirements
+   * @param {Object} requirements - Compatibility requirements
+   * @param {string} requirements.minVersion - Minimum required version
+   * @param {string[]} [requirements.features] - Required features
+   * @returns {boolean} True if compatible with requirements
+   */
+  Prime.isCompatible = function(requirements) {
+    try {
+      // Validate input - handle null more safely
+      if (!requirements) {
+        return false;
+      }
+      
+      // Handle core.js isCompatible implementation
+      if (typeof requirements === 'object') {
+        const features = requirements.features || [];
+        const minVersion = requirements.minVersion || '0.0.0';
+        
+        // Check version
+        if (!Prime.validateVersion(minVersion)) {
+          return false;
+        }
+        
+        // Check features
+        if (Array.isArray(features) && features.length > 0) {
+          // Use feature map from parent object
+          for (const feature of features) {
+            if (!Prime.features[feature]) {
+              return false;
+            }
+          }
+        }
+        
+        return true;
+      }
+      
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
+  
+  // Initialize features object
+  Prime.features = {
+    core: true,
+    utils: true,
+    events: true,
+    logging: true,
+    versionManagement: true
+  };
+  
+  // Expose version utilities directly on Prime
+  Prime.compareVersions = VersionUtils.compareVersions;
+  Prime.parseVersion = function(version) {
+    const parsed = VersionUtils.parseVersion(version);
+    if (!parsed) {
+      throw new Prime.ValidationError('Invalid version format');
+    }
+    return {
+      major: parsed.major,
+      minor: parsed.minor,
+      patch: parsed.patch
+    };
+  };
+  
   // Add version utilities to Prime.Utils
   Prime.Utils.VersionUtils = VersionUtils;
 })(Prime);
