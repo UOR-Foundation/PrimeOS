@@ -253,7 +253,7 @@ class MockCluster {
   }
 
   async _processParameterSync(task) {
-    // Simulate parameter synchronization
+    // Simulate parameter synchronization with proper gradient aggregation
     const { nodeId, parameters } = task.data;
 
     // Store node-specific parameters
@@ -263,7 +263,7 @@ class MockCluster {
     if (!this.parameters.global) {
       this.parameters.global = JSON.parse(JSON.stringify(parameters));
     } else {
-      // Otherwise, update global parameters (simplified averaging)
+      // Otherwise, update global parameters using proper gradient aggregation
       for (
         let layerIndex = 0;
         layerIndex < parameters.weights.length;
@@ -282,22 +282,192 @@ class MockCluster {
           continue;
         }
 
-        // Update weights
-        for (let i = 0; i < parameters.weights[layerIndex].length; i++) {
-          for (let j = 0; j < parameters.weights[layerIndex][i].length; j++) {
-            this.parameters.global.weights[layerIndex][i][j] =
-              (this.parameters.global.weights[layerIndex][i][j] +
-                parameters.weights[layerIndex][i][j]) /
-              2;
+        // Get all node parameters for this layer
+        const nodeParamValues = Array.from(this.parameters.nodeSpecific.values())
+          .filter(np => np.weights[layerIndex])
+          .map(np => ({
+            weights: np.weights[layerIndex],
+            biases: np.biases[layerIndex]
+          }));
+
+        // Include the current global parameters as a stabilizing factor
+        nodeParamValues.push({
+          weights: this.parameters.global.weights[layerIndex],
+          biases: this.parameters.global.biases[layerIndex]
+        });
+
+        // Define node weights - could be customized based on node performance or other metrics
+        // Using equal weights for now, but giving slightly higher weight to the global parameters
+        const nodeWeights = nodeParamValues.map((_, idx) => 
+          idx === nodeParamValues.length - 1 ? 1.5 : 1.0
+        );
+        const totalWeight = nodeWeights.reduce((sum, w) => sum + w, 0);
+
+        // Update weights using Kahan summation for numerical stability
+        for (let i = 0; i < this.parameters.global.weights[layerIndex].length; i++) {
+          for (let j = 0; j < this.parameters.global.weights[layerIndex][i].length; j++) {
+            // Collect all values for this position
+            const positionValues = [];
+            const validWeights = [];
+            
+            for (let nodeIdx = 0; nodeIdx < nodeParamValues.length; nodeIdx++) {
+              const nodeParam = nodeParamValues[nodeIdx];
+              // Ensure position exists in node parameters
+              if (nodeParam.weights && nodeParam.weights[i] && 
+                  typeof nodeParam.weights[i][j] === 'number' && 
+                  Number.isFinite(nodeParam.weights[i][j])) {
+                positionValues.push(nodeParam.weights[i][j]);
+                validWeights.push(nodeWeights[nodeIdx]);
+              }
+            }
+
+            // Check for extreme outliers (values far outside the typical range)
+            if (positionValues.length >= 3) {
+              // Simple outlier detection: remove values > 3 standard deviations from mean
+              const mean = positionValues.reduce((sum, val) => sum + val, 0) / positionValues.length;
+              const squaredDiffs = positionValues.map(val => Math.pow(val - mean, 2));
+              const variance = squaredDiffs.reduce((sum, val) => sum + val, 0) / positionValues.length;
+              const stdDev = Math.sqrt(variance);
+              const threshold = 3 * stdDev;
+              
+              // Filter out outliers
+              const filteredValues = [];
+              const filteredWeights = [];
+              for (let idx = 0; idx < positionValues.length; idx++) {
+                if (Math.abs(positionValues[idx] - mean) <= threshold) {
+                  filteredValues.push(positionValues[idx]);
+                  filteredWeights.push(validWeights[idx]);
+                }
+              }
+              
+              // Only use filtered values if we didn't filter everything out
+              if (filteredValues.length > 0) {
+                positionValues.length = 0;
+                positionValues.push(...filteredValues);
+                validWeights.length = 0;
+                validWeights.push(...filteredWeights);
+              }
+            }
+            
+            // Apply Kahan summation for numerical stability
+            let sum = 0;
+            let compensation = 0;
+            let totalUsedWeight = 0;
+            
+            for (let idx = 0; idx < positionValues.length; idx++) {
+              const value = positionValues[idx];
+              const weight = validWeights[idx];
+              
+              // Skip non-finite values
+              if (!Number.isFinite(value)) continue;
+              
+              // Apply weight
+              const weightedValue = value * weight;
+              totalUsedWeight += weight;
+              
+              // Kahan summation step
+              const y = weightedValue - compensation;
+              const t = sum + y;
+              compensation = t - sum - y;
+              sum = t;
+            }
+            
+            // Normalize by total weight
+            if (totalUsedWeight > 0) {
+              this.parameters.global.weights[layerIndex][i][j] = sum / totalUsedWeight;
+            }
+            
+            // Clip extreme values to maintain stability
+            const clipValue = 1e8;
+            if (!Number.isFinite(this.parameters.global.weights[layerIndex][i][j])) {
+              this.parameters.global.weights[layerIndex][i][j] = 0; // Replace NaN/Infinity with 0
+            } else if (Math.abs(this.parameters.global.weights[layerIndex][i][j]) > clipValue) {
+              this.parameters.global.weights[layerIndex][i][j] = 
+                Math.sign(this.parameters.global.weights[layerIndex][i][j]) * clipValue;
+            }
           }
         }
 
-        // Update biases
-        for (let i = 0; i < parameters.biases[layerIndex].length; i++) {
-          this.parameters.global.biases[layerIndex][i] =
-            (this.parameters.global.biases[layerIndex][i] +
-              parameters.biases[layerIndex][i]) /
-            2;
+        // Update biases using the same approach
+        for (let i = 0; i < this.parameters.global.biases[layerIndex].length; i++) {
+          // Collect all values for this position
+          const positionValues = [];
+          const validWeights = [];
+          
+          for (let nodeIdx = 0; nodeIdx < nodeParamValues.length; nodeIdx++) {
+            const nodeParam = nodeParamValues[nodeIdx];
+            // Ensure position exists in node parameters
+            if (nodeParam.biases && typeof nodeParam.biases[i] === 'number' && 
+                Number.isFinite(nodeParam.biases[i])) {
+              positionValues.push(nodeParam.biases[i]);
+              validWeights.push(nodeWeights[nodeIdx]);
+            }
+          }
+
+          // Check for extreme outliers
+          if (positionValues.length >= 3) {
+            // Simple outlier detection: remove values > 3 standard deviations from mean
+            const mean = positionValues.reduce((sum, val) => sum + val, 0) / positionValues.length;
+            const squaredDiffs = positionValues.map(val => Math.pow(val - mean, 2));
+            const variance = squaredDiffs.reduce((sum, val) => sum + val, 0) / positionValues.length;
+            const stdDev = Math.sqrt(variance);
+            const threshold = 3 * stdDev;
+            
+            // Filter out outliers
+            const filteredValues = [];
+            const filteredWeights = [];
+            for (let idx = 0; idx < positionValues.length; idx++) {
+              if (Math.abs(positionValues[idx] - mean) <= threshold) {
+                filteredValues.push(positionValues[idx]);
+                filteredWeights.push(validWeights[idx]);
+              }
+            }
+            
+            // Only use filtered values if we didn't filter everything out
+            if (filteredValues.length > 0) {
+              positionValues.length = 0;
+              positionValues.push(...filteredValues);
+              validWeights.length = 0;
+              validWeights.push(...filteredWeights);
+            }
+          }
+          
+          // Apply Kahan summation for numerical stability
+          let sum = 0;
+          let compensation = 0;
+          let totalUsedWeight = 0;
+          
+          for (let idx = 0; idx < positionValues.length; idx++) {
+            const value = positionValues[idx];
+            const weight = validWeights[idx];
+            
+            // Skip non-finite values
+            if (!Number.isFinite(value)) continue;
+            
+            // Apply weight
+            const weightedValue = value * weight;
+            totalUsedWeight += weight;
+            
+            // Kahan summation step
+            const y = weightedValue - compensation;
+            const t = sum + y;
+            compensation = t - sum - y;
+            sum = t;
+          }
+          
+          // Normalize by total weight
+          if (totalUsedWeight > 0) {
+            this.parameters.global.biases[layerIndex][i] = sum / totalUsedWeight;
+          }
+          
+          // Clip extreme values to maintain stability
+          const clipValue = 1e8;
+          if (!Number.isFinite(this.parameters.global.biases[layerIndex][i])) {
+            this.parameters.global.biases[layerIndex][i] = 0; // Replace NaN/Infinity with 0
+          } else if (Math.abs(this.parameters.global.biases[layerIndex][i]) > clipValue) {
+            this.parameters.global.biases[layerIndex][i] = 
+              Math.sign(this.parameters.global.biases[layerIndex][i]) * clipValue;
+          }
         }
       }
     }
@@ -315,13 +485,22 @@ class MockCluster {
   }
 
   async _processGradientAggregation(task) {
-    // Simulate gradient aggregation
+    // Simulate gradient aggregation with advanced techniques
     const { nodeGradients } = task.data;
 
-    // Simple aggregation - just average the gradients
+    // Advanced aggregation with outlier handling and weighted averaging
     const aggregatedGradients = {
       dW: [],
       dB: [],
+    };
+
+    // Configuration for aggregation
+    const config = {
+      clipOutliers: true,
+      outlierThreshold: 3.0, // Standard deviations
+      maxValue: 1e8,
+      nodeWeights: {}, // Will be computed based on gradient quality
+      defaultWeight: 1.0
     };
 
     // Process each layer
@@ -337,34 +516,97 @@ class MockCluster {
       const firstNodeGradient = layerGradients[0];
       if (!firstNodeGradient || !firstNodeGradient.dW) continue;
 
+      // Compute node weights based on gradient quality for this layer
+      const nodeWeights = this._computeNodeWeights(layerGradients, config);
+
       // Initialize weight gradients
       for (let i = 0; i < firstNodeGradient.dW.length; i++) {
         aggregatedGradients.dW[layerIndex][i] = [];
 
         for (let j = 0; j < firstNodeGradient.dW[i].length; j++) {
-          // Gather all node values for this position
-          const values = layerGradients
-            .filter(
-              (g) => g && g.dW && g.dW[i] && typeof g.dW[i][j] === "number",
-            )
-            .map((g) => g.dW[i][j]);
+          // Gather all node values and their weights for this position
+          const values = [];
+          const weights = [];
+          
+          for (let nodeIdx = 0; nodeIdx < layerGradients.length; nodeIdx++) {
+            const gradient = layerGradients[nodeIdx];
+            
+            // Ensure the position exists and is a valid number
+            if (gradient && gradient.dW && gradient.dW[i] && 
+                typeof gradient.dW[i][j] === "number" && 
+                Number.isFinite(gradient.dW[i][j])) {
+              values.push(gradient.dW[i][j]);
+              weights.push(nodeWeights[nodeIdx]);
+            }
+          }
 
-          // Use Kahan summation for numerical stability
-          aggregatedGradients.dW[layerIndex][i][j] =
-            values.length > 0 ? kahanSum(values) / values.length : 0;
+          // Handle outliers if enabled and we have enough data points
+          if (config.clipOutliers && values.length >= 3) {
+            const { filteredValues, filteredWeights } = this._removeOutliers(values, weights, config.outlierThreshold);
+            
+            // Only use filtered values if we have at least one value left
+            if (filteredValues.length > 0) {
+              values.length = 0;
+              weights.length = 0;
+              values.push(...filteredValues);
+              weights.push(...filteredWeights);
+            }
+          }
+
+          // Compute weighted average using Kahan summation for numerical stability
+          aggregatedGradients.dW[layerIndex][i][j] = this._weightedKahanSum(values, weights);
+          
+          // Clip extreme values
+          if (!Number.isFinite(aggregatedGradients.dW[layerIndex][i][j])) {
+            aggregatedGradients.dW[layerIndex][i][j] = 0; // Replace NaN/Infinity with 0
+          } else if (Math.abs(aggregatedGradients.dW[layerIndex][i][j]) > config.maxValue) {
+            aggregatedGradients.dW[layerIndex][i][j] = 
+              Math.sign(aggregatedGradients.dW[layerIndex][i][j]) * config.maxValue;
+          }
         }
       }
 
-      // Initialize bias gradients
+      // Initialize bias gradients with the same approach
       for (let i = 0; i < firstNodeGradient.dB.length; i++) {
-        // Gather all node values for this position
-        const values = layerGradients
-          .filter((g) => g && g.dB && typeof g.dB[i] === "number")
-          .map((g) => g.dB[i]);
+        // Gather all node values and their weights for this position
+        const values = [];
+        const weights = [];
+        
+        for (let nodeIdx = 0; nodeIdx < layerGradients.length; nodeIdx++) {
+          const gradient = layerGradients[nodeIdx];
+          
+          // Ensure the position exists and is a valid number
+          if (gradient && gradient.dB && 
+              typeof gradient.dB[i] === "number" && 
+              Number.isFinite(gradient.dB[i])) {
+            values.push(gradient.dB[i]);
+            weights.push(nodeWeights[nodeIdx]);
+          }
+        }
 
-        // Use Kahan summation for numerical stability
-        aggregatedGradients.dB[layerIndex][i] =
-          values.length > 0 ? kahanSum(values) / values.length : 0;
+        // Handle outliers if enabled and we have enough data points
+        if (config.clipOutliers && values.length >= 3) {
+          const { filteredValues, filteredWeights } = this._removeOutliers(values, weights, config.outlierThreshold);
+          
+          // Only use filtered values if we have at least one value left
+          if (filteredValues.length > 0) {
+            values.length = 0;
+            weights.length = 0;
+            values.push(...filteredValues);
+            weights.push(...filteredWeights);
+          }
+        }
+
+        // Compute weighted average using Kahan summation for numerical stability
+        aggregatedGradients.dB[layerIndex][i] = this._weightedKahanSum(values, weights);
+        
+        // Clip extreme values
+        if (!Number.isFinite(aggregatedGradients.dB[layerIndex][i])) {
+          aggregatedGradients.dB[layerIndex][i] = 0; // Replace NaN/Infinity with 0
+        } else if (Math.abs(aggregatedGradients.dB[layerIndex][i]) > config.maxValue) {
+          aggregatedGradients.dB[layerIndex][i] = 
+            Math.sign(aggregatedGradients.dB[layerIndex][i]) * config.maxValue;
+        }
       }
     }
 
@@ -372,6 +614,141 @@ class MockCluster {
       success: true,
       gradients: aggregatedGradients,
     };
+  }
+  
+  /**
+   * Compute weights for each node based on gradient quality
+   * @param {Array<Object>} nodeGradients - Gradients from each node
+   * @param {Object} config - Configuration for weighting
+   * @returns {Array<number>} Weight for each node
+   * @private
+   */
+  _computeNodeWeights(nodeGradients, config) {
+    const weights = [];
+    
+    // Compute quality scores for each node's gradients
+    for (const gradient of nodeGradients) {
+      if (!gradient || !gradient.dW) {
+        weights.push(0); // Zero weight for invalid gradients
+        continue;
+      }
+      
+      // Count non-finite values as measure of gradient quality
+      let validCount = 0;
+      let totalCount = 0;
+      
+      // Check weights
+      for (const row of gradient.dW) {
+        if (!row) continue;
+        
+        for (const value of row) {
+          totalCount++;
+          if (Number.isFinite(value) && Math.abs(value) < config.maxValue) {
+            validCount++;
+          }
+        }
+      }
+      
+      // Check biases
+      if (gradient.dB) {
+        for (const value of gradient.dB) {
+          totalCount++;
+          if (Number.isFinite(value) && Math.abs(value) < config.maxValue) {
+            validCount++;
+          }
+        }
+      }
+      
+      // Compute quality score (0-1)
+      const qualityScore = totalCount > 0 ? validCount / totalCount : 0;
+      
+      // Assign weight based on quality
+      // Square the quality score to penalize poor quality more heavily
+      const weight = config.defaultWeight * Math.pow(qualityScore, 2);
+      
+      // Add to weights list
+      weights.push(Math.max(0.1, Math.min(2.0, weight)));
+    }
+    
+    return weights;
+  }
+  
+  /**
+   * Remove statistical outliers from a set of values
+   * @param {Array<number>} values - Values to filter
+   * @param {Array<number>} weights - Weights for each value
+   * @param {number} threshold - Threshold in standard deviations
+   * @returns {Object} Filtered values and weights
+   * @private
+   */
+  _removeOutliers(values, weights, threshold) {
+    // Compute weighted mean
+    let sum = 0;
+    let weightSum = 0;
+    
+    for (let i = 0; i < values.length; i++) {
+      sum += values[i] * weights[i];
+      weightSum += weights[i];
+    }
+    
+    const mean = weightSum > 0 ? sum / weightSum : 0;
+    
+    // Compute weighted standard deviation
+    let variance = 0;
+    
+    for (let i = 0; i < values.length; i++) {
+      variance += weights[i] * Math.pow(values[i] - mean, 2);
+    }
+    
+    variance = weightSum > 0 ? variance / weightSum : 0;
+    const stdDev = Math.sqrt(variance);
+    
+    // Filter values outside threshold
+    const filteredValues = [];
+    const filteredWeights = [];
+    
+    for (let i = 0; i < values.length; i++) {
+      if (Math.abs(values[i] - mean) <= threshold * stdDev) {
+        filteredValues.push(values[i]);
+        filteredWeights.push(weights[i]);
+      }
+    }
+    
+    return { filteredValues, filteredWeights };
+  }
+  
+  /**
+   * Apply weighted Kahan summation algorithm for numerical stability
+   * @param {Array<number>} values - Values to sum
+   * @param {Array<number>} weights - Weights for each value
+   * @returns {number} Weighted average
+   * @private
+   */
+  _weightedKahanSum(values, weights) {
+    // Handle edge case
+    if (values.length === 0) return 0;
+    
+    let sum = 0;
+    let compensation = 0;
+    let weightSum = 0;
+    
+    for (let i = 0; i < values.length; i++) {
+      // Skip non-finite values
+      if (!Number.isFinite(values[i])) continue;
+      
+      // Apply weight
+      const weightedValue = values[i] * weights[i];
+      weightSum += weights[i];
+      
+      // Kahan summation step for added precision
+      const y = weightedValue - compensation;
+      const t = sum + y;
+      compensation = t - sum - y;
+      sum = t;
+    }
+    
+    // Return weighted average
+    return weightSum > 0 ? sum / weightSum : 0;
   }
 
   async _processCoherenceCheck(task) {
@@ -735,27 +1112,72 @@ class MockParameterServer {
   constructor() {
     this.parameters = null;
     this.nodeParameters = new Map();
-    // Create a simple aggregator instead of using the actual implementation
-    this.aggregator = {
-      aggregate: (gradients) => {
-        return gradients.reduce((acc, g) => {
-          acc.push(g);
-          return acc;
-        }, []);
-      },
-    };
+    this.nodeContributions = new Map(); // Track each node's contribution quality
     this.coherenceManager =
       new Prime.Distributed.Coherence.DistributedCoherenceManager();
+    
+    // Configuration for gradient aggregation
+    this.config = {
+      clipOutliers: true,
+      outlierThreshold: 3.0, // Standard deviations
+      maxValue: 1e8,
+      adaptiveWeighting: true,
+      globalParameterWeight: 1.5, // Higher weight to global params for stability
+      defaultNodeWeight: 1.0
+    };
   }
 
+  /**
+   * Store parameters from a node
+   * @param {string} nodeId - Identifier for the node
+   * @param {Object} parameters - Node's parameters
+   */
   storeNodeParameters(nodeId, parameters) {
     this.nodeParameters.set(nodeId, parameters);
+    
+    // Initialize node contribution if not present
+    if (!this.nodeContributions.has(nodeId)) {
+      this.nodeContributions.set(nodeId, {
+        count: 0,
+        coherenceScore: 1.0,
+        weight: this.config.defaultNodeWeight
+      });
+    }
+    
+    // Update contribution count
+    const contribution = this.nodeContributions.get(nodeId);
+    contribution.count++;
+    
+    // Calculate coherence score for this node's parameters
+    const coherenceScore = this._calculateParameterCoherence(parameters);
+    
+    // Update node's contribution metrics using exponential moving average
+    const alpha = 0.3; // Weighting factor for new observations
+    contribution.coherenceScore = (1 - alpha) * contribution.coherenceScore + alpha * coherenceScore;
+    
+    // Adjust node weight based on coherence score if adaptive weighting is enabled
+    if (this.config.adaptiveWeighting) {
+      contribution.weight = this.config.defaultNodeWeight * Math.pow(contribution.coherenceScore, 2);
+      
+      // Ensure weight is in reasonable range
+      contribution.weight = Math.max(0.1, Math.min(2.0, contribution.weight));
+    }
+    
+    this.nodeContributions.set(nodeId, contribution);
   }
 
+  /**
+   * Get current global parameters
+   * @returns {Object} Global parameters
+   */
   getGlobalParameters() {
     return this.parameters;
   }
 
+  /**
+   * Synchronize parameters across all nodes using gradient aggregation
+   * @returns {Object} Updated global parameters
+   */
   async synchronizeParameters() {
     if (this.nodeParameters.size === 0) {
       return null;
@@ -769,50 +1191,44 @@ class MockParameterServer {
       return this.parameters;
     }
 
-    // Aggregate parameters from all nodes
-    const allParameters = Array.from(this.nodeParameters.values());
-
-    // Simple averaging for demonstration
-    // This is a simplified implementation - production code uses gradient update aggregation
-
+    // Get all parameters with their weights
+    const nodeParams = [];
+    const nodeWeights = [];
+    
+    // Collect parameters and weights
+    for (const [nodeId, parameters] of this.nodeParameters.entries()) {
+      nodeParams.push(parameters);
+      
+      // Get node weight from contribution metrics
+      const contribution = this.nodeContributions.get(nodeId);
+      nodeWeights.push(contribution ? contribution.weight : this.config.defaultNodeWeight);
+    }
+    
+    // Add current global parameters with higher weight for stability
+    nodeParams.push(this.parameters);
+    nodeWeights.push(this.config.globalParameterWeight);
+    
+    // Aggregate parameters using weighted average with Kahan summation
     // For each layer
-    for (
-      let layerIdx = 0;
-      layerIdx < this.parameters.weights.length;
-      layerIdx++
-    ) {
+    for (let layerIdx = 0; layerIdx < this.parameters.weights.length; layerIdx++) {
       // Skip if this layer doesn't exist in global parameters
       if (!this.parameters.weights[layerIdx]) continue;
-
-      // For each node's parameters
-      for (const nodeParams of allParameters) {
-        // Skip if this node doesn't have this layer
-        if (!nodeParams.weights[layerIdx]) continue;
-
-        // Update weights
-        for (let i = 0; i < this.parameters.weights[layerIdx].length; i++) {
-          for (
-            let j = 0;
-            j < this.parameters.weights[layerIdx][i].length;
-            j++
-          ) {
-            // Average with the node's weights
-            this.parameters.weights[layerIdx][i][j] =
-              (this.parameters.weights[layerIdx][i][j] +
-                nodeParams.weights[layerIdx][i][j]) /
-              2;
-          }
-        }
-
-        // Update biases
-        for (let i = 0; i < this.parameters.biases[layerIdx].length; i++) {
-          // Average with the node's biases
-          this.parameters.biases[layerIdx][i] =
-            (this.parameters.biases[layerIdx][i] +
-              nodeParams.biases[layerIdx][i]) /
-            2;
-        }
-      }
+      
+      // Aggregate weights with advanced techniques
+      this._aggregateLayerParameters(
+        layerIdx, 
+        nodeParams, 
+        nodeWeights,
+        'weights'
+      );
+      
+      // Aggregate biases with the same approach
+      this._aggregateLayerParameters(
+        layerIdx, 
+        nodeParams, 
+        nodeWeights,
+        'biases'
+      );
     }
 
     // Check coherence of the global parameters
@@ -835,69 +1251,391 @@ class MockParameterServer {
 
     return this.parameters;
   }
-
-  _verifyParameterCoherence(parameters) {
-    // Basic coherence check
+  
+  /**
+   * Aggregate parameters for a specific layer
+   * @param {number} layerIdx - Layer index
+   * @param {Array<Object>} nodeParams - List of node parameters
+   * @param {Array<number>} nodeWeights - Corresponding weights for each node
+   * @param {string} paramType - Parameter type ('weights' or 'biases')
+   * @private
+   */
+  _aggregateLayerParameters(layerIdx, nodeParams, nodeWeights, paramType) {
+    // Different handling depending on parameter type
+    if (paramType === 'weights') {
+      // Process 2D weights matrices
+      for (let i = 0; i < this.parameters.weights[layerIdx].length; i++) {
+        for (let j = 0; j < this.parameters.weights[layerIdx][i].length; j++) {
+          this.parameters.weights[layerIdx][i][j] = this._aggregateParameterValue(
+            nodeParams,
+            nodeWeights,
+            layerIdx,
+            paramType,
+            [i, j]
+          );
+        }
+      }
+    } else if (paramType === 'biases') {
+      // Process 1D bias vectors
+      for (let i = 0; i < this.parameters.biases[layerIdx].length; i++) {
+        this.parameters.biases[layerIdx][i] = this._aggregateParameterValue(
+          nodeParams,
+          nodeWeights,
+          layerIdx,
+          paramType,
+          [i]
+        );
+      }
+    }
+  }
+  
+  /**
+   * Aggregate a single parameter value across nodes
+   * @param {Array<Object>} nodeParams - List of node parameters
+   * @param {Array<number>} nodeWeights - Corresponding weights for each node
+   * @param {number} layerIdx - Layer index
+   * @param {string} paramType - Parameter type ('weights' or 'biases')
+   * @param {Array<number>} indices - Parameter indices (1D or 2D depending on parameter type)
+   * @returns {number} Aggregated parameter value
+   * @private
+   */
+  _aggregateParameterValue(nodeParams, nodeWeights, layerIdx, paramType, indices) {
+    // Collect valid values and weights for this parameter position
+    const values = [];
+    const weights = [];
+    
+    // Retrieve value from each node's parameters
+    for (let nodeIdx = 0; nodeIdx < nodeParams.length; nodeIdx++) {
+      const nodeParam = nodeParams[nodeIdx];
+      
+      // Skip if node doesn't have this layer
+      if (!nodeParam[paramType] || !nodeParam[paramType][layerIdx]) continue;
+      
+      let value;
+      if (paramType === 'weights') {
+        // Handle 2D weights access
+        const [i, j] = indices;
+        if (nodeParam[paramType][layerIdx][i] && typeof nodeParam[paramType][layerIdx][i][j] === 'number') {
+          value = nodeParam[paramType][layerIdx][i][j];
+        }
+      } else {
+        // Handle 1D biases access
+        const [i] = indices;
+        if (typeof nodeParam[paramType][layerIdx][i] === 'number') {
+          value = nodeParam[paramType][layerIdx][i];
+        }
+      }
+      
+      // Only include finite values
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        values.push(value);
+        weights.push(nodeWeights[nodeIdx]);
+      }
+    }
+    
+    // Handle edge case with no valid values
+    if (values.length === 0) {
+      return 0; // Default to zero if no valid values
+    }
+    
+    // Remove outliers if enabled and have enough values
+    if (this.config.clipOutliers && values.length >= 3) {
+      const { filteredValues, filteredWeights } = this._removeOutliers(values, weights);
+      
+      // Only use filtered values if we have at least one value left
+      if (filteredValues.length > 0) {
+        values.length = 0;
+        weights.length = 0;
+        values.push(...filteredValues);
+        weights.push(...filteredWeights);
+      }
+    }
+    
+    // Apply Kahan summation for numerical stability
+    return this._weightedKahanSum(values, weights);
+  }
+  
+  /**
+   * Apply weighted Kahan summation algorithm for numerical stability
+   * @param {Array<number>} values - Values to aggregate
+   * @param {Array<number>} weights - Weights for each value
+   * @returns {number} Weighted average using Kahan summation
+   * @private
+   */
+  _weightedKahanSum(values, weights) {
+    let sum = 0;
+    let compensation = 0;
+    let weightSum = 0;
+    
+    for (let i = 0; i < values.length; i++) {
+      const value = values[i];
+      const weight = weights[i];
+      
+      // Skip non-finite values
+      if (!Number.isFinite(value)) continue;
+      
+      // Apply weight
+      const weightedValue = value * weight;
+      weightSum += weight;
+      
+      // Kahan summation step
+      const y = weightedValue - compensation;
+      const t = sum + y;
+      compensation = t - sum - y;
+      sum = t;
+    }
+    
+    // Normalize by total weight
+    let result = weightSum > 0 ? sum / weightSum : 0;
+    
+    // Clip extreme values to maintain stability
+    if (!Number.isFinite(result)) {
+      result = 0;
+    } else if (Math.abs(result) > this.config.maxValue) {
+      result = Math.sign(result) * this.config.maxValue;
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Remove statistical outliers from a set of values
+   * @param {Array<number>} values - Values to filter
+   * @param {Array<number>} weights - Corresponding weights
+   * @returns {Object} Filtered values and weights
+   * @private
+   */
+  _removeOutliers(values, weights) {
+    // Compute mean
+    let sum = 0;
+    let weightSum = 0;
+    
+    for (let i = 0; i < values.length; i++) {
+      sum += values[i] * weights[i];
+      weightSum += weights[i];
+    }
+    
+    const mean = weightSum > 0 ? sum / weightSum : 0;
+    
+    // Compute standard deviation
+    let variance = 0;
+    
+    for (let i = 0; i < values.length; i++) {
+      variance += weights[i] * Math.pow(values[i] - mean, 2);
+    }
+    
+    variance = weightSum > 0 ? variance / weightSum : 0;
+    const stdDev = Math.sqrt(variance);
+    
+    // Filter values outside threshold
+    const threshold = this.config.outlierThreshold * stdDev;
+    const filteredValues = [];
+    const filteredWeights = [];
+    
+    for (let i = 0; i < values.length; i++) {
+      if (Math.abs(values[i] - mean) <= threshold) {
+        filteredValues.push(values[i]);
+        filteredWeights.push(weights[i]);
+      }
+    }
+    
+    return { filteredValues, filteredWeights };
+  }
+  
+  /**
+   * Calculate coherence score for parameters
+   * @param {Object} parameters - Parameters to check
+   * @returns {number} Coherence score between 0 and 1
+   * @private
+   */
+  _calculateParameterCoherence(parameters) {
+    let validCount = 0;
+    let totalCount = 0;
+    
+    // Check weights
     for (const layerWeights of parameters.weights) {
       if (!layerWeights) continue;
-
+      
       for (const row of layerWeights) {
         for (const value of row) {
-          if (!Number.isFinite(value) || Math.abs(value) > 1e8) {
-            return false;
+          totalCount++;
+          if (Number.isFinite(value) && Math.abs(value) < this.config.maxValue) {
+            validCount++;
           }
         }
       }
     }
-
+    
+    // Check biases
     for (const layerBiases of parameters.biases) {
       if (!layerBiases) continue;
-
+      
       for (const value of layerBiases) {
-        if (!Number.isFinite(value) || Math.abs(value) > 1e8) {
-          return false;
+        totalCount++;
+        if (Number.isFinite(value) && Math.abs(value) < this.config.maxValue) {
+          validCount++;
         }
       }
     }
-
-    return true;
+    
+    return totalCount > 0 ? validCount / totalCount : 0;
   }
 
+  /**
+   * Verify coherence of parameters
+   * @param {Object} parameters - Parameters to check
+   * @returns {boolean} Whether parameters are coherent
+   * @private
+   */
+  _verifyParameterCoherence(parameters) {
+    // Stricter coherence check
+    let extremeValueCount = 0;
+    let nonFiniteCount = 0;
+    let totalCount = 0;
+    
+    // Check weights
+    for (const layerWeights of parameters.weights) {
+      if (!layerWeights) continue;
+      
+      for (const row of layerWeights) {
+        for (const value of row) {
+          totalCount++;
+          
+          if (!Number.isFinite(value)) {
+            nonFiniteCount++;
+          } else if (Math.abs(value) > this.config.maxValue) {
+            extremeValueCount++;
+          }
+        }
+      }
+    }
+    
+    // Check biases
+    for (const layerBiases of parameters.biases) {
+      if (!layerBiases) continue;
+      
+      for (const value of layerBiases) {
+        totalCount++;
+        
+        if (!Number.isFinite(value)) {
+          nonFiniteCount++;
+        } else if (Math.abs(value) > this.config.maxValue) {
+          extremeValueCount++;
+        }
+      }
+    }
+    
+    // Parameters are coherent if:
+    // 1. No non-finite values
+    // 2. Less than 0.1% extreme values
+    return nonFiniteCount === 0 && (extremeValueCount / totalCount) < 0.001;
+  }
+
+  /**
+   * Apply corrections to global parameters
+   * @private
+   */
   _correctGlobalParameters() {
-    // Apply corrections to global parameters
-    // Replace non-finite values and clip extreme values
-
-    for (
-      let layerIdx = 0;
-      layerIdx < this.parameters.weights.length;
-      layerIdx++
-    ) {
+    // Apply more sophisticated corrections to global parameters
+    for (let layerIdx = 0; layerIdx < this.parameters.weights.length; layerIdx++) {
       if (!this.parameters.weights[layerIdx]) continue;
-
+      
+      // Collect statistics for this layer to inform corrections
+      const weightStats = this._collectLayerStatistics(
+        this.parameters.weights[layerIdx], 
+        'weights'
+      );
+      
+      // Apply corrections to weights based on statistics
       for (let i = 0; i < this.parameters.weights[layerIdx].length; i++) {
         for (let j = 0; j < this.parameters.weights[layerIdx][i].length; j++) {
           const value = this.parameters.weights[layerIdx][i][j];
-
+          
           if (!Number.isFinite(value)) {
-            this.parameters.weights[layerIdx][i][j] = 0;
-          } else if (Math.abs(value) > 1e8) {
-            this.parameters.weights[layerIdx][i][j] = Math.sign(value) * 1e8;
+            // Replace NaN/Infinity with zero or layer mean if available
+            this.parameters.weights[layerIdx][i][j] = weightStats.validMean || 0;
+          } else if (Math.abs(value) > this.config.maxValue) {
+            // Clip extreme values and preserve sign
+            this.parameters.weights[layerIdx][i][j] = Math.sign(value) * 
+              Math.min(Math.abs(value), this.config.maxValue);
           }
         }
       }
-
+      
+      // Process biases similarly
       if (!this.parameters.biases[layerIdx]) continue;
-
+      
+      const biasStats = this._collectLayerStatistics(
+        this.parameters.biases[layerIdx], 
+        'biases'
+      );
+      
       for (let i = 0; i < this.parameters.biases[layerIdx].length; i++) {
         const value = this.parameters.biases[layerIdx][i];
-
+        
         if (!Number.isFinite(value)) {
-          this.parameters.biases[layerIdx][i] = 0;
-        } else if (Math.abs(value) > 1e8) {
-          this.parameters.biases[layerIdx][i] = Math.sign(value) * 1e8;
+          // Replace NaN/Infinity with zero or layer mean if available
+          this.parameters.biases[layerIdx][i] = biasStats.validMean || 0;
+        } else if (Math.abs(value) > this.config.maxValue) {
+          // Clip extreme values and preserve sign
+          this.parameters.biases[layerIdx][i] = Math.sign(value) * 
+            Math.min(Math.abs(value), this.config.maxValue);
         }
       }
     }
+  }
+  
+  /**
+   * Collect statistics for a layer's parameters
+   * @param {Array} layerParams - Layer parameters (1D or 2D array)
+   * @param {string} paramType - Parameter type ('weights' or 'biases')
+   * @returns {Object} Layer statistics
+   * @private
+   */
+  _collectLayerStatistics(layerParams, paramType) {
+    const stats = {
+      validCount: 0,
+      validSum: 0,
+      validMean: 0,
+      minValue: Infinity,
+      maxValue: -Infinity,
+      nonFiniteCount: 0
+    };
+    
+    if (paramType === 'weights') {
+      // Process 2D weights array
+      for (const row of layerParams) {
+        for (const value of row) {
+          if (Number.isFinite(value)) {
+            stats.validCount++;
+            stats.validSum += value;
+            stats.minValue = Math.min(stats.minValue, value);
+            stats.maxValue = Math.max(stats.maxValue, value);
+          } else {
+            stats.nonFiniteCount++;
+          }
+        }
+      }
+    } else {
+      // Process 1D biases array
+      for (const value of layerParams) {
+        if (Number.isFinite(value)) {
+          stats.validCount++;
+          stats.validSum += value;
+          stats.minValue = Math.min(stats.minValue, value);
+          stats.maxValue = Math.max(stats.maxValue, value);
+        } else {
+          stats.nonFiniteCount++;
+        }
+      }
+    }
+    
+    // Calculate mean if we have valid values
+    if (stats.validCount > 0) {
+      stats.validMean = stats.validSum / stats.validCount;
+    }
+    
+    return stats;
   }
 }
 
