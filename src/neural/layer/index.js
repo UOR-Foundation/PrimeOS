@@ -821,11 +821,15 @@ const Matrix = Prime.Math.Matrix;
     }
   }
 
+  // Initialize the namespace if it doesn't exist
+  Prime.Neural = Prime.Neural || {};
+  Prime.Neural.Layer = Prime.Neural.Layer || {};
+  
   // Add classes to Prime.Neural namespace
-  Prime.Neural.Layer = {
+  Object.assign(Prime.Neural.Layer, {
     NeuralLayer,
     SelfOptimizingLayer,
-  };
+  });
 })();
 
 // Export the enhanced Prime object

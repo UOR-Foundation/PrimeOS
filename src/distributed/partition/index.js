@@ -4,8 +4,8 @@
  */
 
 // Import the Prime object from core
-const Prime = require("../../core");
-const EventBus = require("../event-bus");
+const Prime = require('../../core');
+const EventBus = require('../event-bus');
 
 // Create the Partition module using IIFE
 (function () {
@@ -15,15 +15,15 @@ const EventBus = require("../event-bus");
    */
   const PartitionType = {
     /** Split network horizontally across layers */
-    LAYER_WISE: "layer_wise",
+    LAYER_WISE: 'layer_wise',
     /** Split individual layers across nodes */
-    INTRA_LAYER: "intra_layer",
+    INTRA_LAYER: 'intra_layer',
     /** Split training data across nodes */
-    DATA_PARALLEL: "data_parallel",
+    DATA_PARALLEL: 'data_parallel',
     /** Split model state for parameter averaging */
-    MODEL_PARALLEL: "model_parallel",
+    MODEL_PARALLEL: 'model_parallel',
     /** Hybrid partitioning based on coherence optimization */
-    COHERENCE_ADAPTIVE: "coherence_adaptive",
+    COHERENCE_ADAPTIVE: 'coherence_adaptive',
   };
 
   /**
@@ -42,7 +42,7 @@ const EventBus = require("../event-bus");
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          "Partition configuration must be an object",
+          'Partition configuration must be an object',
         );
       }
 
@@ -1117,10 +1117,8 @@ const EventBus = require("../event-bus");
       // Aggregate gradients (average across nodes)
       const dW = Array.isArray(this.layerConfig.weights)
         ? JSON.parse(JSON.stringify(this.layerConfig.weights))
-        : Matrix.create(
-            this.layerConfig.outputSize,
-            this.layerConfig.inputSize,
-            0,
+        : Array.from({ length: this.layerConfig.outputSize }, 
+            () => Array(this.layerConfig.inputSize).fill(0)
           );
 
       const dB = new Array(this.layerConfig.outputSize).fill(0);
@@ -1267,10 +1265,8 @@ const EventBus = require("../event-bus");
       const nodeResults = await Promise.all(nodeTasks);
 
       // Initialize combined gradients
-      const dW = Matrix.create(
-        this.layerConfig.outputSize,
-        this.layerConfig.inputSize,
-        0,
+      const dW = Array.from({ length: this.layerConfig.outputSize }, 
+        () => Array(this.layerConfig.inputSize).fill(0)
       );
       const dB = new Array(this.layerConfig.outputSize).fill(0);
       const dX = new Array(this.layerConfig.inputSize).fill(0);
@@ -1675,7 +1671,17 @@ const EventBus = require("../event-bus");
 
       // Ensure Neural module is loaded before use
       if (!Prime.Neural || !Prime.Neural.Layer || !Prime.Neural.Layer.NeuralLayer) {
-        throw new Error("Neural module not loaded or NeuralLayer not available");
+        // This is a critical dependency - ensure proper dependency loading order
+        // First load the base layer module
+        require('../../neural/layer/index');
+        
+        // Then load the main neural module which ties everything together
+        require('../../neural/index');
+        
+        // After loading, verify again
+        if (!Prime.Neural || !Prime.Neural.Layer || !Prime.Neural.Layer.NeuralLayer) {
+          throw new Error('Neural module not loaded or NeuralLayer not available');
+        }
       }
       
       // Create neural layer instance
@@ -1703,7 +1709,14 @@ const EventBus = require("../event-bus");
 
       // Ensure Neural module is loaded before use
       if (!Prime.Neural || !Prime.Neural.Layer || !Prime.Neural.Layer.NeuralLayer) {
-        throw new Error("Neural module not loaded or NeuralLayer not available");
+        // This is a critical dependency - we should have proper module loading
+        // Try to load the module if not already loaded
+        require('../../neural/layer/index');
+        
+        // After loading, verify again
+        if (!Prime.Neural || !Prime.Neural.Layer || !Prime.Neural.Layer.NeuralLayer) {
+          throw new Error('Neural module not loaded or NeuralLayer not available');
+        }
       }
       
       // Create neural layer instance
@@ -1732,7 +1745,14 @@ const EventBus = require("../event-bus");
 
       // Ensure Neural module is loaded before use
       if (!Prime.Neural || !Prime.Neural.Layer || !Prime.Neural.Layer.NeuralLayer) {
-        throw new Error("Neural module not loaded or NeuralLayer not available");
+        // This is a critical dependency - we should have proper module loading
+        // Try to load the module if not already loaded
+        require('../../neural/layer/index');
+        
+        // After loading, verify again
+        if (!Prime.Neural || !Prime.Neural.Layer || !Prime.Neural.Layer.NeuralLayer) {
+          throw new Error('Neural module not loaded or NeuralLayer not available');
+        }
       }
       
       // Create neural layer instance
@@ -1766,7 +1786,15 @@ const EventBus = require("../event-bus");
       // Ensure Coherence module is loaded before use
       if (!Prime.Distributed || !Prime.Distributed.Coherence || 
           !Prime.Distributed.Coherence.DistributedCoherenceManager) {
-        throw new Error("Coherence module not loaded or DistributedCoherenceManager not available");
+        // This is a critical dependency - we should have proper module loading
+        // Try to load the module if not already loaded
+        require('../coherence-core');
+        
+        // After loading, verify again
+        if (!Prime.Distributed || !Prime.Distributed.Coherence || 
+            !Prime.Distributed.Coherence.DistributedCoherenceManager) {
+          throw new Error('Coherence module not loaded or DistributedCoherenceManager not available');
+        }
       }
       
       // Use the proper coherence checker implementation

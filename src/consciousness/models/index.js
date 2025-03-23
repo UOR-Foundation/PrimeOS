@@ -294,8 +294,8 @@ const Prime = require("../../core");
     findCoherentRegions() {
       const regions = [];
       const visited = new Set();
-
-      // Find starting points for regions (high coherence points)
+      
+      // Start with high coherence points
       for (let i = 0; i < this.points.length; i++) {
         if (visited.has(i)) continue;
 
@@ -304,12 +304,49 @@ const Prime = require("../../core");
         if (coherence >= this.coherenceThreshold) {
           // Start a new region
           const region = this._expandRegion(i, visited);
-          regions.push(region);
+          if (region) {
+            regions.push(region);
+          }
         } else {
           visited.add(i);
         }
       }
-
+      
+      // If no regions found with high coherence, look for strongly connected points
+      if (regions.length === 0) {
+        for (let i = 0; i < this.points.length; i++) {
+          if (visited.has(i)) continue;
+          
+          const hasStrongConnections = Array.from(this.connections.get(i).entries())
+            .some(([_, conn]) => conn.strength >= 0.8);
+            
+          if (hasStrongConnections) {
+            const region = this._expandRegion(i, visited);
+            if (region) {
+              regions.push(region);
+            }
+          } else {
+            visited.add(i);
+          }
+        }
+      }
+      
+      // If still no regions, check for any connected points
+      if (regions.length === 0) {
+        for (let i = 0; i < this.points.length; i++) {
+          if (visited.has(i)) continue;
+          
+          if (this.connections.get(i).size > 0) {
+            const region = this._expandRegion(i, visited);
+            if (region) {
+              regions.push(region);
+            }
+          } else {
+            visited.add(i);
+          }
+        }
+      }
+      
       return regions;
     }
 
@@ -324,7 +361,7 @@ const Prime = require("../../core");
       const regionPoints = [];
       const queue = [startIndex];
       const regionCoherence = [];
-
+      
       while (queue.length > 0) {
         const currentIndex = queue.shift();
 
@@ -332,8 +369,12 @@ const Prime = require("../../core");
         visited.add(currentIndex);
 
         const coherence = this.coherenceValues.get(currentIndex) || 0;
-
-        if (coherence >= this.coherenceThreshold) {
+        
+        // Consider points with high coherence or strong connections
+        const hasStrongConnection = Array.from(this.connections.get(currentIndex).values())
+          .some(conn => conn.strength >= 0.7);
+        
+        if (coherence >= this.coherenceThreshold || hasStrongConnection) {
           regionPoints.push(currentIndex);
           regionCoherence.push(coherence);
 
@@ -341,11 +382,18 @@ const Prime = require("../../core");
           for (const [connectedIndex, connection] of this.connections
             .get(currentIndex)
             .entries()) {
-            if (!visited.has(connectedIndex) && connection.strength > 0.5) {
-              queue.push(connectedIndex);
+            if (!visited.has(connectedIndex)) {
+              if (connection.strength >= 0.5) {
+                queue.push(connectedIndex);
+              }
             }
           }
         }
+      }
+
+      // Only return valid regions with at least 2 points
+      if (regionPoints.length < 2) {
+        return null;
       }
 
       // Calculate region properties

@@ -1537,6 +1537,19 @@ class Matrix {
     const tolerance = options.tolerance || 1e-10;
     const maxIterations = options.maxIterations || 100;
     
+    // Check if we have the ExtremePrecision module available
+    if (Prime.ExtremePrecision && Prime.ExtremePrecision.svd) {
+      // Use the specialized extreme precision implementation
+      const result = Prime.ExtremePrecision.svd(this.values, { tolerance, maxIterations });
+      
+      // Convert returned matrices to Matrix objects
+      result.U = new Matrix(result.U);
+      result.S = new Matrix(result.S);
+      result.V = new Matrix(result.V);
+      
+      return result;
+    }
+    
     // For small matrices, use direct approach with enhanced precision
     if (this.rows <= 3 && this.cols <= 3) {
       return this._svdDirect(tolerance);

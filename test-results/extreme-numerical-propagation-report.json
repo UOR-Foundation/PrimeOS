@@ -1,0 +1,510 @@
+{
+  "numFailedTestSuites": 0,
+  "numFailedTests": 0,
+  "numPassedTestSuites": 1,
+  "numPassedTests": 2,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 26,
+  "numRuntimeErrorTestSuites": 0,
+  "numTodoTests": 0,
+  "numTotalTestSuites": 1,
+  "numTotalTests": 28,
+  "openHandles": [],
+  "snapshot": {
+    "added": 0,
+    "didUpdate": false,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0
+  },
+  "startTime": 1742683727536,
+  "success": true,
+  "testResults": [
+    {
+      "leaks": false,
+      "numFailingTests": 0,
+      "numPassingTests": 2,
+      "numPendingTests": 26,
+      "numTodoTests": 0,
+      "openHandles": [],
+      "perfStats": {
+        "end": 1742683730271,
+        "runtime": 2368,
+        "slow": false,
+        "start": 1742683727903
+      },
+      "skipped": false,
+      "snapshot": {
+        "added": 0,
+        "fileDeleted": false,
+        "matched": 0,
+        "unchecked": 0,
+        "uncheckedKeys": [],
+        "unmatched": 0,
+        "updated": 0
+      },
+      "testFilePath": "/workspaces/PrimeOS/tests/extreme-conditions-tests.js",
+      "testResults": [
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Formal Coherence Constraints"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Formal Coherence Constraints should validate manifold structures with formal constraints",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should validate manifold structures with formal constraints"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Formal Coherence Constraints"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Formal Coherence Constraints should validate fiber structures with formal constraints",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should validate fiber structures with formal constraints"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Formal Coherence Constraints"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Formal Coherence Constraints should validate transformations with formal group axioms",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should validate transformations with formal group axioms"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Formal Coherence Constraints"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Formal Coherence Constraints should reject invalid manifold structures",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should reject invalid manifold structures"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Formal Coherence Constraints"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Formal Coherence Constraints should validate compound UOR structures with nested constraints",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should validate compound UOR structures with nested constraints"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Pattern Recognition with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Pattern Recognition with UOR Guarantees should create a mathematically rigorous reference manifold",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should create a mathematically rigorous reference manifold"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Pattern Recognition with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Pattern Recognition with UOR Guarantees should compute pattern coherence with formal guarantees",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should compute pattern coherence with formal guarantees"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Pattern Recognition with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Pattern Recognition with UOR Guarantees should maintain stable algebraic representations under small perturbations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should maintain stable algebraic representations under small perturbations"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Pattern Recognition with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Pattern Recognition with UOR Guarantees should detect invariant structures across algebraic transformations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should detect invariant structures across algebraic transformations"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should initialize the fiber manifold with formal mathematical structure",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should initialize the fiber manifold with formal mathematical structure"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should create mathematically valid symmetry generators",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should create mathematically valid symmetry generators"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should maintain transformation consistency under composition",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should maintain transformation consistency under composition"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should handle problem encoding with formal constraint preservation",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle problem encoding with formal constraint preservation"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should compute coherence measures with formal guarantees",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should compute coherence measures with formal guarantees"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should optimize solutions with formal constraint satisfaction guarantees",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should optimize solutions with formal constraint satisfaction guarantees"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Large Scale RNA Folding Simulations"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Large Scale RNA Folding Simulations should handle extreme numerical conditions in RNA energy calculations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle extreme numerical conditions in RNA energy calculations"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Large Scale RNA Folding Simulations"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Large Scale RNA Folding Simulations should handle catastrophic cancellation in energy differences",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle catastrophic cancellation in energy differences"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Large Scale RNA Folding Simulations"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Large Scale RNA Folding Simulations should handle extreme vector operations in 3D coordinate transformations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle extreme vector operations in 3D coordinate transformations"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Large Scale RNA Folding Simulations"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Large Scale RNA Folding Simulations should correctly handle constraint satisfaction with extreme dynamic parameters",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should correctly handle constraint satisfaction with extreme dynamic parameters"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "High-Dimension Fiber Algebra with Extreme Conditions"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling High-Dimension Fiber Algebra with Extreme Conditions should handle pattern detection in extremely high dimensions",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle pattern detection in extremely high dimensions"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "High-Dimension Fiber Algebra with Extreme Conditions"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling High-Dimension Fiber Algebra with Extreme Conditions should maintain algebraic invariants with extreme numerical values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should maintain algebraic invariants with extreme numerical values"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "High-Dimension Fiber Algebra with Extreme Conditions"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling High-Dimension Fiber Algebra with Extreme Conditions should handle extreme pattern feature extraction",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle extreme pattern feature extraction"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "High-Dimension Fiber Algebra with Extreme Conditions"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling High-Dimension Fiber Algebra with Extreme Conditions should perform stable multi-fiber pattern analysis with extreme data",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should perform stable multi-fiber pattern analysis with extreme data"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Coherence-Gradient Descent with Extreme Optimizations"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Coherence-Gradient Descent with Extreme Optimizations should optimize under extreme constraint conditions",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should optimize under extreme constraint conditions"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Coherence-Gradient Descent with Extreme Optimizations"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Coherence-Gradient Descent with Extreme Optimizations should maintain numerical stability in optimizations with extreme landscapes",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should maintain numerical stability in optimizations with extreme landscapes"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Coherence-Gradient Descent with Extreme Optimizations"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Coherence-Gradient Descent with Extreme Optimizations should handle extreme symmetry and invariance properties",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle extreme symmetry and invariance properties"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Numerical Propagation Analysis for RNA Simulations"
+          ],
+          "duration": 5,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Numerical Propagation Analysis for RNA Simulations should control floating point error accumulation in iterative energy calculations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should control floating point error accumulation in iterative energy calculations"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Numerical Propagation Analysis for RNA Simulations"
+          ],
+          "duration": 55,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Numerical Propagation Analysis for RNA Simulations should maintain precision and invariants in extreme range vector operations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should maintain precision and invariants in extreme range vector operations"
+        }
+      ],
+      "failureMessage": null
+    }
+  ],
+  "wasInterrupted": false
+}

@@ -6,6 +6,9 @@
 // Import the Prime object from core
 const Prime = require("../core");
 
+// Import layer base first (important for testing)
+require("./layer/index");
+
 // Import specialized modules
 require("./activation/index");
 require("./optimization/index");

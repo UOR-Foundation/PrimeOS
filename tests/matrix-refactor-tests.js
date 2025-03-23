@@ -8,6 +8,24 @@ require('../src/math/matrix'); // This loads all the matrix modules
 
 // Test suite for Matrix refactoring
 describe('Matrix Refactoring', () => {
+  // Set up shared test matrices
+  let m1, m2, m3, m4;
+  
+  beforeEach(() => {
+    // Initialize test matrices
+    m1 = Prime.Math.Matrix.create(2, 2, 0);
+    m1[0][0] = 1; m1[0][1] = 2;
+    m1[1][0] = 3; m1[1][1] = 4;
+    
+    m2 = Prime.Math.Matrix.create(2, 2, 0);
+    m2[0][0] = 5; m2[0][1] = 6;
+    m2[1][0] = 7; m2[1][1] = 8;
+    
+    m3 = Prime.Math.Matrix.create(2, 2, 0);
+    
+    m4 = Prime.Math.Matrix.identity(2);
+  });
+  
   // Core matrix operations tests
   describe('Core Operations', () => {
     test('should create matrices of specified dimensions', () => {

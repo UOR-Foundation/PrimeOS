@@ -780,9 +780,18 @@ class AttentionMechanism {
   /**
    * Get current attention field
    * 
-   * @returns {Object} Attention field
+   * @returns {Array} Attention field values array
    */
   getAttentionField() {
+    return [...this.attentionField.values];
+  }
+  
+  /**
+   * Get detailed attention field information
+   * 
+   * @returns {Object} Detailed attention field
+   */
+  getDetailedAttentionField() {
     return {
       values: [...this.attentionField.values],
       globalAttention: this.attentionField.globalAttention,

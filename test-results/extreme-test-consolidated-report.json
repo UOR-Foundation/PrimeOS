@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-03-22T22:50:32.332Z",
+  "summary": {
+    "totalTests": 4,
+    "passedTests": 4,
+    "failedTests": 0,
+    "allSuccessful": true
+  },
+  "batches": [
+    {
+      "name": "basic",
+      "description": "Basic extreme precision tests",
+      "success": true,
+      "totalTests": 4,
+      "passedTests": 4,
+      "failedTests": 0
+    }
+  ]
+}

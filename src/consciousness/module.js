@@ -195,6 +195,7 @@ class ConsciousnessModule {
       return this.currentState;
     }
     
+    
     // Use provided deltaTime or calculate from last update
     if (deltaTime === null) {
       const now = Date.now();
@@ -216,8 +217,8 @@ class ConsciousnessModule {
       componentTimes: {}
     };
     
-    // Store previous state
-    this.previousState = this.currentState;
+    // Store previous state (create a deep copy to avoid reference issues in tests)
+    this.previousState = JSON.parse(JSON.stringify(this.currentState));
     
     // Generate next raw state
     let t = Date.now();
@@ -601,7 +602,7 @@ class ConsciousnessModule {
       selfModel: this.selfModel,
       consciousness,
       arousal,
-      attention,
+      attention, // This is now an array due to our changes to getAttentionField
       cycle: this._cycleCount,
       isActive: this.isActive
     };
