@@ -8,8 +8,8 @@
 // Import Prime core
 const Prime = require('../core');
 
-// Import mathematics module
-const Mathematics = require('../mathematics');
+// Import mathematics module if needed in the future
+// const Mathematics = require('../mathematics');
 
 // Ensure namespaces exist
 Prime.Coherence = Prime.Coherence || {};

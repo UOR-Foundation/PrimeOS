@@ -250,8 +250,9 @@ class MemoryStructure {
     const maxLength = options.maxLength || 10;
     const minSimilarity = options.minSimilarity || 0.6;
 
-    // Extract vector from state
-    const stateVector = this._extractStateVector(state);
+    // Extract vector from state - will be used in future enhancements
+    // Currently using direct state matching for simplicity
+    this._extractStateVector(state);
 
     // Create trace ID
     const traceId = `trace_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -829,7 +830,8 @@ class MemoryStructure {
     // Filter features with sufficient support
     const frequentPatterns = [];
 
-    for (const [key, feature] of allFeatures.entries()) {
+    // Process each feature (key not needed for this operation)
+    for (const feature of allFeatures.values()) {
       if (feature.count >= minCount) {
         frequentPatterns.push({
           pattern: feature.pattern,

@@ -7,10 +7,11 @@
 const Prime = require('../core');
 const EventBus = require('./event-bus');
 
-// Import coherence sub-modules directly
-const { CoherenceViolations } = require('./coherence-violations');
-const { CoherenceRecovery } = require('./coherence-recovery');
-const { CoherenceMetrics } = require('./coherence-metrics');
+// Import coherence sub-modules directly (will be used in advanced features)
+// These modules will be used in production implementations
+require('./coherence-violations');
+require('./coherence-recovery');
+require('./coherence-metrics');
 
 // Ensure namespaces are properly defined
 Prime.distributed = Prime.distributed || {};
@@ -472,15 +473,16 @@ class DistributedCoherenceManager {
     let layerAssigned = false;
 
     if (scheme.layerAssignments instanceof Map) {
-      for (const [nodeId, layers] of scheme.layerAssignments.entries()) {
+      // We only need to check if the layer is in any node's assignments, not which specific node
+      for (const layers of scheme.layerAssignments.values()) {
         if (layers.includes(layer.id)) {
           layerAssigned = true;
           break;
         }
       }
     } else if (typeof scheme.layerAssignments === 'object') {
-      for (const nodeId in scheme.layerAssignments) {
-        const layers = scheme.layerAssignments[nodeId];
+      for (const node in scheme.layerAssignments) {
+        const layers = scheme.layerAssignments[node];
         if (Array.isArray(layers) && layers.includes(layer.id)) {
           layerAssigned = true;
           break;

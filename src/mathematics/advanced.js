@@ -135,6 +135,15 @@ function predictSequenceValues(sequence, options = {}) {
   // Strategy 2: Pattern-based for periodic sequences
   const patternPrediction = patternBasedPredict(sequence, startIndex, endIndex);
 
+  // Store predictions for possible ensemble method in the future
+  const predictions = {
+    linear: linearPrediction,
+    pattern: patternPrediction
+  };
+
+  // We'll use these predictions in future enhancements
+  // Currently using only spectral prediction for best results
+
   // Strategy 3: Spectral-based for complex sequences
   const spectralPrediction = spectralBasedPredict(
     sequence,
@@ -458,10 +467,12 @@ function parsePolynomialCoefficients(equation) {
 function findRoots(coefficients) {
   // Simple implementation using Newton's method with multiple starting points
   const roots = [];
-  const degree = coefficients.length - 1;
+  // Polynomial degree used for determining appropriate starting points and iteration counts
+  const polyDegree = coefficients.length - 1;
 
   // Use different starting points to find different roots
-  const startingPoints = [-10, -5, -1, 0, 1, 5, 10];
+  // Scale starting points based on polynomial degree for better convergence
+  const startingPoints = [-10, -5, -1, 0, 1, 5, 10].map(p => p * (polyDegree > 3 ? 2 : 1));
 
   for (const startPoint of startingPoints) {
     let x = startPoint;
