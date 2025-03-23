@@ -79,9 +79,9 @@ describe("PrimeOS Distributed Computation Module", () => {
         },
       };
 
-      // Submit task and verify it's handled - this is a partial test
-      // In a real system we'd wait for the result, but here we just ensure
-      // that submission doesn't throw an error
+      // Submit task and verify it's handled - this is a basic test
+      // This test simply verifies the task submission interface works correctly
+      // A full test would also verify the result
       const promise = manager.submitTask(task);
       expect(promise instanceof Promise).toBe(true);
     });

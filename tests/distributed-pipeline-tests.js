@@ -773,7 +773,7 @@ class MockParameterServer {
     const allParameters = Array.from(this.nodeParameters.values());
 
     // Simple averaging for demonstration
-    // In a real implementation, this would use gradient update aggregation
+    // This is a simplified implementation - production code uses gradient update aggregation
 
     // For each layer
     for (
