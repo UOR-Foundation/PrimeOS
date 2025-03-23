@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Create the Consciousness namespace
 Prime.Consciousness = {};
@@ -14,7 +14,7 @@ Prime.Consciousness = {};
  * @returns {Promise<Object>} Initialization result
  */
 Prime.Consciousness.initialize = async function () {
-  console.log('Initializing Consciousness module...');
+  console.log("Initializing Consciousness module...");
   return {
     success: true,
     timestamp: Date.now(),
@@ -22,15 +22,15 @@ Prime.Consciousness.initialize = async function () {
 };
 
 // Import core components
-const ConsciousnessOperator = require('./operator');
-const SelfReferentialLoop = require('./self-reference');
-const TemporalIntegration = require('./temporal');
-const StateRepresentation = require('./state');
-const AttentionMechanism = require('./attention');
-const MemoryStructure = require('./memory');
-const DecisionMaking = require('./decision');
-const ThresholdManager = require('./threshold');
-const ConsciousnessModule = require('./module');
+const ConsciousnessOperator = require("./operator");
+const SelfReferentialLoop = require("./self-reference");
+const TemporalIntegration = require("./temporal");
+const StateRepresentation = require("./state");
+const AttentionMechanism = require("./attention");
+const MemoryStructure = require("./memory");
+const DecisionMaking = require("./decision");
+const ThresholdManager = require("./threshold");
+const ConsciousnessModule = require("./module");
 
 // Register core components directly
 Prime.Consciousness.Operator = ConsciousnessOperator;
@@ -44,8 +44,8 @@ Prime.Consciousness.ThresholdManager = ThresholdManager;
 Prime.Consciousness.Module = ConsciousnessModule;
 
 // Import submodules
-require('./models');
-require('./awareness');
+require("./models");
+require("./awareness");
 
 // Export the enhanced Prime object
 module.exports = Prime;

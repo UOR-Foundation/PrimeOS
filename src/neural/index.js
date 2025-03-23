@@ -4,26 +4,26 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Import layer base first (important for testing)
-require('./layer/index');
+require("./layer/index");
 
 // Import specialized modules
-require('./activation/index');
-require('./optimization/index');
-require('./layer/dense-layer'); // Original implementation
-require('./layer/dense');       // Proper constructor
-require('./layer/convolutional');
-require('./layer/recurrent');
+require("./activation/index");
+require("./optimization/index");
+require("./layer/dense-layer"); // Original implementation
+require("./layer/dense"); // Proper constructor
+require("./layer/convolutional");
+require("./layer/recurrent");
 
 // Import model management modules
-require('./model');
-require('./model-builder');
-require('./training-loop');
-require('./model-io');
-require('./model/index');
-require('./model-simple'); // Simple model for tests
+require("./model");
+require("./model-builder");
+require("./training-loop");
+require("./model-io");
+require("./model/index");
+require("./model-simple"); // Simple model for tests
 
 // Create the Neural module using IIFE
 (function () {
@@ -42,13 +42,13 @@ require('./model-simple'); // Simple model for tests
       const lowerType = type.toLowerCase();
 
       switch (lowerType) {
-        case 'dense':
+        case "dense":
           return new Prime.Neural.Layer.DenseLayer(config);
-        case 'conv':
-        case 'convolutional':
+        case "conv":
+        case "convolutional":
           return new Prime.Neural.Layer.ConvolutionalLayer(config);
-        case 'rnn':
-        case 'recurrent':
+        case "rnn":
+        case "recurrent":
           return new Prime.Neural.Layer.RecurrentLayer(config);
         default:
           throw new Error(`Unknown layer type: ${type}`);
@@ -94,14 +94,14 @@ require('./model-simple'); // Simple model for tests
      * @returns {Object} Coherence information
      */
     static checkCoherence(component) {
-      if (typeof component.calculateCoherence === 'function') {
+      if (typeof component.calculateCoherence === "function") {
         return {
           score: component.calculateCoherence(),
-          component: component.constructor.name || 'Unknown',
+          component: component.constructor.name || "Unknown",
         };
       }
 
-      return { score: 1.0, component: 'Unknown' };
+      return { score: 1.0, component: "Unknown" };
     }
 
     /**
@@ -110,13 +110,13 @@ require('./model-simple'); // Simple model for tests
      * @param {string} [type='float32'] - Type of typed array ('float32', 'float64')
      * @returns {TypedArray} Typed array
      */
-    static toTypedArray(array, type = 'float32') {
+    static toTypedArray(array, type = "float32") {
       if (!Array.isArray(array)) {
-        throw new Error('Input must be an array');
+        throw new Error("Input must be an array");
       }
 
       if (array.length === 0) {
-        return type === 'float64' ? new Float64Array(0) : new Float32Array(0);
+        return type === "float64" ? new Float64Array(0) : new Float32Array(0);
       }
 
       // Handle nested arrays (2D)
@@ -127,13 +127,13 @@ require('./model-simple'); // Simple model for tests
         // Check if all rows have the same length
         for (let i = 1; i < rows; i++) {
           if (!Array.isArray(array[i]) || array[i].length !== cols) {
-            throw new Error('All rows must have the same length for 2D arrays');
+            throw new Error("All rows must have the same length for 2D arrays");
           }
         }
 
         // Create a flat typed array
         const flatArray =
-          type === 'float64'
+          type === "float64"
             ? new Float64Array(rows * cols)
             : new Float32Array(rows * cols);
 
@@ -147,8 +147,8 @@ require('./model-simple'); // Simple model for tests
         // Create 2D view with the same structure as the input array
         const result = new Array(rows);
         const TypedArrayClass =
-          type === 'float64' ? Float64Array : Float32Array;
-        const bytesPerElement = type === 'float64' ? 8 : 4;
+          type === "float64" ? Float64Array : Float32Array;
+        const bytesPerElement = type === "float64" ? 8 : 4;
 
         for (let i = 0; i < rows; i++) {
           result[i] = new TypedArrayClass(
@@ -159,12 +159,12 @@ require('./model-simple'); // Simple model for tests
         }
 
         // Store reference to the flat array for efficient operations
-        Object.defineProperty(result, '_flatArray', { value: flatArray });
+        Object.defineProperty(result, "_flatArray", { value: flatArray });
 
         return result;
       } else {
         // Handle 1D arrays
-        return type === 'float64'
+        return type === "float64"
           ? new Float64Array(array)
           : new Float32Array(array);
       }

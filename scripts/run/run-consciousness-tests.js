@@ -11,9 +11,9 @@ const runTest = async (name, path) => {
   const start = Date.now();
   try {
     const testModule = require(path);
-    if (typeof testModule === 'function') {
+    if (typeof testModule === "function") {
       await testModule();
-    } else if (testModule && typeof testModule.runTests === 'function') {
+    } else if (testModule && typeof testModule.runTests === "function") {
       await testModule.runTests();
     } else {
       // Testing module that self-executes
@@ -30,19 +30,19 @@ const runTest = async (name, path) => {
 
 // Main test runner
 const runAllTests = async () => {
-  console.log('==================================================');
-  console.log('Running PrimeOS Consciousness Module Tests');
-  console.log('==================================================\n');
+  console.log("==================================================");
+  console.log("Running PrimeOS Consciousness Module Tests");
+  console.log("==================================================\n");
 
   const testCases = [
-    { name: 'Basic Consciousness Components', path: './test-consciousness.js' },
+    { name: "Basic Consciousness Components", path: "./test-consciousness.js" },
     {
-      name: 'Consciousness Module Integration',
-      path: './tests/consciousness-integration-tests.js',
+      name: "Consciousness Module Integration",
+      path: "./tests/consciousness-integration-tests.js",
     },
     {
-      name: 'Consciousness Neural Integration',
-      path: './tests/consciousness-tests.js',
+      name: "Consciousness Neural Integration",
+      path: "./tests/consciousness-tests.js",
     },
   ];
 
@@ -54,9 +54,9 @@ const runAllTests = async () => {
   }
 
   // Print summary
-  console.log('\n==================================================');
-  console.log('Test Results Summary');
-  console.log('==================================================');
+  console.log("\n==================================================");
+  console.log("Test Results Summary");
+  console.log("==================================================");
 
   let failed = false;
   for (const result of results) {
@@ -68,11 +68,11 @@ const runAllTests = async () => {
     }
   }
 
-  console.log('\n==================================================');
+  console.log("\n==================================================");
   const passedCount = results.filter((r) => r.success).length;
   console.log(`${passedCount}/${results.length} test suites PASSED`);
-  console.log(`OVERALL STATUS: ${failed ? 'FAILURE' : 'SUCCESS'}`);
-  console.log('==================================================');
+  console.log(`OVERALL STATUS: ${failed ? "FAILURE" : "SUCCESS"}`);
+  console.log("==================================================");
 
   // Return exit code
   process.exit(failed ? 1 : 0);
@@ -80,6 +80,6 @@ const runAllTests = async () => {
 
 // Execute all tests
 runAllTests().catch((error) => {
-  console.error('Fatal error in test runner:', error);
+  console.error("Fatal error in test runner:", error);
   process.exit(1);
 });

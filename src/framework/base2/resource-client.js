@@ -4,8 +4,8 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
+const Prime = require("../../core/prime.js");
+const MathUtils = require("../math");
 
 /**
  * Resource Client - Interface to Base 1 Resources
@@ -18,12 +18,12 @@ const ResourceClient = {
    */
   create: function (config = {}) {
     return {
-      type: 'resourceClient',
+      type: "resourceClient",
       runtime: config.runtime,
       observation: config.observation,
       interaction: config.interaction,
       representation: config.representation,
-      name: config.name || 'ResourceClient',
+      name: config.name || "ResourceClient",
 
       // Cache for performance optimization
       _cache: {
@@ -105,7 +105,7 @@ const ResourceClient = {
         // Input validation with detailed error messages
         if (!model) {
           throw new Prime.ValidationError(
-            'Model is required for runModel operation',
+            "Model is required for runModel operation",
           );
         }
 
@@ -189,13 +189,13 @@ const ResourceClient = {
         const enableCaching = options.cache !== false;
         const cacheKey = enableCaching
           ? JSON.stringify({
-            query,
-            options: {
-              limit: options.limit,
-              offset: options.offset,
-              sort: options.sort,
-            },
-          })
+              query,
+              options: {
+                limit: options.limit,
+                offset: options.offset,
+                sort: options.sort,
+              },
+            })
           : null;
 
         if (enableCaching && this._cache.fetchResults.has(cacheKey)) {
@@ -296,7 +296,7 @@ const ResourceClient = {
             if (
               object === null ||
               object === undefined ||
-              typeof object !== 'object' ||
+              typeof object !== "object" ||
               (Array.isArray(object) && object.length < 100)
             ) {
               cacheKey = JSON.stringify({
@@ -369,7 +369,7 @@ const ResourceClient = {
           this._cache.modelRuns.clear();
         }
 
-        Prime.Logger.info('Resource client cache cleared');
+        Prime.Logger.info("Resource client cache cleared");
       },
 
       /**
@@ -393,7 +393,7 @@ const ResourceClient = {
           return `${modelId}:${JSON.stringify(input)}`;
         } catch (e) {
           // If JSON stringify fails, use a fallback approach
-          return `${model.id || model.name || 'model'}:${typeof input}:${Date.now()}`;
+          return `${model.id || model.name || "model"}:${typeof input}:${Date.now()}`;
         }
       },
 

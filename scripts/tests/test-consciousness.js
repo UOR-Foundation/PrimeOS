@@ -3,14 +3,14 @@
  */
 
 // Import core and required modules
-const Prime = require('./src/core.js');
-const Coherence = require('./src/coherence.js');
+const Prime = require("./src/core.js");
+const Coherence = require("./src/coherence.js");
 
 // Set up basic error classes
 Prime.ValidationError = class ValidationError extends Error {
   constructor(message, options = {}) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
     this.context = options.context || {};
   }
 };
@@ -18,7 +18,7 @@ Prime.ValidationError = class ValidationError extends Error {
 Prime.CoherenceError = class CoherenceError extends Error {
   constructor(message, options = {}) {
     super(message);
-    this.name = 'CoherenceError';
+    this.name = "CoherenceError";
     this.context = options.context || {};
   }
 };
@@ -26,18 +26,18 @@ Prime.CoherenceError = class CoherenceError extends Error {
 Prime.InvalidOperationError = class InvalidOperationError extends Error {
   constructor(message, options = {}) {
     super(message);
-    this.name = 'InvalidOperationError';
+    this.name = "InvalidOperationError";
     this.context = options.context || {};
   }
 };
 
 // Import components individually for testing
-const MemoryStructure = require('./src/consciousness/memory.js');
-const DecisionMaking = require('./src/consciousness/decision.js');
-const ThresholdManager = require('./src/consciousness/threshold.js');
+const MemoryStructure = require("./src/consciousness/memory.js");
+const DecisionMaking = require("./src/consciousness/decision.js");
+const ThresholdManager = require("./src/consciousness/threshold.js");
 
 // Create a simple test
-console.log('=== Testing Consciousness Module Components ===\n');
+console.log("=== Testing Consciousness Module Components ===\n");
 
 try {
   // Create a MemoryStructure component
@@ -47,7 +47,7 @@ try {
     longTermCapacity: 50,
   });
 
-  console.log('✓ PASS: MemoryStructure created successfully');
+  console.log("✓ PASS: MemoryStructure created successfully");
 
   // Create a DecisionMaking component
   const decision = new DecisionMaking({
@@ -55,7 +55,7 @@ try {
     coherenceThreshold: 0.6,
   });
 
-  console.log('✓ PASS: DecisionMaking created successfully');
+  console.log("✓ PASS: DecisionMaking created successfully");
 
   // Create a ThresholdManager component
   const threshold = new ThresholdManager({
@@ -63,11 +63,11 @@ try {
     adaptationRate: 0.2,
   });
 
-  console.log('✓ PASS: ThresholdManager created successfully');
+  console.log("✓ PASS: ThresholdManager created successfully");
 
   // Test memory storage
   const testState = {
-    id: 'test_state_1',
+    id: "test_state_1",
     vector: [0.5, 0.6, 0.7, 0.4, 0.3],
     attention: 0.5,
     awareness: 0.6,
@@ -76,8 +76,8 @@ try {
     differentiation: 0.3,
   };
 
-  memory.store(testState, { type: 'test' });
-  console.log('✓ PASS: Memory storage works');
+  memory.store(testState, { type: "test" });
+  console.log("✓ PASS: Memory storage works");
 
   // Test memory retrieval
   const retrievedMemories = memory.retrieve(testState);
@@ -89,7 +89,7 @@ try {
   decision.initialize(testState);
 
   // Test decision making
-  const alternatives = ['Option A', 'Option B', 'Option C'];
+  const alternatives = ["Option A", "Option B", "Option C"];
   const decisionResult = decision.decide(alternatives, testState, {
     importance: 0.7,
   });
@@ -108,17 +108,17 @@ try {
   );
 
   // Show comprehensive status
-  console.log('\n=== Component Implementation Status ===');
-  console.log('✓ MemoryStructure: Complete');
-  console.log('✓ DecisionMaking: Complete');
-  console.log('✓ ThresholdManager: Complete');
-  console.log('✓ ConsciousnessModule: Complete (see integration test results)');
+  console.log("\n=== Component Implementation Status ===");
+  console.log("✓ MemoryStructure: Complete");
+  console.log("✓ DecisionMaking: Complete");
+  console.log("✓ ThresholdManager: Complete");
+  console.log("✓ ConsciousnessModule: Complete (see integration test results)");
 
   console.log(
-    '\nComponents are ready for further integration with the full system.',
+    "\nComponents are ready for further integration with the full system.",
   );
 } catch (error) {
-  console.error('Test failed:', error.message);
+  console.error("Test failed:", error.message);
   console.error(error.stack);
   process.exit(1);
 }

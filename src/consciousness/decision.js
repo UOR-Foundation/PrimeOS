@@ -14,14 +14,14 @@
 // Try to import core if available
 let Prime;
 try {
-  Prime = require('../core.js');
+  Prime = require("../core.js");
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
 }
 
 // Import required modules
-const MathUtils = require('../framework/math/index.js');
+const MathUtils = require("../framework/math/index.js");
 
 /**
  * DecisionMaking provides mechanisms for coherence-based action selection
@@ -109,7 +109,7 @@ class DecisionMaking {
         alternatives: [],
         certainty: 0,
         coherence: 0,
-        explanation: 'No alternatives provided',
+        explanation: "No alternatives provided",
         timestamp: Date.now(),
       };
     }
@@ -120,7 +120,7 @@ class DecisionMaking {
         alternatives: [],
         certainty: 1.0,
         coherence: 1.0,
-        explanation: 'Only one alternative available',
+        explanation: "Only one alternative available",
         timestamp: Date.now(),
       };
     }
@@ -649,8 +649,8 @@ class DecisionMaking {
     let coherence = 0;
 
     // For object alternatives, check direct coherence properties
-    if (altType === 'object' && alternative) {
-      if (typeof alternative.coherence === 'number') {
+    if (altType === "object" && alternative) {
+      if (typeof alternative.coherence === "number") {
         coherence = alternative.coherence;
       } else {
         // Calculate coherence based on perspective's values
@@ -667,10 +667,10 @@ class DecisionMaking {
     // Calculate utility - expected benefit/value of the alternative
     let utility = 0;
 
-    if (altType === 'object' && alternative) {
-      if (typeof alternative.utility === 'number') {
+    if (altType === "object" && alternative) {
+      if (typeof alternative.utility === "number") {
         utility = alternative.utility;
-      } else if (typeof alternative.value === 'number') {
+      } else if (typeof alternative.value === "number") {
         utility = alternative.value;
       } else {
         // Estimate utility based on perspective's utility function
@@ -696,8 +696,8 @@ class DecisionMaking {
     // Calculate novelty - how different/novel this alternative is
     let novelty = 0;
 
-    if (altType === 'object' && alternative) {
-      if (typeof alternative.novelty === 'number') {
+    if (altType === "object" && alternative) {
+      if (typeof alternative.novelty === "number") {
         novelty = alternative.novelty;
       } else {
         // Estimate novelty as inverse of coherence with a noise factor
@@ -733,7 +733,7 @@ class DecisionMaking {
     // Check each value dimension in perspective
     for (const [key, value] of Object.entries(perspective.values)) {
       // Skip non-numeric values
-      if (typeof value !== 'number') continue;
+      if (typeof value !== "number") continue;
 
       totalCount++;
 
@@ -742,17 +742,17 @@ class DecisionMaking {
         const altValue = alternative[key];
 
         // Calculate similarity for numeric values
-        if (typeof altValue === 'number') {
+        if (typeof altValue === "number") {
           const similarity = 1 - Math.min(1, Math.abs(altValue - value));
           matchCount += similarity;
         }
         // For boolean values
-        else if (typeof altValue === 'boolean') {
+        else if (typeof altValue === "boolean") {
           const boolValue = value > 0.5;
           matchCount += altValue === boolValue ? 1 : 0;
         }
         // For string values, count as partial match
-        else if (typeof altValue === 'string') {
+        else if (typeof altValue === "string") {
           matchCount += 0.5;
         }
       }
@@ -785,25 +785,25 @@ class DecisionMaking {
     let riskUtility = 0;
 
     // Calculate benefit utility
-    if (typeof alternative.benefit === 'number') {
+    if (typeof alternative.benefit === "number") {
       benefitUtility = alternative.benefit;
-    } else if (typeof alternative.value === 'number') {
+    } else if (typeof alternative.value === "number") {
       benefitUtility = alternative.value;
     } else {
       // Estimate from properties that suggest benefits
       const benefitProps = [
-        'positive',
-        'gain',
-        'benefit',
-        'reward',
-        'advantage',
+        "positive",
+        "gain",
+        "benefit",
+        "reward",
+        "advantage",
       ];
 
       let benefitSum = 0;
       let benefitCount = 0;
 
       for (const prop of benefitProps) {
-        if (typeof alternative[prop] === 'number') {
+        if (typeof alternative[prop] === "number") {
           benefitSum += alternative[prop];
           benefitCount++;
         }
@@ -813,23 +813,23 @@ class DecisionMaking {
     }
 
     // Calculate cost utility
-    if (typeof alternative.cost === 'number') {
+    if (typeof alternative.cost === "number") {
       costUtility = 1 - alternative.cost; // Invert so higher is better
     } else {
       // Estimate from properties that suggest costs
       const costProps = [
-        'negative',
-        'cost',
-        'effort',
-        'difficulty',
-        'disadvantage',
+        "negative",
+        "cost",
+        "effort",
+        "difficulty",
+        "disadvantage",
       ];
 
       let costSum = 0;
       let costCount = 0;
 
       for (const prop of costProps) {
-        if (typeof alternative[prop] === 'number') {
+        if (typeof alternative[prop] === "number") {
           costSum += alternative[prop];
           costCount++;
         }
@@ -839,7 +839,7 @@ class DecisionMaking {
     }
 
     // Calculate risk utility
-    if (typeof alternative.risk === 'number') {
+    if (typeof alternative.risk === "number") {
       riskUtility = 1 - alternative.risk; // Invert so higher is better
     } else {
       // Default moderate risk
@@ -873,8 +873,8 @@ class DecisionMaking {
 
     // Primary perspective - balanced
     this._perspectiveModels.push({
-      id: 'p_primary',
-      name: 'Primary',
+      id: "p_primary",
+      name: "Primary",
       bias: 0.5,
       certainty: 0.9,
       riskTolerance: 0.5,
@@ -883,8 +883,8 @@ class DecisionMaking {
 
     // Conservative perspective - values coherence, risk-averse
     this._perspectiveModels.push({
-      id: 'p_conservative',
-      name: 'Conservative',
+      id: "p_conservative",
+      name: "Conservative",
       bias: 0.3,
       certainty: 0.8,
       riskTolerance: 0.3,
@@ -897,8 +897,8 @@ class DecisionMaking {
 
     // Exploratory perspective - values novelty, risk-seeking
     this._perspectiveModels.push({
-      id: 'p_exploratory',
-      name: 'Exploratory',
+      id: "p_exploratory",
+      name: "Exploratory",
       bias: 0.7,
       certainty: 0.7,
       riskTolerance: 0.7,
@@ -926,13 +926,13 @@ class DecisionMaking {
     // Extract core consciousness dimensions
     if (state.vector && Array.isArray(state.vector)) {
       const dimensions = [
-        'attention',
-        'awareness',
-        'coherence',
-        'integration',
-        'differentiation',
-        'selfReference',
-        'temporalBinding',
+        "attention",
+        "awareness",
+        "coherence",
+        "integration",
+        "differentiation",
+        "selfReference",
+        "temporalBinding",
       ];
 
       for (let i = 0; i < dimensions.length && i < state.vector.length; i++) {
@@ -940,19 +940,19 @@ class DecisionMaking {
       }
     } else {
       // Extract directly from state properties
-      if (typeof state.attention === 'number')
+      if (typeof state.attention === "number")
         values.attention = state.attention;
-      if (typeof state.awareness === 'number')
+      if (typeof state.awareness === "number")
         values.awareness = state.awareness;
-      if (typeof state.coherence === 'number')
+      if (typeof state.coherence === "number")
         values.coherence = state.coherence;
-      if (typeof state.integration === 'number')
+      if (typeof state.integration === "number")
         values.integration = state.integration;
-      if (typeof state.differentiation === 'number')
+      if (typeof state.differentiation === "number")
         values.differentiation = state.differentiation;
-      if (typeof state.selfReference === 'number')
+      if (typeof state.selfReference === "number")
         values.selfReference = state.selfReference;
-      if (typeof state.temporalBinding === 'number')
+      if (typeof state.temporalBinding === "number")
         values.temporalBinding = state.temporalBinding;
     }
 
@@ -1093,20 +1093,26 @@ class DecisionMaking {
    */
   _calculateCertainty(selectedEval, allEvals) {
     // If we only have one alternative, certainty is based on confidence
-    if (!selectedEval || !selectedEval.confidenceScores || !selectedEval.confidenceScores.length) {
+    if (
+      !selectedEval ||
+      !selectedEval.confidenceScores ||
+      !selectedEval.confidenceScores.length
+    ) {
       return 0.5; // Default certainty for testing
     }
-    
+
     if (allEvals.length <= 1) {
-      const meanConfidence = selectedEval.confidenceScores.reduce((sum, val) => sum + val, 0) /
+      const meanConfidence =
+        selectedEval.confidenceScores.reduce((sum, val) => sum + val, 0) /
         selectedEval.confidenceScores.length;
       return meanConfidence || 0.5; // Ensure we return a number, not NaN
     }
 
     // Calculate scoring gap between top choice and runner-up
     const topScore = selectedEval.overallScore || 0.5;
-    const runnerUpScore = allEvals[1] ? (allEvals[1].overallScore || 0.3) : 0.3;
-    const scoreDiff = topScore > 0 ? (topScore - runnerUpScore) / topScore : 0.2;
+    const runnerUpScore = allEvals[1] ? allEvals[1].overallScore || 0.3 : 0.3;
+    const scoreDiff =
+      topScore > 0 ? (topScore - runnerUpScore) / topScore : 0.2;
 
     // Calculate consistency of evaluations
     const coherenceVariability =
@@ -1189,41 +1195,41 @@ class DecisionMaking {
     const factors = [];
 
     if (isExploration) {
-      factors.push('exploration opportunity');
+      factors.push("exploration opportunity");
     }
 
     if (meanCoherence > 0.7) {
-      factors.push('high coherence');
+      factors.push("high coherence");
     } else if (meanCoherence < 0.4) {
-      factors.push('despite low coherence');
+      factors.push("despite low coherence");
     }
 
     if (meanUtility > 0.7) {
-      factors.push('high utility');
+      factors.push("high utility");
     } else if (meanUtility < 0.4) {
-      factors.push('limited utility');
+      factors.push("limited utility");
     }
 
     if (meanConfidence > 0.7) {
-      factors.push('high confidence');
+      factors.push("high confidence");
     } else if (meanConfidence < 0.4) {
-      factors.push('low confidence');
+      factors.push("low confidence");
     }
 
     if (meanNovelty > 0.7 && !isExploration) {
-      factors.push('novel option');
+      factors.push("novel option");
     }
 
     // Create explanation
     if (factors.length === 0) {
-      return 'Balanced decision across all factors';
+      return "Balanced decision across all factors";
     }
 
     if (factors.length === 1) {
       return `Decision based on ${factors[0]}`;
     }
 
-    return `Decision based on ${factors.slice(0, -1).join(', ')} and ${factors[factors.length - 1]}`;
+    return `Decision based on ${factors.slice(0, -1).join(", ")} and ${factors[factors.length - 1]}`;
   }
 
   /**
@@ -1276,8 +1282,8 @@ class DecisionMaking {
     const decision = this.decisionHistory.find(
       (d) =>
         d.selected === selected ||
-        (typeof d.selected === 'object' &&
-          typeof selected === 'object' &&
+        (typeof d.selected === "object" &&
+          typeof selected === "object" &&
           d.selected.id === selected.id),
     );
 
@@ -1320,16 +1326,16 @@ class DecisionMaking {
     // Extract outcome success level
     let success = 0.5; // Default neutral
 
-    if (typeof outcome === 'number') {
+    if (typeof outcome === "number") {
       success = Math.min(1, Math.max(0, outcome));
-    } else if (typeof outcome === 'boolean') {
+    } else if (typeof outcome === "boolean") {
       success = outcome ? 1.0 : 0.0;
-    } else if (outcome && typeof outcome === 'object') {
-      if (typeof outcome.success === 'number') {
+    } else if (outcome && typeof outcome === "object") {
+      if (typeof outcome.success === "number") {
         success = Math.min(1, Math.max(0, outcome.success));
-      } else if (typeof outcome.success === 'boolean') {
+      } else if (typeof outcome.success === "boolean") {
         success = outcome.success ? 1.0 : 0.0;
-      } else if (typeof outcome.value === 'number') {
+      } else if (typeof outcome.value === "number") {
         success = Math.min(1, Math.max(0, outcome.value));
       }
     }
@@ -1340,39 +1346,39 @@ class DecisionMaking {
     if (decision.exploration) {
       // Exploration decisions were likely influenced by exploratory perspective
       perspectiveInfluence.push({
-        id: 'p_exploratory',
+        id: "p_exploratory",
         weight: 0.7,
       });
 
       perspectiveInfluence.push({
-        id: 'p_primary',
+        id: "p_primary",
         weight: 0.3,
       });
     } else if (decision.coherence > 0.7) {
       // High coherence decisions were likely influenced by conservative perspective
       perspectiveInfluence.push({
-        id: 'p_conservative',
+        id: "p_conservative",
         weight: 0.6,
       });
 
       perspectiveInfluence.push({
-        id: 'p_primary',
+        id: "p_primary",
         weight: 0.4,
       });
     } else {
       // Balanced decisions influenced more by primary perspective
       perspectiveInfluence.push({
-        id: 'p_primary',
+        id: "p_primary",
         weight: 0.6,
       });
 
       perspectiveInfluence.push({
-        id: 'p_conservative',
+        id: "p_conservative",
         weight: 0.2,
       });
 
       perspectiveInfluence.push({
-        id: 'p_exploratory',
+        id: "p_exploratory",
         weight: 0.2,
       });
     }

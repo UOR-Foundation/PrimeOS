@@ -14,15 +14,15 @@
 // Try to import core if available
 let Prime;
 try {
-  Prime = require('../core.js');
+  Prime = require("../core.js");
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
 }
 
 // Import required modules
-const { Manifold } = require('../framework/base0/manifold.js');
-const MathUtils = require('../framework/math/index.js');
+const { Manifold } = require("../framework/base0/manifold.js");
+const MathUtils = require("../framework/math/index.js");
 
 /**
  * ConsciousnessOperator class provides the mathematical foundations for
@@ -235,31 +235,31 @@ class ConsciousnessOperator {
     const vector = new Array(this.dimension).fill(0);
 
     // Fill vector with available state attributes
-    if (state.attention && typeof state.attention === 'number') {
+    if (state.attention && typeof state.attention === "number") {
       vector[0] = Math.min(1, Math.max(0, state.attention));
     }
 
-    if (state.awareness && typeof state.awareness === 'number') {
+    if (state.awareness && typeof state.awareness === "number") {
       vector[1] = Math.min(1, Math.max(0, state.awareness));
     }
 
-    if (state.coherence && typeof state.coherence === 'number') {
+    if (state.coherence && typeof state.coherence === "number") {
       vector[2] = Math.min(1, Math.max(0, state.coherence));
     }
 
-    if (state.integration && typeof state.integration === 'number') {
+    if (state.integration && typeof state.integration === "number") {
       vector[3] = Math.min(1, Math.max(0, state.integration));
     }
 
-    if (state.differentiation && typeof state.differentiation === 'number') {
+    if (state.differentiation && typeof state.differentiation === "number") {
       vector[4] = Math.min(1, Math.max(0, state.differentiation));
     }
 
-    if (state.selfReference && typeof state.selfReference === 'number') {
+    if (state.selfReference && typeof state.selfReference === "number") {
       vector[5] = Math.min(1, Math.max(0, state.selfReference));
     }
 
-    if (state.temporalBinding && typeof state.temporalBinding === 'number') {
+    if (state.temporalBinding && typeof state.temporalBinding === "number") {
       vector[6] = Math.min(1, Math.max(0, state.temporalBinding));
     }
 
@@ -267,12 +267,12 @@ class ConsciousnessOperator {
     if (
       this.dimension > 7 &&
       state.attributes &&
-      typeof state.attributes === 'object'
+      typeof state.attributes === "object"
     ) {
       const attributeKeys = Object.keys(state.attributes);
       for (let i = 7; i < this.dimension && i - 7 < attributeKeys.length; i++) {
         const value = state.attributes[attributeKeys[i - 7]];
-        if (typeof value === 'number') {
+        if (typeof value === "number") {
           vector[i] = Math.min(1, Math.max(0, value));
         }
       }
@@ -358,7 +358,7 @@ class ConsciousnessOperator {
     if (vector.length > 6) result.temporalBinding = vector[6];
 
     // Update additional attributes if present
-    if (result.attributes && typeof result.attributes === 'object') {
+    if (result.attributes && typeof result.attributes === "object") {
       const attributeKeys = Object.keys(result.attributes);
       for (let i = 7; i < vector.length && i - 7 < attributeKeys.length; i++) {
         result.attributes[attributeKeys[i - 7]] = vector[i];
@@ -645,13 +645,16 @@ class ConsciousnessOperator {
     }
 
     // Initialize covariance matrix with zeros
-    const covMatrix = Array(this.dimension).fill().map(() => Array(this.dimension).fill(0));
+    const covMatrix = Array(this.dimension)
+      .fill()
+      .map(() => Array(this.dimension).fill(0));
 
     // Fill covariance matrix
     for (const vector of vectors) {
       for (let i = 0; i < this.dimension && i < vector.length; i++) {
         for (let j = 0; j < this.dimension && j < vector.length; j++) {
-          covMatrix[i][j] += (vector[i] - meanVector[i]) * (vector[j] - meanVector[j]);
+          covMatrix[i][j] +=
+            (vector[i] - meanVector[i]) * (vector[j] - meanVector[j]);
         }
       }
     }
@@ -708,17 +711,27 @@ class ConsciousnessOperator {
     const maxIterations = 20;
 
     // Create a working copy of the matrix
-    const workMatrix = Array(n).fill().map((_, i) => Array(n).fill().map((_, j) => matrix[i][j]));
+    const workMatrix = Array(n)
+      .fill()
+      .map((_, i) =>
+        Array(n)
+          .fill()
+          .map((_, j) => matrix[i][j]),
+      );
 
     // Extract top eigenvalues
     for (let eigIndex = 0; eigIndex < Math.min(n, 3); eigIndex++) {
       // Initialize random vector
-      let vector = Array(n).fill().map(() => Math.random());
+      let vector = Array(n)
+        .fill()
+        .map(() => Math.random());
       let eigenvalue = 0;
 
       // Normalize vector
-      const initialNorm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-      vector = vector.map(val => val / initialNorm);
+      const initialNorm = Math.sqrt(
+        vector.reduce((sum, val) => sum + val * val, 0),
+      );
+      vector = vector.map((val) => val / initialNorm);
 
       // Power iteration
       for (let iter = 0; iter < maxIterations; iter++) {
@@ -737,10 +750,12 @@ class ConsciousnessOperator {
         }
 
         // Normalize new vector
-        const norm = Math.sqrt(newVector.reduce((sum, val) => sum + val * val, 0));
+        const norm = Math.sqrt(
+          newVector.reduce((sum, val) => sum + val * val, 0),
+        );
         if (norm < 1e-10) break;
 
-        vector = newVector.map(val => val / norm);
+        vector = newVector.map((val) => val / norm);
       }
 
       // Store eigenvalue
@@ -796,8 +811,8 @@ class ConsciousnessOperator {
 
       for (const part of partition) {
         // Extract sub-vectors for this part
-        const subVectors = vectors.map(vector => {
-          return part.map(index => vector[index]);
+        const subVectors = vectors.map((vector) => {
+          return part.map((index) => vector[index]);
         });
 
         // Calculate sub-covariance matrix
@@ -835,12 +850,13 @@ class ConsciousnessOperator {
     avgDifferentiation /= partitionCount;
 
     // Calculate integration-differentiation balance (maximum when both are high)
-    const integrationDifferentiationBalance = 4 * avgIntegration * avgDifferentiation;
+    const integrationDifferentiationBalance =
+      4 * avgIntegration * avgDifferentiation;
 
     return {
       minInfoPartition,
       minInfoLoss,
-      integrationDifferentiationBalance
+      integrationDifferentiationBalance,
     };
   }
 
@@ -857,21 +873,26 @@ class ConsciousnessOperator {
     // Partition 1: Split in half (or as close as possible)
     const half = Math.floor(dimension / 2);
     partitions.push([
-      Array.from({length: half}, (_, i) => i),
-      Array.from({length: dimension - half}, (_, i) => i + half)
+      Array.from({ length: half }, (_, i) => i),
+      Array.from({ length: dimension - half }, (_, i) => i + half),
     ]);
 
     // Partition 2: Split every other element
     partitions.push([
-      Array.from({length: Math.ceil(dimension / 2)}, (_, i) => i * 2).filter(i => i < dimension),
-      Array.from({length: Math.floor(dimension / 2)}, (_, i) => i * 2 + 1).filter(i => i < dimension)
+      Array.from({ length: Math.ceil(dimension / 2) }, (_, i) => i * 2).filter(
+        (i) => i < dimension,
+      ),
+      Array.from(
+        { length: Math.floor(dimension / 2) },
+        (_, i) => i * 2 + 1,
+      ).filter((i) => i < dimension),
     ]);
 
     // Partition 3: Split first third vs rest
     const third = Math.floor(dimension / 3);
     partitions.push([
-      Array.from({length: third}, (_, i) => i),
-      Array.from({length: dimension - third}, (_, i) => i + third)
+      Array.from({ length: third }, (_, i) => i),
+      Array.from({ length: dimension - third }, (_, i) => i + third),
     ]);
 
     // Partition 4: Split based on eigenspace (consciousness-relevant features)
@@ -879,7 +900,7 @@ class ConsciousnessOperator {
     // while higher indices represent more abstract properties
     partitions.push([
       [0, 1, 2], // Attention, awareness, coherence
-      Array.from({length: dimension - 3}, (_, i) => i + 3) // Rest
+      Array.from({ length: dimension - 3 }, (_, i) => i + 3), // Rest
     ]);
 
     return partitions;
@@ -926,7 +947,7 @@ class ConsciousnessOperator {
    * @returns {string} State ID
    */
   _getStateId(state) {
-    if (!state) return 'null';
+    if (!state) return "null";
 
     if (state._id) return state._id;
 
@@ -964,8 +985,8 @@ class ConsciousnessOperator {
    * @param {Function} metricFn - Custom coherence metric function
    */
   setCoherenceMetric(metricFn) {
-    if (typeof metricFn !== 'function') {
-      throw new Error('Coherence metric must be a function');
+    if (typeof metricFn !== "function") {
+      throw new Error("Coherence metric must be a function");
     }
 
     this.coherenceMetric = metricFn;

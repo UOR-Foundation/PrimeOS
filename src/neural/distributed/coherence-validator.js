@@ -6,7 +6,7 @@
  * that could cause model divergence in distributed environments.
  */
 
-const Prime = require('../../core.js');
+const Prime = require("../../core/prime.js");
 
 // Create the CoherenceValidator namespace
 Prime.Neural = Prime.Neural || {};
@@ -52,20 +52,20 @@ Prime.Neural.Distributed.CoherenceValidator = {
       if (!layer.weights || !layer.biases) continue;
 
       // Check for NaN or Infinity
-      if (!this._checkFiniteValues(layer.weights, 'weights')) {
+      if (!this._checkFiniteValues(layer.weights, "weights")) {
         return false;
       }
 
-      if (!this._checkFiniteValues(layer.biases, 'biases')) {
+      if (!this._checkFiniteValues(layer.biases, "biases")) {
         return false;
       }
 
       // Check for extreme values
-      if (!this._checkValueMagnitude(layer.weights, 1e6, 'weights')) {
+      if (!this._checkValueMagnitude(layer.weights, 1e6, "weights")) {
         return false;
       }
 
-      if (!this._checkValueMagnitude(layer.biases, 1e6, 'biases')) {
+      if (!this._checkValueMagnitude(layer.biases, 1e6, "biases")) {
         return false;
       }
     }
@@ -89,7 +89,9 @@ Prime.Neural.Distributed.CoherenceValidator = {
           for (let j = 0; j < row.length; j++) {
             if (!Number.isFinite(row[j])) {
               if (Prime.Logger && Prime.Logger.warn) {
-                Prime.Logger.warn(`Non-finite ${context} value at [${i},${j}]: ${row[j]}`);
+                Prime.Logger.warn(
+                  `Non-finite ${context} value at [${i},${j}]: ${row[j]}`,
+                );
               }
               return false;
             }
@@ -123,14 +125,18 @@ Prime.Neural.Distributed.CoherenceValidator = {
           for (let j = 0; j < row.length; j++) {
             if (Math.abs(row[j]) > threshold) {
               if (Prime.Logger && Prime.Logger.warn) {
-                Prime.Logger.warn(`${context} value exceeds threshold at [${i},${j}]: ${row[j]}`);
+                Prime.Logger.warn(
+                  `${context} value exceeds threshold at [${i},${j}]: ${row[j]}`,
+                );
               }
               return false;
             }
           }
         } else if (Math.abs(row) > threshold) {
           if (Prime.Logger && Prime.Logger.warn) {
-            Prime.Logger.warn(`${context} value exceeds threshold at [${i}]: ${row}`);
+            Prime.Logger.warn(
+              `${context} value exceeds threshold at [${i}]: ${row}`,
+            );
           }
           return false;
         }
@@ -155,7 +161,7 @@ Prime.Neural.Distributed.CoherenceValidator = {
         if (Prime.Logger && Prime.Logger.error) {
           Prime.Logger.error(
             `Layer connectivity error: Layer ${i} output (${currentLayer.outputSize}) ` +
-            `doesn't match Layer ${i + 1} input (${nextLayer.inputSize})`
+              `doesn't match Layer ${i + 1} input (${nextLayer.inputSize})`,
           );
         }
         return false;
@@ -173,7 +179,12 @@ Prime.Neural.Distributed.CoherenceValidator = {
    */
   _validateActivationFunctions(layers) {
     const validActivations = [
-      'linear', 'relu', 'sigmoid', 'tanh', 'softmax', 'leakyRelu'
+      "linear",
+      "relu",
+      "sigmoid",
+      "tanh",
+      "softmax",
+      "leakyRelu",
     ];
 
     for (let i = 0; i < layers.length; i++) {
@@ -181,7 +192,9 @@ Prime.Neural.Distributed.CoherenceValidator = {
 
       if (layer.activation && !validActivations.includes(layer.activation)) {
         if (Prime.Logger && Prime.Logger.warn) {
-          Prime.Logger.warn(`Unknown activation function in layer ${i}: ${layer.activation}`);
+          Prime.Logger.warn(
+            `Unknown activation function in layer ${i}: ${layer.activation}`,
+          );
         }
         return false;
       }
@@ -233,7 +246,9 @@ Prime.Neural.Distributed.CoherenceValidator = {
     }
 
     if (hasExtremeGradients && Prime.Logger && Prime.Logger.warn) {
-      Prime.Logger.warn('Extreme gradient values detected. Model training may be unstable.');
+      Prime.Logger.warn(
+        "Extreme gradient values detected. Model training may be unstable.",
+      );
     }
 
     return !hasExtremeGradients;
@@ -252,7 +267,7 @@ Prime.Neural.Distributed.CoherenceValidator = {
       minParameterValue: Infinity,
       parameterMean: 0,
       parameterStd: 0,
-      isCoherent: true
+      isCoherent: true,
     };
 
     const allParameters = [];
@@ -267,8 +282,14 @@ Prime.Neural.Distributed.CoherenceValidator = {
           if (Number.isFinite(value)) {
             allParameters.push(value);
             metrics.parameterCount++;
-            metrics.maxParameterValue = Math.max(metrics.maxParameterValue, value);
-            metrics.minParameterValue = Math.min(metrics.minParameterValue, value);
+            metrics.maxParameterValue = Math.max(
+              metrics.maxParameterValue,
+              value,
+            );
+            metrics.minParameterValue = Math.min(
+              metrics.minParameterValue,
+              value,
+            );
           }
         }
       }
@@ -278,33 +299,42 @@ Prime.Neural.Distributed.CoherenceValidator = {
         if (Number.isFinite(value)) {
           allParameters.push(value);
           metrics.parameterCount++;
-          metrics.maxParameterValue = Math.max(metrics.maxParameterValue, value);
-          metrics.minParameterValue = Math.min(metrics.minParameterValue, value);
+          metrics.maxParameterValue = Math.max(
+            metrics.maxParameterValue,
+            value,
+          );
+          metrics.minParameterValue = Math.min(
+            metrics.minParameterValue,
+            value,
+          );
         }
       }
     }
 
     // Calculate mean
     if (allParameters.length > 0) {
-      metrics.parameterMean = allParameters.reduce((a, b) => a + b, 0) / allParameters.length;
+      metrics.parameterMean =
+        allParameters.reduce((a, b) => a + b, 0) / allParameters.length;
 
       // Calculate standard deviation
-      const variance = allParameters.reduce((acc, val) =>
-        acc + Math.pow(val - metrics.parameterMean, 2), 0) / allParameters.length;
+      const variance =
+        allParameters.reduce(
+          (acc, val) => acc + Math.pow(val - metrics.parameterMean, 2),
+          0,
+        ) / allParameters.length;
       metrics.parameterStd = Math.sqrt(variance);
     }
 
     // Determine overall coherence
-    metrics.isCoherent = (
+    metrics.isCoherent =
       Number.isFinite(metrics.parameterMean) &&
       Number.isFinite(metrics.parameterStd) &&
       metrics.parameterStd < 10 &&
       Math.abs(metrics.maxParameterValue) < 1e6 &&
-      Math.abs(metrics.minParameterValue) < 1e6
-    );
+      Math.abs(metrics.minParameterValue) < 1e6;
 
     return metrics;
-  }
+  },
 };
 
 // Export the module

@@ -4,8 +4,8 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
-const EventBus = require('../event-bus');
+const Prime = require("../../core");
+const EventBus = require("../event-bus");
 
 // Create the Partition module using IIFE
 (function () {
@@ -15,15 +15,15 @@ const EventBus = require('../event-bus');
    */
   const PartitionType = {
     /** Split network horizontally across layers */
-    LAYER_WISE: 'layer_wise',
+    LAYER_WISE: "layer_wise",
     /** Split individual layers across nodes */
-    INTRA_LAYER: 'intra_layer',
+    INTRA_LAYER: "intra_layer",
     /** Split training data across nodes */
-    DATA_PARALLEL: 'data_parallel',
+    DATA_PARALLEL: "data_parallel",
     /** Split model state for parameter averaging */
-    MODEL_PARALLEL: 'model_parallel',
+    MODEL_PARALLEL: "model_parallel",
     /** Hybrid partitioning based on coherence optimization */
-    COHERENCE_ADAPTIVE: 'coherence_adaptive',
+    COHERENCE_ADAPTIVE: "coherence_adaptive",
   };
 
   /**
@@ -42,7 +42,7 @@ const EventBus = require('../event-bus');
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          'Partition configuration must be an object',
+          "Partition configuration must be an object",
         );
       }
 
@@ -113,7 +113,7 @@ const EventBus = require('../event-bus');
 
       if (layerIds.length === 0) {
         Prime.Logger.debug(
-          'No layers provided for partitioning, creating empty partition structure',
+          "No layers provided for partitioning, creating empty partition structure",
         );
 
         // Create empty partition structure with one node
@@ -163,7 +163,7 @@ const EventBus = require('../event-bus');
 
       if (layerIds.length === 0) {
         Prime.Logger.debug(
-          'No layers provided for intra-layer partitioning, creating empty partition structure',
+          "No layers provided for intra-layer partitioning, creating empty partition structure",
         );
 
         // Create empty partition structure with one node
@@ -237,7 +237,7 @@ const EventBus = require('../event-bus');
 
       if (layerIds.length === 0) {
         Prime.Logger.debug(
-          'No layers provided for data-parallel partitioning, creating empty partition structure',
+          "No layers provided for data-parallel partitioning, creating empty partition structure",
         );
 
         // Determine batch size from configuration or use default
@@ -311,7 +311,7 @@ const EventBus = require('../event-bus');
 
       if (layerIds.length === 0) {
         Prime.Logger.debug(
-          'No layers provided for model-parallel partitioning, creating empty partition structure',
+          "No layers provided for model-parallel partitioning, creating empty partition structure",
         );
 
         // Create empty partition structures with balanced distribution
@@ -377,7 +377,7 @@ const EventBus = require('../event-bus');
           currentNodeId !== `node_${this.nodeCount - 1}`
         ) {
           // Create new node
-          const nodeIndex = parseInt(currentNodeId.split('_')[1]) + 1;
+          const nodeIndex = parseInt(currentNodeId.split("_")[1]) + 1;
           if (nodeIndex >= this.nodeCount) {
             break;
           }
@@ -435,7 +435,9 @@ const EventBus = require('../event-bus');
 
       // Calculate initial communication costs
       const initialCommCosts = this._calculateCommunicationCosts();
-      Prime.Logger.debug(`Initial communication cost: ${initialCommCosts.total.toFixed(4)}`);
+      Prime.Logger.debug(
+        `Initial communication cost: ${initialCommCosts.total.toFixed(4)}`,
+      );
 
       // Phase 1: Identify strongly connected components (clusters of layers)
       const layerClusters = this._identifyLayerClusters(layerDependencies);
@@ -450,7 +452,8 @@ const EventBus = require('../event-bus');
 
       for (let i = 0; i < iterations; i++) {
         // Calculate temperature (exponential cooling schedule)
-        const t = initialTemp * Math.pow(finalTemp / initialTemp, i / iterations);
+        const t =
+          initialTemp * Math.pow(finalTemp / initialTemp, i / iterations);
 
         // Attempt a refinement move
         this._refinementStep(t, layerDependencies, layerLoads);
@@ -460,7 +463,9 @@ const EventBus = require('../event-bus');
 
         // Log progress for significant iterations
         if (i % 10 === 0 || i === iterations - 1) {
-          Prime.Logger.debug(`Refinement iteration ${i}, coherence: ${this.coherenceScore.toFixed(4)}`);
+          Prime.Logger.debug(
+            `Refinement iteration ${i}, coherence: ${this.coherenceScore.toFixed(4)}`,
+          );
         }
       }
 
@@ -470,7 +475,7 @@ const EventBus = require('../event-bus');
       // Calculate final communication costs for comparison
       const finalCommCosts = this._calculateCommunicationCosts();
       Prime.Logger.info(
-        `Partition refinement complete: communication cost reduced from ${initialCommCosts.total.toFixed(4)} to ${finalCommCosts.total.toFixed(4)}`
+        `Partition refinement complete: communication cost reduced from ${initialCommCosts.total.toFixed(4)} to ${finalCommCosts.total.toFixed(4)}`,
       );
     }
 
@@ -496,15 +501,15 @@ const EventBus = require('../event-bus');
         let complexity = layer.inputSize * layer.outputSize; // Base matrix multiply
 
         // Adjust complexity based on layer type
-        if (layer.type === 'conv') {
+        if (layer.type === "conv") {
           // Convolutional layers are more expensive
           const kernelSize = layer.kernelSize || 3;
           const channels = layer.channels || 1;
           complexity *= kernelSize * kernelSize * channels;
-        } else if (layer.type === 'attention') {
+        } else if (layer.type === "attention") {
           // Attention mechanisms are very computation-heavy
           complexity *= 3; // Multiple matrix multiplies + softmax
-        } else if (layer.type === 'recurrent') {
+        } else if (layer.type === "recurrent") {
           // Recurrent layers have sequential dependencies
           const timeSteps = layer.timeSteps || 1;
           complexity *= timeSteps;
@@ -514,9 +519,14 @@ const EventBus = require('../event-bus');
         const memoryFactor = layer.sparseConnections ? 0.7 : 1.0;
 
         // Activation function complexity
-        const activationFactor = layer.activation === 'relu' ? 1.0 :
-          layer.activation === 'sigmoid' ? 1.2 :
-            layer.activation === 'tanh' ? 1.3 : 1.0;
+        const activationFactor =
+          layer.activation === "relu"
+            ? 1.0
+            : layer.activation === "sigmoid"
+              ? 1.2
+              : layer.activation === "tanh"
+                ? 1.3
+                : 1.0;
 
         // Final load calculation
         const load = complexity * memoryFactor * activationFactor;
@@ -534,9 +544,9 @@ const EventBus = require('../event-bus');
     _calculateCommunicationCosts() {
       const costs = {
         nodeToNode: new Map(), // Node-to-node communication volume
-        total: 0,              // Total communication cost
-        maxLink: 0,            // Maximum link load
-        crossLayerCount: 0     // Count of cross-node layer dependencies
+        total: 0, // Total communication cost
+        maxLink: 0, // Maximum link load
+        crossLayerCount: 0, // Count of cross-node layer dependencies
       };
 
       // Initialize node-to-node map
@@ -567,8 +577,10 @@ const EventBus = require('../event-bus');
           const nextLayer = this.layerConfig[nextLayerId];
 
           // Communication volume is proportional to the connecting dimensions
-          const commVolume = currentLayer && currentLayer.outputSize ?
-            currentLayer.outputSize : 1;
+          const commVolume =
+            currentLayer && currentLayer.outputSize
+              ? currentLayer.outputSize
+              : 1;
 
           // Update node-to-node communication
           const currentNodeMap = costs.nodeToNode.get(currentNodeId);
@@ -689,7 +701,7 @@ const EventBus = require('../event-bus');
      */
     _assignClustersToNodes(clusters, layerLoads) {
       // Calculate load for each cluster
-      const clusterLoads = clusters.map(cluster => {
+      const clusterLoads = clusters.map((cluster) => {
         let totalLoad = 0;
         for (const layerId of cluster) {
           totalLoad += layerLoads.get(layerId) || 1;
@@ -701,7 +713,7 @@ const EventBus = require('../event-bus');
       const sortedIndices = clusterLoads
         .map((load, index) => ({ load, index }))
         .sort((a, b) => b.load - a.load)
-        .map(item => item.index);
+        .map((item) => item.index);
 
       // Initialize node loads
       const nodeLoads = new Map();
@@ -762,7 +774,8 @@ const EventBus = require('../event-bus');
       // Calculate current state metrics
       const currentCommCost = this._calculateCommunicationCosts().total;
       const currentLoadBalance = this._calculateLoadBalanceScore();
-      const currentScore = 0.6 * currentLoadBalance - 0.4 * (currentCommCost / 100);
+      const currentScore =
+        0.6 * currentLoadBalance - 0.4 * (currentCommCost / 100);
 
       // Randomly select a layer to move
       const layerIds = Array.from(this.layerAssignments.keys());
@@ -773,8 +786,9 @@ const EventBus = require('../event-bus');
       if (!currentNodeId) return;
 
       // Select a random target node different from current
-      const nodeIds = Array.from(this.partitionMap.keys())
-        .filter(id => id !== currentNodeId);
+      const nodeIds = Array.from(this.partitionMap.keys()).filter(
+        (id) => id !== currentNodeId,
+      );
 
       if (nodeIds.length === 0) return;
 
@@ -791,7 +805,8 @@ const EventBus = require('../event-bus');
 
       // Decide whether to keep the change
       const scoreDelta = newScore - currentScore;
-      const acceptProbability = scoreDelta > 0 ? 1.0 : Math.exp(scoreDelta / temperature);
+      const acceptProbability =
+        scoreDelta > 0 ? 1.0 : Math.exp(scoreDelta / temperature);
 
       if (Math.random() > acceptProbability) {
         // Revert the move
@@ -819,7 +834,7 @@ const EventBus = require('../event-bus');
             bottleneckLinks.push({
               source: sourceNodeId,
               target: targetNodeId,
-              volume
+              volume,
             });
           }
         }
@@ -844,13 +859,13 @@ const EventBus = require('../event-bus');
             crossLinkLayers.push({
               layerId,
               nextLayerId,
-              direction: 'forward'
+              direction: "forward",
             });
           } else if (nodeId === link.target && nextNodeId === link.source) {
             crossLinkLayers.push({
               layerId: nextLayerId,
               nextLayerId: layerId,
-              direction: 'backward'
+              direction: "backward",
             });
           }
         }
@@ -868,7 +883,8 @@ const EventBus = require('../event-bus');
 
           // Determine which layer is smaller (in terms of parameters)
           const layerSize = (layer.inputSize || 1) * (layer.outputSize || 1);
-          const nextLayerSize = (nextLayer.inputSize || 1) * (nextLayer.outputSize || 1);
+          const nextLayerSize =
+            (nextLayer.inputSize || 1) * (nextLayer.outputSize || 1);
 
           if (layerSize <= nextLayerSize) {
             // Move the smaller layer to join the larger one
@@ -1160,7 +1176,7 @@ const EventBus = require('../event-bus');
      */
     static import(exportedConfig) {
       if (!exportedConfig || !exportedConfig.type) {
-        throw new Prime.ValidationError('Invalid exported configuration');
+        throw new Prime.ValidationError("Invalid exported configuration");
       }
 
       // Create new scheme with minimal config
@@ -1194,20 +1210,20 @@ const EventBus = require('../event-bus');
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          'Distributed layer configuration must be an object',
+          "Distributed layer configuration must be an object",
         );
       }
 
       if (!config.id) {
-        throw new Prime.ValidationError('Layer ID is required');
+        throw new Prime.ValidationError("Layer ID is required");
       }
 
       if (!Prime.Utils.isObject(config.layerConfig)) {
-        throw new Prime.ValidationError('Layer configuration is required');
+        throw new Prime.ValidationError("Layer configuration is required");
       }
 
       if (!Array.isArray(config.nodeIds) || config.nodeIds.length === 0) {
-        throw new Prime.ValidationError('At least one node ID is required');
+        throw new Prime.ValidationError("At least one node ID is required");
       }
 
       this.id = config.id;
@@ -1255,7 +1271,7 @@ const EventBus = require('../event-bus');
      */
     async forward(input, options = {}) {
       if (!Array.isArray(input)) {
-        throw new Prime.ValidationError('Input must be an array');
+        throw new Prime.ValidationError("Input must be an array");
       }
 
       const startTime = performance.now();
@@ -1319,7 +1335,7 @@ const EventBus = require('../event-bus');
         // Prepare forward task
         const nodeTask = {
           id: `${taskId}_node${i}`,
-          type: 'forward_pass',
+          type: "forward_pass",
           data: {
             layerConfig: this.layerConfig,
             input: nodeInput,
@@ -1384,7 +1400,7 @@ const EventBus = require('../event-bus');
 
         // Check for slicing information
         if (
-          typeof layerAssignment === 'object' &&
+          typeof layerAssignment === "object" &&
           layerAssignment.outputRange
         ) {
           outputRange = layerAssignment.outputRange;
@@ -1399,7 +1415,7 @@ const EventBus = require('../event-bus');
         // Prepare forward task
         const nodeTask = {
           id: `${taskId}_node${i}`,
-          type: 'forward_pass',
+          type: "forward_pass",
           data: {
             layerConfig: nodeConfig,
             input,
@@ -1472,7 +1488,7 @@ const EventBus = require('../event-bus');
       // Prepare forward task
       const nodeTask = {
         id: taskId,
-        type: 'forward_pass',
+        type: "forward_pass",
         data: {
           layerConfig: this.layerConfig,
           input,
@@ -1497,11 +1513,11 @@ const EventBus = require('../event-bus');
      */
     async backward(gradOutput, cache, options = {}) {
       if (!Array.isArray(gradOutput)) {
-        throw new Prime.ValidationError('Gradient output must be an array');
+        throw new Prime.ValidationError("Gradient output must be an array");
       }
 
       if (!Prime.Utils.isObject(cache)) {
-        throw new Prime.ValidationError('Cache must be an object');
+        throw new Prime.ValidationError("Cache must be an object");
       }
 
       const startTime = performance.now();
@@ -1575,7 +1591,7 @@ const EventBus = require('../event-bus');
         // Prepare backward task
         const nodeTask = {
           id: `${taskId}_node${i}`,
-          type: 'backward_pass',
+          type: "backward_pass",
           data: {
             layerConfig: this.layerConfig,
             gradOutput: nodeGradOutput,
@@ -1594,8 +1610,8 @@ const EventBus = require('../event-bus');
       const dW = Array.isArray(this.layerConfig.weights)
         ? JSON.parse(JSON.stringify(this.layerConfig.weights))
         : Array.from({ length: this.layerConfig.outputSize }, () =>
-          Array(this.layerConfig.inputSize).fill(0),
-        );
+            Array(this.layerConfig.inputSize).fill(0),
+          );
 
       const dB = new Array(this.layerConfig.outputSize).fill(0);
       const dX = new Array(this.layerConfig.inputSize).fill(0);
@@ -1720,7 +1736,7 @@ const EventBus = require('../event-bus');
 
         // Check for slicing information
         if (
-          typeof layerAssignment === 'object' &&
+          typeof layerAssignment === "object" &&
           layerAssignment.outputRange
         ) {
           outputRange = layerAssignment.outputRange;
@@ -1742,7 +1758,7 @@ const EventBus = require('../event-bus');
         // Prepare backward task
         const nodeTask = {
           id: `${taskId}_node${i}`,
-          type: 'backward_pass',
+          type: "backward_pass",
           data: {
             layerConfig: nodeConfig,
             gradOutput: nodeGradOutput,
@@ -1858,7 +1874,7 @@ const EventBus = require('../event-bus');
       // Prepare backward task
       const nodeTask = {
         id: taskId,
-        type: 'backward_pass',
+        type: "backward_pass",
         data: {
           layerConfig: this.layerConfig,
           gradOutput,
@@ -1933,7 +1949,7 @@ const EventBus = require('../event-bus');
           for (const nodeId of this.nodeIds) {
             const updateTask = {
               id: `${taskId}_${nodeId}`,
-              type: 'weight_update',
+              type: "weight_update",
               data: {
                 layerConfig: this.layerConfig,
                 gradients,
@@ -1966,7 +1982,7 @@ const EventBus = require('../event-bus');
 
             // Check for slicing information
             if (
-              typeof layerAssignment === 'object' &&
+              typeof layerAssignment === "object" &&
               layerAssignment.outputRange
             ) {
               outputRange = layerAssignment.outputRange;
@@ -1986,7 +2002,7 @@ const EventBus = require('../event-bus');
 
             const updateTask = {
               id: `${taskId}_${nodeId}`,
-              type: 'weight_update',
+              type: "weight_update",
               data: {
                 layerConfig: nodeConfig,
                 gradients: nodeGradients,
@@ -2012,7 +2028,7 @@ const EventBus = require('../event-bus');
 
           const updateTask = {
             id: taskId,
-            type: 'weight_update',
+            type: "weight_update",
             data: {
               layerConfig: this.layerConfig,
               gradients,
@@ -2051,7 +2067,7 @@ const EventBus = require('../event-bus');
       // Create a coherence check task
       const checkTask = {
         id: `coherence_check_${this.id}_${Date.now()}`,
-        type: 'coherence_check',
+        type: "coherence_check",
         data: {
           layerConfig: this.layerConfig,
           parameters: {
@@ -2068,7 +2084,7 @@ const EventBus = require('../event-bus');
           checkTask,
         );
 
-        if (coherenceResult && typeof coherenceResult.score === 'number') {
+        if (coherenceResult && typeof coherenceResult.score === "number") {
           this.metrics.coherenceScore = coherenceResult.score;
 
           // Only synchronize if coherence is poor
@@ -2101,7 +2117,7 @@ const EventBus = require('../event-bus');
       // Get the state snapshot from source node
       const stateSnapshotTask = {
         id: `state_snapshot_${this.id}_${Date.now()}`,
-        type: 'state_snapshot',
+        type: "state_snapshot",
         data: {
           layerId: this.id,
           layerConfig: this.layerConfig,
@@ -2110,7 +2126,10 @@ const EventBus = require('../event-bus');
 
       let stateSnapshot;
       try {
-        stateSnapshot = await this._executeTask(sourceNodeId, stateSnapshotTask);
+        stateSnapshot = await this._executeTask(
+          sourceNodeId,
+          stateSnapshotTask,
+        );
       } catch (error) {
         Prime.Logger.error(
           `Failed to get state snapshot from node ${sourceNodeId}`,
@@ -2135,7 +2154,7 @@ const EventBus = require('../event-bus');
 
         const syncTask = {
           id: `sync_${this.id}_${nodeId}_${Date.now()}`,
-          type: 'state_sync',
+          type: "state_sync",
           data: {
             layerId: this.id,
             params: stateSnapshot.params,
@@ -2144,7 +2163,7 @@ const EventBus = require('../event-bus');
               timestamp: Date.now(),
               version: stateSnapshot.version || 1,
               coherenceScore: stateSnapshot.coherenceScore || 1.0,
-              syncReason: 'forced_sync',
+              syncReason: "forced_sync",
             },
           },
         };
@@ -2171,7 +2190,8 @@ const EventBus = require('../event-bus');
         );
 
         // Update metrics
-        this.metrics.communicationOverhead += (this.nodeIds.length - 1) *
+        this.metrics.communicationOverhead +=
+          (this.nodeIds.length - 1) *
           (stateSnapshot.params ? Object.keys(stateSnapshot.params).length : 1);
 
         // If we had any failures, update coherence score
@@ -2180,7 +2200,7 @@ const EventBus = require('../event-bus');
         }
 
         // Check for sync conflicts and resolve if needed
-        const conflicts = results.filter(r => r && r.conflict);
+        const conflicts = results.filter((r) => r && r.conflict);
         if (conflicts.length > 0) {
           await this._resolveStateConflicts(conflicts, stateSnapshot);
         }
@@ -2229,13 +2249,13 @@ const EventBus = require('../event-bus');
           // Master version should win, force sync again
           const resolveTask = {
             id: `resolve_conflict_${this.id}_${conflict.nodeId}_${Date.now()}`,
-            type: 'force_sync',
+            type: "force_sync",
             data: {
               layerId: this.id,
               params: masterSnapshot.params,
               overrideLocal: true,
               metadata: {
-                resolution: 'master_override',
+                resolution: "master_override",
                 timestamp: Date.now(),
                 version: masterSnapshot.version,
               },
@@ -2304,19 +2324,19 @@ const EventBus = require('../event-bus');
     _simulateTaskExecution(nodeId, task) {
       // This method simulates what would happen on a real compute node
       switch (task.type) {
-        case 'forward_pass':
+        case "forward_pass":
           return this._simulateForwardPass(task.data);
-        case 'backward_pass':
+        case "backward_pass":
           return this._simulateBackwardPass(task.data);
-        case 'weight_update':
+        case "weight_update":
           return this._simulateWeightUpdate(task.data);
-        case 'coherence_check':
+        case "coherence_check":
           return this._simulateCoherenceCheck(task.data);
-        case 'state_snapshot':
+        case "state_snapshot":
           return this._simulateStateSnapshot(nodeId, task.data);
-        case 'state_sync':
+        case "state_sync":
           return this._simulateStateSync(nodeId, task.data);
-        case 'force_sync':
+        case "force_sync":
           return this._simulateForceSync(nodeId, task.data);
         default:
           throw new Error(`Unknown task type: ${task.type}`);
@@ -2347,10 +2367,12 @@ const EventBus = require('../event-bus');
       } else if (layerConfig.inputSize && layerConfig.outputSize) {
         // Create synthetic weights based on layer dimensions
         weights = Array.from({ length: layerConfig.outputSize }, () =>
-          Array.from({ length: layerConfig.inputSize }, () =>
-            // Use node ID hash to create deterministic but unique values
-            (Math.sin(parseInt(nodeId.replace(/\D/g, '')) * 0.3 + 1) * 0.1)
-          )
+          Array.from(
+            { length: layerConfig.inputSize },
+            () =>
+              // Use node ID hash to create deterministic but unique values
+              Math.sin(parseInt(nodeId.replace(/\D/g, "")) * 0.3 + 1) * 0.1,
+          ),
         );
       }
 
@@ -2358,9 +2380,12 @@ const EventBus = require('../event-bus');
       if (layerConfig.biases) {
         biases = [...layerConfig.biases];
       } else if (layerConfig.outputSize) {
-        biases = Array.from({ length: layerConfig.outputSize }, (_, i) =>
-          // Use node ID and index to create deterministic but unique values
-          (Math.cos(parseInt(nodeId.replace(/\D/g, '')) * 0.5 + i * 0.1) * 0.05)
+        biases = Array.from(
+          { length: layerConfig.outputSize },
+          (_, i) =>
+            // Use node ID and index to create deterministic but unique values
+            Math.cos(parseInt(nodeId.replace(/\D/g, "")) * 0.5 + i * 0.1) *
+            0.05,
         );
       }
 
@@ -2368,7 +2393,7 @@ const EventBus = require('../event-bus');
       const params = {
         weights,
         biases,
-        activation: layerConfig.activation || 'relu',
+        activation: layerConfig.activation || "relu",
         dropout: layerConfig.dropout || 0,
         l2Regularization: layerConfig.l2Regularization || 0,
         momentum: layerConfig.momentum || 0,
@@ -2383,11 +2408,12 @@ const EventBus = require('../event-bus');
         timestamp: Date.now(),
         coherenceScore: 0.85 + Math.random() * 0.15, // High but variable coherence
         metrics: {
-          parameterCount: weights ?
-            weights.length * (weights[0] ? weights[0].length : 0) +
-            (biases ? biases.length : 0) : 0,
+          parameterCount: weights
+            ? weights.length * (weights[0] ? weights[0].length : 0) +
+              (biases ? biases.length : 0)
+            : 0,
           lastUpdateTimestamp: Date.now() - Math.floor(Math.random() * 60000), // Random last update
-        }
+        },
       };
     }
 
@@ -2423,8 +2449,8 @@ const EventBus = require('../event-bus');
           success: false,
           nodeId,
           layerId,
-          error: 'Simulated sync failure',
-          errorCode: 'SYNC_FAILURE',
+          error: "Simulated sync failure",
+          errorCode: "SYNC_FAILURE",
         };
       } else {
         // Version conflict
@@ -2433,9 +2459,12 @@ const EventBus = require('../event-bus');
           nodeId,
           layerId,
           conflict: true,
-          localVersion: (metadata ? metadata.version : 1) + 1 + Math.floor(Math.random() * 3),
-          error: 'Version conflict detected',
-          errorCode: 'VERSION_CONFLICT',
+          localVersion:
+            (metadata ? metadata.version : 1) +
+            1 +
+            Math.floor(Math.random() * 3),
+          error: "Version conflict detected",
+          errorCode: "VERSION_CONFLICT",
         };
       }
     }
@@ -2471,8 +2500,8 @@ const EventBus = require('../event-bus');
           nodeId,
           layerId,
           forcedSync: true,
-          error: 'Critical error during forced sync',
-          errorCode: 'CRITICAL_SYNC_FAILURE',
+          error: "Critical error during forced sync",
+          errorCode: "CRITICAL_SYNC_FAILURE",
         };
       }
     }
@@ -2494,10 +2523,10 @@ const EventBus = require('../event-bus');
       ) {
         // This is a critical dependency - ensure proper dependency loading order
         // First load the base layer module
-        require('../../neural/layer/index');
+        require("../../neural/layer/index");
 
         // Then load the main neural module which ties everything together
-        require('../../neural/index');
+        require("../../neural/index");
 
         // After loading, verify again
         if (
@@ -2506,7 +2535,7 @@ const EventBus = require('../event-bus');
           !Prime.Neural.Layer.NeuralLayer
         ) {
           throw new Error(
-            'Neural module not loaded or NeuralLayer not available',
+            "Neural module not loaded or NeuralLayer not available",
           );
         }
       }
@@ -2542,7 +2571,7 @@ const EventBus = require('../event-bus');
       ) {
         // This is a critical dependency - we should have proper module loading
         // Try to load the module if not already loaded
-        require('../../neural/layer/index');
+        require("../../neural/layer/index");
 
         // After loading, verify again
         if (
@@ -2551,7 +2580,7 @@ const EventBus = require('../event-bus');
           !Prime.Neural.Layer.NeuralLayer
         ) {
           throw new Error(
-            'Neural module not loaded or NeuralLayer not available',
+            "Neural module not loaded or NeuralLayer not available",
           );
         }
       }
@@ -2588,7 +2617,7 @@ const EventBus = require('../event-bus');
       ) {
         // This is a critical dependency - we should have proper module loading
         // Try to load the module if not already loaded
-        require('../../neural/layer/index');
+        require("../../neural/layer/index");
 
         // After loading, verify again
         if (
@@ -2597,7 +2626,7 @@ const EventBus = require('../event-bus');
           !Prime.Neural.Layer.NeuralLayer
         ) {
           throw new Error(
-            'Neural module not loaded or NeuralLayer not available',
+            "Neural module not loaded or NeuralLayer not available",
           );
         }
       }
@@ -2640,7 +2669,7 @@ const EventBus = require('../event-bus');
       ) {
         // This is a critical dependency - we should have proper module loading
         // Try to load the module if not already loaded
-        require('../coherence-core');
+        require("../coherence-core");
 
         // After loading, verify again
         if (
@@ -2649,7 +2678,7 @@ const EventBus = require('../event-bus');
           !Prime.Distributed.Coherence.DistributedCoherenceManager
         ) {
           throw new Error(
-            'Coherence module not loaded or DistributedCoherenceManager not available',
+            "Coherence module not loaded or DistributedCoherenceManager not available",
           );
         }
       }

@@ -3,8 +3,8 @@
  * Provides an interface for working with matrices stored in storage
  */
 
-const Prime = require('../../core');
-const { StorageError } = require('../index');
+const Prime = require("../../core");
+const { StorageError } = require("../index");
 
 /**
  * Matrix adapter for working with stored matrices
@@ -20,16 +20,16 @@ class MatrixAdapter {
     this.storageManager = storageManager;
     this.storageId = storageId;
     this.options = {
-      ...options
+      ...options,
     };
-    
+
     this.rows = 0;
     this.columns = 0;
     this.matrix = null;
     this.modified = false;
     this.initialized = false;
   }
-  
+
   /**
    * Initializes the matrix adapter
    * @returns {Promise<void>}
@@ -38,23 +38,25 @@ class MatrixAdapter {
     if (this.initialized) {
       return;
     }
-    
+
     try {
       // Load the matrix
       this.matrix = await this.storageManager.load(this.storageId);
-      
+
       if (!this.matrix) {
         throw new StorageError(
-          'Matrix not found in storage',
+          "Matrix not found in storage",
           { id: this.storageId },
-          'STORAGE_MATRIX_NOT_FOUND'
+          "STORAGE_MATRIX_NOT_FOUND",
         );
       }
-      
+
       // Get dimensions
       if (Array.isArray(this.matrix)) {
         this.rows = this.matrix.length;
-        this.columns = Array.isArray(this.matrix[0]) ? this.matrix[0].length : 0;
+        this.columns = Array.isArray(this.matrix[0])
+          ? this.matrix[0].length
+          : 0;
       } else if (this.matrix.rows && this.matrix.columns) {
         // Handle matrix object with dimensions
         this.rows = this.matrix.rows;
@@ -65,27 +67,27 @@ class MatrixAdapter {
         this.columns = this.matrix.getColumns();
       } else {
         throw new StorageError(
-          'Invalid matrix format',
+          "Invalid matrix format",
           { id: this.storageId },
-          'STORAGE_INVALID_MATRIX'
+          "STORAGE_INVALID_MATRIX",
         );
       }
-      
+
       this.initialized = true;
     } catch (error) {
       if (error instanceof StorageError) {
         throw error;
       }
-      
+
       throw new StorageError(
         `Failed to initialize matrix adapter: ${error.message}`,
         { id: this.storageId, originalError: error },
-        'STORAGE_ADAPTER_INIT_FAILED',
-        error
+        "STORAGE_ADAPTER_INIT_FAILED",
+        error,
       );
     }
   }
-  
+
   /**
    * Gets a value from the matrix
    * @param {number} row - Row index
@@ -96,30 +98,30 @@ class MatrixAdapter {
     if (!this.initialized) {
       await this.init();
     }
-    
+
     // Validate indices
     if (row < 0 || row >= this.rows || col < 0 || col >= this.columns) {
       throw new StorageError(
         `Invalid matrix indices: (${row}, ${col})`,
         { row, col, rows: this.rows, columns: this.columns },
-        'STORAGE_INVALID_INDICES'
+        "STORAGE_INVALID_INDICES",
       );
     }
-    
+
     // Get value
     if (Array.isArray(this.matrix)) {
       return this.matrix[row][col];
-    } else if (typeof this.matrix.get === 'function') {
+    } else if (typeof this.matrix.get === "function") {
       return this.matrix.get(row, col);
     } else {
       throw new StorageError(
-        'Unsupported matrix format',
+        "Unsupported matrix format",
         { matrixType: typeof this.matrix },
-        'STORAGE_UNSUPPORTED_MATRIX'
+        "STORAGE_UNSUPPORTED_MATRIX",
       );
     }
   }
-  
+
   /**
    * Sets a value in the matrix
    * @param {number} row - Row index
@@ -131,42 +133,42 @@ class MatrixAdapter {
     if (!this.initialized) {
       await this.init();
     }
-    
+
     // Validate indices
     if (row < 0 || row >= this.rows || col < 0 || col >= this.columns) {
       throw new StorageError(
         `Invalid matrix indices: (${row}, ${col})`,
         { row, col, rows: this.rows, columns: this.columns },
-        'STORAGE_INVALID_INDICES'
+        "STORAGE_INVALID_INDICES",
       );
     }
-    
+
     // Create a deep copy of the original matrix to modify
     // This ensures the original matrix is not affected until saved (as expected by tests)
     if (Array.isArray(this.matrix) && !this._cloned) {
       this.originalMatrix = this.matrix; // Save reference to original
-      
+
       // Create deep copy
-      this.matrix = this.matrix.map(row => [...row]); 
+      this.matrix = this.matrix.map((row) => [...row]);
       this._cloned = true;
     }
-    
+
     // Set value
     if (Array.isArray(this.matrix)) {
       this.matrix[row][col] = value;
-    } else if (typeof this.matrix.set === 'function') {
+    } else if (typeof this.matrix.set === "function") {
       this.matrix.set(row, col, value);
     } else {
       throw new StorageError(
-        'Unsupported matrix format for set operation',
+        "Unsupported matrix format for set operation",
         { matrixType: typeof this.matrix },
-        'STORAGE_UNSUPPORTED_MATRIX'
+        "STORAGE_UNSUPPORTED_MATRIX",
       );
     }
-    
+
     this.modified = true;
   }
-  
+
   /**
    * Gets a row from the matrix
    * @param {number} row - Row index
@@ -176,20 +178,20 @@ class MatrixAdapter {
     if (!this.initialized) {
       await this.init();
     }
-    
+
     // Validate row index
     if (row < 0 || row >= this.rows) {
       throw new StorageError(
         `Invalid row index: ${row}`,
         { row, rows: this.rows },
-        'STORAGE_INVALID_INDEX'
+        "STORAGE_INVALID_INDEX",
       );
     }
-    
+
     // Get row
     if (Array.isArray(this.matrix)) {
       return [...this.matrix[row]]; // Return a copy to prevent unintended modifications
-    } else if (typeof this.matrix.getRow === 'function') {
+    } else if (typeof this.matrix.getRow === "function") {
       return this.matrix.getRow(row);
     } else {
       // Construct row manually
@@ -200,7 +202,7 @@ class MatrixAdapter {
       return row_data;
     }
   }
-  
+
   /**
    * Gets a column from the matrix
    * @param {number} col - Column index
@@ -210,18 +212,18 @@ class MatrixAdapter {
     if (!this.initialized) {
       await this.init();
     }
-    
+
     // Validate column index
     if (col < 0 || col >= this.columns) {
       throw new StorageError(
         `Invalid column index: ${col}`,
         { col, columns: this.columns },
-        'STORAGE_INVALID_INDEX'
+        "STORAGE_INVALID_INDEX",
       );
     }
-    
+
     // Get column
-    if (typeof this.matrix.getColumn === 'function') {
+    if (typeof this.matrix.getColumn === "function") {
       return this.matrix.getColumn(col);
     } else {
       // Construct column manually
@@ -236,7 +238,7 @@ class MatrixAdapter {
       return col_data;
     }
   }
-  
+
   /**
    * Sets a row in the matrix
    * @param {number} row - Row index
@@ -247,29 +249,29 @@ class MatrixAdapter {
     if (!this.initialized) {
       await this.init();
     }
-    
+
     // Validate row index
     if (row < 0 || row >= this.rows) {
       throw new StorageError(
         `Invalid row index: ${row}`,
         { row, rows: this.rows },
-        'STORAGE_INVALID_INDEX'
+        "STORAGE_INVALID_INDEX",
       );
     }
-    
+
     // Validate values length
     if (!Array.isArray(values) || values.length !== this.columns) {
       throw new StorageError(
         `Invalid row values length: ${values.length}`,
         { values, columns: this.columns },
-        'STORAGE_INVALID_SIZE'
+        "STORAGE_INVALID_SIZE",
       );
     }
-    
+
     // Set row
     if (Array.isArray(this.matrix)) {
       this.matrix[row] = [...values]; // Set with a copy to prevent unintended side effects
-    } else if (typeof this.matrix.setRow === 'function') {
+    } else if (typeof this.matrix.setRow === "function") {
       this.matrix.setRow(row, values);
     } else {
       // Set row values individually
@@ -277,10 +279,10 @@ class MatrixAdapter {
         await this.set(row, j, values[j]);
       }
     }
-    
+
     this.modified = true;
   }
-  
+
   /**
    * Sets a column in the matrix
    * @param {number} col - Column index
@@ -291,27 +293,27 @@ class MatrixAdapter {
     if (!this.initialized) {
       await this.init();
     }
-    
+
     // Validate column index
     if (col < 0 || col >= this.columns) {
       throw new StorageError(
         `Invalid column index: ${col}`,
         { col, columns: this.columns },
-        'STORAGE_INVALID_INDEX'
+        "STORAGE_INVALID_INDEX",
       );
     }
-    
+
     // Validate values length
     if (!Array.isArray(values) || values.length !== this.rows) {
       throw new StorageError(
         `Invalid column values length: ${values.length}`,
         { values, rows: this.rows },
-        'STORAGE_INVALID_SIZE'
+        "STORAGE_INVALID_SIZE",
       );
     }
-    
+
     // Set column
-    if (typeof this.matrix.setColumn === 'function') {
+    if (typeof this.matrix.setColumn === "function") {
       this.matrix.setColumn(col, values);
     } else {
       // Set column values individually
@@ -323,10 +325,10 @@ class MatrixAdapter {
         }
       }
     }
-    
+
     this.modified = true;
   }
-  
+
   /**
    * Gets the entire matrix
    * @returns {Promise<Array>} Matrix data
@@ -335,11 +337,11 @@ class MatrixAdapter {
     if (!this.initialized) {
       await this.init();
     }
-    
+
     // Return a deep copy of the matrix to prevent unintended modifications
     if (Array.isArray(this.matrix)) {
-      return this.matrix.map(row => [...row]);
-    } else if (typeof this.matrix.toArray === 'function') {
+      return this.matrix.map((row) => [...row]);
+    } else if (typeof this.matrix.toArray === "function") {
       return this.matrix.toArray();
     } else {
       // Construct matrix manually
@@ -353,7 +355,7 @@ class MatrixAdapter {
       return matrix;
     }
   }
-  
+
   /**
    * Sets the entire matrix
    * @param {Array} matrix - Matrix data
@@ -363,18 +365,18 @@ class MatrixAdapter {
     // Validate matrix
     if (!Array.isArray(matrix) || !Array.isArray(matrix[0])) {
       throw new StorageError(
-        'Invalid matrix format',
+        "Invalid matrix format",
         { matrixType: typeof matrix },
-        'STORAGE_INVALID_MATRIX'
+        "STORAGE_INVALID_MATRIX",
       );
     }
-    
+
     const newRows = matrix.length;
     const newColumns = matrix[0].length;
-    
+
     // If the dimensions are different, create a new matrix
     if (newRows !== this.rows || newColumns !== this.columns) {
-      this.matrix = matrix.map(row => [...row]);
+      this.matrix = matrix.map((row) => [...row]);
       this.rows = newRows;
       this.columns = newColumns;
     } else {
@@ -383,7 +385,7 @@ class MatrixAdapter {
         for (let i = 0; i < this.rows; i++) {
           this.matrix[i] = [...matrix[i]];
         }
-      } else if (typeof this.matrix.setMatrix === 'function') {
+      } else if (typeof this.matrix.setMatrix === "function") {
         this.matrix.setMatrix(matrix);
       } else {
         // Update values individually
@@ -394,11 +396,11 @@ class MatrixAdapter {
         }
       }
     }
-    
+
     this.modified = true;
     await this.save();
   }
-  
+
   /**
    * Saves changes back to storage
    * @returns {Promise<boolean>} Whether changes were saved
@@ -407,11 +409,11 @@ class MatrixAdapter {
     if (!this.initialized) {
       await this.init();
     }
-    
+
     if (!this.modified) {
       return false;
     }
-    
+
     try {
       // Save matrix back to storage
       await this.storageManager.store(this.matrix, this.storageId);
@@ -421,8 +423,8 @@ class MatrixAdapter {
       throw new StorageError(
         `Failed to save matrix: ${error.message}`,
         { id: this.storageId, originalError: error },
-        'STORAGE_SAVE_FAILED',
-        error
+        "STORAGE_SAVE_FAILED",
+        error,
       );
     }
   }

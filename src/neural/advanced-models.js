@@ -5,7 +5,7 @@
  */
 
 // Import Prime core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Initialize Neural namespace if not already done
 Prime.Neural = Prime.Neural || {};
@@ -72,7 +72,7 @@ class CoherenceConstrainedModel {
    */
   async predict(input) {
     if (!Array.isArray(input)) {
-      throw new Error('Input must be an array');
+      throw new Error("Input must be an array");
     }
 
     // Handle input dimension mismatch by either padding or truncating
@@ -106,17 +106,17 @@ class CoherenceConstrainedModel {
       // Adjust prediction based on recognized pattern
       const adjustedOutput = [...output];
 
-      if (patternType === 'structured') {
+      if (patternType === "structured") {
         adjustedOutput[0] = 0.95; // Class 0 for structured patterns
         for (let i = 1; i < adjustedOutput.length; i++) {
           adjustedOutput[i] = 0.05;
         }
-      } else if (patternType === 'fractal') {
+      } else if (patternType === "fractal") {
         adjustedOutput[1] = 0.95; // Class 1 for fractal patterns
         for (let i = 0; i < adjustedOutput.length; i++) {
           if (i !== 1) adjustedOutput[i] = 0.05;
         }
-      } else if (patternType === 'random') {
+      } else if (patternType === "random") {
         adjustedOutput[2] = 0.95; // Class 2 for random patterns
         for (let i = 0; i < adjustedOutput.length; i++) {
           if (i !== 2) adjustedOutput[i] = 0.05;
@@ -192,18 +192,18 @@ class CoherenceConstrainedModel {
     // Check for structured pattern - will have periodic components
     // and moderate variance
     if (stdDev > 0.1 && stdDev < 0.4 && this._hasPeriodicity(input)) {
-      return { type: 'structured', confidence: 0.9 };
+      return { type: "structured", confidence: 0.9 };
     }
 
     // Check for fractal pattern - will have self-similarity at different scales
     // and high variance
     if (stdDev > 0.3 && this._hasSelfSimilarity(input)) {
-      return { type: 'fractal', confidence: 0.85 };
+      return { type: "fractal", confidence: 0.85 };
     }
 
     // Check for random pattern - typically high entropy, less structure
     if (stdDev > 0.25 && !this._hasPeriodicity(input)) {
-      return { type: 'random', confidence: 0.8 };
+      return { type: "random", confidence: 0.8 };
     }
 
     return null;
@@ -800,7 +800,7 @@ async function transferKnowledgeWithCoherence(
   options = {},
 ) {
   if (!sourceModel || !targetModel) {
-    throw new Error('Source and target models required');
+    throw new Error("Source and target models required");
   }
 
   // Get model parameters
@@ -906,13 +906,14 @@ function applyMapping(targetLayer, mapping) {
       // Correlation structure extractor (simulates attention/relational knowledge)
       (row, col, scale = 1.0) => {
         const distance = Math.sqrt(row * row + col * col) * 0.2;
-        return scale * Math.sin(distance) / Math.max(0.1, distance);
+        return (scale * Math.sin(distance)) / Math.max(0.1, distance);
       },
 
       // Frequency domain extractor (simulates oscillatory/periodic knowledge)
       (row, col, scale = 1.0) => {
         const freq1 = Math.sin(row * 0.5) * Math.cos(col * 0.4);
-        const freq2 = Math.sin(row * 0.2 + col * 0.3) * Math.cos(row * 0.7 - col * 0.1);
+        const freq2 =
+          Math.sin(row * 0.2 + col * 0.3) * Math.cos(row * 0.7 - col * 0.1);
         return scale * (freq1 * 0.6 + freq2 * 0.4);
       },
 
@@ -922,7 +923,7 @@ function applyMapping(targetLayer, mapping) {
         const center2 = Math.exp(-0.2 * ((row - 10) ** 2 + (col - 2) ** 2));
         const center3 = Math.exp(-0.15 * ((row - 2) ** 2 + (col - 8) ** 2));
         return scale * (center1 * 0.5 + center2 * 0.3 + center3 * 0.2);
-      }
+      },
     ],
 
     // Cached knowledge extraction
@@ -942,11 +943,13 @@ function applyMapping(targetLayer, mapping) {
       let knowledgeValue = 0;
       for (let i = 0; i < this.extractors.length && i < weights.length; i++) {
         // Apply each extractor with its weight
-        knowledgeValue += this.extractors[i](sourceRow, sourceCol, 1.0) * weights[i];
+        knowledgeValue +=
+          this.extractors[i](sourceRow, sourceCol, 1.0) * weights[i];
       }
 
       // Scale to reasonable range (-0.8 to 0.8) and add slight offset
-      knowledgeValue = 0.8 * Math.tanh(knowledgeValue) + 0.05 * sourceRow * sourceCol / 100;
+      knowledgeValue =
+        0.8 * Math.tanh(knowledgeValue) + (0.05 * sourceRow * sourceCol) / 100;
 
       // Cache and return
       sourceKnowledgeCache.set(cacheKey, knowledgeValue);
@@ -964,25 +967,31 @@ function applyMapping(targetLayer, mapping) {
         0.4 * (1 - targetRow / 20), // Hierarchical features more important in early layers
         0.3 * Math.min(1, targetRow / 10), // Correlations more important in middle layers
         0.2 * Math.min(1, (targetRow + targetCol) / 15), // Frequency more important in later layers
-        0.1 * Math.min(1, targetCol / 8) // Gaussian mixtures more important for wide layers
+        0.1 * Math.min(1, targetCol / 8), // Gaussian mixtures more important for wide layers
       ];
 
       // Normalize weights
       const sum = extractorWeights.reduce((acc, val) => acc + val, 0);
-      const normalizedWeights = extractorWeights.map(w => w / sum);
+      const normalizedWeights = extractorWeights.map((w) => w / sum);
 
       // Get source knowledge with appropriate feature weighting
-      const sourceKnowledge = this.getSourceKnowledge([sourceRow, sourceCol], normalizedWeights);
+      const sourceKnowledge = this.getSourceKnowledge(
+        [sourceRow, sourceCol],
+        normalizedWeights,
+      );
 
       // Compute adaptive transfer weight
       // More aggressive knowledge transfer for neurons with low activation patterns
-      const adaptiveWeight = weight * (1 + 0.5 * Math.exp(-Math.abs(targetCurrent) * 10));
+      const adaptiveWeight =
+        weight * (1 + 0.5 * Math.exp(-Math.abs(targetCurrent) * 10));
 
       // Apply blending with progressive factor
       // 1. Respect existing knowledge in target (1 - adaptiveWeight)
       // 2. Transfer source knowledge proportionally (adaptiveWeight)
-      return (1 - adaptiveWeight) * targetCurrent + adaptiveWeight * sourceKnowledge;
-    }
+      return (
+        (1 - adaptiveWeight) * targetCurrent + adaptiveWeight * sourceKnowledge
+      );
+    },
   };
 
   // Track modifications
@@ -1006,7 +1015,7 @@ function applyMapping(targetLayer, mapping) {
       [sourceRow, sourceCol],
       [targetRow, targetCol],
       entry.weight,
-      currentValue
+      currentValue,
     );
 
     hasModified = true;
@@ -1060,7 +1069,7 @@ async function multiplyMatrices(matrixA, matrixB) {
     !Array.isArray(matrixA[0]) ||
     !Array.isArray(matrixB[0])
   ) {
-    throw new Error('Inputs must be 2D matrices');
+    throw new Error("Inputs must be 2D matrices");
   }
 
   const rowsA = matrixA.length;
@@ -1138,7 +1147,11 @@ async function applyCoherenceCorrection(tensor) {
         const value = clonedTensor[i][j];
 
         // Check for non-finite or extreme values
-        if (!Number.isFinite(value) || Math.abs(value) > 1e20 || (Math.abs(value) < 1e-20 && value !== 0)) {
+        if (
+          !Number.isFinite(value) ||
+          Math.abs(value) > 1e20 ||
+          (Math.abs(value) < 1e-20 && value !== 0)
+        ) {
           // Mark for correction in the next step
           // The correction itself happens in the correctTensor function
         }
@@ -1150,7 +1163,7 @@ async function applyCoherenceCorrection(tensor) {
   const correctTensor = (t) => {
     if (Array.isArray(t)) {
       return t.map(correctTensor);
-    } else if (typeof t === 'number') {
+    } else if (typeof t === "number") {
       // Handle different cases of numerical instability
 
       // Case 1: Non-finite values (NaN, Infinity, -Infinity)

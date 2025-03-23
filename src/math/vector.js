@@ -8,11 +8,11 @@
  */
 
 // Import the Prime object first
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Import the modular vector components - only explicitly require core
 // Let the others be loaded lazily through Prime.Math
-require('./vector-core');
+require("./vector-core");
 
 // Ensure the Math namespace exists
 Prime.Math = Prime.Math || {};
@@ -26,10 +26,10 @@ Prime.Math = Prime.Math || {};
   const getVectorModule = function (moduleName) {
     if (!Prime.Math[moduleName]) {
       // If not loaded, try to load it via the getter in math/index.js
-      if (moduleName === 'VectorAdvanced') {
-        require('./vector-advanced');
-      } else if (moduleName === 'VectorValidation') {
-        require('./vector-validation');
+      if (moduleName === "VectorAdvanced") {
+        require("./vector-advanced");
+      } else if (moduleName === "VectorValidation") {
+        require("./vector-validation");
       }
     }
     return Prime.Math[moduleName] || {};
@@ -92,7 +92,7 @@ Prime.Math = Prime.Math || {};
     createTyped: function (dimensions, initialValue, arrayType) {
       return VectorCore.create(dimensions, initialValue, {
         useTypedArray: true,
-        arrayType: arrayType || 'float64',
+        arrayType: arrayType || "float64",
       });
     },
 
@@ -145,15 +145,15 @@ Prime.Math = Prime.Math || {};
       // Use Kahan summation for better precision
       let sum = 0;
       let compensation = 0;
-      
+
       for (let i = 0; i < vector.length; i++) {
         const squared = vector[i] * vector[i];
         const y = squared - compensation;
         const t = sum + y;
-        compensation = (t - sum) - y;
+        compensation = t - sum - y;
         sum = t;
       }
-      
+
       return Math.sqrt(sum);
     },
 
@@ -164,12 +164,12 @@ Prime.Math = Prime.Math || {};
      */
     normalize: function (vector) {
       const mag = this.magnitude(vector);
-      
+
       // Check for zero magnitude to avoid division by zero
       if (mag < Number.EPSILON) {
-        throw new Error('Cannot normalize a zero vector');
+        throw new Error("Cannot normalize a zero vector");
       }
-      
+
       return this.scale(vector, 1 / mag);
     },
 
@@ -182,13 +182,13 @@ Prime.Math = Prime.Math || {};
     cross: function (a, b) {
       // Ensure vectors are 3D
       if (a.length !== 3 || b.length !== 3) {
-        throw new Error('Cross product requires 3D vectors');
+        throw new Error("Cross product requires 3D vectors");
       }
-      
+
       return [
         a[1] * b[2] - a[2] * b[1],
         a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0]
+        a[0] * b[1] - a[1] * b[0],
       ];
     },
 
@@ -201,16 +201,16 @@ Prime.Math = Prime.Math || {};
     angle: function (a, b) {
       const magA = this.magnitude(a);
       const magB = this.magnitude(b);
-      
+
       // Check for zero vectors
       if (magA < Number.EPSILON || magB < Number.EPSILON) {
-        throw new Error('Cannot calculate angle with zero vector');
+        throw new Error("Cannot calculate angle with zero vector");
       }
-      
+
       const dotProduct = this.dot(a, b);
       // Clamp the value to avoid numerical precision issues
       const cosAngle = Math.max(-1, Math.min(1, dotProduct / (magA * magB)));
-      
+
       return Math.acos(cosAngle);
     },
 
@@ -222,11 +222,11 @@ Prime.Math = Prime.Math || {};
      */
     project: function (a, b) {
       const magBSquared = this.dot(b, b);
-      
+
       if (magBSquared < Number.EPSILON) {
-        throw new Error('Cannot project onto a zero vector');
+        throw new Error("Cannot project onto a zero vector");
       }
-      
+
       const scalar = this.dot(a, b) / magBSquared;
       return this.scale(b, scalar);
     },
@@ -239,9 +239,9 @@ Prime.Math = Prime.Math || {};
      */
     distance: function (a, b) {
       if (a.length !== b.length) {
-        throw new Error('Vectors must have the same dimensions');
+        throw new Error("Vectors must have the same dimensions");
       }
-      
+
       // Create a difference vector and calculate its magnitude
       const diff = this.subtract(a, b);
       return this.magnitude(diff);
@@ -255,14 +255,14 @@ Prime.Math = Prime.Math || {};
      */
     manhattanDistance: function (a, b) {
       if (a.length !== b.length) {
-        throw new Error('Vectors must have the same dimensions');
+        throw new Error("Vectors must have the same dimensions");
       }
-      
+
       let sum = 0;
       for (let i = 0; i < a.length; i++) {
         sum += Math.abs(a[i] - b[i]);
       }
-      
+
       return sum;
     },
 
@@ -274,14 +274,14 @@ Prime.Math = Prime.Math || {};
      */
     elementWiseMultiply: function (a, b) {
       if (a.length !== b.length) {
-        throw new Error('Vectors must have the same dimensions');
+        throw new Error("Vectors must have the same dimensions");
       }
-      
+
       const result = new Array(a.length);
       for (let i = 0; i < a.length; i++) {
         result[i] = a[i] * b[i];
       }
-      
+
       return result;
     },
 
@@ -312,16 +312,16 @@ Prime.Math = Prime.Math || {};
      */
     outerProduct: function (a, b) {
       const result = new Array(a.length);
-      
+
       for (let i = 0; i < a.length; i++) {
         result[i] = new Array(b.length);
         for (let j = 0; j < b.length; j++) {
           result[i][j] = a[i] * b[j];
         }
       }
-      
+
       return result;
-    }
+    },
   };
 
   // Add Vector to the Prime.Math namespace

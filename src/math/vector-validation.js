@@ -5,11 +5,11 @@
  */
 
 // Import the Prime object with VectorCore
-const Prime = require('./vector-core');
+const Prime = require("./vector-core");
 
 // Ensure VectorCore exists
 if (!Prime.Math.VectorCore) {
-  throw new Error('VectorCore must be loaded before VectorValidation');
+  throw new Error("VectorCore must be loaded before VectorValidation");
 }
 
 // Get reference to VectorCore
@@ -31,7 +31,7 @@ const VectorValidation = {
 
     // Check if all elements are numbers
     for (let i = 0; i < v.length; i++) {
-      if (typeof v[i] !== 'number' || Number.isNaN(v[i])) {
+      if (typeof v[i] !== "number" || Number.isNaN(v[i])) {
         return false;
       }
     }
@@ -155,7 +155,7 @@ const VectorValidation = {
     if (!isVector) {
       return {
         isVector: false,
-        diagnostics: 'Not a vector (array or TypedArray required)',
+        diagnostics: "Not a vector (array or TypedArray required)",
       };
     }
 
@@ -167,7 +167,7 @@ const VectorValidation = {
     let anyZero = false;
 
     for (let i = 0; i < v.length; i++) {
-      if (typeof v[i] !== 'number') {
+      if (typeof v[i] !== "number") {
         allNumbers = false;
       } else {
         if (Number.isNaN(v[i])) {
@@ -210,7 +210,7 @@ const VectorValidation = {
     return {
       isVector: true,
       isTypedArray: ArrayBuffer.isView(v),
-      type: ArrayBuffer.isView(v) ? v.constructor.name : 'Array',
+      type: ArrayBuffer.isView(v) ? v.constructor.name : "Array",
       dimension: v.length,
       allNumbers,
       allFinite,
@@ -219,11 +219,11 @@ const VectorValidation = {
       anyZero,
       isZero: this.isZeroVector(v, { tolerance: 1e-10 }),
       isUnit: this.isUnitVector(v),
-      magnitude: allFinite ? magnitude : 'N/A',
-      min: allFinite ? minValue : 'N/A',
-      max: allFinite ? maxValue : 'N/A',
-      mean: allFinite ? meanValue : 'N/A',
-      valueRange: allFinite ? maxValue - minValue : 'N/A',
+      magnitude: allFinite ? magnitude : "N/A",
+      min: allFinite ? minValue : "N/A",
+      max: allFinite ? maxValue : "N/A",
+      mean: allFinite ? meanValue : "N/A",
+      valueRange: allFinite ? maxValue - minValue : "N/A",
     };
   },
 
@@ -241,13 +241,13 @@ const VectorValidation = {
 
     if (!VectorCore.isVector(v)) {
       throw new Prime.ValidationError(
-        'Value is not a vector (array or TypedArray required)',
+        "Value is not a vector (array or TypedArray required)",
       );
     }
 
     // Check if all elements are numbers and finite if required
     for (let i = 0; i < v.length; i++) {
-      if (typeof v[i] !== 'number') {
+      if (typeof v[i] !== "number") {
         throw new Prime.ValidationError(
           `Element at index ${i} is not a number`,
         );
@@ -265,7 +265,7 @@ const VectorValidation = {
     // Check for zero vector if not allowed
     if (!allowZero && this.isZeroVector(v)) {
       throw new Prime.ValidationError(
-        'Zero vector is not allowed for this operation',
+        "Zero vector is not allowed for this operation",
       );
     }
 
@@ -308,7 +308,7 @@ const VectorValidation = {
   sanitizeVector: function (v, options = {}) {
     if (!VectorCore.isVector(v)) {
       throw new Prime.ValidationError(
-        'Value is not a vector (array or TypedArray required)',
+        "Value is not a vector (array or TypedArray required)",
       );
     }
 
@@ -321,7 +321,7 @@ const VectorValidation = {
 
     // Replace problematic values
     for (let i = 0; i < result.length; i++) {
-      if (typeof result[i] !== 'number') {
+      if (typeof result[i] !== "number") {
         // Convert non-numbers to 0
         result[i] = 0;
       } else if (replaceNaN && Number.isNaN(result[i])) {
@@ -342,17 +342,17 @@ Prime.Math = Prime.Math || {};
 
 // Check if VectorValidation already has a getter defined, if so, use it
 if (
-  Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation') &&
-  Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation').get
+  Object.getOwnPropertyDescriptor(Prime.Math, "VectorValidation") &&
+  Object.getOwnPropertyDescriptor(Prime.Math, "VectorValidation").get
 ) {
   // Use a more careful approach to update the property
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.Math,
-    'VectorValidation',
+    "VectorValidation",
   );
   const originalGetter = descriptor.get;
 
-  Object.defineProperty(Prime.Math, 'VectorValidation', {
+  Object.defineProperty(Prime.Math, "VectorValidation", {
     get: function () {
       const result = originalGetter.call(this);
       // If result is an empty object (placeholder), return our implementation

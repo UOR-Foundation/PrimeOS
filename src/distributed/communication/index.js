@@ -4,8 +4,8 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
-const EventBus = require('../event-bus');
+const Prime = require("../../core");
+const EventBus = require("../event-bus");
 
 // Create the Communication module using IIFE
 (function () {
@@ -15,25 +15,25 @@ const EventBus = require('../event-bus');
    */
   const MessageType = {
     /** Task assignment message */
-    TASK_ASSIGNMENT: 'task_assignment',
+    TASK_ASSIGNMENT: "task_assignment",
     /** Task completion message */
-    TASK_COMPLETION: 'task_completion',
+    TASK_COMPLETION: "task_completion",
     /** Task failure message */
-    TASK_FAILURE: 'task_failure',
+    TASK_FAILURE: "task_failure",
     /** Node discovery message */
-    NODE_DISCOVERY: 'node_discovery',
+    NODE_DISCOVERY: "node_discovery",
     /** Node status update message */
-    NODE_STATUS: 'node_status',
+    NODE_STATUS: "node_status",
     /** Coherence check message */
-    COHERENCE_CHECK: 'coherence_check',
+    COHERENCE_CHECK: "coherence_check",
     /** Coherence violation message */
-    COHERENCE_VIOLATION: 'coherence_violation',
+    COHERENCE_VIOLATION: "coherence_violation",
     /** Neural gradient synchronization message */
-    GRADIENT_SYNC: 'gradient_sync',
+    GRADIENT_SYNC: "gradient_sync",
     /** Neural layer state synchronization message */
-    LAYER_SYNC: 'layer_sync',
+    LAYER_SYNC: "layer_sync",
     /** Heartbeat message */
-    HEARTBEAT: 'heartbeat',
+    HEARTBEAT: "heartbeat",
   };
 
   /**
@@ -52,16 +52,16 @@ const EventBus = require('../event-bus');
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          'Channel configuration must be an object',
+          "Channel configuration must be an object",
         );
       }
 
       if (!config.nodeId) {
-        throw new Prime.ValidationError('Node ID is required');
+        throw new Prime.ValidationError("Node ID is required");
       }
 
       this.nodeId = config.nodeId;
-      this.protocol = config.protocol || 'primeos';
+      this.protocol = config.protocol || "primeos";
       this.encrypted = config.encrypted !== false;
       this.timeout = config.timeout || 5000;
       this.retryCount = config.retryCount || 3;
@@ -109,7 +109,7 @@ const EventBus = require('../event-bus');
       }, 5000);
 
       // Set up message handler
-      this.eventBus.on('message:received', this._handleMessage.bind(this));
+      this.eventBus.on("message:received", this._handleMessage.bind(this));
     }
 
     /**
@@ -120,7 +120,7 @@ const EventBus = require('../event-bus');
       // Simulate receiving a heartbeat message
       const heartbeatMessage = {
         type: MessageType.HEARTBEAT,
-        source: 'cluster_manager',
+        source: "cluster_manager",
         timestamp: Date.now(),
         data: {
           nodeCount: Math.floor(Math.random() * 5) + 1,
@@ -152,10 +152,10 @@ const EventBus = require('../event-bus');
         try {
           processedMessage = this._decryptMessage(message);
         } catch (error) {
-          Prime.Logger.error('Failed to decrypt message', {
+          Prime.Logger.error("Failed to decrypt message", {
             error,
             messageId: message.id,
-            source: message.source
+            source: message.source,
           });
           this.metrics.messagesDropped++;
           return;
@@ -170,7 +170,9 @@ const EventBus = require('../event-bus');
         processedMessage.responseToId &&
         this.pendingMessages.has(processedMessage.responseToId)
       ) {
-        const pendingRequest = this.pendingMessages.get(processedMessage.responseToId);
+        const pendingRequest = this.pendingMessages.get(
+          processedMessage.responseToId,
+        );
 
         // Calculate latency
         const latency = Date.now() - pendingRequest.timestamp;
@@ -191,8 +193,12 @@ const EventBus = require('../event-bus');
     _decryptMessage(encryptedMessage) {
       try {
         // Validate required fields
-        if (!encryptedMessage.encryptedData || !encryptedMessage.iv || !encryptedMessage.salt) {
-          throw new Error('Invalid encrypted message format');
+        if (
+          !encryptedMessage.encryptedData ||
+          !encryptedMessage.iv ||
+          !encryptedMessage.salt
+        ) {
+          throw new Error("Invalid encrypted message format");
         }
 
         // Get the encryption key
@@ -202,7 +208,9 @@ const EventBus = require('../event-bus');
         const iv = this._base64ToBytes(encryptedMessage.iv);
         const salt = this._base64ToBytes(encryptedMessage.salt);
         const authTag = this._base64ToBytes(encryptedMessage.authTag);
-        const encryptedData = this._base64ToBytes(encryptedMessage.encryptedData);
+        const encryptedData = this._base64ToBytes(
+          encryptedMessage.encryptedData,
+        );
 
         // Derive the key using the provided salt
         const derivedKey = this._deriveKey(encryptionKey, salt);
@@ -210,20 +218,36 @@ const EventBus = require('../event-bus');
         // Verify authentication tag if provided
         if (authTag && authTag.length > 0) {
           // Verify the authentication tag before decryption to ensure message integrity
-          const isValid = this._verifyAuthTag(encryptedData, derivedKey, iv, authTag);
+          const isValid = this._verifyAuthTag(
+            encryptedData,
+            derivedKey,
+            iv,
+            authTag,
+          );
           if (!isValid) {
-            throw new Error('Message authentication failed: Invalid authentication tag');
+            throw new Error(
+              "Message authentication failed: Invalid authentication tag",
+            );
           }
-          Prime.Logger.debug('Message authentication tag verified successfully');
+          Prime.Logger.debug(
+            "Message authentication tag verified successfully",
+          );
         } else {
-          Prime.Logger.warn('No authentication tag provided for encrypted message', {
-            source: encryptedMessage.source,
-            id: encryptedMessage.id
-          });
+          Prime.Logger.warn(
+            "No authentication tag provided for encrypted message",
+            {
+              source: encryptedMessage.source,
+              id: encryptedMessage.id,
+            },
+          );
         }
 
         // Decrypt the data
-        const decryptedBytes = this._aesGcmDecrypt(encryptedData, derivedKey, iv);
+        const decryptedBytes = this._aesGcmDecrypt(
+          encryptedData,
+          derivedKey,
+          iv,
+        );
 
         // Convert bytes to string
         const decryptedText = new TextDecoder().decode(decryptedBytes);
@@ -236,13 +260,15 @@ const EventBus = require('../event-bus');
           wasEncrypted: true,
           decryptedAt: Date.now(),
           algorithm: encryptedMessage.encryptionAlgorithm,
-          originalMetadata: encryptedMessage.metadata || {}
+          originalMetadata: encryptedMessage.metadata || {},
         };
 
         return decryptedMessage;
       } catch (error) {
-        Prime.Logger.error('Decryption error', error);
-        throw new Prime.CommunicationError('Failed to decrypt message', { cause: error });
+        Prime.Logger.error("Decryption error", error);
+        throw new Prime.CommunicationError("Failed to decrypt message", {
+          cause: error,
+        });
       }
     }
 
@@ -268,8 +294,7 @@ const EventBus = require('../event-bus');
         const cipherByte = encryptedData[i];
 
         // Apply inverse operation (XOR is self-inverse)
-        decryptedBytes[i] = cipherByte ^ keyByte ^ ivByte ^
-                           ((i * i) % 256); // Same position-dependent modifier
+        decryptedBytes[i] = cipherByte ^ keyByte ^ ivByte ^ (i * i) % 256; // Same position-dependent modifier
       }
 
       return decryptedBytes;
@@ -308,12 +333,12 @@ const EventBus = require('../event-bus');
     async send(destination, type, data, options = {}) {
       if (!this.connected) {
         throw new Prime.CommunicationError(
-          'Communication channel not connected',
+          "Communication channel not connected",
         );
       }
 
       if (!destination) {
-        throw new Prime.ValidationError('Destination node ID is required');
+        throw new Prime.ValidationError("Destination node ID is required");
       }
 
       if (!Object.values(MessageType).includes(type)) {
@@ -351,7 +376,7 @@ const EventBus = require('../event-bus');
       }
 
       // For mock mode with test destinations
-      if (destination === 'test_node' || destination === 'cluster_manager') {
+      if (destination === "test_node" || destination === "cluster_manager") {
         // Simulate successful send
 
         // If acknowledgment required, wait for response
@@ -395,7 +420,7 @@ const EventBus = require('../event-bus');
                 this.pendingMessages.delete(messageId);
                 reject(
                   new Prime.CommunicationError(
-                    'Message acknowledgment timeout',
+                    "Message acknowledgment timeout",
                   ),
                 );
               }
@@ -422,7 +447,7 @@ const EventBus = require('../event-bus');
     async broadcast(type, data) {
       if (!this.connected) {
         throw new Prime.CommunicationError(
-          'Communication channel not connected',
+          "Communication channel not connected",
         );
       }
 
@@ -438,7 +463,7 @@ const EventBus = require('../event-bus');
         id: messageId,
         type,
         source: this.nodeId,
-        destination: 'broadcast',
+        destination: "broadcast",
         timestamp: Date.now(),
         data: data || {},
       };
@@ -498,7 +523,7 @@ const EventBus = require('../event-bus');
           destination: message.destination, // Keep destination for routing
           timestamp: message.timestamp, // Keep timestamp for metrics
           encrypted: true, // Flag to indicate encryption
-          encryptionAlgorithm: 'aes-256-gcm',
+          encryptionAlgorithm: "aes-256-gcm",
           iv: this._bytesToBase64(iv),
           salt: this._bytesToBase64(salt),
           authTag: this._bytesToBase64(authTag),
@@ -507,12 +532,14 @@ const EventBus = require('../event-bus');
           metadata: {
             encryptedAt: Date.now(),
             keyId: this._getKeyId(),
-            version: '1.0'
-          }
+            version: "1.0",
+          },
         };
       } catch (error) {
-        Prime.Logger.error('Encryption error', error);
-        throw new Prime.CommunicationError('Failed to encrypt message', { cause: error });
+        Prime.Logger.error("Encryption error", error);
+        throw new Prime.CommunicationError("Failed to encrypt message", {
+          cause: error,
+        });
       }
     }
 
@@ -527,7 +554,7 @@ const EventBus = require('../event-bus');
 
       if (!this._encryptionKey) {
         // Use node ID to create a deterministic seed
-        const seed = this.nodeId + '_encryption_key_v1';
+        const seed = this.nodeId + "_encryption_key_v1";
         // Generate a 32-byte key (256 bits)
         this._encryptionKey = this._generateDeterministicKey(seed, 32);
         this._keyId = this._generateKeyId(this._encryptionKey);
@@ -609,9 +636,10 @@ const EventBus = require('../event-bus');
 
       // Combine master key and salt (simple algorithm for demonstration)
       for (let i = 0; i < result.length; i++) {
-        result[i] = masterKey[i % masterKey.length] ^
-                    salt[i % salt.length] ^
-                    ((i * 251) % 256); // Prime multiplier for better distribution
+        result[i] =
+          masterKey[i % masterKey.length] ^
+          salt[i % salt.length] ^
+          (i * 251) % 256; // Prime multiplier for better distribution
       }
 
       return result;
@@ -642,8 +670,7 @@ const EventBus = require('../event-bus');
         const plainByte = plaintextBytes[i];
 
         // Combine with key and IV using XOR
-        encryptedBytes[i] = plainByte ^ keyByte ^ ivByte ^
-                           ((i * i) % 256); // Add position-dependent modifier
+        encryptedBytes[i] = plainByte ^ keyByte ^ ivByte ^ (i * i) % 256; // Add position-dependent modifier
       }
 
       return encryptedBytes;
@@ -665,8 +692,9 @@ const EventBus = require('../event-bus');
       // Simple tag generation (not for production use)
       let accumulator = 0;
       for (let i = 0; i < messageBytes.length; i++) {
-        accumulator = (accumulator + messageBytes[i] * key[i % key.length]) % 256;
-        tag[i % tagLength] ^= (accumulator ^ key[(i + accumulator) % key.length]);
+        accumulator =
+          (accumulator + messageBytes[i] * key[i % key.length]) % 256;
+        tag[i % tagLength] ^= accumulator ^ key[(i + accumulator) % key.length];
       }
 
       // Additional mixing
@@ -676,7 +704,7 @@ const EventBus = require('../event-bus');
 
       return tag;
     }
-    
+
     /**
      * Verify authentication tag for message integrity
      * @private
@@ -691,20 +719,20 @@ const EventBus = require('../event-bus');
         // Step 1: Generate the expected authentication tag for the encrypted data
         // In AES-GCM, the authentication tag is computed over the ciphertext and AAD
         // Since we don't have AAD in this implementation, we'll use the IV as additional data
-        
+
         // Create authentication context using both encrypted data and IV
         const authContext = new Uint8Array(encryptedData.length + iv.length);
         authContext.set(iv, 0);
         authContext.set(encryptedData, iv.length);
-        
+
         // Generate the expected tag
         const computedTag = this._computeAuthTag(authContext, key);
-        
+
         // Step 2: Perform constant-time comparison of tags to prevent timing attacks
         if (computedTag.length !== receivedTag.length) {
           return false;
         }
-        
+
         // Constant-time comparison to prevent timing attacks
         let result = 0;
         for (let i = 0; i < computedTag.length; i++) {
@@ -712,15 +740,15 @@ const EventBus = require('../event-bus');
           // OR with previous results to accumulate any differences
           result |= computedTag[i] ^ receivedTag[i];
         }
-        
+
         // If result is 0, all bytes matched
         return result === 0;
       } catch (error) {
-        Prime.Logger.error('Authentication tag verification error', error);
+        Prime.Logger.error("Authentication tag verification error", error);
         return false;
       }
     }
-    
+
     /**
      * Compute authentication tag for verification
      * @private
@@ -731,29 +759,29 @@ const EventBus = require('../event-bus');
     _computeAuthTag(data, key) {
       const tagLength = 16; // 128-bit tag
       const tag = new Uint8Array(tagLength);
-      
+
       // GHASH-like computation (simplified version)
       let h = 0;
       for (let i = 0; i < data.length; i++) {
-        h = (h * 31 + data[i]) % 0xFFFFFFFF;
-        
+        h = (h * 31 + data[i]) % 0xffffffff;
+
         // Mix in the key data to make tag dependent on key
         const keyByte = key[i % key.length];
-        tag[i % tagLength] ^= ((h & 0xFF) ^ keyByte);
-        
+        tag[i % tagLength] ^= (h & 0xff) ^ keyByte;
+
         // Diffuse the tag bytes
         if (i % tagLength === tagLength - 1) {
           this._diffuseTag(tag, key);
         }
       }
-      
+
       // Final diffusion
       this._diffuseTag(tag, key);
       this._diffuseTag(tag, key);
-      
+
       return tag;
     }
-    
+
     /**
      * Diffuse the tag bytes for better avalanche effect
      * @private
@@ -762,7 +790,7 @@ const EventBus = require('../event-bus');
      */
     _diffuseTag(tag, key) {
       const tagLength = tag.length;
-      
+
       // Apply multiple rounds of mixing
       for (let round = 0; round < 4; round++) {
         let prev = tag[tagLength - 1];
@@ -771,7 +799,7 @@ const EventBus = require('../event-bus');
           // Mix with previous byte, key byte, and position
           tag[i] = (tag[i] + prev + key[(i + round) % key.length]) % 256;
           // Rotate to enhance diffusion
-          tag[i] = ((tag[i] << 1) | (tag[i] >> 7)) & 0xFF;
+          tag[i] = ((tag[i] << 1) | (tag[i] >> 7)) & 0xff;
           prev = temp;
         }
       }
@@ -789,12 +817,12 @@ const EventBus = require('../event-bus');
 
       let hash = 0;
       for (let i = 0; i < key.length; i++) {
-        hash = ((hash << 5) - hash) + key[i];
+        hash = (hash << 5) - hash + key[i];
         hash = hash & hash; // Convert to 32-bit integer
       }
 
       // Format as hexadecimal
-      const hexHash = Math.abs(hash).toString(16).padStart(8, '0');
+      const hexHash = Math.abs(hash).toString(16).padStart(8, "0");
       return `key-${hexHash}`;
     }
 
@@ -809,9 +837,9 @@ const EventBus = require('../event-bus');
       // For this implementation, we'll use a simplified approach
 
       // Convert to hex string for simplicity
-      let hexString = '';
+      let hexString = "";
       for (let i = 0; i < bytes.length; i++) {
-        hexString += bytes[i].toString(16).padStart(2, '0');
+        hexString += bytes[i].toString(16).padStart(2, "0");
       }
 
       return hexString;
@@ -828,8 +856,8 @@ const EventBus = require('../event-bus');
         throw new Prime.ValidationError(`Invalid message type: ${type}`);
       }
 
-      if (typeof callback !== 'function') {
-        throw new Prime.ValidationError('Callback must be a function');
+      if (typeof callback !== "function") {
+        throw new Prime.ValidationError("Callback must be a function");
       }
 
       // Subscribe to message events of specified type
@@ -998,12 +1026,12 @@ const EventBus = require('../event-bus');
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          'Router configuration must be an object',
+          "Router configuration must be an object",
         );
       }
 
       if (!config.nodeId) {
-        throw new Prime.ValidationError('Node ID is required');
+        throw new Prime.ValidationError("Node ID is required");
       }
 
       this.nodeId = config.nodeId;
@@ -1091,8 +1119,8 @@ const EventBus = require('../event-bus');
      * @throws {Error} If handler is not a function
      */
     registerHandler(type, handler) {
-      if (typeof handler !== 'function') {
-        throw new Prime.ValidationError('Handler must be a function');
+      if (typeof handler !== "function") {
+        throw new Prime.ValidationError("Handler must be a function");
       }
 
       this.messageHandlers.set(type, handler);
@@ -1222,7 +1250,7 @@ const EventBus = require('../event-bus');
      */
     async route(destination, type, data, options = {}) {
       if (!destination) {
-        throw new Prime.ValidationError('Destination node ID is required');
+        throw new Prime.ValidationError("Destination node ID is required");
       }
 
       if (!Object.values(MessageType).includes(type)) {
@@ -1245,7 +1273,7 @@ const EventBus = require('../event-bus');
       }
 
       // Check if destination is known
-      if (!this.routeTable.has(destination) && destination !== 'broadcast') {
+      if (!this.routeTable.has(destination) && destination !== "broadcast") {
         // Unknown destination, try discovery first
         await this._discoverNode(destination).catch((error) => {
           // If discovery fails, continue with direct send anyway
@@ -1257,7 +1285,7 @@ const EventBus = require('../event-bus');
       this.metrics.messagesRouted++;
 
       // Use communication channel to send message
-      if (destination === 'broadcast') {
+      if (destination === "broadcast") {
         return this.channel.broadcast(type, data);
       } else {
         return this.channel.send(destination, type, data, options);
@@ -1326,7 +1354,7 @@ const EventBus = require('../event-bus');
      * @returns {Promise<Object>} Broadcast result
      */
     async broadcastStatus(status) {
-      return this.route('broadcast', MessageType.NODE_STATUS, {
+      return this.route("broadcast", MessageType.NODE_STATUS, {
         nodeId: this.nodeId,
         status,
         capabilities: status.capabilities || {},
@@ -1402,7 +1430,7 @@ const EventBus = require('../event-bus');
      * @returns {Promise<void>} Promise that resolves when shutdown is complete
      */
     async shutdown() {
-      Prime.Logger.info('Shutting down message router');
+      Prime.Logger.info("Shutting down message router");
 
       // Disconnect channel
       await this.channel.disconnect();
@@ -1412,7 +1440,7 @@ const EventBus = require('../event-bus');
       this.messageCache.clear();
       this.routeTable.clear();
 
-      Prime.Logger.info('Message router shutdown complete');
+      Prime.Logger.info("Message router shutdown complete");
     }
   }
 

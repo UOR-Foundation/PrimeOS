@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Create the Activation module using IIFE
 (function () {
@@ -23,7 +23,7 @@ const Prime = require('../../core');
       const lowerName = name.toLowerCase();
 
       switch (lowerName) {
-        case 'sigmoid':
+        case "sigmoid":
           return {
             forward: ActivationFunctions.sigmoid,
             backward: ActivationFunctions.sigmoidGradient,
@@ -33,7 +33,7 @@ const Prime = require('../../core');
             rangeMin: 0,
             rangeMax: 1,
           };
-        case 'tanh':
+        case "tanh":
           return {
             forward: ActivationFunctions.tanh,
             backward: ActivationFunctions.tanhGradient,
@@ -43,7 +43,7 @@ const Prime = require('../../core');
             rangeMin: -1,
             rangeMax: 1,
           };
-        case 'relu':
+        case "relu":
           return {
             forward: ActivationFunctions.relu,
             backward: ActivationFunctions.reluGradient,
@@ -53,7 +53,7 @@ const Prime = require('../../core');
             rangeMin: 0,
             rangeMax: Infinity,
           };
-        case 'leaky_relu':
+        case "leaky_relu":
           return {
             forward: ActivationFunctions.leakyRelu,
             backward: ActivationFunctions.leakyReluGradient,
@@ -63,7 +63,7 @@ const Prime = require('../../core');
             rangeMin: -Infinity,
             rangeMax: Infinity,
           };
-        case 'elu':
+        case "elu":
           return {
             forward: ActivationFunctions.elu,
             backward: ActivationFunctions.eluGradient,
@@ -73,7 +73,7 @@ const Prime = require('../../core');
             rangeMin: -1,
             rangeMax: Infinity,
           };
-        case 'selu':
+        case "selu":
           return {
             forward: ActivationFunctions.selu,
             backward: ActivationFunctions.seluGradient,
@@ -83,7 +83,7 @@ const Prime = require('../../core');
             rangeMin: -1.7581,
             rangeMax: Infinity,
           };
-        case 'softmax':
+        case "softmax":
           return {
             forward: ActivationFunctions.softmax,
             backward: ActivationFunctions.softmaxGradient,
@@ -93,8 +93,8 @@ const Prime = require('../../core');
             rangeMin: 0,
             rangeMax: 1,
           };
-        case 'linear':
-        case 'identity':
+        case "linear":
+        case "identity":
           return {
             forward: ActivationFunctions.linear,
             backward: ActivationFunctions.linearGradient,
@@ -104,7 +104,7 @@ const Prime = require('../../core');
             rangeMin: -Infinity,
             rangeMax: Infinity,
           };
-        case 'swish':
+        case "swish":
           return {
             forward: ActivationFunctions.swish,
             backward: ActivationFunctions.swishGradient,
@@ -746,12 +746,12 @@ const Prime = require('../../core');
 
       // Define thresholds for dead/saturated
       const deadThreshold =
-        typeof rangeMin === 'number' && isFinite(rangeMin)
+        typeof rangeMin === "number" && isFinite(rangeMin)
           ? rangeMin + 0.01 * (rangeMax - rangeMin)
           : 0.01;
 
       const saturatedThreshold =
-        typeof rangeMax === 'number' && isFinite(rangeMax)
+        typeof rangeMax === "number" && isFinite(rangeMax)
           ? rangeMax - 0.01 * (rangeMax - rangeMin)
           : 0.99;
 
@@ -766,7 +766,7 @@ const Prime = require('../../core');
         }
 
         if (
-          typeof rangeMax === 'number' &&
+          typeof rangeMax === "number" &&
           isFinite(rangeMax) &&
           Math.abs(value - rangeMax) < rangeMax - saturatedThreshold
         ) {
@@ -822,7 +822,7 @@ const Prime = require('../../core');
       const activation = ActivationFunctions.get(activationType);
 
       // Special case for softmax (operates on whole vector)
-      if (activationType.toLowerCase() === 'softmax') {
+      if (activationType.toLowerCase() === "softmax") {
         const result = [];
         for (let i = 0; i < inputs.length; i++) {
           result.push(activation.forward(inputs[i]));

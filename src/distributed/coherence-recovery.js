@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 /**
  * Recovery strategies for coherence violations
@@ -12,15 +12,15 @@ const Prime = require('../core');
  */
 const RecoveryStrategy = {
   /** Continue with adjusted parameters */
-  CONTINUE: 'continue',
+  CONTINUE: "continue",
   /** Rollback to last known good state */
-  ROLLBACK: 'rollback',
+  ROLLBACK: "rollback",
   /** Reset affected components */
-  RESET: 'reset',
+  RESET: "reset",
   /** Resynchronize with coordinator */
-  RESYNC: 'resync',
+  RESYNC: "resync",
   /** Repartition computation graph */
-  REPARTITION: 'repartition',
+  REPARTITION: "repartition",
 };
 
 /**
@@ -41,7 +41,7 @@ const RecoveryManager = {
     ) {
       return {
         required: false,
-        message: 'No recovery actions needed',
+        message: "No recovery actions needed",
         actions: [],
       };
     }
@@ -62,8 +62,8 @@ const RecoveryManager = {
       const action = {
         forViolation: violation,
         strategy: RecoveryStrategy.CONTINUE,
-        urgency: 'low',
-        description: 'Monitor the situation',
+        urgency: "low",
+        description: "Monitor the situation",
       };
 
       // Determine appropriate recovery strategy based on violation type and severity
@@ -74,59 +74,59 @@ const RecoveryManager = {
           violation.type === ViolationTypes.GRADIENT
         ) {
           action.strategy = RecoveryStrategy.ROLLBACK;
-          action.urgency = 'immediate';
+          action.urgency = "immediate";
           action.description =
-            'Rollback to last known good state due to critical numerical issue';
+            "Rollback to last known good state due to critical numerical issue";
         } else if (violation.type === ViolationTypes.NETWORK) {
           action.strategy = RecoveryStrategy.REPARTITION;
-          action.urgency = 'immediate';
+          action.urgency = "immediate";
           action.description =
-            'Repartition computation to recover from network failure';
+            "Repartition computation to recover from network failure";
         } else {
           action.strategy = RecoveryStrategy.RESET;
-          action.urgency = 'immediate';
-          action.description = 'Reset affected components';
+          action.urgency = "immediate";
+          action.description = "Reset affected components";
         }
         recoveryPlan.hasUrgentActions = true;
       } else if (violation.severity === Severity.HIGH) {
         // High severity issues require significant intervention
         if (violation.type === ViolationTypes.SYNCHRONIZATION) {
           action.strategy = RecoveryStrategy.RESYNC;
-          action.urgency = 'high';
+          action.urgency = "high";
           action.description =
-            'Resynchronize with coordinator to resolve sync issues';
+            "Resynchronize with coordinator to resolve sync issues";
         } else if (violation.type === ViolationTypes.DIMENSIONAL) {
           action.strategy = RecoveryStrategy.RESET;
-          action.urgency = 'high';
+          action.urgency = "high";
           action.description =
-            'Reset affected components with dimensional mismatches';
+            "Reset affected components with dimensional mismatches";
         } else {
           action.strategy = RecoveryStrategy.ROLLBACK;
-          action.urgency = 'high';
-          action.description = 'Rollback to previous consistent state';
+          action.urgency = "high";
+          action.description = "Rollback to previous consistent state";
         }
       } else if (violation.severity === Severity.MEDIUM) {
         // Medium severity allows for more measured responses
         if (violation.type === ViolationTypes.GRADIENT) {
           action.strategy = RecoveryStrategy.CONTINUE;
-          action.urgency = 'medium';
+          action.urgency = "medium";
           action.description =
-            'Adjust gradient clipping parameters and continue';
+            "Adjust gradient clipping parameters and continue";
         } else if (violation.type === ViolationTypes.SYNCHRONIZATION) {
           action.strategy = RecoveryStrategy.RESYNC;
-          action.urgency = 'medium';
+          action.urgency = "medium";
           action.description =
-            'Schedule resynchronization at next convenient point';
+            "Schedule resynchronization at next convenient point";
         } else {
           action.strategy = RecoveryStrategy.CONTINUE;
-          action.urgency = 'medium';
-          action.description = 'Continue with adjusted parameters';
+          action.urgency = "medium";
+          action.description = "Continue with adjusted parameters";
         }
       } else {
         // Low severity allows for minimal intervention
         action.strategy = RecoveryStrategy.CONTINUE;
-        action.urgency = 'low';
-        action.description = 'Continue with monitoring';
+        action.urgency = "low";
+        action.description = "Continue with monitoring";
       }
 
       // Add action to plan
@@ -135,13 +135,13 @@ const RecoveryManager = {
 
     // Determine overall recovery message
     if (recoveryPlan.hasUrgentActions) {
-      recoveryPlan.message = 'Urgent recovery actions required';
-    } else if (recoveryPlan.actions.some((a) => a.urgency === 'high')) {
-      recoveryPlan.message = 'High priority recovery actions recommended';
-    } else if (recoveryPlan.actions.some((a) => a.urgency === 'medium')) {
-      recoveryPlan.message = 'Recovery actions recommended';
+      recoveryPlan.message = "Urgent recovery actions required";
+    } else if (recoveryPlan.actions.some((a) => a.urgency === "high")) {
+      recoveryPlan.message = "High priority recovery actions recommended";
+    } else if (recoveryPlan.actions.some((a) => a.urgency === "medium")) {
+      recoveryPlan.message = "Recovery actions recommended";
     } else {
-      recoveryPlan.message = 'Minor recovery actions suggested';
+      recoveryPlan.message = "Minor recovery actions suggested";
     }
 
     return recoveryPlan;
@@ -157,7 +157,7 @@ const RecoveryManager = {
     if (!Array.isArray(tensor)) {
       return {
         success: false,
-        message: 'Invalid tensor format',
+        message: "Invalid tensor format",
         correctedTensor: null,
         corrections: 0,
       };
@@ -237,7 +237,7 @@ const RecoveryManager = {
       message:
         corrections > 0
           ? `Applied ${corrections} numerical corrections`
-          : 'No corrections needed',
+          : "No corrections needed",
     };
   },
 
@@ -251,7 +251,7 @@ const RecoveryManager = {
     if (!Array.isArray(gradients)) {
       return {
         success: false,
-        message: 'Invalid gradients format',
+        message: "Invalid gradients format",
         clippedGradients: null,
         clippingApplied: false,
       };
@@ -259,14 +259,14 @@ const RecoveryManager = {
 
     const clipValue = options.clipValue || 5.0;
     const clipNorm = options.clipNorm || null;
-    const clipMethod = options.clipMethod || 'value'; // 'value' or 'norm'
+    const clipMethod = options.clipMethod || "value"; // 'value' or 'norm'
 
     let clippedGradients;
     let clippingApplied = false;
 
     // For norm-based clipping, compute the global norm first
     let globalNorm = 0;
-    if (clipMethod === 'norm' && clipNorm !== null) {
+    if (clipMethod === "norm" && clipNorm !== null) {
       const flattenedSquares = [];
 
       // Flatten and compute squared values
@@ -295,7 +295,7 @@ const RecoveryManager = {
 
     const isMatrix = Array.isArray(gradients[0]);
 
-    if (clipMethod === 'value') {
+    if (clipMethod === "value") {
       // Simple value clipping
       if (isMatrix) {
         clippedGradients = gradients.map((row) => {
@@ -330,7 +330,7 @@ const RecoveryManager = {
           return value;
         });
       }
-    } else if (clipMethod === 'norm' && clipNorm !== null) {
+    } else if (clipMethod === "norm" && clipNorm !== null) {
       // Rescale based on norm if needed
       const rescale = globalNorm > clipNorm ? clipNorm / globalNorm : 1.0;
 
@@ -370,10 +370,10 @@ const RecoveryManager = {
       success: true,
       clippedGradients,
       clippingApplied,
-      globalNorm: clipMethod === 'norm' ? globalNorm : null,
+      globalNorm: clipMethod === "norm" ? globalNorm : null,
       message: clippingApplied
-        ? 'Applied gradient clipping'
-        : 'No clipping applied',
+        ? "Applied gradient clipping"
+        : "No clipping applied",
     };
   },
 };

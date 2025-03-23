@@ -7,7 +7,7 @@ const Prime = {
   ValidationError: class ValidationError extends Error {
     constructor(message) {
       super(message);
-      this.name = 'ValidationError';
+      this.name = "ValidationError";
     }
   },
   Math: {
@@ -29,10 +29,10 @@ const Prime = {
   },
   Utils: {
     isObject: function (obj) {
-      return typeof obj === 'object' && obj !== null;
+      return typeof obj === "object" && obj !== null;
     },
     isNumber: function (num) {
-      return typeof num === 'number' && !isNaN(num);
+      return typeof num === "number" && !isNaN(num);
     },
   },
   Logger: {
@@ -61,12 +61,12 @@ class MockDistributedNeuralModel {
 
     this.distributedConfig = {
       enabled: config.distributed?.enabled ?? false,
-      partitionScheme: config.distributed?.partitionScheme || 'data_parallel',
+      partitionScheme: config.distributed?.partitionScheme || "data_parallel",
       syncFrequency: config.distributed?.syncFrequency || 10,
       synchronizationStrategy:
-        config.distributed?.synchronizationStrategy || 'average',
+        config.distributed?.synchronizationStrategy || "average",
       syncRecoveryStrategy:
-        config.distributed?.syncRecoveryStrategy || 'local_fallback',
+        config.distributed?.syncRecoveryStrategy || "local_fallback",
     };
 
     this.distributedState = {
@@ -101,7 +101,7 @@ class MockDistributedNeuralModel {
     const layer = {
       inputSize: layerConfig.inputSize || this.inputSize,
       outputSize: layerConfig.outputSize,
-      activation: layerConfig.activation || 'relu',
+      activation: layerConfig.activation || "relu",
       weights: [],
       biases: [],
     };
@@ -252,28 +252,28 @@ Prime.Neural.Distributed.DistributedNeuralModel = MockDistributedNeuralModel;
 
 // Run a simple test
 async function runTest() {
-  console.log('=== Testing MockDistributedNeuralModel ===');
+  console.log("=== Testing MockDistributedNeuralModel ===");
 
   // Create model with distributed configuration
   const model = new Prime.Neural.Distributed.DistributedNeuralModel({
     inputSize: 10,
     layers: [
       {
-        type: 'dense',
+        type: "dense",
         outputSize: 5,
-        activation: 'relu',
+        activation: "relu",
       },
     ],
     distributed: {
       enabled: true,
-      partitionScheme: 'data_parallel',
+      partitionScheme: "data_parallel",
       syncFrequency: 2,
-      synchronizationStrategy: 'average',
+      synchronizationStrategy: "average",
     },
   });
 
   // Verify model configuration
-  console.log('Model configuration:');
+  console.log("Model configuration:");
   console.log(`- Input size: ${model.inputSize}`);
   console.log(`- First layer input size: ${model.layers[0].inputSize}`);
   console.log(`- First layer output size: ${model.layers[0].outputSize}`);
@@ -283,19 +283,19 @@ async function runTest() {
   // Extract parameters
   const parameters = model._extractModelParameters();
 
-  console.log('\nParameter extraction:');
+  console.log("\nParameter extraction:");
   console.log(
     `- Weights shape: [${parameters.weights[0].length}x${parameters.weights[0][0].length}]`,
   );
   console.log(`- Biases length: ${parameters.biases[0].length}`);
 
   // Simulate parameter synchronization
-  console.log('\nSimulating parameter synchronization...');
+  console.log("\nSimulating parameter synchronization...");
   model.metrics.iteration = 1;
   const syncResult = await model._synchronizeParameters();
 
   console.log(
-    `- Synchronization result: ${syncResult ? 'success' : 'failure'}`,
+    `- Synchronization result: ${syncResult ? "success" : "failure"}`,
   );
   console.log(
     `- Last sync iteration: ${model.distributedState.lastSyncIteration}`,
@@ -307,13 +307,13 @@ async function runTest() {
   // Get distributed status
   const status = model.getDistributedStatus();
 
-  console.log('\nDistributed status:');
+  console.log("\nDistributed status:");
   console.log(status);
 
-  console.log('\n=== Test completed successfully ===');
+  console.log("\n=== Test completed successfully ===");
 }
 
 // Execute the test
 runTest().catch((error) => {
-  console.error('Test failed with error:', error);
+  console.error("Test failed with error:", error);
 });

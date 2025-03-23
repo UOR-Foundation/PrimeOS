@@ -3,12 +3,12 @@
  * Utility functions for Node.js storage providers
  */
 
-const Prime = require('../../core');
-const { PrimeStorageError } = require('../core/provider');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-const crypto = require('crypto');
+const Prime = require("../../core");
+const { PrimeStorageError } = require("../core/provider");
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
+const crypto = require("crypto");
 
 /**
  * Utility functions for Node.js storage
@@ -19,7 +19,7 @@ const NodeStorageUtils = {
    * @returns {string} Default storage path
    */
   getDefaultStoragePath() {
-    return path.join(os.tmpdir(), 'primeos-storage');
+    return path.join(os.tmpdir(), "primeos-storage");
   },
 
   /**
@@ -35,13 +35,13 @@ const NodeStorageUtils = {
    * @param {string} [appName='primeos'] - Application name
    * @returns {string} Application data directory path
    */
-  getAppDataDir(appName = 'primeos') {
-    if (process.platform === 'win32') {
-      return path.join(process.env.APPDATA || '', appName);
-    } else if (process.platform === 'darwin') {
-      return path.join(os.homedir(), 'Library', 'Application Support', appName);
+  getAppDataDir(appName = "primeos") {
+    if (process.platform === "win32") {
+      return path.join(process.env.APPDATA || "", appName);
+    } else if (process.platform === "darwin") {
+      return path.join(os.homedir(), "Library", "Application Support", appName);
     } else {
-      return path.join(os.homedir(), '.config', appName);
+      return path.join(os.homedir(), ".config", appName);
     }
   },
 
@@ -51,26 +51,28 @@ const NodeStorageUtils = {
    * @param {string} [algorithm='sha256'] - Hash algorithm
    * @returns {Promise<string>} File hash
    */
-  async calculateFileHash(filePath, algorithm = 'sha256') {
+  async calculateFileHash(filePath, algorithm = "sha256") {
     return new Promise((resolve, reject) => {
       const hash = crypto.createHash(algorithm);
       const stream = fs.createReadStream(filePath);
-      
-      stream.on('error', (err) => {
-        reject(new PrimeStorageError(
-          `Failed to calculate file hash: ${err.message}`,
-          { path: filePath },
-          'STORAGE_HASH_FAILED',
-          err
-        ));
+
+      stream.on("error", (err) => {
+        reject(
+          new PrimeStorageError(
+            `Failed to calculate file hash: ${err.message}`,
+            { path: filePath },
+            "STORAGE_HASH_FAILED",
+            err,
+          ),
+        );
       });
-      
-      stream.on('data', (chunk) => {
+
+      stream.on("data", (chunk) => {
         hash.update(chunk);
       });
-      
-      stream.on('end', () => {
-        resolve(hash.digest('hex'));
+
+      stream.on("end", () => {
+        resolve(hash.digest("hex"));
       });
     });
   },
@@ -82,10 +84,10 @@ const NodeStorageUtils = {
    */
   async getDirectorySize(dirPath) {
     let totalSize = 0;
-    
+
     try {
       const files = await this.readDirRecursive(dirPath);
-      
+
       const sizePromises = files.map(async (file) => {
         try {
           const stats = await this.getFileStats(file);
@@ -94,15 +96,18 @@ const NodeStorageUtils = {
           return 0;
         }
       });
-      
+
       const sizes = await Promise.all(sizePromises);
       totalSize = sizes.reduce((total, size) => total + size, 0);
     } catch (error) {
-      Prime.Logger.warn(`Failed to calculate directory size: ${error.message}`, {
-        path: dirPath
-      });
+      Prime.Logger.warn(
+        `Failed to calculate directory size: ${error.message}`,
+        {
+          path: dirPath,
+        },
+      );
     }
-    
+
     return totalSize;
   },
 
@@ -114,14 +119,14 @@ const NodeStorageUtils = {
    */
   async readDirRecursive(dir) {
     let results = [];
-    
+
     try {
       const list = await this.readDir(dir);
-      
+
       for (const file of list) {
         const filePath = path.join(dir, file);
         const stats = await this.getFileStats(filePath);
-        
+
         if (stats.isDirectory()) {
           const subFiles = await this.readDirRecursive(filePath);
           results = results.concat(subFiles);
@@ -130,11 +135,14 @@ const NodeStorageUtils = {
         }
       }
     } catch (error) {
-      Prime.Logger.warn(`Failed to read directory recursively: ${error.message}`, {
-        path: dir
-      });
+      Prime.Logger.warn(
+        `Failed to read directory recursively: ${error.message}`,
+        {
+          path: dir,
+        },
+      );
     }
-    
+
     return results;
   },
 
@@ -182,25 +190,25 @@ const NodeStorageUtils = {
   async getDiskSpace(dirPath = os.tmpdir()) {
     return new Promise((resolve, reject) => {
       // Use fs.statfs if available, otherwise fallback
-      if (typeof fs.statfs === 'function') {
+      if (typeof fs.statfs === "function") {
         fs.statfs(dirPath, (err, stats) => {
           if (err) {
             reject(err);
             return;
           }
-          
+
           resolve({
             available: stats.bavail * stats.bsize,
             total: stats.blocks * stats.bsize,
-            used: (stats.blocks - stats.bfree) * stats.bsize
+            used: (stats.blocks - stats.bfree) * stats.bsize,
           });
         });
       } else {
         // Simple fallback with default values
         resolve({
           available: 1024 * 1024 * 1024 * 10, // 10GB
-          total: 1024 * 1024 * 1024 * 100,    // 100GB
-          used: 1024 * 1024 * 1024 * 90       // 90GB
+          total: 1024 * 1024 * 1024 * 100, // 100GB
+          used: 1024 * 1024 * 1024 * 90, // 90GB
         });
       }
     });
@@ -214,11 +222,11 @@ const NodeStorageUtils = {
    */
   async atomicWriteFile(filePath, data) {
     const tempPath = `${filePath}.tmp`;
-    
+
     try {
       // Write to temporary file
       await this.writeFile(tempPath, data);
-      
+
       // Rename temporary file to target file
       await this.renameFile(tempPath, filePath);
     } catch (error) {
@@ -230,12 +238,12 @@ const NodeStorageUtils = {
       } catch (cleanupError) {
         // Ignore cleanup errors
       }
-      
+
       throw new PrimeStorageError(
         `Failed to write file atomically: ${error.message}`,
         { path: filePath },
-        'STORAGE_ATOMIC_WRITE_FAILED',
-        error
+        "STORAGE_ATOMIC_WRITE_FAILED",
+        error,
       );
     }
   },
@@ -316,18 +324,18 @@ const NodeStorageUtils = {
    * @param {*} [data] - Optional data to write
    * @returns {Promise<string>} Path to the temporary file
    */
-  async createTempFile(prefix = 'primeos-', data) {
+  async createTempFile(prefix = "primeos-", data) {
     const tempDir = os.tmpdir();
-    const randomName = crypto.randomBytes(16).toString('hex');
+    const randomName = crypto.randomBytes(16).toString("hex");
     const filePath = path.join(tempDir, `${prefix}${randomName}`);
-    
+
     if (data !== undefined) {
       await this.writeFile(filePath, data);
     } else {
       // Create an empty file
-      await this.writeFile(filePath, '');
+      await this.writeFile(filePath, "");
     }
-    
+
     return filePath;
   },
 
@@ -336,11 +344,11 @@ const NodeStorageUtils = {
    * @param {string} [prefix='primeos-'] - Directory name prefix
    * @returns {Promise<string>} Path to the temporary directory
    */
-  async createTempDir(prefix = 'primeos-') {
+  async createTempDir(prefix = "primeos-") {
     const tempDir = os.tmpdir();
-    const randomName = crypto.randomBytes(16).toString('hex');
+    const randomName = crypto.randomBytes(16).toString("hex");
     const dirPath = path.join(tempDir, `${prefix}${randomName}`);
-    
+
     return new Promise((resolve, reject) => {
       fs.mkdir(dirPath, { recursive: true }, (err) => {
         if (err) {
@@ -350,7 +358,7 @@ const NodeStorageUtils = {
         }
       });
     });
-  }
+  },
 };
 
 module.exports = NodeStorageUtils;

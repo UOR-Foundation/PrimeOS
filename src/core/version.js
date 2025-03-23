@@ -5,7 +5,7 @@
  */
 
 // Import Prime object from prime.js
-const Prime = require('./prime.js');
+const Prime = require("./prime.js");
 
 (function (Prime) {
   // Version management utilities
@@ -16,7 +16,7 @@ const Prime = require('./prime.js');
      * @returns {Object|null} Parsed version object or null if invalid
      */
     parseVersion: (version) => {
-      if (typeof version !== 'string') return null;
+      if (typeof version !== "string") return null;
 
       // Regular expression for SemVer 2.0.0 (major.minor.patch-prerelease+build)
       const semverRegex =
@@ -33,10 +33,10 @@ const Prime = require('./prime.js');
       const patch = patchStr !== undefined ? parseInt(patchStr, 10) : 0;
 
       // Parse prerelease identifiers
-      const prerelease = prereleaseStr ? prereleaseStr.split('.') : [];
+      const prerelease = prereleaseStr ? prereleaseStr.split(".") : [];
 
       // Parse build metadata
-      const build = buildStr ? buildStr.split('.') : [];
+      const build = buildStr ? buildStr.split(".") : [];
 
       return {
         major,
@@ -163,24 +163,24 @@ const Prime = require('./prime.js');
         );
 
         switch (operator) {
-          case '=':
-          case '':
+          case "=":
+          case "":
             return result === 0;
-          case '>':
+          case ">":
             return result === 1;
-          case '>=':
+          case ">=":
             return result === 1 || result === 0;
-          case '<':
+          case "<":
             return result === -1;
-          case '<=':
+          case "<=":
             return result === -1 || result === 0;
-          case '~':
+          case "~":
             return (
               parsedVersion.major === parsedCompareVersion.major &&
               parsedVersion.minor === parsedCompareVersion.minor &&
               parsedVersion.patch >= parsedCompareVersion.patch
             );
-          case '^':
+          case "^":
             return (
               parsedVersion.major === parsedCompareVersion.major &&
               (parsedVersion.minor > parsedCompareVersion.minor ||
@@ -195,52 +195,53 @@ const Prime = require('./prime.js');
   };
 
   // Add version validation functions to Prime
-  
+
   /**
    * Validates if a version string is compatible with the current version
    * @param {string} version - Version string to validate
    * @returns {boolean} True if version is valid and compatible
    */
-  Prime.validateVersion = function(version) {
+  Prime.validateVersion = function (version) {
     try {
       const parsed = VersionUtils.parseVersion(version);
       if (!parsed) return false;
-      
+
       // Extract current version
-      const current = VersionUtils.parseVersion(Prime.VERSION || '1.0.0');
+      const current = VersionUtils.parseVersion(Prime.VERSION || "1.0.0");
       if (!current) return false;
-      
+
       // Higher major version should be invalid
       if (parsed.major > current.major) return false;
-      
+
       // All other versions are considered valid
       return true;
     } catch (e) {
       return false;
     }
   };
-  
+
   /**
    * Validates a version with partial matching (e.g., just major.minor)
    * @param {string} version - Partial version string
    * @returns {boolean} True if version is compatible
    */
-  Prime.validateVersionPartial = function(version) {
+  Prime.validateVersionPartial = function (version) {
     try {
       // Handle invalid version strings
-      if (typeof version !== 'string') return false;
-      
+      if (typeof version !== "string") return false;
+
       // Add .0 for partial versions
-      const fullVersion = version.split('.').length < 3 
-        ? `${version}${'0'.repeat(3 - version.split('.').length)}` 
-        : version;
-      
+      const fullVersion =
+        version.split(".").length < 3
+          ? `${version}${"0".repeat(3 - version.split(".").length)}`
+          : version;
+
       return Prime.validateVersion(fullVersion);
     } catch (e) {
       return false;
     }
   };
-  
+
   /**
    * Checks compatibility with minimum version and feature requirements
    * @param {Object} requirements - Compatibility requirements
@@ -248,23 +249,23 @@ const Prime = require('./prime.js');
    * @param {string[]} [requirements.features] - Required features
    * @returns {boolean} True if compatible with requirements
    */
-  Prime.isCompatible = function(requirements) {
+  Prime.isCompatible = function (requirements) {
     try {
       // Validate input - handle null more safely
       if (!requirements) {
         return false;
       }
-      
+
       // Handle core.js isCompatible implementation
-      if (typeof requirements === 'object') {
+      if (typeof requirements === "object") {
         const features = requirements.features || [];
-        const minVersion = requirements.minVersion || '0.0.0';
-        
+        const minVersion = requirements.minVersion || "0.0.0";
+
         // Check version
         if (!Prime.validateVersion(minVersion)) {
           return false;
         }
-        
+
         // Check features
         if (Array.isArray(features) && features.length > 0) {
           // Use feature map from parent object
@@ -274,44 +275,44 @@ const Prime = require('./prime.js');
             }
           }
         }
-        
+
         return true;
       }
-      
+
       return false;
     } catch (e) {
       return false;
     }
   };
-  
+
   // Initialize features object
   Prime.features = {
     core: true,
     utils: true,
     events: true,
     logging: true,
-    versionManagement: true
+    versionManagement: true,
   };
-  
+
   // Expose version utilities directly on Prime
   Prime.compareVersions = VersionUtils.compareVersions;
-  Prime.parseVersion = function(version) {
+  Prime.parseVersion = function (version) {
     const parsed = VersionUtils.parseVersion(version);
     if (!parsed) {
-      throw new Prime.ValidationError('Invalid version format');
+      throw new Prime.ValidationError("Invalid version format");
     }
     return {
       major: parsed.major,
       minor: parsed.minor,
-      patch: parsed.patch
+      patch: parsed.patch,
     };
   };
-  
+
   // Add version utilities to Prime.Utils
   Prime.Utils.VersionUtils = VersionUtils;
 })(Prime);
 
 // CommonJS export
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }

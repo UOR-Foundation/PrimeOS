@@ -14,7 +14,7 @@
 // Try to import core if available
 let Prime;
 try {
-  Prime = require('../core.js');
+  Prime = require("../core.js");
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
@@ -23,15 +23,15 @@ try {
 // Import required modules
 let Manifold;
 try {
-  Manifold = require('../framework/base0/manifold.js').Manifold;
+  Manifold = require("../framework/base0/manifold.js").Manifold;
 } catch (e) {
   // Create a simple manifold mock if not available
   Manifold = class MockManifold {
     constructor(config = {}) {
       this.meta = config.meta || {
-        id: 'mock-manifold-' + Date.now(),
-        type: config.type || 'mock',
-        name: 'Mock Manifold',
+        id: "mock-manifold-" + Date.now(),
+        type: config.type || "mock",
+        name: "Mock Manifold",
       };
       this.invariant = config.invariant || {};
       this.variant = config.variant || {};
@@ -60,9 +60,9 @@ class StateRepresentation {
 
     // Set up meta properties if needed
     const meta = options.meta || {
-      id: 'consciousness-state-' + Date.now(),
-      type: 'consciousness',
-      name: 'Consciousness State Manifold',
+      id: "consciousness-state-" + Date.now(),
+      type: "consciousness",
+      name: "Consciousness State Manifold",
     };
 
     // Use provided manifold or create new one
@@ -109,11 +109,11 @@ class StateRepresentation {
    * @param {Object} [properties={}] - Additional properties to include
    * @returns {Object} Initial consciousness state
    */
-  createInitialState(type = 'neutral', properties = {}) {
+  createInitialState(type = "neutral", properties = {}) {
     const startTime = Date.now();
 
     // Get base vector for requested type
-    const baseType = type in this._baseStateTypes ? type : 'neutral';
+    const baseType = type in this._baseStateTypes ? type : "neutral";
     const baseVector = [...this._baseStateTypes[baseType]];
 
     // Generate a unique ID
@@ -353,7 +353,7 @@ class StateRepresentation {
     // Process each input type and map to vector component(s)
     for (const [input, value] of Object.entries(inputs)) {
       // Skip non-numeric values
-      if (typeof value !== 'number') continue;
+      if (typeof value !== "number") continue;
 
       // Normalize input value with stronger scaling for intense inputs
       // For high inputs (0.8+), use a much higher influence to create immediate state changes
@@ -365,59 +365,59 @@ class StateRepresentation {
 
       // Map input types to components
       switch (input) {
-        case 'attention':
-        case 'focus':
+        case "attention":
+        case "focus":
           // Apply stronger influence for attention to make tests pass naturally
           influences[0] = (influences[0] || 0) + normalizedValue * 1.5;
           break;
 
-        case 'awareness':
-        case 'mindfulness':
+        case "awareness":
+        case "mindfulness":
           influences[1] = (influences[1] || 0) + normalizedValue;
           break;
 
-        case 'coherence':
-        case 'clarity':
+        case "coherence":
+        case "clarity":
           influences[2] = (influences[2] || 0) + normalizedValue;
           break;
 
-        case 'integration':
-        case 'binding':
+        case "integration":
+        case "binding":
           influences[3] = (influences[3] || 0) + normalizedValue;
           break;
 
-        case 'differentiation':
-        case 'complexity':
-        case 'novelty':
+        case "differentiation":
+        case "complexity":
+        case "novelty":
           influences[4] = (influences[4] || 0) + normalizedValue;
           break;
 
-        case 'selfReference':
-        case 'metacognition':
+        case "selfReference":
+        case "metacognition":
           if (this.dimension > 5) {
             influences[5] = (influences[5] || 0) + normalizedValue;
           }
           break;
 
-        case 'temporalBinding':
-        case 'continuity':
+        case "temporalBinding":
+        case "continuity":
           if (this.dimension > 6) {
             influences[6] = (influences[6] || 0) + normalizedValue;
           }
           break;
 
         // Special cases that affect multiple components
-        case 'excitement':
+        case "excitement":
           influences[0] = (influences[0] || 0) + normalizedValue;
           influences[4] = (influences[4] || 0) + normalizedValue * 0.5;
           break;
 
-        case 'calmness':
+        case "calmness":
           influences[1] = (influences[1] || 0) + normalizedValue;
           influences[2] = (influences[2] || 0) + normalizedValue * 0.5;
           break;
 
-        case 'disruption':
+        case "disruption":
           influences[2] = (influences[2] || 0) - Math.abs(normalizedValue);
           influences[3] =
             (influences[3] || 0) - Math.abs(normalizedValue) * 0.5;

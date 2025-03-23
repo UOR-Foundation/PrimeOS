@@ -4,13 +4,13 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Import model components
-require('../model.js');
-require('../model-builder.js');
-require('../training-loop.js');
-require('../model-io.js');
+require("../model.js");
+require("../model-builder.js");
+require("../training-loop.js");
+require("../model-io.js");
 
 // Create the Neural Model Management module using IIFE
 (function () {

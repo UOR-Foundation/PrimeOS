@@ -3,8 +3,8 @@
  * Utilities for serializing and deserializing data for storage
  */
 
-const Prime = require('../../core');
-const { PrimeStorageError } = require('./provider');
+const Prime = require("../../core");
+const { PrimeStorageError } = require("./provider");
 
 /**
  * Serializer class for encoding and decoding data for storage
@@ -22,14 +22,14 @@ class Serializer {
     this.options = {
       preserveInstances: true,
       compression: false,
-      format: 'json',
+      format: "json",
       preserveMethods: true,
-      ...options
+      ...options,
     };
-    
+
     // Initialize registered class map for instance serialization
     this.registeredClasses = new Map();
-    
+
     // Register built-in PrimeOS classes
     this.registerBuiltinClasses();
   }
@@ -41,135 +41,144 @@ class Serializer {
   registerBuiltinClasses() {
     // Register Math classes
     if (Prime.Math && Prime.Math.Matrix) {
-      this.registerClass('Matrix', Prime.Math.Matrix, {
+      this.registerClass("Matrix", Prime.Math.Matrix, {
         serialize: (instance) => ({
           rows: instance.rows,
           columns: instance.columns,
-          data: instance.data
+          data: instance.data,
         }),
         deserialize: (data) => {
           const matrix = new Prime.Math.Matrix(data.rows, data.columns);
           matrix.data = data.data;
           return matrix;
-        }
+        },
       });
     }
-    
+
     if (Prime.Math && Prime.Math.Vector) {
-      this.registerClass('Vector', Prime.Math.Vector, {
+      this.registerClass("Vector", Prime.Math.Vector, {
         serialize: (instance) => ({
           dimension: instance.dimension,
-          data: instance.data
+          data: instance.data,
         }),
         deserialize: (data) => {
           const vector = new Prime.Math.Vector(data.dimension);
           vector.data = data.data;
           return vector;
-        }
+        },
       });
     }
-    
+
     // Register Neural classes if available
     if (Prime.Neural && Prime.Neural.Model) {
-      this.registerClass('NeuralModel', Prime.Neural.Model, {
+      this.registerClass("NeuralModel", Prime.Neural.Model, {
         serialize: (instance) => ({
           name: instance.name,
-          layers: instance.layers.map(layer => ({
+          layers: instance.layers.map((layer) => ({
             type: layer.constructor.name,
             config: layer.getConfig(),
-            weights: layer.weights ? {
-              rows: layer.weights.rows,
-              columns: layer.weights.columns,
-              data: layer.weights.data
-            } : null,
-            biases: layer.biases ? {
-              dimension: layer.biases.dimension,
-              data: layer.biases.data
-            } : null
-          }))
+            weights: layer.weights
+              ? {
+                  rows: layer.weights.rows,
+                  columns: layer.weights.columns,
+                  data: layer.weights.data,
+                }
+              : null,
+            biases: layer.biases
+              ? {
+                  dimension: layer.biases.dimension,
+                  data: layer.biases.data,
+                }
+              : null,
+          })),
         }),
         deserialize: (data) => {
           const model = new Prime.Neural.Model({
-            name: data.name
+            name: data.name,
           });
-          
-          data.layers.forEach(layerData => {
+
+          data.layers.forEach((layerData) => {
             let layer;
-            
+
             // Create the correct layer type
             switch (layerData.type) {
-              case 'DenseLayer':
+              case "DenseLayer":
                 layer = new Prime.Neural.Layer.Dense(
                   layerData.config.inputSize,
                   layerData.config.outputSize,
-                  layerData.config.options
+                  layerData.config.options,
                 );
                 break;
-              case 'ConvolutionalLayer':
+              case "ConvolutionalLayer":
                 layer = new Prime.Neural.Layer.Convolutional(
                   layerData.config.inputShape,
                   layerData.config.filterShape,
-                  layerData.config.options
+                  layerData.config.options,
                 );
                 break;
-              case 'RecurrentLayer':
+              case "RecurrentLayer":
                 layer = new Prime.Neural.Layer.Recurrent(
                   layerData.config.inputSize,
                   layerData.config.hiddenSize,
-                  layerData.config.options
+                  layerData.config.options,
                 );
                 break;
               default:
                 throw new Error(`Unknown layer type: ${layerData.type}`);
             }
-            
+
             // Set weights and biases if available
             if (layerData.weights) {
               layer.weights = new Prime.Math.Matrix(
                 layerData.weights.rows,
-                layerData.weights.columns
+                layerData.weights.columns,
               );
               layer.weights.data = layerData.weights.data;
             }
-            
+
             if (layerData.biases) {
               layer.biases = new Prime.Math.Vector(layerData.biases.dimension);
               layer.biases.data = layerData.biases.data;
             }
-            
+
             model.addLayer(layer);
           });
-          
+
           return model;
-        }
+        },
       });
     }
-    
+
     // Register Base0 classes if available
     if (Prime.Base0 && Prime.Base0.Manifold) {
-      this.registerClass('Manifold', Prime.Base0.Manifold, {
+      this.registerClass("Manifold", Prime.Base0.Manifold, {
         serialize: (instance) => ({
           dimensions: instance.dimensions,
-          metric: instance.metric ? {
-            rows: instance.metric.rows,
-            columns: instance.metric.columns,
-            data: instance.metric.data
-          } : null,
-          properties: instance.properties
+          metric: instance.metric
+            ? {
+                rows: instance.metric.rows,
+                columns: instance.metric.columns,
+                data: instance.metric.data,
+              }
+            : null,
+          properties: instance.properties,
         }),
         deserialize: (data) => {
           let metric = null;
           if (data.metric) {
-            metric = new Prime.Math.Matrix(data.metric.rows, data.metric.columns);
+            metric = new Prime.Math.Matrix(
+              data.metric.rows,
+              data.metric.columns,
+            );
             metric.data = data.metric.data;
           }
-          
+
           return new Prime.Base0.Manifold({
             dimensions: data.dimensions,
             metric,
-            properties: data.properties
+            properties: data.properties,
           });
-        }
+        },
       });
     }
   }
@@ -186,7 +195,7 @@ class Serializer {
     this.registeredClasses.set(className, {
       constructor: classConstructor,
       serialize: handlers.serialize,
-      deserialize: handlers.deserialize
+      deserialize: handlers.deserialize,
     });
   }
 
@@ -201,99 +210,115 @@ class Serializer {
         type: typeof data,
         format: this.options.format,
         compressed: this.options.compression,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      
+
       // Handle primitives directly
       if (data === null || data === undefined) {
         return {
           serialized: JSON.stringify(data),
-          metadata: { ...metadata, isPrimitive: true }
+          metadata: { ...metadata, isPrimitive: true },
         };
       }
-      
-      if (typeof data === 'number' || typeof data === 'string' || typeof data === 'boolean') {
+
+      if (
+        typeof data === "number" ||
+        typeof data === "string" ||
+        typeof data === "boolean"
+      ) {
         return {
           serialized: JSON.stringify(data),
-          metadata: { ...metadata, isPrimitive: true }
+          metadata: { ...metadata, isPrimitive: true },
         };
       }
-      
+
       // Special handling for Buffer or TypedArray
-      if (typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) {
-        metadata.type = 'Buffer';
+      if (typeof Buffer !== "undefined" && Buffer.isBuffer(data)) {
+        metadata.type = "Buffer";
         return {
           serialized: data,
-          metadata
+          metadata,
         };
       }
-      
+
       if (ArrayBuffer.isView(data) || data instanceof ArrayBuffer) {
         metadata.type = data.constructor.name;
         const buffer = data instanceof ArrayBuffer ? data : data.buffer;
-        
+
         return {
           serialized: new Uint8Array(buffer),
-          metadata
+          metadata,
         };
       }
-      
+
       // Try to identify and serialize instances of registered classes
       if (this.options.preserveInstances) {
         try {
-          for (const [className, { constructor, serialize }] of this.registeredClasses.entries()) {
+          for (const [
+            className,
+            { constructor, serialize },
+          ] of this.registeredClasses.entries()) {
             // Check if data is an instance of the constructor
             // Use a safer check to avoid circular dependency issues
-            const isInstance = constructor && 
-              typeof constructor === 'function' &&
-              (data instanceof constructor || 
-              (data && data.constructor && data.constructor.name === constructor.name));
-              
+            const isInstance =
+              constructor &&
+              typeof constructor === "function" &&
+              (data instanceof constructor ||
+                (data &&
+                  data.constructor &&
+                  data.constructor.name === constructor.name));
+
             if (isInstance) {
               const serializedInstance = serialize(data);
               metadata.className = className;
-              
+
               return {
                 serialized: JSON.stringify(serializedInstance),
-                metadata
+                metadata,
               };
             }
           }
         } catch (instanceError) {
           // Ignore instance check errors and continue with regular serialization
-          Prime.Logger.warn('Instance check error during serialization, continuing with default serialization', {
-            error: instanceError.message
-          });
+          Prime.Logger.warn(
+            "Instance check error during serialization, continuing with default serialization",
+            {
+              error: instanceError.message,
+            },
+          );
         }
       }
-      
+
       // Special handling for manifold-like objects with methods
-      if (this.options.preserveMethods && data && typeof data === 'object') {
+      if (this.options.preserveMethods && data && typeof data === "object") {
         // Check if this looks like a manifold object
-        if (data.name === 'TestManifold' && data.dimensions && 
-            typeof data.computeGeodesic === 'function' && 
-            typeof data.getMetricAt === 'function') {
+        if (
+          data.name === "TestManifold" &&
+          data.dimensions &&
+          typeof data.computeGeodesic === "function" &&
+          typeof data.getMetricAt === "function"
+        ) {
           // Tag it as a manifold for later restoration
           metadata.isManifold = true;
-          metadata.manifoldType = 'TestManifold';
+          metadata.manifoldType = "TestManifold";
           metadata.hasMethods = {
             computeGeodesic: true,
-            getMetricAt: true
+            getMetricAt: true,
           };
         }
       }
-      
+
       // Default to JSON for objects and arrays
       return {
         serialized: JSON.stringify(data),
-        metadata
+        metadata,
       };
     } catch (error) {
       throw new PrimeStorageError(
         `Failed to serialize data: ${error.message}`,
         { originalError: error },
-        'STORAGE_SERIALIZATION_ERROR',
-        error
+        "STORAGE_SERIALIZATION_ERROR",
+        error,
       );
     }
   }
@@ -307,78 +332,89 @@ class Serializer {
   async deserialize(serialized, metadata) {
     try {
       // Handle null or undefined
-      if (serialized === 'null' || serialized === 'undefined') {
+      if (serialized === "null" || serialized === "undefined") {
         return JSON.parse(serialized);
       }
-      
+
       // Handle Buffer or TypedArray
-      if (metadata.type === 'Buffer' || metadata.type.includes('Array')) {
+      if (metadata.type === "Buffer" || metadata.type.includes("Array")) {
         return serialized;
       }
-      
+
       // Handle instance of registered class
-      if (metadata.className && this.registeredClasses.has(metadata.className)) {
+      if (
+        metadata.className &&
+        this.registeredClasses.has(metadata.className)
+      ) {
         const { deserialize } = this.registeredClasses.get(metadata.className);
         const parsed = JSON.parse(serialized);
         return deserialize(parsed);
       }
-      
+
       // Handle manifold-like objects with special methods
-      if (metadata.type === 'object' && serialized) {
+      if (metadata.type === "object" && serialized) {
         const parsed = JSON.parse(serialized);
-        
+
         // Check if this is a manifold based on metadata
-        if (metadata.isManifold && metadata.manifoldType === 'TestManifold') {
+        if (metadata.isManifold && metadata.manifoldType === "TestManifold") {
           // Restore the methods based on metadata
           if (metadata.hasMethods && metadata.hasMethods.computeGeodesic) {
-            parsed.computeGeodesic = function(point, direction) {
+            parsed.computeGeodesic = function (point, direction) {
               return {
                 startPoint: [...point],
                 direction: [...direction],
-                length: Math.sqrt(direction.reduce((sum, val) => sum + val * val, 0)),
-                type: 'line'
+                length: Math.sqrt(
+                  direction.reduce((sum, val) => sum + val * val, 0),
+                ),
+                type: "line",
               };
             };
           }
-          
+
           if (metadata.hasMethods && metadata.hasMethods.getMetricAt) {
-            parsed.getMetricAt = function(point) {
+            parsed.getMetricAt = function (point) {
               return this.metric;
             };
           }
-          
+
           return parsed;
         }
-        
+
         // Fallback check based on object properties
-        if (parsed && parsed.name === 'TestManifold' && 
-            parsed.dimensions && parsed.metric) {
+        if (
+          parsed &&
+          parsed.name === "TestManifold" &&
+          parsed.dimensions &&
+          parsed.metric
+        ) {
           // Restore the methods that were lost during serialization
-          parsed.computeGeodesic = function(point, direction) {
+          parsed.computeGeodesic = function (point, direction) {
             return {
               startPoint: [...point],
               direction: [...direction],
-              length: Math.sqrt(direction.reduce((sum, val) => sum + val * val, 0)),
-              type: 'line'
+              length: Math.sqrt(
+                direction.reduce((sum, val) => sum + val * val, 0),
+              ),
+              type: "line",
             };
           };
-          
-          parsed.getMetricAt = function(point) {
+
+          parsed.getMetricAt = function (point) {
             return this.metric;
           };
-          
+
           return parsed;
         }
       }
-      
+
       // Default to JSON parsing
       return JSON.parse(serialized);
     } catch (error) {
       throw new PrimeStorageError(
         `Failed to deserialize data: ${error.message}`,
         { originalError: error, metadata },
-        'STORAGE_DESERIALIZATION_ERROR',
-        error
+        "STORAGE_DESERIALIZATION_ERROR",
+        error,
       );
     }
   }
@@ -391,25 +427,27 @@ class Serializer {
    */
   async chunkData(data, chunkSize) {
     const { serialized, metadata } = await this.serialize(data);
-    
+
     // If serialized data is small enough, return as a single chunk
     if (serialized.length <= chunkSize) {
-      return [{
-        data: serialized,
-        metadata: {
-          ...metadata,
-          index: 0,
-          totalChunks: 1,
-          isLastChunk: true
-        }
-      }];
+      return [
+        {
+          data: serialized,
+          metadata: {
+            ...metadata,
+            index: 0,
+            totalChunks: 1,
+            isLastChunk: true,
+          },
+        },
+      ];
     }
-    
+
     // Split serialized data into chunks
     const chunks = [];
     let index = 0;
-    
-    if (typeof serialized === 'string') {
+
+    if (typeof serialized === "string") {
       for (let i = 0; i < serialized.length; i += chunkSize) {
         const chunk = serialized.substring(i, i + chunkSize);
         chunks.push({
@@ -418,8 +456,8 @@ class Serializer {
             ...metadata,
             index,
             totalChunks: Math.ceil(serialized.length / chunkSize),
-            isLastChunk: i + chunkSize >= serialized.length
-          }
+            isLastChunk: i + chunkSize >= serialized.length,
+          },
         });
         index++;
       }
@@ -433,13 +471,13 @@ class Serializer {
             ...metadata,
             index,
             totalChunks: Math.ceil(serialized.length / chunkSize),
-            isLastChunk: i + chunkSize >= serialized.length
-          }
+            isLastChunk: i + chunkSize >= serialized.length,
+          },
         });
         index++;
       }
     }
-    
+
     return chunks;
   }
 
@@ -451,44 +489,47 @@ class Serializer {
   async reconstructFromChunks(chunks) {
     if (!chunks || chunks.length === 0) {
       throw new PrimeStorageError(
-        'No chunks provided for reconstruction',
+        "No chunks provided for reconstruction",
         {},
-        'STORAGE_EMPTY_CHUNKS'
+        "STORAGE_EMPTY_CHUNKS",
       );
     }
-    
+
     // Sort chunks by index
     chunks.sort((a, b) => a.metadata.index - b.metadata.index);
-    
+
     // Check if chunks are complete
     const totalChunks = chunks[0].metadata.totalChunks;
     if (chunks.length !== totalChunks) {
       throw new PrimeStorageError(
         `Incomplete chunks: expected ${totalChunks}, got ${chunks.length}`,
         { expected: totalChunks, received: chunks.length },
-        'STORAGE_INCOMPLETE_CHUNKS'
+        "STORAGE_INCOMPLETE_CHUNKS",
       );
     }
-    
+
     // Combine chunks
     let combined;
-    
-    if (typeof chunks[0].data === 'string') {
-      combined = chunks.map(chunk => chunk.data).join('');
+
+    if (typeof chunks[0].data === "string") {
+      combined = chunks.map((chunk) => chunk.data).join("");
     } else {
       // Handle Buffer or TypedArray
-      const totalLength = chunks.reduce((sum, chunk) => sum + chunk.data.length, 0);
+      const totalLength = chunks.reduce(
+        (sum, chunk) => sum + chunk.data.length,
+        0,
+      );
       const combinedBuffer = new Uint8Array(totalLength);
-      
+
       let offset = 0;
       for (const chunk of chunks) {
         combinedBuffer.set(new Uint8Array(chunk.data), offset);
         offset += chunk.data.length;
       }
-      
+
       combined = combinedBuffer;
     }
-    
+
     // Deserialize combined data
     return this.deserialize(combined, chunks[0].metadata);
   }

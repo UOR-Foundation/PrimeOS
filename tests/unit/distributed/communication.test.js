@@ -12,7 +12,9 @@ describe("PrimeOS Distributed Computation Module - Communication", () => {
         nodeId: "test_node_3",
       });
 
-      expect(channel instanceof Prime.Distributed.Communication.CommunicationChannel).toBe(true);
+      expect(
+        channel instanceof Prime.Distributed.Communication.CommunicationChannel,
+      ).toBe(true);
       expect(channel.nodeId).toBe("test_node_3");
       expect(channel.isConnected()).toBe(true);
 
@@ -30,9 +32,14 @@ describe("PrimeOS Distributed Computation Module - Communication", () => {
         nodeId: "test_node_4",
       });
 
-      expect(router instanceof Prime.Distributed.Communication.MessageRouter).toBe(true);
+      expect(
+        router instanceof Prime.Distributed.Communication.MessageRouter,
+      ).toBe(true);
       expect(router.nodeId).toBe("test_node_4");
-      expect(router.channel instanceof Prime.Distributed.Communication.CommunicationChannel).toBe(true);
+      expect(
+        router.channel instanceof
+          Prime.Distributed.Communication.CommunicationChannel,
+      ).toBe(true);
     });
 
     test("registers and handles message handlers correctly", () => {

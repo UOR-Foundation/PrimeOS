@@ -14,21 +14,21 @@
 // Try to import core if available
 let Prime;
 try {
-  Prime = require('../core.js');
+  Prime = require("../core.js");
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
 }
 
 // Import components
-const ConsciousnessOperator = require('./operator.js');
-const { SelfReference } = require('./self-reference.js');
-const TemporalIntegration = require('./temporal.js');
-const StateRepresentation = require('./state.js');
-const AttentionMechanism = require('./attention.js');
-const MemoryStructure = require('./memory.js');
-const DecisionMaking = require('./decision.js');
-const ThresholdManager = require('./threshold.js');
+const ConsciousnessOperator = require("./operator.js");
+const { SelfReference } = require("./self-reference.js");
+const TemporalIntegration = require("./temporal.js");
+const StateRepresentation = require("./state.js");
+const AttentionMechanism = require("./attention.js");
+const MemoryStructure = require("./memory.js");
+const DecisionMaking = require("./decision.js");
+const ThresholdManager = require("./threshold.js");
 
 /**
  * ConsciousnessModule integrates all consciousness components
@@ -124,7 +124,7 @@ class ConsciousnessModule {
   initialize(initialState = null) {
     // Create initial state if not provided
     if (!initialState) {
-      initialState = this.stateRepresentation.createInitialState('neutral');
+      initialState = this.stateRepresentation.createInitialState("neutral");
     }
 
     // Ensure initialState is processed by the operator
@@ -188,7 +188,7 @@ class ConsciousnessModule {
    */
   update(inputs = {}, deltaTime = null) {
     if (!this.isInitialized) {
-      throw new Error('Consciousness module not initialized');
+      throw new Error("Consciousness module not initialized");
     }
 
     if (!this.isActive) {
@@ -344,7 +344,7 @@ class ConsciousnessModule {
         selected:
           alternatives && alternatives.length > 0 ? alternatives[0] : null,
         certainty: 0,
-        error: 'Consciousness not active',
+        error: "Consciousness not active",
       };
     }
 
@@ -359,7 +359,7 @@ class ConsciousnessModule {
     this._stats.decisions++;
 
     // Emit decision event
-    this._emitEvent('decision', {
+    this._emitEvent("decision", {
       decision,
       alternatives,
       context,
@@ -399,7 +399,7 @@ class ConsciousnessModule {
   getConsciousnessLevel() {
     if (!this.currentState) {
       return {
-        level: 'inactive',
+        level: "inactive",
         integrated: 0,
         coherence: 0,
       };
@@ -449,7 +449,7 @@ class ConsciousnessModule {
 
       // Check if level name changed
       if (currentLevel.level !== previousLevel.level) {
-        this._emitEvent('consciousnessChange', {
+        this._emitEvent("consciousnessChange", {
           from: previousLevel,
           to: currentLevel,
           state: this.currentState,
@@ -465,7 +465,7 @@ class ConsciousnessModule {
    * @param {Object} cycle - Update cycle information
    */
   _emitUpdateEvent(cycle) {
-    this._emitEvent('update', {
+    this._emitEvent("update", {
       state: this.currentState,
       previousState: this.previousState,
       selfModel: this.selfModel,
@@ -480,7 +480,7 @@ class ConsciousnessModule {
    * @param {Object} transition - Transition information
    */
   _emitTransitionEvent(transition) {
-    this._emitEvent('stateTransition', {
+    this._emitEvent("stateTransition", {
       state: this.currentState,
       previousState: this.previousState,
       transition,
@@ -494,7 +494,7 @@ class ConsciousnessModule {
       transition.transitions.coherence &&
       transition.transitions.coherence.exceeds
     ) {
-      this._emitEvent('coherenceChange', {
+      this._emitEvent("coherenceChange", {
         state: this.currentState,
         previousState: this.previousState,
         from: transition.transitions.coherence.from,
@@ -508,7 +508,7 @@ class ConsciousnessModule {
       transition.transitions.attention &&
       transition.transitions.attention.exceeds
     ) {
-      this._emitEvent('attentionShift', {
+      this._emitEvent("attentionShift", {
         state: this.currentState,
         previousState: this.previousState,
         from: transition.transitions.attention.from,

@@ -5,9 +5,9 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
-const { Manifold } = require('./manifold.js');
+const Prime = require("../../core/prime.js");
+const MathUtils = require("../math");
+const { Manifold } = require("./manifold.js");
 
 /**
  * TangentSpaceOperations - Operations for working with tangent spaces on manifolds
@@ -22,7 +22,7 @@ const TangentSpaceOperations = {
    */
   calculateTangentSpace: function (manifold, point = null, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError('First argument must be a manifold');
+      throw new Prime.ValidationError("First argument must be a manifold");
     }
 
     // If no point specified, use the current manifold state
@@ -38,22 +38,28 @@ const TangentSpaceOperations = {
 
     // First, determine the manifold type and its geometric properties
     const manifoldType = manifold.getType();
-    let manifoldGeometry = 'euclidean'; // Default assumption
+    let manifoldGeometry = "euclidean"; // Default assumption
 
     // Extract additional geometric information from manifold metadata if available
     if (manifold.getMeta() && manifold.getMeta().geometry) {
       manifoldGeometry = manifold.getMeta().geometry;
-    } else if (manifoldType.includes('sphere') || manifoldType.includes('ellipsoid')) {
-      manifoldGeometry = 'spherical';
-    } else if (manifoldType.includes('hyper') || manifoldType.includes('saddle')) {
-      manifoldGeometry = 'hyperbolic';
-    } else if (manifoldType.includes('torus')) {
-      manifoldGeometry = 'toroidal';
+    } else if (
+      manifoldType.includes("sphere") ||
+      manifoldType.includes("ellipsoid")
+    ) {
+      manifoldGeometry = "spherical";
+    } else if (
+      manifoldType.includes("hyper") ||
+      manifoldType.includes("saddle")
+    ) {
+      manifoldGeometry = "hyperbolic";
+    } else if (manifoldType.includes("torus")) {
+      manifoldGeometry = "toroidal";
     }
 
     // For non-Euclidean manifolds, we need to account for the geometry
     // when creating tangent basis vectors
-    if (manifoldGeometry === 'spherical') {
+    if (manifoldGeometry === "spherical") {
       // For spherical geometry, tangent vectors must be perpendicular to the position vector
 
       // First, create an uncorrected set of basis vectors
@@ -65,28 +71,33 @@ const TangentSpaceOperations = {
       }
 
       // Calculate the position vector norm (distance from origin)
-      const pointNorm = Math.sqrt(point.reduce((sum, val) => sum + val * val, 0)) || 1;
+      const pointNorm =
+        Math.sqrt(point.reduce((sum, val) => sum + val * val, 0)) || 1;
 
       // Normalize the position vector
-      const normalizedPoint = point.map(val => val / pointNorm);
+      const normalizedPoint = point.map((val) => val / pointNorm);
 
       // Project each basis vector to be tangent to the sphere at this point
       for (let i = 0; i < uncorrectedBasis.length; i++) {
         const basisVector = uncorrectedBasis[i];
 
         // Calculate dot product with the position
-        const dotWithPosition = basisVector.reduce((sum, val, idx) =>
-          sum + val * normalizedPoint[idx], 0);
+        const dotWithPosition = basisVector.reduce(
+          (sum, val, idx) => sum + val * normalizedPoint[idx],
+          0,
+        );
 
         // Subtract the radial component to get a tangent vector
-        const tangentVector = basisVector.map((val, idx) =>
-          val - dotWithPosition * normalizedPoint[idx]);
+        const tangentVector = basisVector.map(
+          (val, idx) => val - dotWithPosition * normalizedPoint[idx],
+        );
 
         // Normalize the tangent vector
-        const tangentNorm = Math.sqrt(tangentVector.reduce(
-          (sum, val) => sum + val * val, 0)) || 1;
+        const tangentNorm =
+          Math.sqrt(tangentVector.reduce((sum, val) => sum + val * val, 0)) ||
+          1;
 
-        basisVectors.push(tangentVector.map(val => val / tangentNorm));
+        basisVectors.push(tangentVector.map((val) => val / tangentNorm));
       }
 
       // Remove any linearly dependent vectors
@@ -98,8 +109,9 @@ const TangentSpaceOperations = {
         const currentVector = basisVectors[i];
 
         // Skip vectors that are essentially zero
-        const vectorNorm = Math.sqrt(currentVector.reduce(
-          (sum, val) => sum + val * val, 0));
+        const vectorNorm = Math.sqrt(
+          currentVector.reduce((sum, val) => sum + val * val, 0),
+        );
         if (vectorNorm < 1e-10) {
           isIndependent = false;
         } else {
@@ -109,7 +121,9 @@ const TangentSpaceOperations = {
 
             // Calculate normalized dot product
             const dotProduct = currentVector.reduce(
-              (sum, val, idx) => sum + val * prevVector[idx], 0);
+              (sum, val, idx) => sum + val * prevVector[idx],
+              0,
+            );
 
             // If vectors are nearly parallel, they are not independent
             if (Math.abs(dotProduct) > 1 - 1e-10) {
@@ -127,28 +141,37 @@ const TangentSpaceOperations = {
       basisVectors = finalBasisVectors;
 
       // If we don't have enough basis vectors, generate additional ones
-      while (basisVectors.length < dimension - 1) { // Sphere tangent space is dimension-1
+      while (basisVectors.length < dimension - 1) {
+        // Sphere tangent space is dimension-1
         // Create a random vector
-        const randomVector = Array(dimension).fill(0).map(() => Math.random() * 2 - 1);
+        const randomVector = Array(dimension)
+          .fill(0)
+          .map(() => Math.random() * 2 - 1);
 
         // Project to be tangent to sphere and normalize
-        const dotWithPosition = randomVector.reduce((sum, val, idx) =>
-          sum + val * normalizedPoint[idx], 0);
+        const dotWithPosition = randomVector.reduce(
+          (sum, val, idx) => sum + val * normalizedPoint[idx],
+          0,
+        );
 
-        const tangentVector = randomVector.map((val, idx) =>
-          val - dotWithPosition * normalizedPoint[idx]);
+        const tangentVector = randomVector.map(
+          (val, idx) => val - dotWithPosition * normalizedPoint[idx],
+        );
 
-        const tangentNorm = Math.sqrt(tangentVector.reduce(
-          (sum, val) => sum + val * val, 0)) || 1;
+        const tangentNorm =
+          Math.sqrt(tangentVector.reduce((sum, val) => sum + val * val, 0)) ||
+          1;
 
-        const normalizedTangent = tangentVector.map(val => val / tangentNorm);
+        const normalizedTangent = tangentVector.map((val) => val / tangentNorm);
 
         // Check if this vector is linearly independent from existing ones
         let isIndependent = true;
         for (let j = 0; j < basisVectors.length && isIndependent; j++) {
           const existingVector = basisVectors[j];
           const dotProduct = normalizedTangent.reduce(
-            (sum, val, idx) => sum + val * existingVector[idx], 0);
+            (sum, val, idx) => sum + val * existingVector[idx],
+            0,
+          );
 
           if (Math.abs(dotProduct) > 0.9) {
             isIndependent = false;
@@ -159,8 +182,7 @@ const TangentSpaceOperations = {
           basisVectors.push(normalizedTangent);
         }
       }
-    }
-    else if (manifoldGeometry === 'hyperbolic') {
+    } else if (manifoldGeometry === "hyperbolic") {
       // For hyperbolic geometry, similar to spherical but with different metric
 
       // First create standard basis vectors
@@ -224,15 +246,14 @@ const TangentSpaceOperations = {
 
         // Normalize the vector
         const newNorm = Math.sqrt(Math.abs(newNormSquared));
-        const normalizedVector = newVector.map(val => val / newNorm);
+        const normalizedVector = newVector.map((val) => val / newNorm);
 
         orthogonalBasis.push(normalizedVector);
       }
 
       // Replace with orthogonalized basis
       basisVectors = orthogonalBasis;
-    }
-    else if (manifoldGeometry === 'toroidal') {
+    } else if (manifoldGeometry === "toroidal") {
       // For toroidal geometry, the basis depends on the parameterization
       // In a standard parameterization, each pair of coordinates represents a circle
 
@@ -247,20 +268,22 @@ const TangentSpaceOperations = {
       // but we need to normalize them according to the local metric
       // which depends on the radius of each circle
 
-      if (manifold.getMeta() && manifold.getMeta().radii &&
-          Array.isArray(manifold.getMeta().radii)) {
+      if (
+        manifold.getMeta() &&
+        manifold.getMeta().radii &&
+        Array.isArray(manifold.getMeta().radii)
+      ) {
         // If we have explicit radii information, use it
         const radii = manifold.getMeta().radii;
 
         for (let i = 0; i < Math.min(dimension, radii.length); i++) {
           // Scale basis vector by the circle radius
           if (radii[i] > 0) {
-            basisVectors[i] = basisVectors[i].map(val => val / radii[i]);
+            basisVectors[i] = basisVectors[i].map((val) => val / radii[i]);
           }
         }
       }
-    }
-    else {
+    } else {
       // For Euclidean and other geometries, use standard basis vectors
       for (let i = 0; i < dimension; i++) {
         const basisVector = Array(dimension).fill(0);
@@ -294,7 +317,7 @@ const TangentSpaceOperations = {
    */
   calculateCurvature: function (manifold, point = null, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError('First argument must be a manifold');
+      throw new Prime.ValidationError("First argument must be a manifold");
     }
 
     // If no point specified, use the current manifold state
@@ -315,9 +338,9 @@ const TangentSpaceOperations = {
     const meanInvariant =
       invariants.length > 0
         ? invariants.reduce(
-          (sum, val) => sum + (typeof val === 'number' ? val : 0),
-          0,
-        ) / invariants.length
+            (sum, val) => sum + (typeof val === "number" ? val : 0),
+            0,
+          ) / invariants.length
         : 0;
 
     // Calculate a simplified curvature value
@@ -357,11 +380,11 @@ const TangentSpaceOperations = {
     options = {},
   ) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError('First argument must be a manifold');
+      throw new Prime.ValidationError("First argument must be a manifold");
     }
 
     if (!Array.isArray(vector)) {
-      throw new Prime.ValidationError('Vector must be an array');
+      throw new Prime.ValidationError("Vector must be an array");
     }
 
     // If no point specified, use the current manifold state
@@ -410,11 +433,11 @@ const TangentSpaceOperations = {
    */
   isTangentVector: function (manifold, vector, point = null, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError('First argument must be a manifold');
+      throw new Prime.ValidationError("First argument must be a manifold");
     }
 
     if (!Array.isArray(vector)) {
-      throw new Prime.ValidationError('Vector must be an array');
+      throw new Prime.ValidationError("Vector must be an array");
     }
 
     // If no point specified, use the current manifold state
@@ -482,7 +505,7 @@ const TangentSpaceOperations = {
    */
   calculateMetricTensor: function (manifold, point = null, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError('First argument must be a manifold');
+      throw new Prime.ValidationError("First argument must be a manifold");
     }
 
     // If no point specified, use the current manifold state
@@ -499,23 +522,29 @@ const TangentSpaceOperations = {
 
     // First, determine the manifold type and its geometric properties
     const manifoldType = manifold.getType();
-    let manifoldGeometry = 'euclidean'; // Default assumption
+    let manifoldGeometry = "euclidean"; // Default assumption
 
     // Extract geometric information from manifold metadata
     if (manifold.getMeta() && manifold.getMeta().geometry) {
       manifoldGeometry = manifold.getMeta().geometry;
-    } else if (manifoldType.includes('sphere') || manifoldType.includes('ellipsoid')) {
-      manifoldGeometry = 'spherical';
-    } else if (manifoldType.includes('hyper') || manifoldType.includes('saddle')) {
-      manifoldGeometry = 'hyperbolic';
-    } else if (manifoldType.includes('torus')) {
-      manifoldGeometry = 'toroidal';
+    } else if (
+      manifoldType.includes("sphere") ||
+      manifoldType.includes("ellipsoid")
+    ) {
+      manifoldGeometry = "spherical";
+    } else if (
+      manifoldType.includes("hyper") ||
+      manifoldType.includes("saddle")
+    ) {
+      manifoldGeometry = "hyperbolic";
+    } else if (manifoldType.includes("torus")) {
+      manifoldGeometry = "toroidal";
     }
 
     const metricTensor = [];
 
     // Calculate the appropriate metric tensor based on geometry
-    if (manifoldGeometry === 'spherical') {
+    if (manifoldGeometry === "spherical") {
       // For spherical geometry, the metric is induced from the embedding space
       // Get the radius if available, otherwise use the point norm
       let radius = 1.0;
@@ -523,7 +552,8 @@ const TangentSpaceOperations = {
         radius = manifold.getMeta().radius;
       } else {
         // Estimate radius from the point
-        radius = Math.sqrt(point.reduce((sum, val) => sum + val * val, 0)) || 1.0;
+        radius =
+          Math.sqrt(point.reduce((sum, val) => sum + val * val, 0)) || 1.0;
       }
 
       // Initialize metric tensor
@@ -540,8 +570,7 @@ const TangentSpaceOperations = {
           metricTensor[i].push(radius * radius * innerProduct);
         }
       }
-    }
-    else if (manifoldGeometry === 'hyperbolic') {
+    } else if (manifoldGeometry === "hyperbolic") {
       // For hyperbolic geometry, the metric has a Minkowski signature (-,+,+,+,...)
 
       // Initialize metric tensor with Minkowski metric
@@ -576,8 +605,7 @@ const TangentSpaceOperations = {
           metricTensor[i][j] *= radius * radius;
         }
       }
-    }
-    else if (manifoldGeometry === 'toroidal') {
+    } else if (manifoldGeometry === "toroidal") {
       // For toroidal geometry, the metric depends on the circles' radii
 
       // Get radii if available
@@ -591,7 +619,8 @@ const TangentSpaceOperations = {
       }
 
       // Angular coordinates for the torus (from the point or given directly)
-      let theta = 0, phi = 0;
+      let theta = 0,
+        phi = 0;
       if (manifold.getMeta() && manifold.getMeta().coordinates) {
         theta = manifold.getMeta().coordinates.theta || 0;
         phi = manifold.getMeta().coordinates.phi || 0;
@@ -613,12 +642,10 @@ const TangentSpaceOperations = {
             if (i === 0) {
               // First coordinate is around major circumference
               metricValue = majorRadius * majorRadius;
-            }
-            else if (i === 1) {
+            } else if (i === 1) {
               // Second coordinate is around minor circumference
               metricValue = minorRadius * minorRadius;
-            }
-            else if (i >= 2 && i < dimension) {
+            } else if (i >= 2 && i < dimension) {
               // For higher dimensions, use appropriate scaling
               metricValue = 1.0;
             }
@@ -627,15 +654,17 @@ const TangentSpaceOperations = {
           metricTensor[i].push(metricValue);
         }
       }
-    }
-    else if (manifoldGeometry === 'product') {
+    } else if (manifoldGeometry === "product") {
       // For product manifolds, the metric is a block diagonal matrix
       // of the metrics of the factor manifolds
 
       // Get the factor dimensions if available
       let factorDimensions = [];
-      if (manifold.getMeta() && manifold.getMeta().factorDimensions &&
-          Array.isArray(manifold.getMeta().factorDimensions)) {
+      if (
+        manifold.getMeta() &&
+        manifold.getMeta().factorDimensions &&
+        Array.isArray(manifold.getMeta().factorDimensions)
+      ) {
         factorDimensions = manifold.getMeta().factorDimensions;
       } else {
         // Default assumption: all factors have equal dimension
@@ -665,8 +694,7 @@ const TangentSpaceOperations = {
         }
         startIndex += factorDim;
       }
-    }
-    else {
+    } else {
       // For Euclidean and other generic geometries, use standard inner product
       for (let i = 0; i < dimension; i++) {
         metricTensor.push([]);

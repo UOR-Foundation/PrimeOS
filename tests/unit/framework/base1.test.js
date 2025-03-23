@@ -7,12 +7,12 @@ const { assertions, mocking } = require("../../utils");
 
 describe("PrimeOS Framework - Base1", () => {
   let base0;
-  
+
   beforeEach(() => {
     // Create Base 0 components for testing
     base0 = Prime.Base0.createBase0Components();
   });
-  
+
   describe("RuntimeModel", () => {
     test("creates a runtime model with correct properties", () => {
       // Create Runtime Model

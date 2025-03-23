@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 /**
  * Coherence metrics manager
@@ -202,8 +202,8 @@ class CoherenceMetricsManager {
     const history = this.metrics.coherenceHistory;
     if (history.length < 2) {
       return {
-        trend: 'stable',
-        description: 'Insufficient data for trend analysis',
+        trend: "stable",
+        description: "Insufficient data for trend analysis",
         delta: 0,
         periods: 0,
       };
@@ -236,21 +236,21 @@ class CoherenceMetricsManager {
     const delta = lastAvg - firstAvg;
 
     // Determine trend description
-    let trend = 'stable';
-    let description = 'Coherence is stable';
+    let trend = "stable";
+    let description = "Coherence is stable";
 
     if (delta > 0.05) {
-      trend = 'improving';
-      description = 'Coherence is improving significantly';
+      trend = "improving";
+      description = "Coherence is improving significantly";
     } else if (delta > 0.01) {
-      trend = 'slightly-improving';
-      description = 'Coherence is slightly improving';
+      trend = "slightly-improving";
+      description = "Coherence is slightly improving";
     } else if (delta < -0.05) {
-      trend = 'degrading';
-      description = 'Coherence is degrading significantly';
+      trend = "degrading";
+      description = "Coherence is degrading significantly";
     } else if (delta < -0.01) {
-      trend = 'slightly-degrading';
-      description = 'Coherence is slightly degrading';
+      trend = "slightly-degrading";
+      description = "Coherence is slightly degrading";
     }
 
     return {
@@ -282,14 +282,14 @@ class CoherenceMetricsManager {
         violationRate:
           snapshot.checksPerformed > 0
             ? (snapshot.violationsDetected / snapshot.checksPerformed).toFixed(
-              3,
-            )
+                3,
+              )
             : 0,
         recoveryRate:
           snapshot.violationsDetected > 0
             ? (snapshot.recoveryActions / snapshot.violationsDetected).toFixed(
-              3,
-            )
+                3,
+              )
             : 0,
         mostCommonViolationType: this._findMostCommon(
           snapshot.violationsByType,
@@ -297,20 +297,20 @@ class CoherenceMetricsManager {
         mostCommonRecoveryStrategy: this._findMostCommon(
           snapshot.recoveryByStrategy,
         ),
-        networkStatus: snapshot.isPartitioned ? 'partitioned' : 'healthy',
+        networkStatus: snapshot.isPartitioned ? "partitioned" : "healthy",
       },
     };
 
     // Log report if logger available
     if (Prime.Logger && Prime.Logger.info) {
-      Prime.Logger.info('Coherence metrics report', { report });
+      Prime.Logger.info("Coherence metrics report", { report });
     } else if (console && console.log) {
-      console.log('Coherence metrics report:', report.summary);
+      console.log("Coherence metrics report:", report.summary);
     }
 
     // Emit event if event bus available
     if (Prime.EventBus && Prime.EventBus.emit) {
-      Prime.EventBus.emit('coherence:metrics:report', report);
+      Prime.EventBus.emit("coherence:metrics:report", report);
     }
 
     return report;

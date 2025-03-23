@@ -7,7 +7,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Ensure the namespaces exist
 Prime.distributed = Prime.distributed || {};
@@ -28,7 +28,7 @@ class FaultTolerance {
    */
   constructor(options = {}) {
     // Configuration
-    this.strategy = options.strategy || 'checkpoint';
+    this.strategy = options.strategy || "checkpoint";
     this.checkpointInterval = options.checkpointInterval || 100;
     this.replicationFactor = options.replicationFactor || 1;
     this.autoRecover = options.autoRecover !== false;
@@ -57,7 +57,7 @@ class FaultTolerance {
    */
   registerNode(nodeId, profile) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -68,7 +68,7 @@ class FaultTolerance {
    */
   createCheckpoint(trainingState, iteration) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -79,7 +79,7 @@ class FaultTolerance {
    */
   replicateParameters(parameters, targetNodes) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -90,7 +90,7 @@ class FaultTolerance {
    */
   reportFailure(nodeId, failureDetails) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -101,7 +101,7 @@ class FaultTolerance {
    */
   recoverFromFailure(nodeId, replacementNodeId = null) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -111,7 +111,7 @@ class FaultTolerance {
    */
   restoreFromCheckpoint(checkpointId) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -122,7 +122,7 @@ class FaultTolerance {
    */
   _findBestCheckpoint(targetIteration) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -133,7 +133,7 @@ class FaultTolerance {
    */
   _verifyConsistency(parameters) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**

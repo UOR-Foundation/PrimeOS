@@ -4,8 +4,8 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
+const Prime = require("../../core/prime.js");
+const MathUtils = require("../math");
 
 /**
  * System Manager - Handles memory, security, and resource management
@@ -19,19 +19,19 @@ const SystemManager = {
   create: function (config = {}) {
     // Configure default security policy if none provided
     const defaultSecurity = {
-      defaultPolicy: 'allow',  // Default to permissive for tests
+      defaultPolicy: "allow", // Default to permissive for tests
       policy: {
-        'allocateResource': true,  // Allow all resource allocation by default
-        'freeResource': true,     // Allow all resource freeing by default
-        'getResourceUsage': true  // Allow resource usage statistics by default
-      }
+        allocateResource: true, // Allow all resource allocation by default
+        freeResource: true, // Allow all resource freeing by default
+        getResourceUsage: true, // Allow resource usage statistics by default
+      },
     };
 
     return {
-      type: 'systemManager',
+      type: "systemManager",
       security: config.security || defaultSecurity,
       memory: config.memory || {},
-      name: config.name || 'SystemManager',
+      name: config.name || "SystemManager",
       _resources: {},
 
       // Memory statistics with enhanced precision
@@ -59,14 +59,14 @@ const SystemManager = {
       allocateMemory: function (size, options = {}) {
         // Validate input parameters with enhanced numerical checks
         if (!Prime.Utils.isNumber(size)) {
-          throw new Prime.ValidationError('Size must be a number', {
+          throw new Prime.ValidationError("Size must be a number", {
             context: { providedSize: size, type: typeof size },
           });
         }
 
         // Ensure size is finite and non-NaN
         if (!Number.isFinite(size)) {
-          throw new Prime.ValidationError('Size must be a finite number', {
+          throw new Prime.ValidationError("Size must be a finite number", {
             context: {
               providedSize: size,
               isNaN: Number.isNaN(size),
@@ -76,7 +76,7 @@ const SystemManager = {
         }
 
         if (size <= 0) {
-          throw new Prime.ValidationError('Size must be a positive number', {
+          throw new Prime.ValidationError("Size must be a positive number", {
             context: { providedSize: size },
           });
         }
@@ -93,7 +93,7 @@ const SystemManager = {
           // Check if total memory limit would be exceeded
           if (totalLimit && memoryStats.totalAllocated + size > totalLimit) {
             throw new Prime.ResourceExhaustionError(
-              'Memory allocation would exceed total memory limit',
+              "Memory allocation would exceed total memory limit",
               {
                 context: {
                   requested: size,
@@ -116,7 +116,7 @@ const SystemManager = {
               processLimit
           ) {
             throw new Prime.ResourceExhaustionError(
-              'Memory allocation would exceed process memory limit',
+              "Memory allocation would exceed process memory limit",
               {
                 context: {
                   processId: options.processId,
@@ -137,7 +137,7 @@ const SystemManager = {
           // Check individual allocation size limit
           if (allocationLimit && size > allocationLimit) {
             throw new Prime.ResourceExhaustionError(
-              'Memory allocation size exceeds individual allocation limit',
+              "Memory allocation size exceeds individual allocation limit",
               {
                 context: {
                   requested: size,
@@ -155,14 +155,14 @@ const SystemManager = {
 
         // Record allocation details with enhanced metadata
         const allocation = {
-          type: 'memory',
+          type: "memory",
           size,
           allocated: Date.now(),
           expiresAt: options.ttl ? Date.now() + options.ttl : null,
           lastAccessed: Date.now(),
-          processId: options.processId || 'system',
-          priority: options.priority || 'normal',
-          purpose: options.purpose || 'general',
+          processId: options.processId || "system",
+          priority: options.priority || "normal",
+          purpose: options.purpose || "general",
           metadata: options.metadata || {},
           accessCount: 0,
         };
@@ -173,12 +173,12 @@ const SystemManager = {
         // Schedule automatic cleanup if TTL is specified
         if (options.ttl) {
           // Use setTimeout in browser or node.js, or a custom scheduler in other environments
-          if (typeof setTimeout === 'function') {
+          if (typeof setTimeout === "function") {
             setTimeout(() => {
               try {
                 // Check if resource still exists and hasn't been manually freed
                 if (this._resources[address]) {
-                  this.freeMemory(address, { reason: 'ttl_expired' });
+                  this.freeMemory(address, { reason: "ttl_expired" });
 
                   // Log cleanup if logging is enabled
                   if (
@@ -211,11 +211,11 @@ const SystemManager = {
         }
 
         // Update memory tracking statistics with the allocationType
-        const allocationType = options.allocationType || 'general';
+        const allocationType = options.allocationType || "general";
         this._updateMemoryStats(
           address,
           size,
-          'allocate',
+          "allocate",
           options.processId,
           allocationType,
         );
@@ -313,7 +313,7 @@ const SystemManager = {
 
         for (const address in this._resources) {
           const resource = this._resources[address];
-          if (resource.type === 'memory') {
+          if (resource.type === "memory") {
             // Update total statistics with Kahan summation
             const y = resource.size - compensation;
             const t = totalAllocated + y;
@@ -323,23 +323,23 @@ const SystemManager = {
             stats.totalCount++;
 
             // Update process statistics
-            const processId = resource.processId || 'system';
+            const processId = resource.processId || "system";
             stats.processAllocations[processId] =
               (stats.processAllocations[processId] || 0) + resource.size;
 
             // Update priority statistics
-            const priority = resource.priority || 'normal';
+            const priority = resource.priority || "normal";
             stats.byPriority[priority] =
               (stats.byPriority[priority] || 0) + resource.size;
 
             // Update purpose statistics
-            const purpose = resource.purpose || 'general';
+            const purpose = resource.purpose || "general";
             stats.byPurpose[purpose] =
               (stats.byPurpose[purpose] || 0) + resource.size;
 
             // Update allocation type statistics
             const allocationType =
-              resource.metadata.allocationType || 'general';
+              resource.metadata.allocationType || "general";
             stats.byAllocationType[allocationType] =
               (stats.byAllocationType[allocationType] || 0) + resource.size;
 
@@ -393,7 +393,7 @@ const SystemManager = {
         size,
         operation,
         processId,
-        allocationType = 'general',
+        allocationType = "general",
       ) {
         // Initialize allocationsByType if needed
         this._memoryTracking.allocationsByType[allocationType] = this
@@ -404,7 +404,7 @@ const SystemManager = {
         };
 
         // Update metrics based on operation
-        if (operation === 'allocate') {
+        if (operation === "allocate") {
           this._memoryTracking.allocations++;
 
           // Update allocation type statistics
@@ -426,7 +426,7 @@ const SystemManager = {
           if (currentUsage > this._memoryTracking.peakUsage) {
             this._memoryTracking.peakUsage = currentUsage;
           }
-        } else if (operation === 'free') {
+        } else if (operation === "free") {
           this._memoryTracking.frees++;
 
           // Update allocation type statistics if we know the type
@@ -456,7 +456,7 @@ const SystemManager = {
             operation,
             address,
             size,
-            processId: processId || 'system',
+            processId: processId || "system",
             allocationType,
           });
         }
@@ -536,27 +536,27 @@ const SystemManager = {
         const cleanupOrder = [
           // First, clean expired allocations
           (resource) =>
-            resource.type === 'memory' &&
+            resource.type === "memory" &&
             resource.expiresAt &&
             resource.expiresAt < Date.now(),
 
           // Target unused resources first
           (resource) =>
-            resource.type === 'memory' &&
+            resource.type === "memory" &&
             resource.accessCount === 0 &&
             Date.now() - resource.allocated > 60000, // Unused for at least 60 seconds
 
           // Then clean low priority resources with no recent access
           (resource) =>
-            resource.type === 'memory' &&
-            resource.priority === 'low' &&
+            resource.type === "memory" &&
+            resource.priority === "low" &&
             Date.now() - resource.lastAccessed >
               (this.memory.idleTimeout || 300000),
 
           // Finally, clean normal priority resources with very old access times
           (resource) =>
-            resource.type === 'memory' &&
-            resource.priority === 'normal' &&
+            resource.type === "memory" &&
+            resource.priority === "normal" &&
             Date.now() - resource.lastAccessed >
               (this.memory.extendedIdleTimeout || 1800000),
         ];
@@ -593,10 +593,10 @@ const SystemManager = {
           for (const address of candidateAddresses) {
             const resource = this._resources[address];
             const resourceSize = resource.size;
-            const resourceType = resource.metadata.allocationType || 'general';
+            const resourceType = resource.metadata.allocationType || "general";
 
             try {
-              this.freeMemory(address, { reason: 'gc' });
+              this.freeMemory(address, { reason: "gc" });
               stats.freed++;
               stats.bytesReclaimed += resourceSize;
 
@@ -671,7 +671,7 @@ const SystemManager = {
           );
         }
 
-        if (this._resources[address].type !== 'memory') {
+        if (this._resources[address].type !== "memory") {
           if (options.ignoreErrors) {
             return false;
           }
@@ -687,10 +687,10 @@ const SystemManager = {
         const resourceSize = this._resources[address].size;
         const processId = this._resources[address].processId;
         const allocationType =
-          this._resources[address].metadata.allocationType || 'general';
+          this._resources[address].metadata.allocationType || "general";
 
         // Run cleanup callback if provided
-        if (options.cleanup && typeof options.cleanup === 'function') {
+        if (options.cleanup && typeof options.cleanup === "function") {
           try {
             options.cleanup(this._resources[address]);
           } catch (error) {
@@ -714,7 +714,7 @@ const SystemManager = {
         this._updateMemoryStats(
           address,
           resourceSize,
-          'free',
+          "free",
           processId,
           allocationType,
         );
@@ -724,7 +724,7 @@ const SystemManager = {
           Prime.Logger.debug(
             `Memory at address ${address} freed (${resourceSize} bytes)`,
             {
-              reason: options.reason || 'manual',
+              reason: options.reason || "manual",
               processId,
               allocationType,
             },
@@ -749,17 +749,21 @@ const SystemManager = {
           if (!this.security || !this.security.policy) {
             // Check if we have default policy configuration
             if (this.security && this.security.defaultPolicy) {
-              defaultAction = this.security.defaultPolicy === 'allow';
+              defaultAction = this.security.defaultPolicy === "allow";
             } else {
               // Use restrictive default if not configured
               defaultAction = false;
             }
 
             // Log missing policy if logging is enabled
-            if (Prime.Logger && this.security && this.security.logging?.policyMissing) {
+            if (
+              Prime.Logger &&
+              this.security &&
+              this.security.logging?.policyMissing
+            ) {
               Prime.Logger.warn(
-                `No security policy defined for "${operation}". Using default ${defaultAction ? 'allow' : 'deny'}.`,
-                { context }
+                `No security policy defined for "${operation}". Using default ${defaultAction ? "allow" : "deny"}.`,
+                { context },
               );
             }
 
@@ -773,9 +777,9 @@ const SystemManager = {
 
             // 2. Check operation namespace match (e.g., "memory.allocate" matches "memory.*")
             () => {
-              const parts = operation.split('.');
+              const parts = operation.split(".");
               for (let i = parts.length - 1; i > 0; i--) {
-                const namespace = parts.slice(0, i).join('.');
+                const namespace = parts.slice(0, i).join(".");
                 const wildcardOp = `${namespace}.*`;
                 const result = this._evaluateSinglePolicy(wildcardOp, context);
                 if (result !== null) return result;
@@ -784,18 +788,18 @@ const SystemManager = {
             },
 
             // 3. Check global wildcard policy
-            () => this._evaluateSinglePolicy('*', context),
+            () => this._evaluateSinglePolicy("*", context),
 
             // 4. Use default policy if configured
             () => {
               if (this.security.defaultPolicy) {
-                return this.security.defaultPolicy === 'allow';
+                return this.security.defaultPolicy === "allow";
               }
               return null;
             },
 
             // 5. Final fallback (restrictive)
-            () => false
+            () => false,
           ];
 
           // Execute policy chain until a non-null result is found
@@ -812,7 +816,7 @@ const SystemManager = {
             Prime.Logger.error(
               `Critical error evaluating security policy for "${operation}":`,
               error,
-              { context }
+              { context },
             );
           }
 
@@ -827,7 +831,7 @@ const SystemManager = {
        * @param {Object} context - Operation context
        * @returns {boolean|null} Policy decision or null if not defined
        */
-      _evaluateSinglePolicy: function(policyName, context) {
+      _evaluateSinglePolicy: function (policyName, context) {
         // Check if policy exists
         if (!this.security.policy[policyName]) {
           return null;
@@ -836,14 +840,14 @@ const SystemManager = {
         const policy = this.security.policy[policyName];
 
         // Handle function-based policy
-        if (typeof policy === 'function') {
+        if (typeof policy === "function") {
           try {
             // Create policy context with additional security information
             const policyContext = {
               ...context,
               timestamp: Date.now(),
-              securityLevel: this.security.level || 'standard',
-              operationId: Prime.Utils.uuid()
+              securityLevel: this.security.level || "standard",
+              operationId: Prime.Utils.uuid(),
             };
 
             const result = policy(policyContext);
@@ -851,8 +855,8 @@ const SystemManager = {
             // Log policy decisions if enabled
             if (Prime.Logger && this.security.logging?.policyDecisions) {
               Prime.Logger.debug(
-                `Policy "${policyName}" evaluation: ${result ? 'ALLOW' : 'DENY'}`,
-                { policyContext }
+                `Policy "${policyName}" evaluation: ${result ? "ALLOW" : "DENY"}`,
+                { policyContext },
               );
             }
 
@@ -863,18 +867,18 @@ const SystemManager = {
               Prime.Logger.error(
                 `Error evaluating security policy "${policyName}":`,
                 error,
-                { context }
+                { context },
               );
             }
             return false;
           }
         }
         // Handle boolean policy
-        else if (typeof policy === 'boolean') {
+        else if (typeof policy === "boolean") {
           return policy;
         }
         // Handle object policy with conditions
-        else if (typeof policy === 'object' && policy !== null) {
+        else if (typeof policy === "object" && policy !== null) {
           return this._evaluatePolicyConditions(policy, context);
         }
 
@@ -882,7 +886,7 @@ const SystemManager = {
         if (Prime.Logger && this.security.logging?.policyErrors) {
           Prime.Logger.error(
             `Invalid policy type for "${policyName}": ${typeof policy}`,
-            { context }
+            { context },
           );
         }
 
@@ -896,26 +900,28 @@ const SystemManager = {
        * @param {Object} context - Operation context
        * @returns {boolean} Whether conditions are met
        */
-      _evaluatePolicyConditions: function(policy, context) {
+      _evaluatePolicyConditions: function (policy, context) {
         try {
           // Handle direct allow/deny fields
-          if (typeof policy.allow === 'boolean') return policy.allow;
-          if (typeof policy.deny === 'boolean') return !policy.deny;
+          if (typeof policy.allow === "boolean") return policy.allow;
+          if (typeof policy.deny === "boolean") return !policy.deny;
 
           // Handle role-based access control
           if (policy.roles && context.roles) {
             // Check if any required role is present
             if (Array.isArray(policy.roles.anyOf)) {
-              const hasRole = policy.roles.anyOf.some(role =>
-                Array.isArray(context.roles) && context.roles.includes(role)
+              const hasRole = policy.roles.anyOf.some(
+                (role) =>
+                  Array.isArray(context.roles) && context.roles.includes(role),
               );
               if (!hasRole) return false;
             }
 
             // Check if all required roles are present
             if (Array.isArray(policy.roles.allOf)) {
-              const hasAllRoles = policy.roles.allOf.every(role =>
-                Array.isArray(context.roles) && context.roles.includes(role)
+              const hasAllRoles = policy.roles.allOf.every(
+                (role) =>
+                  Array.isArray(context.roles) && context.roles.includes(role),
               );
               if (!hasAllRoles) return false;
             }
@@ -935,19 +941,30 @@ const SystemManager = {
             // Check day of week restrictions
             if (policy.timeRestrictions.daysOfWeek) {
               const day = now.getDay(); // 0 = Sunday, 6 = Saturday
-              if (!policy.timeRestrictions.daysOfWeek.includes(day)) return false;
+              if (!policy.timeRestrictions.daysOfWeek.includes(day))
+                return false;
             }
           }
 
           // Handle IP/network restrictions
           if (policy.networkRestrictions && context.ip) {
-            if (policy.networkRestrictions.allowedIPs &&
-                !this._checkIPInRange(context.ip, policy.networkRestrictions.allowedIPs)) {
+            if (
+              policy.networkRestrictions.allowedIPs &&
+              !this._checkIPInRange(
+                context.ip,
+                policy.networkRestrictions.allowedIPs,
+              )
+            ) {
               return false;
             }
 
-            if (policy.networkRestrictions.blockedIPs &&
-                this._checkIPInRange(context.ip, policy.networkRestrictions.blockedIPs)) {
+            if (
+              policy.networkRestrictions.blockedIPs &&
+              this._checkIPInRange(
+                context.ip,
+                policy.networkRestrictions.blockedIPs,
+              )
+            ) {
               return false;
             }
           }
@@ -960,15 +977,17 @@ const SystemManager = {
           }
 
           // Handle permission threshold
-          if (typeof policy.permissionLevel === 'number' &&
-              typeof context.permissionLevel === 'number') {
+          if (
+            typeof policy.permissionLevel === "number" &&
+            typeof context.permissionLevel === "number"
+          ) {
             if (context.permissionLevel < policy.permissionLevel) {
               return false;
             }
           }
 
           // Handle custom condition function
-          if (typeof policy.condition === 'function') {
+          if (typeof policy.condition === "function") {
             return policy.condition(context);
           }
 
@@ -976,11 +995,10 @@ const SystemManager = {
           return policy.default !== false;
         } catch (error) {
           if (Prime.Logger) {
-            Prime.Logger.error(
-              'Error evaluating policy conditions:',
-              error,
-              { policy, context }
-            );
+            Prime.Logger.error("Error evaluating policy conditions:", error, {
+              policy,
+              context,
+            });
           }
 
           return false;
@@ -994,7 +1012,7 @@ const SystemManager = {
        * @param {Array<string>} ranges - Array of allowed IPs/CIDR ranges
        * @returns {boolean} Whether IP is in allowed range
        */
-      _checkIPInRange: function(ip, ranges) {
+      _checkIPInRange: function (ip, ranges) {
         if (!Array.isArray(ranges) || ranges.length === 0) return false;
 
         // Convert IP string to 32-bit integer for faster comparison
@@ -1006,13 +1024,13 @@ const SystemManager = {
           if (range === ip) return true;
 
           // Handle wildcard notation (e.g., "192.168.1.*")
-          if (range.includes('*')) {
-            const rangeParts = range.split('.');
-            const ipParts = ip.split('.');
+          if (range.includes("*")) {
+            const rangeParts = range.split(".");
+            const ipParts = ip.split(".");
             let match = true;
 
             for (let i = 0; i < 4; i++) {
-              if (rangeParts[i] !== '*' && rangeParts[i] !== ipParts[i]) {
+              if (rangeParts[i] !== "*" && rangeParts[i] !== ipParts[i]) {
                 match = false;
                 break;
               }
@@ -1022,20 +1040,21 @@ const SystemManager = {
           }
 
           // Handle CIDR notation (e.g., "192.168.1.0/24")
-          if (range.includes('/')) {
-            const [cidrIp, cidrBits] = range.split('/');
-            
+          if (range.includes("/")) {
+            const [cidrIp, cidrBits] = range.split("/");
+
             // Convert CIDR IP to integer
             const cidrIpInt = this._ipToInt(cidrIp);
             if (cidrIpInt === null) continue; // Invalid CIDR IP
-            
+
             // Parse prefix length (bits)
             const prefixLength = parseInt(cidrBits, 10);
-            if (isNaN(prefixLength) || prefixLength < 0 || prefixLength > 32) continue; // Invalid prefix
-            
+            if (isNaN(prefixLength) || prefixLength < 0 || prefixLength > 32)
+              continue; // Invalid prefix
+
             // Calculate subnet mask
             const mask = prefixLength === 0 ? 0 : ~0 << (32 - prefixLength);
-            
+
             // Check if IP is in the subnet
             if ((ipInt & mask) === (cidrIpInt & mask)) {
               return true;
@@ -1045,33 +1064,33 @@ const SystemManager = {
 
         return false;
       },
-      
+
       /**
        * Convert IP address string to 32-bit integer
        * @private
        * @param {string} ip - IP address in dot notation (e.g., "192.168.1.1")
        * @returns {number|null} IP as 32-bit integer or null if invalid
        */
-      _ipToInt: function(ip) {
-        if (!ip || typeof ip !== 'string') return null;
-        
-        const parts = ip.split('.');
+      _ipToInt: function (ip) {
+        if (!ip || typeof ip !== "string") return null;
+
+        const parts = ip.split(".");
         if (parts.length !== 4) return null;
-        
+
         let result = 0;
-        
+
         for (let i = 0; i < 4; i++) {
           const octet = parseInt(parts[i], 10);
-          
+
           // Validate each octet
           if (isNaN(octet) || octet < 0 || octet > 255) {
             return null;
           }
-          
+
           // Shift and add
           result = (result << 8) + octet;
         }
-        
+
         return result >>> 0; // Ensure unsigned 32-bit integer
       },
 
@@ -1083,7 +1102,7 @@ const SystemManager = {
        */
       allocateResource: function (type, config = {}) {
         // Check permission
-        if (!this.checkPermission('allocateResource', { type, config })) {
+        if (!this.checkPermission("allocateResource", { type, config })) {
           throw new Prime.InvalidOperationError(
             `Permission denied: allocateResource ${type}`,
           );
@@ -1116,7 +1135,7 @@ const SystemManager = {
 
         // Check permission
         if (
-          !this.checkPermission('freeResource', {
+          !this.checkPermission("freeResource", {
             address,
             resource: this._resources[address],
           })
@@ -1136,9 +1155,9 @@ const SystemManager = {
        */
       getResourceUsage: function () {
         // Check permission
-        if (!this.checkPermission('getResourceUsage', {})) {
+        if (!this.checkPermission("getResourceUsage", {})) {
           throw new Prime.InvalidOperationError(
-            'Permission denied: getResourceUsage',
+            "Permission denied: getResourceUsage",
           );
         }
 
@@ -1178,7 +1197,7 @@ const SystemManager = {
           stats.byType[resource.type].count++;
 
           // Special handling for memory
-          if (resource.type === 'memory') {
+          if (resource.type === "memory") {
             stats.memory.count++;
 
             // Update with Kahan summation for better precision

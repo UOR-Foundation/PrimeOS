@@ -4,10 +4,13 @@
  */
 
 // Import Prime core directly to avoid circular dependencies
-const Prime = require('../../core/prime.js');
+const Prime = require("../../core/prime.js");
 
-// Import math utilities directly with explicit error handling
-const mathUtils = require('./index.js');
+// Import standardized math interface
+const StandardMath = require("./index.js").Standard;
+
+// Import type validation
+const TypeValidation = require("./type-validation.js");
 
 /**
  * Clifford Algebra implementation for multi-dimensional space modeling
@@ -22,9 +25,63 @@ class CliffordAlgebraFiber {
    * @param {Array} options.position - Position in the reference manifold (default: origin)
    */
   constructor(options = {}) {
+    // Validate options if provided
+    if (options !== undefined) {
+      TypeValidation.assertObject(options, "options", {
+        operation: "CliffordAlgebraFiber.constructor",
+      });
+
+      // Validate dimension if provided
+      if (options.dimension !== undefined) {
+        TypeValidation.assertPositiveInteger(
+          options.dimension,
+          "options.dimension",
+          {
+            operation: "CliffordAlgebraFiber.constructor",
+          },
+        );
+      }
+
+      // Validate signature if provided
+      if (options.signature !== undefined) {
+        TypeValidation.assertArray(options.signature, "options.signature", {
+          operation: "CliffordAlgebraFiber.constructor",
+        });
+        TypeValidation.assertNumberArray(
+          options.signature,
+          "options.signature",
+          {
+            operation: "CliffordAlgebraFiber.constructor",
+          },
+        );
+      }
+
+      // Validate position if provided
+      if (options.position !== undefined) {
+        TypeValidation.assertArray(options.position, "options.position", {
+          operation: "CliffordAlgebraFiber.constructor",
+        });
+        TypeValidation.assertNumberArray(options.position, "options.position", {
+          operation: "CliffordAlgebraFiber.constructor",
+        });
+      }
+    }
+
     this.dimension = options.dimension || 3;
     this.signature = options.signature || Array(this.dimension).fill(1);
     this.position = options.position || Array(3).fill(0); // Manifold position
+
+    // Validate that dimension is reasonable to avoid computational explosions
+    if (this.dimension > 16) {
+      Prime.Logger.warn(
+        `Clifford algebra dimension ${this.dimension} may lead to computational overflow`,
+        {
+          operation: "CliffordAlgebraFiber.constructor",
+          recommendedMaximum: 16,
+        },
+      );
+    }
+
     this.basis = this._generateBasis();
     this.innerProductMetric = this._initializeMetric();
     this.state = null;
@@ -38,11 +95,11 @@ class CliffordAlgebraFiber {
    * @returns {Array} Array of basis element names
    */
   _generateBasis() {
-    const basis = ['1']; // Scalar basis
+    const basis = ["1"]; // Scalar basis
 
     // Generate all basis elements (2^dimension of them)
     for (let i = 1; i < 1 << this.dimension; i++) {
-      let name = '';
+      let name = "";
       for (let j = 0; j < this.dimension; j++) {
         if (i & (1 << j)) {
           name += `e${j + 1}`;
@@ -63,25 +120,22 @@ class CliffordAlgebraFiber {
    */
   _initializeMetric() {
     const n = this.basis.length;
-    const metric = Array(n)
-      .fill()
-      .map(() => Array(n).fill(0));
 
-    // Initialize diagonal elements based on signature
-    for (let i = 0; i < n; i++) {
-      metric[i][i] = 1; // Start with identity
-    }
+    // Create identity matrix as starting point
+    const metric = StandardMath.Matrix.identity(n);
 
     // Vary the metric based on position in the manifold
     for (let i = 1; i < n; i++) {
       for (let j = 0; j < i; j++) {
         // Position-dependent correlation
+        // Sum position coordinates
+        const positionSum = StandardMath.Vector.sum(this.position);
+
+        // Calculate correlation using cosine function
         const correlation =
-          0.1 *
-          Math.cos(
-            (Math.PI * this.position.reduce((sum, v) => sum + v, 0) * (i + j)) /
-              n,
-          );
+          0.1 * Math.cos((Math.PI * positionSum * (i + j)) / n);
+
+        // Set symmetric off-diagonal elements
         metric[i][j] = correlation;
         metric[j][i] = correlation;
       }
@@ -97,7 +151,7 @@ class CliffordAlgebraFiber {
    * @returns {number} Grade of the element
    */
   getGrade(element) {
-    if (element === '1') return 0;
+    if (element === "1") return 0;
 
     // Count the number of vector basis elements in the product
     const matches = element.match(/e\d+/g);
@@ -119,7 +173,7 @@ class CliffordAlgebraFiber {
       throw new Prime.ValidationError(`Basis elements not found: ${a}, ${b}`, {
         elemA: a,
         elemB: b,
-        availableBasis: this.basis.length
+        availableBasis: this.basis.length,
       });
     }
 
@@ -132,17 +186,50 @@ class CliffordAlgebraFiber {
    * @param {Array} state - State vector in the Clifford algebra
    */
   setState(state) {
-    if (!Array.isArray(state)) {
-      throw new Prime.ValidationError('State must be an array', {
-        actualType: typeof state
-      });
-    }
-    
+    // Validate state is an array
+    TypeValidation.assertArray(state, "state", {
+      operation: "CliffordAlgebraFiber.setState",
+    });
+
+    // Validate state has correct length
     if (state.length !== this.basis.length) {
-      throw new Prime.ValidationError(`State vector must have length ${this.basis.length}`, {
-        expected: this.basis.length,
-        actual: state.length
-      });
+      throw new Prime.DimensionMismatchError(
+        `State vector must have length ${this.basis.length}`,
+        {
+          operation: "CliffordAlgebraFiber.setState",
+          expectedDimension: this.basis.length,
+          actualDimension: state.length,
+          basisSize: this.basis.length,
+        },
+      );
+    }
+
+    // Validate state contains only numbers
+    TypeValidation.assertNumberArray(state, "state", {
+      operation: "CliffordAlgebraFiber.setState",
+    });
+
+    // Check for extreme values that might cause numerical instability
+    try {
+      TypeValidation.validateArrayMagnitudes(
+        state,
+        "state",
+        { minMagnitude: 1e-100, maxMagnitude: 1e100, allowZero: true },
+        { operation: "CliffordAlgebraFiber.setState" },
+      );
+    } catch (error) {
+      // Convert to warning for extreme values instead of error
+      if (error instanceof Prime.NumericOverflowError) {
+        Prime.Logger.warn(
+          `State vector contains extreme values that may cause numerical instability`,
+          {
+            operation: "CliffordAlgebraFiber.setState",
+            ...error.context,
+          },
+        );
+      } else {
+        throw error;
+      }
     }
 
     this.state = state.slice();
@@ -169,21 +256,15 @@ class CliffordAlgebraFiber {
    */
   calculateNorm(state, options = {}) {
     if (!state) return 0;
-    
-    const useScaling = options.useScaling !== false;
-    const useKahan = options.useKahan !== false;
-    
+
     // Use the inner product method with the state vector itself
     // This provides all the numerical stability enhancements
-    const innerProductValue = this.innerProduct(state, {
-      useScaling: useScaling,
-      useKahan: useKahan
-    });
-    
-    // Ensure non-negative before taking square root
-    return Math.sqrt(Math.max(0, innerProductValue));
+    const innerProductValue = this.innerProduct(state, options);
+
+    // Use StandardMath for safe square root operation with numerical stability
+    return StandardMath.sqrt(Math.max(0, innerProductValue));
   }
-  
+
   /**
    * Compute the norm of the current state
    *
@@ -192,7 +273,7 @@ class CliffordAlgebraFiber {
   computeNorm() {
     return this.calculateNorm(this.state);
   }
-  
+
   /**
    * Calculate the inner product between the current state and another state
    * with enhanced numerical stability for extreme values
@@ -204,133 +285,189 @@ class CliffordAlgebraFiber {
    * @returns {number} Inner product value
    */
   innerProduct(otherState, options = {}) {
+    // Validate that current state exists
     if (!this.state) {
-      throw new Prime.ValidationError('No state set for this fiber');
+      throw new Prime.ValidationError("No state set for this fiber", {
+        operation: "CliffordAlgebraFiber.innerProduct",
+      });
     }
-    
-    if (!otherState) {
-      throw new Prime.ValidationError('Other state must be provided');
+
+    // Validate otherState is provided and is an array
+    TypeValidation.assertDefined(otherState, "otherState", {
+      operation: "CliffordAlgebraFiber.innerProduct",
+    });
+
+    TypeValidation.assertArray(otherState, "otherState", {
+      operation: "CliffordAlgebraFiber.innerProduct",
+    });
+
+    // Validate otherState contains only numbers
+    TypeValidation.assertNumberArray(otherState, "otherState", {
+      operation: "CliffordAlgebraFiber.innerProduct",
+    });
+
+    // Validate options object if provided
+    if (options !== undefined) {
+      TypeValidation.assertObject(options, "options", {
+        operation: "CliffordAlgebraFiber.innerProduct",
+      });
+
+      // Validate specific option types if provided
+      if (options.useScaling !== undefined) {
+        TypeValidation.assertBoolean(options.useScaling, "options.useScaling", {
+          operation: "CliffordAlgebraFiber.innerProduct",
+        });
+      }
+
+      if (options.useKahan !== undefined) {
+        TypeValidation.assertBoolean(options.useKahan, "options.useKahan", {
+          operation: "CliffordAlgebraFiber.innerProduct",
+        });
+      }
     }
-    
+
     const useScaling = options.useScaling !== false;
     const useKahan = options.useKahan !== false;
     const minLength = Math.min(this.state.length, otherState.length);
-    
+
     // For empty states or metric, return 0
-    if (minLength === 0 || !this.innerProductMetric || 
-        this.innerProductMetric.length === 0) {
+    if (
+      minLength === 0 ||
+      !this.innerProductMetric ||
+      this.innerProductMetric.length === 0
+    ) {
       return 0;
     }
-    
+
+    // Check for extreme values in other state that might cause numerical instability
+    try {
+      TypeValidation.validateArrayMagnitudes(
+        otherState,
+        "otherState",
+        { minMagnitude: 1e-100, maxMagnitude: 1e100, allowZero: true },
+        { operation: "CliffordAlgebraFiber.innerProduct" },
+      );
+    } catch (error) {
+      // Convert to warning for extreme values instead of error
+      if (error instanceof Prime.NumericOverflowError) {
+        Prime.Logger.warn(
+          `State vector contains extreme values that may cause numerical instability`,
+          {
+            operation: "CliffordAlgebraFiber.innerProduct",
+            ...error.context,
+          },
+        );
+      }
+    }
+
     // Handle extreme values with scaling if needed
     if (useScaling) {
       // Find max absolute values for scaling
       let maxState = 0;
       let maxOther = 0;
       let maxMetric = 0;
-      
+
       // Get maximum values for scaling
       for (let i = 0; i < minLength; i++) {
         maxState = Math.max(maxState, Math.abs(this.state[i]));
         maxOther = Math.max(maxOther, Math.abs(otherState[i]));
-        
+
         for (let j = 0; j < minLength; j++) {
-          if (i < this.innerProductMetric.length && 
-              j < this.innerProductMetric[i].length) {
-            maxMetric = Math.max(maxMetric, Math.abs(this.innerProductMetric[i][j]));
+          if (
+            i < this.innerProductMetric.length &&
+            j < this.innerProductMetric[i].length
+          ) {
+            maxMetric = Math.max(
+              maxMetric,
+              Math.abs(this.innerProductMetric[i][j]),
+            );
           }
         }
       }
-      
+
       // Check if any values are extreme
-      const hasExtremeValues = (maxState > 1e100 || maxState < 1e-100 || 
-                               maxOther > 1e100 || maxOther < 1e-100 || 
-                               maxMetric > 1e100 || maxMetric < 1e-100);
-      
+      const hasExtremeValues =
+        maxState > 1e100 ||
+        maxState < 1e-100 ||
+        maxOther > 1e100 ||
+        maxOther < 1e-100 ||
+        maxMetric > 1e100 ||
+        maxMetric < 1e-100;
+
       // Use scaling for extreme values
       if (hasExtremeValues) {
         // Avoid division by zero
         const scaleState = maxState === 0 ? 1 : maxState;
         const scaleOther = maxOther === 0 ? 1 : maxOther;
         const scaleMetric = maxMetric === 0 ? 1 : maxMetric;
-        
-        // Use Kahan summation with scaling
+
+        // Use StandardMath's Kahan summation with scaling
         if (useKahan) {
-          let result = 0;
-          let compensation = 0;
-          
-          // Separate positive and negative contributions to avoid cancellation
-          let posSum = 0;
-          let negSum = 0;
-          let posCompensation = 0;
-          let negCompensation = 0;
-          
+          // Prepare for StandardMath's approach to compensated arithmetic
+          // We'll leverage StandardMath.Statistics.weightedSum for numerical stability
+          const terms = [];
+          const weights = [];
+
+          // Setup for controlled summation with numerical stability
+
           for (let i = 0; i < minLength; i++) {
             for (let j = 0; j < minLength; j++) {
-              if (i < this.innerProductMetric.length && j < this.innerProductMetric[i].length) {
+              if (
+                i < this.innerProductMetric.length &&
+                j < this.innerProductMetric[i].length
+              ) {
                 // Scale each component
                 const scaledState = this.state[i] / scaleState;
-                const scaledMetric = this.innerProductMetric[i][j] / scaleMetric;
+                const scaledMetric =
+                  this.innerProductMetric[i][j] / scaleMetric;
                 const scaledOther = otherState[j] / scaleOther;
-                
+
                 // Compute scaled term
                 const term = scaledState * scaledMetric * scaledOther;
-                
-                // Separate positive and negative terms
-                if (term >= 0) {
-                  // Kahan summation for positive terms
-                  const y = term - posCompensation;
-                  const t = posSum + y;
-                  posCompensation = t - posSum - y;
-                  posSum = t;
-                } else {
-                  // Kahan summation for negative terms
-                  const y = term - negCompensation;
-                  const t = negSum + y;
-                  negCompensation = t - negSum - y;
-                  negSum = t;
-                }
+
+                // Add term to collection for standardized summation
+                terms.push(term);
+                weights.push(1.0); // Equal weights for all terms
               }
             }
           }
-          
-          // Add positive and negative sums with another Kahan step
-          const y = posSum - compensation;
-          const t = result + y;
-          compensation = t - result - y;
-          result = t;
-          
-          const yNeg = negSum - compensation;
-          const tNeg = result + yNeg;
-          compensation = tNeg - result - yNeg;
-          result = tNeg;
-          
+
+          // Use StandardMath for numerically stable weighted sum
+          const sumResult = StandardMath.Statistics.weightedSum(terms, {
+            weights: weights,
+            useCompensatedSum: true,
+          });
+
           // Scale back the result
-          return result * scaleState * scaleMetric * scaleOther;
+          return sumResult.sum * scaleState * scaleMetric * scaleOther;
         } else {
           // Standard summation with scaling
           let result = 0;
-          
+
           for (let i = 0; i < minLength; i++) {
             for (let j = 0; j < minLength; j++) {
-              if (i < this.innerProductMetric.length && j < this.innerProductMetric[i].length) {
+              if (
+                i < this.innerProductMetric.length &&
+                j < this.innerProductMetric[i].length
+              ) {
                 // Scale each component
                 const scaledState = this.state[i] / scaleState;
-                const scaledMetric = this.innerProductMetric[i][j] / scaleMetric;
+                const scaledMetric =
+                  this.innerProductMetric[i][j] / scaleMetric;
                 const scaledOther = otherState[j] / scaleOther;
-                
+
                 // Add to result
                 result += scaledState * scaledMetric * scaledOther;
               }
             }
           }
-          
+
           // Scale the result back
           return result * scaleState * scaleMetric * scaleOther;
         }
       }
     }
-    
+
     // If not using scaling, use Kahan summation if requested
     if (useKahan) {
       // Separate positive and negative contributions
@@ -338,12 +475,16 @@ class CliffordAlgebraFiber {
       let negSum = 0;
       let posCompensation = 0;
       let negCompensation = 0;
-      
+
       for (let i = 0; i < minLength; i++) {
         for (let j = 0; j < minLength; j++) {
-          if (i < this.innerProductMetric.length && j < this.innerProductMetric[i].length) {
-            const term = this.state[i] * this.innerProductMetric[i][j] * otherState[j];
-            
+          if (
+            i < this.innerProductMetric.length &&
+            j < this.innerProductMetric[i].length
+          ) {
+            const term =
+              this.state[i] * this.innerProductMetric[i][j] * otherState[j];
+
             // Separate positive and negative terms to reduce cancellation errors
             if (term >= 0) {
               // Kahan summation for positive terms
@@ -361,25 +502,29 @@ class CliffordAlgebraFiber {
           }
         }
       }
-      
+
       // Combine positive and negative sums
       return posSum + negSum;
     }
-    
+
     // Standard calculation without Kahan or scaling
     let result = 0;
-    
+
     for (let i = 0; i < minLength; i++) {
       for (let j = 0; j < minLength; j++) {
-        if (i < this.innerProductMetric.length && j < this.innerProductMetric[i].length) {
-          result += this.state[i] * this.innerProductMetric[i][j] * otherState[j];
+        if (
+          i < this.innerProductMetric.length &&
+          j < this.innerProductMetric[i].length
+        ) {
+          result +=
+            this.state[i] * this.innerProductMetric[i][j] * otherState[j];
         }
       }
     }
-    
+
     return result;
   }
-  
+
   /**
    * Update the current state with new values
    *
@@ -387,14 +532,14 @@ class CliffordAlgebraFiber {
    */
   updateState(newState) {
     if (!Array.isArray(newState)) {
-      throw new Prime.ValidationError('New state must be an array', {
-        actualType: typeof newState
+      throw new Prime.ValidationError("New state must be an array", {
+        actualType: typeof newState,
       });
     }
-    
+
     // Copy values, limiting to valid dimensions
     this.state = this.state || new Array(this.basis.length).fill(0);
-    
+
     const minLength = Math.min(this.state.length, newState.length);
     for (let i = 0; i < minLength; i++) {
       this.state[i] = newState[i];
@@ -409,12 +554,12 @@ class CliffordAlgebraFiber {
    * @param {Array} pattern.components - Components involved in the pattern
    */
   addPattern(pattern) {
-    if (!pattern || typeof pattern !== 'object') {
-      throw new Prime.ValidationError('Pattern must be an object', {
-        actualType: typeof pattern
+    if (!pattern || typeof pattern !== "object") {
+      throw new Prime.ValidationError("Pattern must be an object", {
+        actualType: typeof pattern,
       });
     }
-    
+
     this.patterns.push(pattern);
   }
 
@@ -443,6 +588,75 @@ class CoherenceGradientDescent {
    * @param {boolean} options.useFiber - Whether to use fiber algebra (default: true)
    */
   constructor(options = {}) {
+    // Validate options if provided
+    if (options !== undefined) {
+      TypeValidation.assertObject(options, "options", {
+        operation: "CoherenceGradientDescent.constructor",
+      });
+
+      // Validate dimension if provided
+      if (options.dimension !== undefined) {
+        TypeValidation.assertPositiveInteger(
+          options.dimension,
+          "options.dimension",
+          {
+            operation: "CoherenceGradientDescent.constructor",
+          },
+        );
+
+        // Check for computationally feasible dimensions
+        if (options.dimension > 30) {
+          Prime.Logger.warn(
+            `Dimension ${options.dimension} may lead to computational overflow in CoherenceGradientDescent`,
+            {
+              operation: "CoherenceGradientDescent.constructor",
+              recommendedMaximum: 30,
+            },
+          );
+        }
+      }
+
+      // Validate numFibers if provided
+      if (options.numFibers !== undefined) {
+        TypeValidation.assertPositiveInteger(
+          options.numFibers,
+          "options.numFibers",
+          {
+            operation: "CoherenceGradientDescent.constructor",
+          },
+        );
+
+        // Check for reasonable number of fibers
+        if (options.numFibers > 20) {
+          Prime.Logger.warn(
+            `Number of fibers ${options.numFibers} is unusually high and may impact performance`,
+            {
+              operation: "CoherenceGradientDescent.constructor",
+              recommendedMaximum: 20,
+            },
+          );
+        }
+      }
+
+      // Validate useSpectral if provided
+      if (options.useSpectral !== undefined) {
+        TypeValidation.assertBoolean(
+          options.useSpectral,
+          "options.useSpectral",
+          {
+            operation: "CoherenceGradientDescent.constructor",
+          },
+        );
+      }
+
+      // Validate useFiber if provided
+      if (options.useFiber !== undefined) {
+        TypeValidation.assertBoolean(options.useFiber, "options.useFiber", {
+          operation: "CoherenceGradientDescent.constructor",
+        });
+      }
+    }
+
     this.dimension = options.dimension || 10;
     this.numFibers = options.numFibers || 5;
     this.useSpectral = options.useSpectral !== false;
@@ -507,7 +721,7 @@ class CoherenceGradientDescent {
     // 1. Single bit flips (using vector basis elements)
     for (let i = 0; i < this.dimension; i++) {
       generators.push({
-        type: 'bit_flip',
+        type: "bit_flip",
         index: i,
         description: `Flip bit ${i}`,
       });
@@ -517,7 +731,7 @@ class CoherenceGradientDescent {
     for (let i = 0; i < this.dimension - 1; i++) {
       for (let j = i + 1; j < this.dimension; j++) {
         generators.push({
-          type: 'bit_swap',
+          type: "bit_swap",
           indices: [i, j],
           description: `Swap bits ${i} and ${j}`,
         });
@@ -532,7 +746,7 @@ class CoherenceGradientDescent {
           .fill()
           .map((_, i) => start + i);
         generators.push({
-          type: 'cluster_flip',
+          type: "cluster_flip",
           indices,
           description: `Flip cluster ${JSON.stringify(indices)}`,
         });
@@ -550,25 +764,91 @@ class CoherenceGradientDescent {
    * @returns {Array} Transformed state vector
    */
   applyTransformation(state, generatorIdx) {
-    if (!Array.isArray(state)) {
-      throw new Prime.ValidationError('State must be an array', {
-        actualType: typeof state
-      });
-    }
-    
+    // Validate state is an array
+    TypeValidation.assertArray(state, "state", {
+      operation: "CoherenceGradientDescent.applyTransformation",
+    });
+
+    // Validate state contains only numbers
+    TypeValidation.assertNumberArray(state, "state", {
+      operation: "CoherenceGradientDescent.applyTransformation",
+    });
+
+    // Validate generatorIdx is a number
+    TypeValidation.assertNumber(generatorIdx, "generatorIdx", {
+      operation: "CoherenceGradientDescent.applyTransformation",
+    });
+
+    // Validate generatorIdx is an integer
+    TypeValidation.assertInteger(generatorIdx, "generatorIdx", {
+      operation: "CoherenceGradientDescent.applyTransformation",
+    });
+
+    // Validate generatorIdx is in range
     if (generatorIdx < 0 || generatorIdx >= this.symmetryGenerators.length) {
-      throw new Prime.ValidationError(`Invalid generator index: ${generatorIdx}`, {
-        max: this.symmetryGenerators.length - 1,
-        provided: generatorIdx
-      });
+      throw new Prime.ValidationError(
+        `Invalid generator index: ${generatorIdx}`,
+        {
+          operation: "CoherenceGradientDescent.applyTransformation",
+          maxAllowedIndex: this.symmetryGenerators.length - 1,
+          providedIndex: generatorIdx,
+          totalGenerators: this.symmetryGenerators.length,
+        },
+      );
     }
 
     const generator = this.symmetryGenerators[generatorIdx];
+
+    // Validate that generator exists and has the expected structure
+    if (!generator || typeof generator !== "object") {
+      throw new Prime.ValidationError("Invalid generator", {
+        operation: "CoherenceGradientDescent.applyTransformation",
+        generatorIndex: generatorIdx,
+        generator: generator,
+      });
+    }
+
+    // Validate generator type
+    if (
+      !generator.type ||
+      !["bit_flip", "bit_swap", "cluster_flip"].includes(generator.type)
+    ) {
+      throw new Prime.ValidationError(
+        `Invalid generator type: ${generator.type}`,
+        {
+          operation: "CoherenceGradientDescent.applyTransformation",
+          validTypes: ["bit_flip", "bit_swap", "cluster_flip"],
+          providedType: generator.type,
+        },
+      );
+    }
+
     const newState = state.slice();
 
     switch (generator.type) {
-      case 'bit_flip':
+      case "bit_flip":
         {
+          // Validate index is defined
+          if (generator.index === undefined) {
+            throw new Prime.ValidationError(
+              "Missing index in bit_flip generator",
+              {
+                operation: "CoherenceGradientDescent.applyTransformation",
+                generator: generator,
+              },
+            );
+          }
+
+          // Validate index is a number
+          TypeValidation.assertNumber(generator.index, "generator.index", {
+            operation: "CoherenceGradientDescent.applyTransformation",
+          });
+
+          // Validate index is an integer
+          TypeValidation.assertInteger(generator.index, "generator.index", {
+            operation: "CoherenceGradientDescent.applyTransformation",
+          });
+
           const idx = generator.index;
           if (idx < state.length) {
             newState[idx] = 1 - newState[idx];
@@ -576,18 +856,107 @@ class CoherenceGradientDescent {
         }
         break;
 
-      case 'bit_swap':
+      case "bit_swap":
         {
+          // Validate indices array exists
+          if (!Array.isArray(generator.indices)) {
+            throw new Prime.ValidationError(
+              "Missing indices in bit_swap generator",
+              {
+                operation: "CoherenceGradientDescent.applyTransformation",
+                generator: generator,
+              },
+            );
+          }
+
+          // Validate indices array has exactly 2 elements
+          if (generator.indices.length !== 2) {
+            throw new Prime.ValidationError(
+              "Bit swap requires exactly 2 indices",
+              {
+                operation: "CoherenceGradientDescent.applyTransformation",
+                expectedIndices: 2,
+                actualIndices: generator.indices.length,
+              },
+            );
+          }
+
           const [i, j] = generator.indices;
+
+          // Validate indices are numbers
+          TypeValidation.assertNumber(i, "generator.indices[0]", {
+            operation: "CoherenceGradientDescent.applyTransformation",
+          });
+
+          TypeValidation.assertNumber(j, "generator.indices[1]", {
+            operation: "CoherenceGradientDescent.applyTransformation",
+          });
+
+          // Validate indices are integers
+          TypeValidation.assertInteger(i, "generator.indices[0]", {
+            operation: "CoherenceGradientDescent.applyTransformation",
+          });
+
+          TypeValidation.assertInteger(j, "generator.indices[1]", {
+            operation: "CoherenceGradientDescent.applyTransformation",
+          });
+
           if (i < state.length && j < state.length) {
             [newState[i], newState[j]] = [newState[j], newState[i]];
           }
         }
         break;
 
-      case 'cluster_flip':
+      case "cluster_flip":
         {
-          for (const idx of generator.indices) {
+          // Validate indices array exists
+          if (!Array.isArray(generator.indices)) {
+            throw new Prime.ValidationError(
+              "Missing indices in cluster_flip generator",
+              {
+                operation: "CoherenceGradientDescent.applyTransformation",
+                generator: generator,
+              },
+            );
+          }
+
+          // Validate indices array is not empty
+          if (generator.indices.length === 0) {
+            throw new Prime.ValidationError(
+              "Cluster flip requires at least one index",
+              {
+                operation: "CoherenceGradientDescent.applyTransformation",
+              },
+            );
+          }
+
+          for (let i = 0; i < generator.indices.length; i++) {
+            const idx = generator.indices[i];
+
+            // Validate each index is a number
+            if (typeof idx !== "number" || isNaN(idx)) {
+              throw new Prime.ValidationError(
+                `Invalid cluster index at position ${i}`,
+                {
+                  operation: "CoherenceGradientDescent.applyTransformation",
+                  index: i,
+                  value: idx,
+                },
+              );
+            }
+
+            // Validate each index is an integer
+            if (!Number.isInteger(idx)) {
+              throw new Prime.ValidationError(
+                `Cluster index at position ${i} must be an integer`,
+                {
+                  operation: "CoherenceGradientDescent.applyTransformation",
+                  index: i,
+                  value: idx,
+                },
+              );
+            }
+
             if (idx < state.length) {
               newState[idx] = 1 - newState[idx];
             }
@@ -609,17 +978,111 @@ class CoherenceGradientDescent {
    * @returns {Object} Encoded problem
    */
   encodeProblem(problem) {
-    if (!problem || typeof problem !== 'object') {
-      throw new Prime.ValidationError('Problem must be an object', {
-        actualType: typeof problem
-      });
-    }
-    
+    // Validate problem is provided and is an object
+    TypeValidation.assertDefined(problem, "problem", {
+      operation: "CoherenceGradientDescent.encodeProblem",
+    });
+
+    TypeValidation.assertObject(problem, "problem", {
+      operation: "CoherenceGradientDescent.encodeProblem",
+    });
+
+    // Validate constraints are provided and are an array
     const constraints = problem.constraints;
-    if (!Array.isArray(constraints)) {
-      throw new Prime.ValidationError('Problem must have an array of constraints', {
-        actualType: constraints ? typeof constraints : 'undefined'
+    TypeValidation.assertDefined(constraints, "problem.constraints", {
+      operation: "CoherenceGradientDescent.encodeProblem",
+    });
+
+    TypeValidation.assertArray(constraints, "problem.constraints", {
+      operation: "CoherenceGradientDescent.encodeProblem",
+    });
+
+    // Validate each constraint is a function
+    for (let i = 0; i < constraints.length; i++) {
+      TypeValidation.assertFunction(
+        constraints[i],
+        `problem.constraints[${i}]`,
+        {
+          operation: "CoherenceGradientDescent.encodeProblem",
+        },
+      );
+    }
+
+    // Validate dimension if provided
+    if (problem.dimension !== undefined) {
+      TypeValidation.assertPositiveInteger(
+        problem.dimension,
+        "problem.dimension",
+        {
+          operation: "CoherenceGradientDescent.encodeProblem",
+        },
+      );
+    }
+
+    // Validate weights if provided
+    if (problem.weights !== undefined) {
+      TypeValidation.assertArray(problem.weights, "problem.weights", {
+        operation: "CoherenceGradientDescent.encodeProblem",
       });
+
+      TypeValidation.assertNumberArray(problem.weights, "problem.weights", {
+        operation: "CoherenceGradientDescent.encodeProblem",
+      });
+
+      // Validate weights match constraints length
+      if (problem.weights.length !== constraints.length) {
+        throw new Prime.DimensionMismatchError(
+          "Weights array must have the same length as constraints array",
+          {
+            operation: "CoherenceGradientDescent.encodeProblem",
+            constraintsLength: constraints.length,
+            weightsLength: problem.weights.length,
+          },
+        );
+      }
+
+      // Validate weights are positive
+      const negativeWeightIndex = problem.weights.findIndex((w) => w <= 0);
+      if (negativeWeightIndex !== -1) {
+        throw new Prime.ValidationError(
+          `Weight at index ${negativeWeightIndex} must be positive`,
+          {
+            operation: "CoherenceGradientDescent.encodeProblem",
+            index: negativeWeightIndex,
+            weight: problem.weights[negativeWeightIndex],
+          },
+        );
+      }
+    }
+
+    // Validate initialState if provided
+    if (problem.initialState !== undefined) {
+      TypeValidation.assertArray(problem.initialState, "problem.initialState", {
+        operation: "CoherenceGradientDescent.encodeProblem",
+      });
+
+      TypeValidation.assertNumberArray(
+        problem.initialState,
+        "problem.initialState",
+        {
+          operation: "CoherenceGradientDescent.encodeProblem",
+        },
+      );
+
+      // Binary problems (0-1) should have binary values
+      const nonBinaryIndex = problem.initialState.findIndex(
+        (v) => v !== 0 && v !== 1,
+      );
+      if (nonBinaryIndex !== -1) {
+        Prime.Logger.warn(
+          `Initial state contains non-binary value at index ${nonBinaryIndex}`,
+          {
+            operation: "CoherenceGradientDescent.encodeProblem",
+            index: nonBinaryIndex,
+            value: problem.initialState[nonBinaryIndex],
+          },
+        );
+      }
     }
 
     const n = problem.dimension || this.dimension;
@@ -672,7 +1135,7 @@ class CoherenceGradientDescent {
     for (let i = 0; i < problem.constraints.length; i++) {
       const constraint = problem.constraints[i];
 
-      // Use intelligent variable dependency detection to determine which 
+      // Use intelligent variable dependency detection to determine which
       // variables interact in this constraint
       const involvedVars = this._identifyInvolvedVariables(constraint, n);
 
@@ -720,13 +1183,14 @@ class CoherenceGradientDescent {
    */
   _identifyInvolvedVariables(constraint, n) {
     // Use multiple approaches to identify involved variables
-    
+
     // First check if function has metadata about involved variables
     if (constraint.involvedVariables) {
-      return Array.isArray(constraint.involvedVariables) ? 
-        constraint.involvedVariables.filter(idx => idx >= 0 && idx < n) : [];
+      return Array.isArray(constraint.involvedVariables)
+        ? constraint.involvedVariables.filter((idx) => idx >= 0 && idx < n)
+        : [];
     }
-    
+
     // Convert function to string to analyze its structure
     let fnStr;
     try {
@@ -735,10 +1199,10 @@ class CoherenceGradientDescent {
       // If we can't get the function source, use a fallback approach
       return this._identifyVariablesBySensitivity(constraint, n);
     }
-    
+
     // Try to extract variable references from the function string
     const involved = new Set();
-    
+
     // Check for direct array access patterns like state[0], state[i], etc.
     const arrayAccessRegex = /state\s*\[\s*(\d+)\s*\]/g;
     let match;
@@ -748,7 +1212,7 @@ class CoherenceGradientDescent {
         involved.add(idx);
       }
     }
-    
+
     // Check for variable names that might be used like x0, x1, v0, v1, etc.
     const variableNameRegex = /\b([xvs])(\d+)\b/g;
     while ((match = variableNameRegex.exec(fnStr)) !== null) {
@@ -757,16 +1221,16 @@ class CoherenceGradientDescent {
         involved.add(idx);
       }
     }
-    
+
     // If we found explicit references, return them
     if (involved.size > 0) {
       return Array.from(involved).sort((a, b) => a - b);
     }
-    
+
     // If static analysis didn't work, try sensitivity analysis
     return this._identifyVariablesBySensitivity(constraint, n);
   }
-  
+
   /**
    * Identify involved variables using sensitivity analysis
    * Tests each variable by flipping its value and measuring constraint changes
@@ -780,7 +1244,7 @@ class CoherenceGradientDescent {
     // Create a baseline state vector (all zeros)
     const baselineState = Array(n).fill(0);
     let baselineResult;
-    
+
     try {
       // Evaluate constraint with baseline state
       baselineResult = this._evaluateConstraint(constraint, baselineState);
@@ -802,20 +1266,20 @@ class CoherenceGradientDescent {
         }
       }
     }
-    
+
     // Test each variable by flipping its value and measuring change
     const involved = [];
     const sensitivityThreshold = 0.001; // Minimum change to consider variable involved
-    
+
     for (let i = 0; i < n; i++) {
       // Create a modified state with this variable flipped
       const testState = baselineState.slice();
       testState[i] = testState[i] === 0 ? 1 : 0;
-      
+
       try {
         // Evaluate constraint with modified state
         const testResult = this._evaluateConstraint(constraint, testState);
-        
+
         // Check if flipping this variable changed the result
         const difference = Math.abs(testResult - baselineResult);
         if (difference > sensitivityThreshold) {
@@ -827,12 +1291,12 @@ class CoherenceGradientDescent {
         involved.push(i);
       }
     }
-    
+
     // If sensitivity analysis found variables, return them
     if (involved.length > 0) {
       return involved;
     }
-    
+
     // If no variables were found to be sensitive, do a second pass
     // with paired variables (to detect constraints with parity or XOR-like behavior)
     if (n >= 2) {
@@ -842,11 +1306,11 @@ class CoherenceGradientDescent {
           const testState = baselineState.slice();
           testState[i] = testState[i] === 0 ? 1 : 0;
           testState[j] = testState[j] === 0 ? 1 : 0;
-          
+
           try {
             // Evaluate constraint with modified state
             const testResult = this._evaluateConstraint(constraint, testState);
-            
+
             // Check if flipping these variables changed the result
             const difference = Math.abs(testResult - baselineResult);
             if (difference > sensitivityThreshold) {
@@ -862,11 +1326,11 @@ class CoherenceGradientDescent {
         }
       }
     }
-    
+
     // Remove duplicates and sort
     return [...new Set(involved)].sort((a, b) => a - b);
   }
-  
+
   /**
    * Get fallback involved variables when analysis fails
    * Uses a deterministic approach based on constraint ID or signature
@@ -879,16 +1343,16 @@ class CoherenceGradientDescent {
     // Get a deterministic sample size based on problem size
     // Minimum of 2 variables, maximum of n/3, at least 3 for n > 10
     const count = Math.max(2, Math.min(Math.ceil(n / 3), Math.ceil(n / 5)));
-    
+
     // Deterministically choose variables with good distribution
     // Use a stride pattern to ensure variables are spread out
     const involved = [];
     const stride = Math.max(1, Math.floor(n / count));
-    
+
     for (let i = 0, idx = 0; i < count && idx < n; i++, idx += stride) {
       involved.push(idx);
     }
-    
+
     // Fill in any remaining spots if we didn't get enough variables
     let start = Math.floor(n / 2); // Start from the middle
     while (involved.length < count && involved.length < n) {
@@ -896,12 +1360,15 @@ class CoherenceGradientDescent {
         involved.push(start);
       }
       // Alternate between moving up and down from the middle
-      start = start + (involved.length % 2 === 0 ? 1 : -1) * (Math.floor(involved.length / 2) + 1);
+      start =
+        start +
+        (involved.length % 2 === 0 ? 1 : -1) *
+          (Math.floor(involved.length / 2) + 1);
       if (start < 0 || start >= n) {
         start = Math.floor(Math.random() * n); // Fallback if pattern reaches bounds
       }
     }
-    
+
     return involved.sort((a, b) => a - b);
   }
 
@@ -1012,25 +1479,25 @@ class CoherenceGradientDescent {
    * @returns {number} Satisfaction level (0-1)
    */
   _evaluateConstraint(constraint, state) {
-    if (typeof constraint !== 'function') {
-      throw new Prime.ValidationError('Constraint must be a function', {
-        actualType: typeof constraint
+    if (typeof constraint !== "function") {
+      throw new Prime.ValidationError("Constraint must be a function", {
+        actualType: typeof constraint,
       });
     }
-    
+
     if (!Array.isArray(state)) {
-      throw new Prime.ValidationError('State must be an array', {
-        actualType: typeof state
+      throw new Prime.ValidationError("State must be an array", {
+        actualType: typeof state,
       });
     }
-    
+
     try {
       const result = constraint(state);
-      
+
       // Normalize result to 0-1 range if it's not already
-      if (typeof result === 'boolean') {
+      if (typeof result === "boolean") {
         return result ? 1 : 0;
-      } else if (typeof result === 'number') {
+      } else if (typeof result === "number") {
         // Handle NaN and Infinity
         if (!Number.isFinite(result)) {
           return 0; // Constraint is not satisfied if result is NaN or Infinity
@@ -1060,18 +1527,77 @@ class CoherenceGradientDescent {
    * @returns {Object} Coherence norm and constraint satisfaction
    */
   computeStateCoherence(problem, state) {
-    if (!problem || typeof problem !== 'object') {
-      throw new Prime.ValidationError('Problem must be an object', {
-        actualType: typeof problem
-      });
+    // Validate problem is provided and is an object
+    TypeValidation.assertDefined(problem, "problem", {
+      operation: "CoherenceGradientDescent.computeStateCoherence",
+    });
+
+    TypeValidation.assertObject(problem, "problem", {
+      operation: "CoherenceGradientDescent.computeStateCoherence",
+    });
+
+    // Validate state is provided and is an array
+    TypeValidation.assertDefined(state, "state", {
+      operation: "CoherenceGradientDescent.computeStateCoherence",
+    });
+
+    TypeValidation.assertArray(state, "state", {
+      operation: "CoherenceGradientDescent.computeStateCoherence",
+    });
+
+    // Validate state contains only numbers
+    TypeValidation.assertNumberArray(state, "state", {
+      operation: "CoherenceGradientDescent.computeStateCoherence",
+    });
+
+    // Validate problem has required properties
+    TypeValidation.assertDefined(
+      problem.n_constraints,
+      "problem.n_constraints",
+      {
+        operation: "CoherenceGradientDescent.computeStateCoherence",
+      },
+    );
+
+    TypeValidation.assertDefined(problem.constraints, "problem.constraints", {
+      operation: "CoherenceGradientDescent.computeStateCoherence",
+    });
+
+    TypeValidation.assertArray(problem.constraints, "problem.constraints", {
+      operation: "CoherenceGradientDescent.computeStateCoherence",
+    });
+
+    // Validate constraints are functions
+    for (let i = 0; i < problem.constraints.length; i++) {
+      TypeValidation.assertFunction(
+        problem.constraints[i],
+        `problem.constraints[${i}]`,
+        {
+          operation: "CoherenceGradientDescent.computeStateCoherence",
+        },
+      );
     }
-    
-    if (!Array.isArray(state)) {
-      throw new Prime.ValidationError('State must be an array', {
-        actualType: typeof state
-      });
+
+    // Validate weights exist and match constraints length
+    TypeValidation.assertDefined(problem.weights, "problem.weights", {
+      operation: "CoherenceGradientDescent.computeStateCoherence",
+    });
+
+    TypeValidation.assertArray(problem.weights, "problem.weights", {
+      operation: "CoherenceGradientDescent.computeStateCoherence",
+    });
+
+    if (problem.weights.length !== problem.constraints.length) {
+      throw new Prime.DimensionMismatchError(
+        "Weights array must have the same length as constraints array",
+        {
+          operation: "CoherenceGradientDescent.computeStateCoherence",
+          constraintsLength: problem.constraints.length,
+          weightsLength: problem.weights.length,
+        },
+      );
     }
-    
+
     const n_constraints = problem.n_constraints;
 
     // Compute constraint satisfaction vector
@@ -1264,18 +1790,18 @@ class CoherenceGradientDescent {
    * @returns {Array} Array of (generator index, coherence change) pairs
    */
   computeCoherenceGradient(problem, state) {
-    if (!problem || typeof problem !== 'object') {
-      throw new Prime.ValidationError('Problem must be an object', {
-        actualType: typeof problem
+    if (!problem || typeof problem !== "object") {
+      throw new Prime.ValidationError("Problem must be an object", {
+        actualType: typeof problem,
       });
     }
-    
+
     if (!Array.isArray(state)) {
-      throw new Prime.ValidationError('State must be an array', {
-        actualType: typeof state
+      throw new Prime.ValidationError("State must be an array", {
+        actualType: typeof state,
       });
     }
-    
+
     const { coherence } = this.computeStateCoherence(problem, state);
     const gradient = [];
 
@@ -1300,13 +1826,13 @@ class CoherenceGradientDescent {
       let isPriority = false;
 
       // Check if this generator affects important variables
-      if (generator.type === 'bit_flip') {
+      if (generator.type === "bit_flip") {
         isPriority = importantIndices.has(generator.index);
-      } else if (generator.type === 'bit_swap') {
+      } else if (generator.type === "bit_swap") {
         isPriority =
           importantIndices.has(generator.indices[0]) ||
           importantIndices.has(generator.indices[1]);
-      } else if (generator.type === 'cluster_flip') {
+      } else if (generator.type === "cluster_flip") {
         isPriority = generator.indices.some((idx) => importantIndices.has(idx));
       }
 
@@ -1350,11 +1876,11 @@ class CoherenceGradientDescent {
    */
   diversifySearch(problem, state, previousStates, iteration) {
     if (!Array.isArray(state)) {
-      throw new Prime.ValidationError('State must be an array', {
-        actualType: typeof state
+      throw new Prime.ValidationError("State must be an array", {
+        actualType: typeof state,
       });
     }
-    
+
     // Determine if we should diversify based on stagnation
     let shouldDiversify = false;
 
@@ -1439,12 +1965,100 @@ class CoherenceGradientDescent {
    * @returns {Object} Solution information
    */
   solve(problem, options = {}) {
-    if (!problem || typeof problem !== 'object') {
-      throw new Prime.ValidationError('Problem must be an object', {
-        actualType: typeof problem
+    // Validate problem is provided and is an object
+    TypeValidation.assertDefined(problem, "problem", {
+      operation: "CoherenceGradientDescent.solve",
+    });
+
+    TypeValidation.assertObject(problem, "problem", {
+      operation: "CoherenceGradientDescent.solve",
+    });
+
+    // Validate problem has required properties
+    TypeValidation.assertDefined(problem.constraints, "problem.constraints", {
+      operation: "CoherenceGradientDescent.solve",
+    });
+
+    TypeValidation.assertArray(problem.constraints, "problem.constraints", {
+      operation: "CoherenceGradientDescent.solve",
+    });
+
+    // Validate options if provided
+    if (options !== undefined) {
+      TypeValidation.assertObject(options, "options", {
+        operation: "CoherenceGradientDescent.solve",
       });
+
+      // Validate specific option types if provided
+      if (options.maxIterations !== undefined) {
+        TypeValidation.assertPositiveInteger(
+          options.maxIterations,
+          "options.maxIterations",
+          {
+            operation: "CoherenceGradientDescent.solve",
+          },
+        );
+
+        // Check for unreasonably large values
+        if (options.maxIterations > 1000000) {
+          Prime.Logger.warn(
+            `maxIterations ${options.maxIterations} is very large and may cause performance issues`,
+            {
+              operation: "CoherenceGradientDescent.solve",
+              recommendedMaximum: 1000000,
+            },
+          );
+        }
+      }
+
+      if (options.useSimulatedAnnealing !== undefined) {
+        TypeValidation.assertBoolean(
+          options.useSimulatedAnnealing,
+          "options.useSimulatedAnnealing",
+          {
+            operation: "CoherenceGradientDescent.solve",
+          },
+        );
+      }
+
+      if (options.temperature !== undefined) {
+        TypeValidation.assertPositiveNumber(
+          options.temperature,
+          "options.temperature",
+          {
+            operation: "CoherenceGradientDescent.solve",
+          },
+        );
+      }
+
+      if (options.restartCount !== undefined) {
+        TypeValidation.assertNonNegativeInteger(
+          options.restartCount,
+          "options.restartCount",
+          {
+            operation: "CoherenceGradientDescent.solve",
+          },
+        );
+      }
+
+      if (options.useTabu !== undefined) {
+        TypeValidation.assertBoolean(options.useTabu, "options.useTabu", {
+          operation: "CoherenceGradientDescent.solve",
+        });
+      }
+
+      if (options.tabuListSize !== undefined) {
+        TypeValidation.assertPositiveInteger(
+          options.tabuListSize,
+          "options.tabuListSize",
+          {
+            operation: "CoherenceGradientDescent.solve",
+          },
+        );
+      }
     }
-    
+
+    // Parse options with defaults
     const maxIterations = options.maxIterations || 1000;
     const useSimulatedAnnealing = options.useSimulatedAnnealing !== false;
     const temperature = options.temperature || 1.0;

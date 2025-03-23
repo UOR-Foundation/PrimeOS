@@ -5,14 +5,14 @@
  * Helps prevent cryptic errors by providing clear validation messages.
  */
 
-const Prime = require('../../core.js');
+const Prime = require("../../core/prime.js");
 
 // Ensure we have Prime.ValidationError available
 if (!Prime.ValidationError) {
   Prime.ValidationError = class ValidationError extends Error {
     constructor(message) {
       super(message);
-      this.name = 'ValidationError';
+      this.name = "ValidationError";
     }
   };
 }
@@ -29,7 +29,7 @@ Prime.Neural.Distributed.DimensionValidator = {
    */
   validateModelConfig(config) {
     if (!config) {
-      throw new Prime.ValidationError('Model configuration is required');
+      throw new Prime.ValidationError("Model configuration is required");
     }
 
     // Validate inputSize
@@ -94,7 +94,7 @@ Prime.Neural.Distributed.DimensionValidator = {
    * @returns {Boolean} True if valid
    * @throws {ValidationError} If dimensions are invalid
    */
-  validateMatrixDimensions(rows, cols, context = 'weights') {
+  validateMatrixDimensions(rows, cols, context = "weights") {
     if (!Number.isInteger(rows) || rows <= 0) {
       throw new Prime.ValidationError(
         `Invalid ${context} matrix rows: ${rows}. Must be a positive integer.`,
@@ -117,7 +117,7 @@ Prime.Neural.Distributed.DimensionValidator = {
    * @returns {Boolean} True if valid
    * @throws {ValidationError} If dimensions are invalid
    */
-  validateVectorDimensions(size, context = 'biases') {
+  validateVectorDimensions(size, context = "biases") {
     if (!Number.isInteger(size) || size <= 0) {
       throw new Prime.ValidationError(
         `Invalid ${context} vector size: ${size}. Must be a positive integer.`,
@@ -182,18 +182,18 @@ Prime.Neural.Distributed.DimensionValidator = {
   logLayerDimensions(layers) {
     if (!Array.isArray(layers) || layers.length === 0) {
       if (Prime.Logger && Prime.Logger.warn) {
-        Prime.Logger.warn('No layers to log dimensions for');
+        Prime.Logger.warn("No layers to log dimensions for");
       }
       return;
     }
 
     if (Prime.Logger && Prime.Logger.info) {
-      Prime.Logger.info('Neural Network Layer Dimensions:');
+      Prime.Logger.info("Neural Network Layer Dimensions:");
 
       for (let i = 0; i < layers.length; i++) {
         const layer = layers[i];
         Prime.Logger.info(
-          `  Layer ${i}: Type=${layer.type || 'dense'}, Input=${layer.inputSize}, Output=${layer.outputSize}`,
+          `  Layer ${i}: Type=${layer.type || "dense"}, Input=${layer.inputSize}, Output=${layer.outputSize}`,
         );
 
         // Log weight dimensions if available

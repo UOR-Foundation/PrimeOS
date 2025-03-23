@@ -37,7 +37,9 @@ describe("PrimeOS Distributed Computation Module - Cluster", () => {
         discoveryMethod: "local",
       });
 
-      expect(manager instanceof Prime.Distributed.Cluster.ClusterManager).toBe(true);
+      expect(manager instanceof Prime.Distributed.Cluster.ClusterManager).toBe(
+        true,
+      );
       expect(manager.config.maxNodes).toBe(5);
       expect(manager.nodes.size).toBe(0);
     });

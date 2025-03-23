@@ -7,7 +7,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Ensure the distributed namespace exists
 Prime.distributed = Prime.distributed || {};
@@ -16,10 +16,10 @@ Prime.distributed = Prime.distributed || {};
 Prime.distributed.training = Prime.distributed.training || {};
 
 // Import all distributed training components
-require('./parameter-server');
-require('./gradient-aggregation');
-require('./model-partitioning');
-require('./fault-tolerance');
+require("./parameter-server");
+require("./gradient-aggregation");
+require("./model-partitioning");
+require("./fault-tolerance");
 
 /**
  * Distributed Training Manager - Top-level facade for distributed training
@@ -64,7 +64,7 @@ class DistributedTraining {
    */
   registerNode(nodeId, capabilities) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -75,7 +75,7 @@ class DistributedTraining {
    */
   initializeTraining(model, options) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -86,7 +86,7 @@ class DistributedTraining {
    */
   startTraining(dataset, trainingConfig) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -96,7 +96,7 @@ class DistributedTraining {
    */
   pauseTraining(createCheckpoint = true) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -106,7 +106,7 @@ class DistributedTraining {
    */
   resumeTraining(options = {}) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**

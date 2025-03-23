@@ -14,14 +14,14 @@
 // Try to import core if available
 let Prime;
 try {
-  Prime = require('../core.js');
+  Prime = require("../core.js");
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
 }
 
 // Import required modules
-const MathUtils = require('../framework/math/index.js');
+const MathUtils = require("../framework/math/index.js");
 
 /**
  * ThresholdManager provides adaptive threshold management for state transitions
@@ -66,10 +66,10 @@ class ThresholdManager {
 
     // Consciousness levels
     this.consciousnessLevels = [
-      { name: 'unconscious', threshold: 0.0 },
-      { name: 'subconscious', threshold: 0.3 },
-      { name: 'conscious', threshold: 0.6 },
-      { name: 'metaconscious', threshold: 0.85 },
+      { name: "unconscious", threshold: 0.0 },
+      { name: "subconscious", threshold: 0.3 },
+      { name: "conscious", threshold: 0.6 },
+      { name: "metaconscious", threshold: 0.85 },
     ];
 
     // Access regulation
@@ -234,12 +234,12 @@ class ThresholdManager {
     let requiredThreshold = this.baseCoherenceThreshold;
 
     // Adjust threshold based on context
-    if (context.importance && typeof context.importance === 'number') {
+    if (context.importance && typeof context.importance === "number") {
       // Lower threshold for important information
       requiredThreshold *= Math.max(0.7, 1 - context.importance * 0.3);
     }
 
-    if (context.urgency && typeof context.urgency === 'number') {
+    if (context.urgency && typeof context.urgency === "number") {
       // Lower threshold for urgent information
       requiredThreshold *= Math.max(0.7, 1 - context.urgency * 0.3);
     }
@@ -485,26 +485,26 @@ class ThresholdManager {
 
       // Apply dimension-specific adjustments
       switch (dimension) {
-        case 'attention':
+        case "attention":
           // Attention threshold affected by arousal
           adaptiveThreshold += (this.arousalLevel - 0.5) * 0.2;
           break;
 
-        case 'awareness':
+        case "awareness":
           // Awareness threshold affected by self-reference
           adaptiveThreshold += (selfReference - 0.5) * 0.15;
           break;
 
-        case 'coherence':
+        case "coherence":
           // Coherence threshold is relatively stable
           break;
 
-        case 'integration':
+        case "integration":
           // Integration threshold affected by temporal binding
           adaptiveThreshold += (temporalBinding - 0.5) * 0.15;
           break;
 
-        case 'differentiation': {
+        case "differentiation": {
           // Differentiation threshold inversely affected by integration
           const integration =
             state.integration ||
@@ -513,7 +513,7 @@ class ThresholdManager {
           break;
         }
 
-        case 'selfReference':
+        case "selfReference":
           // Self-reference threshold highest during metaconsciousness
           if (selfReference > 0.8) {
             adaptiveThreshold -= 0.1; // Easier to maintain once established
@@ -522,7 +522,7 @@ class ThresholdManager {
           }
           break;
 
-        case 'temporalBinding':
+        case "temporalBinding":
           // Temporal binding threshold affected by coherence
           adaptiveThreshold += (coherence - 0.5) * 0.1;
           break;
@@ -621,13 +621,13 @@ class ThresholdManager {
    */
   _getDimensionName(index) {
     const dimensions = [
-      'attention',
-      'awareness',
-      'coherence',
-      'integration',
-      'differentiation',
-      'selfReference',
-      'temporalBinding',
+      "attention",
+      "awareness",
+      "coherence",
+      "integration",
+      "differentiation",
+      "selfReference",
+      "temporalBinding",
     ];
 
     return dimensions[index] || `dimension${index}`;
@@ -702,7 +702,7 @@ class ThresholdManager {
    * @returns {string} State ID
    */
   _getStateId(state) {
-    if (!state) return 'null';
+    if (!state) return "null";
 
     if (state.id) return state.id;
 
@@ -714,7 +714,7 @@ class ThresholdManager {
       .reduce((h, v, i) => h + Math.round(v * 1000) * (i + 1), 0)
       .toString(36);
 
-    return hash + '_' + Date.now().toString(36);
+    return hash + "_" + Date.now().toString(36);
   }
 
   /**
@@ -728,7 +728,7 @@ class ThresholdManager {
     if (!state) return 0;
 
     // If state has coherence property, use it
-    if (typeof state.coherence === 'number') {
+    if (typeof state.coherence === "number") {
       return Math.min(1, Math.max(0, state.coherence));
     }
 
@@ -757,19 +757,19 @@ class ThresholdManager {
   _generateAccessExplanation(granted, coherence, threshold) {
     if (granted) {
       if (coherence > threshold * 1.2) {
-        return 'Access granted: high coherence';
+        return "Access granted: high coherence";
       } else if (coherence > threshold) {
-        return 'Access granted: sufficient coherence';
+        return "Access granted: sufficient coherence";
       } else {
-        return 'Access maintained from previous access';
+        return "Access maintained from previous access";
       }
     } else {
       const gap = threshold - coherence;
 
       if (gap > 0.3) {
-        return 'Access denied: insufficient coherence';
+        return "Access denied: insufficient coherence";
       } else {
-        return 'Access denied: coherence below threshold';
+        return "Access denied: coherence below threshold";
       }
     }
   }
@@ -826,15 +826,15 @@ class ThresholdManager {
     let category;
 
     if (this.arousalLevel < 0.3) {
-      category = 'low';
+      category = "low";
     } else if (this.arousalLevel < 0.5) {
-      category = 'moderate-low';
+      category = "moderate-low";
     } else if (this.arousalLevel < 0.7) {
-      category = 'moderate';
+      category = "moderate";
     } else if (this.arousalLevel < 0.9) {
-      category = 'moderate-high';
+      category = "moderate-high";
     } else {
-      category = 'high';
+      category = "high";
     }
 
     return {

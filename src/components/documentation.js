@@ -5,12 +5,12 @@
  */
 
 // Import Prime using CommonJS to avoid circular dependency
-const Prime = require('../core.js');
+const Prime = require("../core.js");
 // Ensure all modules are loaded in correct order
-require('../mathematics.js');
-require('../coherence.js');
-require('../framework/index.js');
-require('./base.js');
+require("../mathematics.js");
+require("../coherence.js");
+require("../framework/index.js");
+require("./base.js");
 
 (function (Prime) {
   /**
@@ -18,7 +18,7 @@ require('./base.js');
    */
   const generateDocumentation = function (options = {}) {
     const docOptions = {
-      format: options.format || 'markdown',
+      format: options.format || "markdown",
       includePrivate: options.includePrivate === true,
       includeInternal: options.includeInternal === true,
       depth: options.depth || Infinity,
@@ -29,11 +29,11 @@ require('./base.js');
      * @returns {string} Generated documentation
      */
     const generatePrimeDocumentation = function () {
-      if (docOptions.format === 'markdown') {
+      if (docOptions.format === "markdown") {
         return generateMarkdownDocumentation();
-      } else if (docOptions.format === 'html') {
+      } else if (docOptions.format === "html") {
         return generateHtmlDocumentation();
-      } else if (docOptions.format === 'json') {
+      } else if (docOptions.format === "json") {
         return generateJsonDocumentation();
       }
 
@@ -68,9 +68,9 @@ require('./base.js');
 
       // Basic conversion from markdown to HTML
       const html = md
-        .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
-        .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        .replace(/^# (.*?)$/gm, "<h1>$1</h1>")
+        .replace(/^## (.*?)$/gm, "<h2>$1</h2>")
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
       return `<!DOCTYPE html>
       <html>
@@ -90,9 +90,9 @@ require('./base.js');
     const generateJsonDocumentation = function () {
       // Basic documentation structure
       return {
-        name: 'PrimeOS JavaScript Library',
-        version: Prime.version || '1.0.0',
-        description: 'PrimeOS JavaScript Framework',
+        name: "PrimeOS JavaScript Library",
+        version: Prime.version || "1.0.0",
+        description: "PrimeOS JavaScript Framework",
         modules: [],
       };
     };
@@ -106,8 +106,8 @@ require('./base.js');
 
   // Event notification
   if (Prime.EventBus && Prime.EventBus.publish) {
-    Prime.EventBus.publish('module:loaded', {
-      name: 'component-documentation',
+    Prime.EventBus.publish("module:loaded", {
+      name: "component-documentation",
     });
   }
 })(Prime);

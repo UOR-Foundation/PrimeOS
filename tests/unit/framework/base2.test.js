@@ -8,15 +8,15 @@ const { assertions, mocking } = require("../../utils");
 describe("PrimeOS Framework - Base2", () => {
   let base0;
   let base1;
-  
+
   beforeEach(() => {
     // Create Base 0 components
     base0 = Prime.Base0.createBase0Components();
-    
+
     // Connect Base 1 to Base 0
     base1 = Prime.Base1.connectToBase0(base0);
   });
-  
+
   describe("ResourceClient", () => {
     test("creates a resource client with correct properties", () => {
       // Create Resource Client
@@ -39,7 +39,7 @@ describe("PrimeOS Framework - Base2", () => {
       const originalStart = base1.runtime.start;
       const originalRun = base1.runtime.run;
       const originalStop = base1.runtime.stop;
-      
+
       let startCalled = false;
       let runCalled = false;
       let stopCalled = false;
@@ -185,54 +185,72 @@ describe("PrimeOS Framework - Base2", () => {
         systemManager.freeMemory("nonexistent");
       }).toThrow(Prime.InvalidOperationError);
     });
-    
+
     test("correctly implements CIDR IP matching", () => {
       const systemManager = Prime.Base2.createSystemManager({
         security: {
           policy: {
-            'test': {
+            test: {
               networkRestrictions: {
                 allowedIPs: [
-                  '192.168.1.0/24',
-                  '10.0.0.0/8',
-                  '172.16.0.0/12',
-                  '127.0.0.1',
-                  '192.168.2.*'
+                  "192.168.1.0/24",
+                  "10.0.0.0/8",
+                  "172.16.0.0/12",
+                  "127.0.0.1",
+                  "192.168.2.*",
                 ],
                 blockedIPs: [
-                  '192.168.1.128/25',  // Block second half of 192.168.1.0/24
-                  '10.1.2.3'
-                ]
-              }
-            }
-          }
-        }
+                  "192.168.1.128/25", // Block second half of 192.168.1.0/24
+                  "10.1.2.3",
+                ],
+              },
+            },
+          },
+        },
       });
 
       // Test exact IP match
-      expect(systemManager._checkIPInRange('127.0.0.1', ['127.0.0.1'])).toBe(true);
-      
+      expect(systemManager._checkIPInRange("127.0.0.1", ["127.0.0.1"])).toBe(
+        true,
+      );
+
       // Test IP not in list
-      expect(systemManager._checkIPInRange('8.8.8.8', ['127.0.0.1', '10.0.0.1'])).toBe(false);
-      
+      expect(
+        systemManager._checkIPInRange("8.8.8.8", ["127.0.0.1", "10.0.0.1"]),
+      ).toBe(false);
+
       // Test wildcard notation
-      expect(systemManager._checkIPInRange('192.168.2.42', ['192.168.2.*'])).toBe(true);
-      
+      expect(
+        systemManager._checkIPInRange("192.168.2.42", ["192.168.2.*"]),
+      ).toBe(true);
+
       // Test CIDR notation
-      expect(systemManager._checkIPInRange('192.168.1.42', ['192.168.1.0/24'])).toBe(true);
-      expect(systemManager._checkIPInRange('10.20.30.40', ['10.0.0.0/8'])).toBe(true);
-      expect(systemManager._checkIPInRange('192.168.2.1', ['192.168.1.0/24'])).toBe(false);
-      
+      expect(
+        systemManager._checkIPInRange("192.168.1.42", ["192.168.1.0/24"]),
+      ).toBe(true);
+      expect(systemManager._checkIPInRange("10.20.30.40", ["10.0.0.0/8"])).toBe(
+        true,
+      );
+      expect(
+        systemManager._checkIPInRange("192.168.2.1", ["192.168.1.0/24"]),
+      ).toBe(false);
+
       // Test edge cases
-      expect(systemManager._checkIPInRange('192.168.1.42', ['192.168.1.42/32'])).toBe(true);
-      expect(systemManager._checkIPInRange('0.0.0.0', ['0.0.0.0/0'])).toBe(true);
-      expect(systemManager._checkIPInRange('255.255.255.255', ['0.0.0.0/0'])).toBe(true);
-      
+      expect(
+        systemManager._checkIPInRange("192.168.1.42", ["192.168.1.42/32"]),
+      ).toBe(true);
+      expect(systemManager._checkIPInRange("0.0.0.0", ["0.0.0.0/0"])).toBe(
+        true,
+      );
+      expect(
+        systemManager._checkIPInRange("255.255.255.255", ["0.0.0.0/0"]),
+      ).toBe(true);
+
       // Test IP to int conversion
-      expect(systemManager._ipToInt('192.168.1.1')).toBe(3232235777);
-      expect(systemManager._ipToInt('0.0.0.0')).toBe(0);
-      expect(systemManager._ipToInt('255.255.255.255')).toBe(4294967295);
-      expect(systemManager._ipToInt('invalid.ip')).toBeNull();
+      expect(systemManager._ipToInt("192.168.1.1")).toBe(3232235777);
+      expect(systemManager._ipToInt("0.0.0.0")).toBe(0);
+      expect(systemManager._ipToInt("255.255.255.255")).toBe(4294967295);
+      expect(systemManager._ipToInt("invalid.ip")).toBeNull();
     });
   });
 

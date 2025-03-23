@@ -4,8 +4,8 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
+const Prime = require("../../core/prime.js");
+const MathUtils = require("../math");
 
 /**
  * Representation Model - Handles output formatting and visualization
@@ -18,52 +18,52 @@ const RepresentationModel = {
    */
   create: function (config = {}) {
     return {
-      type: 'representation',
+      type: "representation",
       renderers: config.renderers || [],
-      name: config.name || 'RepresentationModel',
+      name: config.name || "RepresentationModel",
 
       // Added security features for safer HTML and XML generation
       security: {
         allowedHtmlTags: config.allowedHtmlTags || [
-          'div',
-          'span',
-          'p',
-          'ul',
-          'ol',
-          'li',
-          'dl',
-          'dt',
-          'dd',
-          'table',
-          'tr',
-          'td',
-          'th',
-          'thead',
-          'tbody',
-          'tfoot',
-          'h1',
-          'h2',
-          'h3',
-          'h4',
-          'h5',
-          'h6',
-          'pre',
-          'code',
-          'a',
-          'img',
-          'time',
+          "div",
+          "span",
+          "p",
+          "ul",
+          "ol",
+          "li",
+          "dl",
+          "dt",
+          "dd",
+          "table",
+          "tr",
+          "td",
+          "th",
+          "thead",
+          "tbody",
+          "tfoot",
+          "h1",
+          "h2",
+          "h3",
+          "h4",
+          "h5",
+          "h6",
+          "pre",
+          "code",
+          "a",
+          "img",
+          "time",
         ],
         allowedHtmlAttributes: config.allowedHtmlAttributes || [
-          'id',
-          'class',
-          'href',
-          'src',
-          'alt',
-          'title',
-          'datetime',
-          'width',
-          'height',
-          'target',
+          "id",
+          "class",
+          "href",
+          "src",
+          "alt",
+          "title",
+          "datetime",
+          "width",
+          "height",
+          "target",
         ],
       },
 
@@ -81,7 +81,7 @@ const RepresentationModel = {
 
         // Validate inputs
         if (object === undefined) {
-          return options.undefinedPlaceholder || '';
+          return options.undefinedPlaceholder || "";
         }
 
         // Check if this model has a Base 0 representation model
@@ -106,8 +106,8 @@ const RepresentationModel = {
         // For backwards compatibility with tests
         if (backwardsCompatible) {
           // Simple implementations for backwards compatibility
-          if (format === 'string') {
-            if (typeof object === 'object' && object !== null) {
+          if (format === "string") {
+            if (typeof object === "object" && object !== null) {
               // Ensure object properties are included in the string representation
               try {
                 return JSON.stringify(object);
@@ -115,27 +115,27 @@ const RepresentationModel = {
                 // Handle circular references
                 return (
                   Object.prototype.toString.call(object) +
-                  ' ' +
-                  Object.keys(object).join(', ')
+                  " " +
+                  Object.keys(object).join(", ")
                 );
               }
             }
             return String(object);
-          } else if (format === 'json') {
+          } else if (format === "json") {
             return JSON.stringify(object);
-          } else if (format === 'html') {
+          } else if (format === "html") {
             // Simple HTML representation
-            if (typeof object === 'string') {
+            if (typeof object === "string") {
               return `<div>${this._escapeHtml(object)}</div>`;
             } else if (Array.isArray(object)) {
-              return `<ul>${object.map((item) => `<li>${this._escapeHtml(this.present(item, 'string'))}</li>`).join('')}</ul>`;
-            } else if (typeof object === 'object' && object !== null) {
+              return `<ul>${object.map((item) => `<li>${this._escapeHtml(this.present(item, "string"))}</li>`).join("")}</ul>`;
+            } else if (typeof object === "object" && object !== null) {
               return `<dl>${Object.entries(object)
                 .map(
                   ([key, value]) =>
-                    `<dt>${this._escapeHtml(key)}</dt><dd>${this._escapeHtml(this.present(value, 'string'))}</dd>`,
+                    `<dt>${this._escapeHtml(key)}</dt><dd>${this._escapeHtml(this.present(value, "string"))}</dd>`,
                 )
-                .join('')}</dl>`;
+                .join("")}</dl>`;
             } else {
               return `<div>${this._escapeHtml(String(object))}</div>`;
             }
@@ -145,24 +145,24 @@ const RepresentationModel = {
         // Advanced implementations with proper escaping, validation, and error handling
         try {
           switch (format) {
-            case 'string':
+            case "string":
               return this._presentAsString(object, options);
 
-            case 'json':
+            case "json":
               return this._presentAsJson(object, options);
 
-            case 'html':
+            case "html":
               return this._presentAsHtml(object, options);
 
-            case 'xml':
+            case "xml":
               return this._presentAsXml(object, options);
 
-            case 'csv':
+            case "csv":
               if (Array.isArray(object)) {
                 return this._presentAsCsv(object, options);
               }
               throw new Prime.InvalidOperationError(
-                'CSV format requires an array input',
+                "CSV format requires an array input",
               );
 
             default:
@@ -170,7 +170,7 @@ const RepresentationModel = {
                 `Format ${format} not supported`,
                 {
                   context: {
-                    availableFormats: ['string', 'json', 'html', 'xml', 'csv'],
+                    availableFormats: ["string", "json", "html", "xml", "csv"],
                     requestedFormat: format,
                   },
                 },
@@ -186,7 +186,7 @@ const RepresentationModel = {
           try {
             return String(object);
           } catch (fallbackError) {
-            return '[Error presenting object]';
+            return "[Error presenting object]";
           }
         }
       },
@@ -200,18 +200,18 @@ const RepresentationModel = {
        */
       _presentAsString: function (object, options = {}) {
         if (object === null) {
-          return options.nullPlaceholder || 'null';
+          return options.nullPlaceholder || "null";
         }
 
-        if (typeof object === 'function') {
-          return options.functionPlaceholder || '[Function]';
+        if (typeof object === "function") {
+          return options.functionPlaceholder || "[Function]";
         }
 
-        if (typeof object === 'symbol') {
+        if (typeof object === "symbol") {
           return object.toString();
         }
 
-        if (typeof object !== 'object') {
+        if (typeof object !== "object") {
           return String(object);
         }
 
@@ -221,19 +221,19 @@ const RepresentationModel = {
           const cache = new Set();
 
           const stringify = (obj, depth = 0) => {
-            if (obj === null) return 'null';
-            if (obj === undefined) return 'undefined';
+            if (obj === null) return "null";
+            if (obj === undefined) return "undefined";
 
-            if (typeof obj !== 'object') {
+            if (typeof obj !== "object") {
               return String(obj);
             }
 
             if (depth >= maxDepth) {
-              return options.depthExceededPlaceholder || '[Object]';
+              return options.depthExceededPlaceholder || "[Object]";
             }
 
             if (cache.has(obj)) {
-              return options.circularReferencePlaceholder || '[Circular]';
+              return options.circularReferencePlaceholder || "[Circular]";
             }
 
             cache.add(obj);
@@ -241,7 +241,7 @@ const RepresentationModel = {
             // Handle arrays
             if (Array.isArray(obj)) {
               const items = obj.map((item) => stringify(item, depth + 1));
-              return `[${items.join(', ')}]`;
+              return `[${items.join(", ")}]`;
             }
 
             // Handle Date objects
@@ -257,13 +257,13 @@ const RepresentationModel = {
               }
             }
 
-            return `{${pairs.join(', ')}}`;
+            return `{${pairs.join(", ")}}`;
           };
 
           return stringify(object);
         } catch (error) {
           // Fallback on error
-          Prime.Logger.warn('Error converting object to string:', error);
+          Prime.Logger.warn("Error converting object to string:", error);
           return Object.prototype.toString.call(object);
         }
       },
@@ -280,13 +280,13 @@ const RepresentationModel = {
           const seen = new WeakSet();
           return (key, value) => {
             // Handle non-object values
-            if (typeof value !== 'object' || value === null) {
+            if (typeof value !== "object" || value === null) {
               return value;
             }
 
             // Handle circular references
             if (seen.has(value)) {
-              return options.circularReferencePlaceholder || '[Circular]';
+              return options.circularReferencePlaceholder || "[Circular]";
             }
 
             seen.add(value);
@@ -304,17 +304,17 @@ const RepresentationModel = {
           );
         } catch (error) {
           // If stringification fails, try a more robust approach
-          Prime.Logger.warn('Error in JSON.stringify:', error);
+          Prime.Logger.warn("Error in JSON.stringify:", error);
 
           // Fallback implementation for problematic objects
           const cache = new Set();
           const safeObject = (obj) => {
-            if (obj === null || typeof obj !== 'object') {
+            if (obj === null || typeof obj !== "object") {
               return obj;
             }
 
             if (cache.has(obj)) {
-              return options.circularReferencePlaceholder || '[Circular]';
+              return options.circularReferencePlaceholder || "[Circular]";
             }
 
             cache.add(obj);
@@ -328,7 +328,7 @@ const RepresentationModel = {
               try {
                 result[key] = safeObject(obj[key]);
               } catch (e) {
-                result[key] = '[Error]';
+                result[key] = "[Error]";
               }
             }
 
@@ -360,10 +360,10 @@ const RepresentationModel = {
           // Check depth limit
           if (depth >= maxDepth) {
             return this._createSafeHtml(
-              'div',
-              this._escapeHtml(options.depthExceededPlaceholder || '[Object]'),
+              "div",
+              this._escapeHtml(options.depthExceededPlaceholder || "[Object]"),
               {
-                class: classes.depthExceeded || 'depth-exceeded',
+                class: classes.depthExceeded || "depth-exceeded",
               },
             );
           }
@@ -371,79 +371,79 @@ const RepresentationModel = {
           // Handle null and undefined
           if (obj === null) {
             return this._createSafeHtml(
-              'span',
-              this._escapeHtml(options.nullPlaceholder || 'null'),
+              "span",
+              this._escapeHtml(options.nullPlaceholder || "null"),
               {
-                class: classes.null || 'null-value',
+                class: classes.null || "null-value",
               },
             );
           }
 
           if (obj === undefined) {
             return this._createSafeHtml(
-              'span',
-              this._escapeHtml(options.undefinedPlaceholder || 'undefined'),
+              "span",
+              this._escapeHtml(options.undefinedPlaceholder || "undefined"),
               {
-                class: classes.undefined || 'undefined-value',
+                class: classes.undefined || "undefined-value",
               },
             );
           }
 
           // Handle primitives
-          if (typeof obj !== 'object') {
+          if (typeof obj !== "object") {
             const value = this._escapeHtml(String(obj));
             const type = typeof obj;
-            return this._createSafeHtml('span', value, {
+            return this._createSafeHtml("span", value, {
               class: classes[type] || `${type}-value`,
             });
           }
 
           // Handle arrays
           if (Array.isArray(obj)) {
-            let itemsHtml = '';
+            let itemsHtml = "";
             for (let i = 0; i < obj.length; i++) {
               const item = obj[i];
               itemsHtml += this._createSafeHtml(
-                'li',
+                "li",
                 objectToHtml(item, depth + 1),
               );
             }
 
-            return this._createSafeHtml('ul', itemsHtml, {
-              class: classes.array || 'array-list',
+            return this._createSafeHtml("ul", itemsHtml, {
+              class: classes.array || "array-list",
             });
           }
 
           // Handle dates
           if (obj instanceof Date) {
             return this._createSafeHtml(
-              'time',
+              "time",
               this._escapeHtml(obj.toISOString()),
               {
                 datetime: obj.toISOString(),
-                class: classes.date || 'date-value',
+                class: classes.date || "date-value",
               },
             );
           }
 
           // Handle objects
-          let entriesHtml = '';
+          let entriesHtml = "";
           for (const [key, value] of Object.entries(obj)) {
-            const keyHtml = this._createSafeHtml('dt', this._escapeHtml(key), {
-              class: classes.key || 'object-key',
+            const keyHtml = this._createSafeHtml("dt", this._escapeHtml(key), {
+              class: classes.key || "object-key",
             });
             const valueHtml = this._createSafeHtml(
-              'dd',
+              "dd",
               objectToHtml(value, depth + 1),
               {
-                class: classes.value || 'object-value',
+                class: classes.value || "object-value",
               },
             );
             entriesHtml += keyHtml + valueHtml;
           }
 
-          return this._createSafeHtml('dl', entriesHtml, {
-            class: classes.object || 'object-list',
+          return this._createSafeHtml("dl", entriesHtml, {
+            class: classes.object || "object-list",
           });
         };
 
@@ -462,10 +462,10 @@ const RepresentationModel = {
         // XML representation with proper escaping
         const createXmlElement = (name, value, attributes = {}) => {
           // Validate element name (XML requires valid names)
-          const safeName = /^[a-zA-Z_][\w.-]*$/.test(name) ? name : 'element';
+          const safeName = /^[a-zA-Z_][\w.-]*$/.test(name) ? name : "element";
 
           // Create attributes string with proper escaping
-          let attributesStr = '';
+          let attributesStr = "";
           for (const [key, attrValue] of Object.entries(attributes)) {
             if (/^[a-zA-Z_][\w.-]*$/.test(key)) {
               attributesStr += ` ${key}="${this._escapeXml(String(attrValue))}"`;
@@ -475,17 +475,17 @@ const RepresentationModel = {
           // Handle different value types
           if (value === null || value === undefined) {
             return `<${safeName}${attributesStr}/>`;
-          } else if (typeof value !== 'object') {
+          } else if (typeof value !== "object") {
             return `<${safeName}${attributesStr}>${this._escapeXml(String(value))}</${safeName}>`;
           } else {
             // For objects, recursively convert properties to elements
-            let childElements = '';
+            let childElements = "";
 
             if (Array.isArray(value)) {
               // For arrays, create item elements
               childElements = value
-                .map((item) => createXmlElement('item', item))
-                .join('');
+                .map((item) => createXmlElement("item", item))
+                .join("");
             } else if (value instanceof Date) {
               // Handle Date objects specially
               return `<${safeName}${attributesStr} type="datetime">${this._escapeXml(value.toISOString())}</${safeName}>`;
@@ -501,10 +501,10 @@ const RepresentationModel = {
         };
 
         // Generate proper XML header with optional encoding
-        const xmlHeader = `<?xml version="1.0" encoding="${options.encoding || 'UTF-8'}"?>`;
+        const xmlHeader = `<?xml version="1.0" encoding="${options.encoding || "UTF-8"}"?>`;
 
         // Convert the root object to XML with a well-defined root element name
-        const rootName = options.rootElement || 'root';
+        const rootName = options.rootElement || "root";
         const xmlContent = createXmlElement(rootName, object);
 
         return `${xmlHeader}\n${xmlContent}`;
@@ -520,7 +520,7 @@ const RepresentationModel = {
       _presentAsCsv: function (array, options = {}) {
         // CSV format for arrays of objects
         if (array.length === 0) {
-          return '';
+          return "";
         }
 
         // Get headers from the first object or from options
@@ -529,13 +529,13 @@ const RepresentationModel = {
         // Proper CSV escaping function
         const escapeCsvValue = (value) => {
           if (value === null || value === undefined) {
-            return '';
+            return "";
           }
 
           const stringValue =
-            typeof value === 'string'
+            typeof value === "string"
               ? value
-              : typeof value === 'object'
+              : typeof value === "object"
                 ? JSON.stringify(value)
                 : String(value);
 
@@ -543,9 +543,9 @@ const RepresentationModel = {
           // should be enclosed in double quotes, and double quotes should be escaped with double quotes
           if (
             stringValue.includes('"') ||
-            stringValue.includes(',') ||
-            stringValue.includes('\n') ||
-            stringValue.includes('\r')
+            stringValue.includes(",") ||
+            stringValue.includes("\n") ||
+            stringValue.includes("\r")
           ) {
             return `"${stringValue.replace(/"/g, '""')}"`;
           }
@@ -555,7 +555,7 @@ const RepresentationModel = {
 
         // Create CSV header row
         let csv =
-          headers.map((header) => escapeCsvValue(header)).join(',') + '\n';
+          headers.map((header) => escapeCsvValue(header)).join(",") + "\n";
 
         // Create data rows
         for (const row of array) {
@@ -564,7 +564,7 @@ const RepresentationModel = {
             return escapeCsvValue(value);
           });
 
-          csv += values.join(',') + '\n';
+          csv += values.join(",") + "\n";
         }
 
         return csv;
@@ -583,7 +583,7 @@ const RepresentationModel = {
         );
 
         if (!renderer) {
-          throw new Prime.InvalidOperationError('No suitable renderer found', {
+          throw new Prime.InvalidOperationError("No suitable renderer found", {
             context: {
               objectType: typeof object,
               targetType: typeof target,
@@ -601,11 +601,11 @@ const RepresentationModel = {
        */
       addRenderer: function (renderer) {
         if (
-          typeof renderer.canRender !== 'function' ||
-          typeof renderer.render !== 'function'
+          typeof renderer.canRender !== "function" ||
+          typeof renderer.render !== "function"
         ) {
           throw new Prime.ValidationError(
-            'Renderer must have canRender and render methods',
+            "Renderer must have canRender and render methods",
           );
         }
 
@@ -620,16 +620,16 @@ const RepresentationModel = {
        * @returns {string} Escaped string
        */
       _escapeHtml: function (str) {
-        if (typeof str !== 'string') {
+        if (typeof str !== "string") {
           str = String(str);
         }
 
         return str
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
       },
 
       /**
@@ -639,16 +639,16 @@ const RepresentationModel = {
        * @returns {string} Escaped string
        */
       _escapeXml: function (str) {
-        if (typeof str !== 'string') {
+        if (typeof str !== "string") {
           str = String(str);
         }
 
         return str
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&apos;');
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
       },
 
       /**
@@ -663,10 +663,10 @@ const RepresentationModel = {
         // Validate tag name against allowed list
         const safeTagName = this.security.allowedHtmlTags.includes(tagName)
           ? tagName
-          : 'div';
+          : "div";
 
         // Create attributes string with proper escaping and validation
-        let attributesStr = '';
+        let attributesStr = "";
         for (const [key, value] of Object.entries(attributes)) {
           // Only allow valid attribute names from allowed list
           if (this.security.allowedHtmlAttributes.includes(key)) {

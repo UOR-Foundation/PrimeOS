@@ -6,39 +6,39 @@
  * to assess performance and numerical stability.
  */
 
-const path = require('path');
-const fs = require('fs');
-const { performance } = require('perf_hooks');
+const path = require("path");
+const fs = require("fs");
+const { performance } = require("perf_hooks");
 const {
   runExampleBenchmarks,
   ExtremeValueBenchmark,
-} = require('./src/distributed/benchmark-extreme');
+} = require("./src/distributed/benchmark-extreme");
 
 // Load all required math modules to ensure they're available
-const Prime = require('./src/mathematics.js');
-require('./src/math/vector');
-require('./src/math/vector-core');
-require('./src/math/vector-advanced');
-require('./src/math/matrix');
-require('./src/math/matrix-core');
-require('./src/math/matrix-advanced');
+const Prime = require("./src/mathematics.js");
+require("./src/math/vector");
+require("./src/math/vector-core");
+require("./src/math/vector-advanced");
+require("./src/math/matrix");
+require("./src/math/matrix-core");
+require("./src/math/matrix-advanced");
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const verbose = args.includes('--verbose') || args.includes('-v');
-const outputJson = args.includes('--json') || args.includes('-j');
-const runCustom = args.includes('--custom') || args.includes('-c');
-const warmupRuns = args.find((arg) => arg.startsWith('--warmup=')) || 3;
-const measureRuns = args.find((arg) => arg.startsWith('--runs=')) || 10;
+const verbose = args.includes("--verbose") || args.includes("-v");
+const outputJson = args.includes("--json") || args.includes("-j");
+const runCustom = args.includes("--custom") || args.includes("-c");
+const warmupRuns = args.find((arg) => arg.startsWith("--warmup=")) || 3;
+const measureRuns = args.find((arg) => arg.startsWith("--runs=")) || 10;
 
 // Extract numeric values if provided
 const warmupCount =
-  typeof warmupRuns === 'string'
-    ? parseInt(warmupRuns.split('=')[1], 10)
+  typeof warmupRuns === "string"
+    ? parseInt(warmupRuns.split("=")[1], 10)
     : warmupRuns;
 const measureCount =
-  typeof measureRuns === 'string'
-    ? parseInt(measureRuns.split('=')[1], 10)
+  typeof measureRuns === "string"
+    ? parseInt(measureRuns.split("=")[1], 10)
     : measureRuns;
 
 console.log(`
@@ -65,12 +65,12 @@ console.log(`
 `);
 console.log(`Extreme Value Performance Benchmarks`);
 console.log(`Warmup runs: ${warmupCount}, Measurement runs: ${measureCount}`);
-console.log(`Verbose mode: ${verbose ? 'enabled' : 'disabled'}`);
-console.log(`Output JSON: ${outputJson ? 'enabled' : 'disabled'}`);
+console.log(`Verbose mode: ${verbose ? "enabled" : "disabled"}`);
+console.log(`Output JSON: ${outputJson ? "enabled" : "disabled"}`);
 console.log(`\nStarting benchmarks...`);
 
 // Create output directory for benchmark results
-const resultsDir = path.resolve(__dirname, 'benchmark-results');
+const resultsDir = path.resolve(__dirname, "benchmark-results");
 if (!fs.existsSync(resultsDir)) {
   fs.mkdirSync(resultsDir, { recursive: true });
 }
@@ -78,7 +78,7 @@ if (!fs.existsSync(resultsDir)) {
 // Run a basic benchmark to verify it works
 let results;
 try {
-  console.log('\nRunning simple benchmark for gradient aggregation...');
+  console.log("\nRunning simple benchmark for gradient aggregation...");
 
   // Create a benchmark instance
   const benchmark = new ExtremeValueBenchmark({
@@ -110,7 +110,7 @@ try {
 
   // Compare standard summation vs Kahan summation
   benchmark.compare(
-    'gradient_aggregation',
+    "gradient_aggregation",
     {
       standard: (gradients) => {
         // Standard summation
@@ -142,7 +142,7 @@ try {
   );
 
   // Benchmark basic vector operations
-  console.log('\nRunning basic vector operations benchmark...');
+  console.log("\nRunning basic vector operations benchmark...");
 
   // Generate simple test vectors
   const vectors = [];
@@ -156,7 +156,7 @@ try {
 
   // Simple vector addition
   benchmark.run(
-    'vector_addition',
+    "vector_addition",
     (a, b) => {
       return a.map((val, idx) => val + b[idx]);
     },
@@ -168,7 +168,7 @@ try {
 
   results = benchmark.results;
 } catch (error) {
-  console.error('Error running benchmarks:', error);
+  console.error("Error running benchmarks:", error);
   results = { error: error.message };
 }
 
@@ -176,15 +176,15 @@ try {
 if (outputJson) {
   const outputFile = path.resolve(
     resultsDir,
-    `extreme-benchmarks-${new Date().toISOString().replace(/:/g, '-')}.json`,
+    `extreme-benchmarks-${new Date().toISOString().replace(/:/g, "-")}.json`,
   );
   fs.writeFileSync(outputFile, JSON.stringify(results, null, 2));
   console.log(`\nBenchmark results saved to ${outputFile}`);
 }
 
 // Print summary table
-console.log('\nBenchmark Summary:');
-console.log('=================');
+console.log("\nBenchmark Summary:");
+console.log("=================");
 
 // Function to format ops/sec with appropriate unit
 function formatOpsPerSec(opsPerSec) {
@@ -198,8 +198,8 @@ if (results.error) {
   console.log(`Error: ${results.error}`);
 } else {
   // Print simple summary table
-  console.log('Benchmark | Ops/Sec | Validation Errors');
-  console.log('----------|---------|------------------');
+  console.log("Benchmark | Ops/Sec | Validation Errors");
+  console.log("----------|---------|------------------");
 
   for (const [name, result] of Object.entries(results)) {
     if (result.stats && result.opsPerSecond !== undefined) {
@@ -211,15 +211,15 @@ if (results.error) {
 
   // For comparison results, handle them specially
   const comparisonResults = Object.entries(results).filter(([name, _]) =>
-    name.includes('gradient_aggregation'),
+    name.includes("gradient_aggregation"),
   );
   if (comparisonResults.length > 0) {
-    console.log('\nComparison Results:');
+    console.log("\nComparison Results:");
     for (const [name, result] of comparisonResults) {
       if (result.results) {
         console.log(`\n${name}:`);
-        console.log('Implementation | Ops/Sec | Relative Performance');
-        console.log('--------------|---------|---------------------');
+        console.log("Implementation | Ops/Sec | Relative Performance");
+        console.log("--------------|---------|---------------------");
         for (const impl of result.results) {
           console.log(
             `${impl.implementation} | ${formatOpsPerSec(impl.opsPerSecond)} | ${impl.relativeThroughput.toFixed(2)}x`,
@@ -230,4 +230,4 @@ if (results.error) {
   }
 }
 
-console.log('\nBenchmarks completed successfully!');
+console.log("\nBenchmarks completed successfully!");

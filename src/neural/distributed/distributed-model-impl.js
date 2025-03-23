@@ -5,10 +5,10 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Make sure dimension validator is loaded
-require('./dimension-validator');
+require("./dimension-validator");
 
 /**
  * Complete implementation of DistributedNeuralModel
@@ -42,16 +42,16 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
     this.distributedConfig = {
       enabled: config.distributed?.enabled ?? false,
       clusterManager: config.distributed?.clusterManager || null,
-      partitionScheme: config.distributed?.partitionScheme || 'data_parallel',
+      partitionScheme: config.distributed?.partitionScheme || "data_parallel",
       nodeCount: config.distributed?.nodeCount || 1,
       syncFrequency: config.distributed?.syncFrequency || 10,
       coherenceCheckFrequency:
         config.distributed?.coherenceCheckFrequency || 50,
       fallbackToLocal: config.distributed?.fallbackToLocal ?? true,
       synchronizationStrategy:
-        config.distributed?.synchronizationStrategy || 'average',
+        config.distributed?.synchronizationStrategy || "average",
       syncRecoveryStrategy:
-        config.distributed?.syncRecoveryStrategy || 'local_fallback',
+        config.distributed?.syncRecoveryStrategy || "local_fallback",
     };
 
     // Distributed operation state
@@ -81,7 +81,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
       const dimensionsValid =
         Prime.Neural.Distributed.DimensionValidator.verifyModelDimensions(this);
       if (!dimensionsValid && Prime.Logger && Prime.Logger.error) {
-        Prime.Logger.error('Model dimensions are inconsistent');
+        Prime.Logger.error("Model dimensions are inconsistent");
       }
     }
 
@@ -124,7 +124,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
 
       // Check for required cluster resources
       if (clusterManager.nodes.size === 0) {
-        throw new Error('Cluster manager has no nodes available');
+        throw new Error("Cluster manager has no nodes available");
       }
 
       // Create node assignments based on partition scheme
@@ -138,7 +138,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
 
       // Log initialization
       if (Prime.Logger && Prime.Logger.info) {
-        Prime.Logger.info('Distributed neural model initialized', {
+        Prime.Logger.info("Distributed neural model initialized", {
           nodeCount: this.distributedState.activeNodes.length,
           partitionScheme: this.distributedConfig.partitionScheme,
         });
@@ -147,7 +147,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
       // Log error but continue in local mode if fallback is enabled
       if (Prime.Logger && Prime.Logger.error) {
         Prime.Logger.error(
-          'Failed to initialize distributed mode, falling back to local',
+          "Failed to initialize distributed mode, falling back to local",
           {
             error: error.message,
           },
@@ -178,7 +178,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
     );
 
     if (availableNodes.length === 0) {
-      throw new Error('No available nodes for distributed computation');
+      throw new Error("No available nodes for distributed computation");
     }
 
     // Store active nodes
@@ -203,13 +203,13 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
     // Determine partition scheme type
     let partitionType;
     switch (this.distributedConfig.partitionScheme.toLowerCase()) {
-      case 'data_parallel':
+      case "data_parallel":
         partitionType = Prime.Distributed.Partition.PartitionType.DATA_PARALLEL;
         break;
-      case 'layer_wise':
+      case "layer_wise":
         partitionType = Prime.Distributed.Partition.PartitionType.LAYER_WISE;
         break;
-      case 'intra_layer':
+      case "intra_layer":
         partitionType = Prime.Distributed.Partition.PartitionType.INTRA_LAYER;
         break;
       default:
@@ -261,7 +261,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
         inputSize: layer.inputSize,
         outputSize: layer.outputSize,
         activation: layer.activation,
-        type: layer.type || 'dense',
+        type: layer.type || "dense",
       })),
     };
   }
@@ -286,7 +286,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
       if (!isCoherent) {
         if (Prime.Logger && Prime.Logger.warn) {
           Prime.Logger.warn(
-            'Parameters failed coherence validation, skipping application',
+            "Parameters failed coherence validation, skipping application",
           );
         }
         return false;
@@ -350,7 +350,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
       if (!remoteResults || remoteResults.length === 0) {
         if (Prime.Logger && Prime.Logger.warn) {
           Prime.Logger.warn(
-            'No remote parameters received for synchronization',
+            "No remote parameters received for synchronization",
           );
         }
         return false;
@@ -358,7 +358,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
 
       // Average parameters based on synchronization strategy
       let finalParams;
-      if (this.distributedConfig.synchronizationStrategy === 'average') {
+      if (this.distributedConfig.synchronizationStrategy === "average") {
         finalParams = this._averageParameters(localParams, remoteResults);
       } else {
         // Use default averaging as fallback
@@ -475,29 +475,29 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
     const strategy = this.distributedConfig.syncRecoveryStrategy;
 
     switch (strategy) {
-      case 'local_fallback':
+      case "local_fallback":
         // Continue with local parameters
         if (Prime.Logger && Prime.Logger.warn) {
           Prime.Logger.warn(
-            'Using local fallback after synchronization failure',
+            "Using local fallback after synchronization failure",
           );
         }
         return true;
 
-      case 'retry':
+      case "retry":
         // Implementation of parameter synchronization retry
         if (Prime.Logger && Prime.Logger.info) {
           Prime.Logger.info(
-            'Using retry strategy for parameter synchronization',
+            "Using retry strategy for parameter synchronization",
           );
         }
         return true;
 
-      case 'conservative_merge':
+      case "conservative_merge":
         // Implementation of partial parameter merging
         if (Prime.Logger && Prime.Logger.info) {
           Prime.Logger.info(
-            'Using conservative merge strategy for parameter recovery',
+            "Using conservative merge strategy for parameter recovery",
           );
         }
         return true;
@@ -534,7 +534,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
 
       if (!isCoherent) {
         if (Prime.Logger && Prime.Logger.warn) {
-          Prime.Logger.warn('Local parameters failed coherence check');
+          Prime.Logger.warn("Local parameters failed coherence check");
         }
         return false;
       }

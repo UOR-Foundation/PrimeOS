@@ -8,17 +8,17 @@
 // Use dynamic loading to avoid circular dependencies
 let Prime;
 try {
-  Prime = require('../../core.js');
+  Prime = require("../../core/prime.js");
 } catch (e) {
   Prime = {};
-  console.error('Failed to import core module:', e.message);
+  console.error("Failed to import core module:", e.message);
 }
 
-const { Vector, Matrix } = require('./linalg.js');
+const { Vector, Matrix } = require("./linalg.js");
 
 // Define isNumber function if not available
 function isNumber(value) {
-  return typeof value === 'number' && !isNaN(value) && isFinite(value);
+  return typeof value === "number" && !isNaN(value) && isFinite(value);
 }
 
 // Define clamp function if not available
@@ -257,7 +257,7 @@ const PrimeMath = {
    */
   createMatrix: function (values, rows, cols) {
     // Ensure we're using the correct Matrix constructor from linalg
-    const { Matrix } = require('./linalg.js');
+    const { Matrix } = require("./linalg.js");
     return new Matrix(values, rows, cols);
   },
 
@@ -318,7 +318,7 @@ const PrimeMath = {
   diagonalMatrix: function (diagonal) {
     return Matrix.diagonal(diagonal);
   },
-  
+
   /**
    * Create a diagonal matrix or extract diagonal from matrix
    * @param {Array<number>|Vector|Matrix} input - Diagonal elements or matrix
@@ -369,7 +369,7 @@ const PrimeMath = {
    */
   multiplyMatrices: function (m1, m2) {
     // Ensure we're using the correct Matrix constructor from linalg
-    const { Matrix } = require('./linalg.js');
+    const { Matrix } = require("./linalg.js");
 
     const mat1 = m1 instanceof Matrix ? m1 : new Matrix(m1);
     return mat1.multiply(m2);
@@ -382,7 +382,7 @@ const PrimeMath = {
    */
   transposeMatrix: function (m) {
     // Ensure we're using the correct Matrix constructor from linalg
-    const { Matrix } = require('./linalg.js');
+    const { Matrix } = require("./linalg.js");
 
     const mat = m instanceof Matrix ? m : new Matrix(m);
     return mat.transpose();
@@ -466,7 +466,7 @@ const PrimeMath = {
    */
   svd: function (m) {
     // Ensure we're using the correct Matrix constructor from linalg
-    const { Matrix } = require('./linalg.js');
+    const { Matrix } = require("./linalg.js");
 
     // Use the specialized extreme precision implementation if available
     if (Prime.ExtremePrecision && Prime.ExtremePrecision.svd) {
@@ -532,7 +532,7 @@ const PrimeMath = {
   sqrt: function (x) {
     if (!isNumber(x) || x < 0) {
       throw new Prime.MathematicalError(
-        'Square root requires a non-negative number',
+        "Square root requires a non-negative number",
       );
     }
 
@@ -554,7 +554,7 @@ const PrimeMath = {
    */
   pow: function (base, exponent) {
     if (!isNumber(base) || !isNumber(exponent)) {
-      throw new Prime.ValidationError('Power requires numeric values');
+      throw new Prime.ValidationError("Power requires numeric values");
     }
 
     // Handle special cases for enhanced precision
@@ -613,7 +613,7 @@ const PrimeMath = {
    */
   exp: function (x) {
     if (!isNumber(x)) {
-      throw new Prime.ValidationError('Exp requires a numeric value');
+      throw new Prime.ValidationError("Exp requires a numeric value");
     }
 
     // For values close to zero, use a Taylor series for better precision
@@ -632,7 +632,7 @@ const PrimeMath = {
    */
   log: function (x) {
     if (!isNumber(x) || x <= 0) {
-      throw new Prime.MathematicalError('Logarithm requires a positive number');
+      throw new Prime.MathematicalError("Logarithm requires a positive number");
     }
 
     // For values close to 1, use a Taylor series for better precision
@@ -652,7 +652,7 @@ const PrimeMath = {
    */
   sin: function (x) {
     if (!isNumber(x)) {
-      throw new Prime.ValidationError('Sine requires a numeric value');
+      throw new Prime.ValidationError("Sine requires a numeric value");
     }
 
     // Normalize angle to [0, 2π)
@@ -674,7 +674,7 @@ const PrimeMath = {
    */
   cos: function (x) {
     if (!isNumber(x)) {
-      throw new Prime.ValidationError('Cosine requires a numeric value');
+      throw new Prime.ValidationError("Cosine requires a numeric value");
     }
 
     // Normalize angle to [0, 2π)
@@ -699,13 +699,13 @@ const PrimeMath = {
    */
   tan: function (x) {
     if (!isNumber(x)) {
-      throw new Prime.ValidationError('Tangent requires a numeric value');
+      throw new Prime.ValidationError("Tangent requires a numeric value");
     }
 
     // Check for values close to singularities (π/2 + nπ)
     const normalized = x % Math.PI;
     if (Math.abs(normalized - Math.PI / 2) < 1e-10) {
-      throw new Prime.MathematicalError('Tangent is undefined at π/2 + nπ');
+      throw new Prime.MathematicalError("Tangent is undefined at π/2 + nπ");
     }
 
     // For better precision, use the ratio of sine and cosine
@@ -724,12 +724,12 @@ const PrimeMath = {
    * @returns {number} Derivative value
    */
   derivative: function (f, x, h = 1e-8) {
-    if (typeof f !== 'function') {
-      throw new Prime.ValidationError('Derivative requires a function');
+    if (typeof f !== "function") {
+      throw new Prime.ValidationError("Derivative requires a function");
     }
 
     if (!isNumber(x)) {
-      throw new Prime.ValidationError('Derivative requires a numeric point');
+      throw new Prime.ValidationError("Derivative requires a numeric point");
     }
 
     // Use central difference for better accuracy
@@ -799,14 +799,14 @@ const PrimeMath = {
    * @returns {number} Root of the equation
    */
   solveNewton: function (f, df, x0, options = {}) {
-    if (typeof f !== 'function' || typeof df !== 'function') {
+    if (typeof f !== "function" || typeof df !== "function") {
       throw new Prime.ValidationError(
-        'Newton method requires function and derivative',
+        "Newton method requires function and derivative",
       );
     }
 
     if (!isNumber(x0)) {
-      throw new Prime.ValidationError('Initial guess must be a number');
+      throw new Prime.ValidationError("Initial guess must be a number");
     }
 
     const tolerance = options.tolerance || 1e-10;
@@ -827,7 +827,7 @@ const PrimeMath = {
       // Check for division by zero
       if (Math.abs(dfx) < 1e-14) {
         throw new Prime.MathematicalError(
-          'Derivative near zero, Newton method failed',
+          "Derivative near zero, Newton method failed",
         );
       }
 
@@ -842,7 +842,7 @@ const PrimeMath = {
       x = newX;
     }
 
-    throw new Prime.MathematicalError('Newton method failed to converge');
+    throw new Prime.MathematicalError("Newton method failed to converge");
   },
 
   /**
@@ -950,7 +950,7 @@ const PrimeMath = {
    */
   lerp: function (a, b, t) {
     if (!isNumber(a) || !isNumber(b) || !isNumber(t)) {
-      throw new Prime.ValidationError('Lerp requires numeric values');
+      throw new Prime.ValidationError("Lerp requires numeric values");
     }
 
     // Clamp t to [0, 1]
@@ -969,7 +969,7 @@ const PrimeMath = {
    */
   clamp: function (value, min, max) {
     if (!isNumber(value) || !isNumber(min) || !isNumber(max)) {
-      throw new Prime.ValidationError('Clamp requires numeric values');
+      throw new Prime.ValidationError("Clamp requires numeric values");
     }
 
     return Math.max(min, Math.min(max, value));
@@ -989,7 +989,7 @@ const PrimeMath = {
   approxEqual: function (a, b, epsilon = Number.EPSILON) {
     if (!isNumber(a) || !isNumber(b)) {
       throw new Prime.ValidationError(
-        'Approximate equality requires numeric values',
+        "Approximate equality requires numeric values",
       );
     }
 
@@ -1032,7 +1032,7 @@ const PrimeMath = {
    */
   random: function (min = 0, max = 1) {
     if (!isNumber(min) || !isNumber(max)) {
-      throw new Prime.ValidationError('Random range requires numeric values');
+      throw new Prime.ValidationError("Random range requires numeric values");
     }
 
     return min + Math.random() * (max - min);
@@ -1047,7 +1047,7 @@ const PrimeMath = {
   randomNormal: function (mean = 0, stdDev = 1) {
     if (!isNumber(mean) || !isNumber(stdDev)) {
       throw new Prime.ValidationError(
-        'Normal distribution requires numeric parameters',
+        "Normal distribution requires numeric parameters",
       );
     }
 
@@ -1067,7 +1067,7 @@ const PrimeMath = {
    */
   toRadians: function (degrees) {
     if (!isNumber(degrees)) {
-      throw new Prime.ValidationError('Degrees must be a number');
+      throw new Prime.ValidationError("Degrees must be a number");
     }
 
     return (degrees * Math.PI) / 180;
@@ -1080,7 +1080,7 @@ const PrimeMath = {
    */
   toDegrees: function (radians) {
     if (!isNumber(radians)) {
-      throw new Prime.ValidationError('Radians must be a number');
+      throw new Prime.ValidationError("Radians must be a number");
     }
 
     return (radians * 180) / Math.PI;
@@ -1092,7 +1092,7 @@ const PrimeMath = {
    * - U is an orthogonal matrix with left singular vectors
    * - S is a diagonal matrix with singular values in descending order
    * - V is an orthogonal matrix with right singular vectors
-   * 
+   *
    * @param {Matrix|Array<Array<number>>} matrix - Input matrix
    * @param {Object} [options={}] - Additional options
    * @param {boolean} [options.thin=false] - Whether to compute thin SVD (U and V have size reduced to match S)
@@ -1101,7 +1101,7 @@ const PrimeMath = {
    * @param {number} [options.tolerance=1e-10] - Convergence tolerance
    * @returns {Object} Object with U, S, V matrices
    */
-  svd: function(matrix, options = {}) {
+  svd: function (matrix, options = {}) {
     // Ensure input is a Matrix object
     const mat = matrix instanceof Matrix ? matrix : new Matrix(matrix);
     const m = mat.rows;
@@ -1110,11 +1110,11 @@ const PrimeMath = {
     const useScaling = options.useScaling !== false;
     const maxIterations = options.maxIterations || 100;
     const tolerance = options.tolerance || 1e-10;
-    
+
     // Analyze matrix for extreme values and scaling needs
     let maxAbs = 0;
     let minNonZero = Infinity;
-    
+
     for (let i = 0; i < m; i++) {
       for (let j = 0; j < n; j++) {
         const absVal = Math.abs(mat.get(i, j));
@@ -1124,12 +1124,16 @@ const PrimeMath = {
         }
       }
     }
-    
+
     // Determine if scaling is needed for numerical stability
-    const needsScaling = useScaling && (maxAbs > 1e100 || minNonZero < 1e-100 || (maxAbs > 0 && minNonZero < Infinity && maxAbs/minNonZero > 1e200));
+    const needsScaling =
+      useScaling &&
+      (maxAbs > 1e100 ||
+        minNonZero < 1e-100 ||
+        (maxAbs > 0 && minNonZero < Infinity && maxAbs / minNonZero > 1e200));
     let scaledMatrix = mat;
     let scaleFactor = 1;
-    
+
     if (needsScaling) {
       if (maxAbs > 1e100) {
         // Scale down for very large values
@@ -1144,57 +1148,57 @@ const PrimeMath = {
         const centerLog = (logMax + logMin) / 2;
         scaleFactor = Math.pow(10, -centerLog);
       }
-      
+
       // Apply scaling
       scaledMatrix = mat.scale(scaleFactor);
     }
-    
+
     // Implementation using the two-sided Jacobi algorithm
     // This is slower but more numerically stable for extreme values
-    
+
     // Create initial matrices
     let U = Matrix.identity(m);
     let V = Matrix.identity(n);
     let S = scaledMatrix.clone();
-    
+
     // Helper function for SVD step using Jacobi rotations
     const svdStep = () => {
       let totalChange = 0;
-      
+
       // Process all possible pairs of columns
       for (let p = 0; p < n - 1; p++) {
         for (let q = p + 1; q < n; q++) {
           // Calculate parameters for Jacobi rotation
           let sqSum = 0;
           let spSum = 0;
-          
+
           for (let i = 0; i < m; i++) {
             const spVal = S.get(i, p);
             const sqVal = S.get(i, q);
             spSum += spVal * spVal;
             sqSum += sqVal * sqVal;
           }
-          
+
           if (Math.sqrt(spSum * sqSum) < 1e-12 * maxAbs) {
             continue; // Skip if columns are effectively zero
           }
-          
+
           // Compute off-diagonal sum
           let spq = 0;
           for (let i = 0; i < m; i++) {
             spq += S.get(i, p) * S.get(i, q);
           }
-          
+
           // Check if rotation is needed
           if (Math.abs(spq) <= tolerance * Math.sqrt(spSum * sqSum)) {
             continue;
           }
-          
+
           // Compute Jacobi rotation parameters
           const theta = 0.5 * Math.atan2(2 * spq, spSum - sqSum);
           const cosTheta = Math.cos(theta);
           const sinTheta = Math.sin(theta);
-          
+
           // Apply rotation to S
           for (let i = 0; i < m; i++) {
             const Sip = S.get(i, p);
@@ -1202,7 +1206,7 @@ const PrimeMath = {
             S.set(i, p, Sip * cosTheta + Siq * sinTheta);
             S.set(i, q, -Sip * sinTheta + Siq * cosTheta);
           }
-          
+
           // Apply rotation to V
           for (let i = 0; i < n; i++) {
             const Vip = V.get(i, p);
@@ -1210,14 +1214,14 @@ const PrimeMath = {
             V.set(i, p, Vip * cosTheta + Viq * sinTheta);
             V.set(i, q, -Vip * sinTheta + Viq * cosTheta);
           }
-          
+
           totalChange += Math.abs(spq);
         }
       }
-      
+
       return totalChange;
     };
-    
+
     // Iterate until convergence or max iterations
     let iter = 0;
     let totalChange = 0;
@@ -1225,11 +1229,11 @@ const PrimeMath = {
       totalChange = svdStep();
       iter++;
     } while (totalChange > tolerance && iter < maxIterations);
-    
+
     // Compute U and singular values from S using QR decomposition
     const singularValues = [];
     const columnNorms = [];
-    
+
     // Calculate column norms
     for (let j = 0; j < n; j++) {
       let colNorm = 0;
@@ -1239,26 +1243,26 @@ const PrimeMath = {
       columnNorms[j] = Math.sqrt(colNorm);
       singularValues[j] = columnNorms[j];
     }
-    
+
     // Sort singular values and rearrange matrices
     const indices = singularValues.map((_, i) => i);
     indices.sort((a, b) => singularValues[b] - singularValues[a]);
-    
+
     // Create sorted matrices
     const sortedS = Matrix.zeros(m, n);
     const sortedU = Matrix.zeros(m, m);
     const sortedV = Matrix.zeros(n, n);
-    
+
     for (let j = 0; j < n; j++) {
       if (j < Math.min(m, n)) {
         sortedS.set(j, j, singularValues[indices[j]]);
       }
-      
+
       // Rearrange V columns
       for (let i = 0; i < n; i++) {
         sortedV.set(i, j, V.get(i, indices[j]));
       }
-      
+
       // Create U columns from normalized S columns
       if (columnNorms[indices[j]] > 1e-12 * maxAbs) {
         for (let i = 0; i < m; i++) {
@@ -1271,32 +1275,32 @@ const PrimeMath = {
         }
       }
     }
-    
+
     // Complete orthogonalization of U if needed
     for (let j = n; j < m; j++) {
       // Find a vector orthogonal to all existing columns
       let tempCol = new Array(m).fill(0);
       tempCol[j % m] = 1;
-      
+
       // Orthogonalize against existing columns
       for (let k = 0; k < j; k++) {
         let dotProd = 0;
         for (let i = 0; i < m; i++) {
           dotProd += tempCol[i] * sortedU.get(i, k);
         }
-        
+
         for (let i = 0; i < m; i++) {
           tempCol[i] -= dotProd * sortedU.get(i, k);
         }
       }
-      
+
       // Normalize
       let norm = 0;
       for (let i = 0; i < m; i++) {
         norm += tempCol[i] * tempCol[i];
       }
       norm = Math.sqrt(norm);
-      
+
       if (norm > 1e-12) {
         for (let i = 0; i < m; i++) {
           sortedU.set(i, j, tempCol[i] / norm);
@@ -1306,40 +1310,40 @@ const PrimeMath = {
         sortedU.set(j, j, 1);
       }
     }
-    
+
     // Scale back if we applied scaling
     if (needsScaling && scaleFactor !== 1) {
       for (let i = 0; i < Math.min(m, n); i++) {
         sortedS.set(i, i, sortedS.get(i, i) / scaleFactor);
       }
     }
-    
+
     // Compute thin SVD if requested
     if (thin) {
       const minDim = Math.min(m, n);
       const thinU = Matrix.zeros(m, minDim);
       const thinS = Matrix.zeros(minDim, minDim);
       const thinV = Matrix.zeros(n, minDim);
-      
+
       for (let i = 0; i < m; i++) {
         for (let j = 0; j < minDim; j++) {
           thinU.set(i, j, sortedU.get(i, j));
         }
       }
-      
+
       for (let i = 0; i < minDim; i++) {
         thinS.set(i, i, sortedS.get(i, i));
       }
-      
+
       for (let i = 0; i < n; i++) {
         for (let j = 0; j < minDim; j++) {
           thinV.set(i, j, sortedV.get(i, j));
         }
       }
-      
+
       return { U: thinU, S: thinS, V: thinV };
     }
-    
+
     return { U: sortedU, S: sortedS, V: sortedV };
   },
 };

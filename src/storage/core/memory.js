@@ -3,9 +3,9 @@
  * In-memory storage provider for fallback and testing
  */
 
-const Prime = require('../../core');
-const { StorageProvider, PrimeStorageError } = require('./provider');
-const { EventEmitter } = require('events');
+const Prime = require("../../core");
+const { StorageProvider, PrimeStorageError } = require("./provider");
+const { EventEmitter } = require("events");
 
 /**
  * Memory-based storage provider
@@ -17,7 +17,7 @@ class MemoryProvider extends StorageProvider {
    */
   constructor(options = {}) {
     super(options);
-    
+
     this.storage = new Map(); // Renamed from 'store' to 'storage' to avoid method conflict
     this.streams = {};
   }
@@ -39,7 +39,7 @@ class MemoryProvider extends StorageProvider {
    */
   async store(data, id) {
     const dataId = id || Prime.Utils.uuid();
-    
+
     // Clone the data to prevent reference issues
     let dataToStore;
     try {
@@ -48,7 +48,7 @@ class MemoryProvider extends StorageProvider {
       // If cloning fails, store as is
       dataToStore = data;
     }
-    
+
     this.storage.set(dataId, dataToStore);
     return Promise.resolve(dataId);
   }
@@ -63,10 +63,10 @@ class MemoryProvider extends StorageProvider {
       throw new PrimeStorageError(
         `Data not found for ID: ${id}`,
         { id },
-        'STORAGE_NOT_FOUND'
+        "STORAGE_NOT_FOUND",
       );
     }
-    
+
     // Clone the data to prevent reference issues
     let data;
     try {
@@ -75,7 +75,7 @@ class MemoryProvider extends StorageProvider {
       // If cloning fails, return as is
       data = this.storage.get(id);
     }
-    
+
     return Promise.resolve(data);
   }
 
@@ -125,7 +125,7 @@ class MemoryProvider extends StorageProvider {
       available: Number.MAX_SAFE_INTEGER,
       used: this.getUsedSpace(),
       total: Number.MAX_SAFE_INTEGER,
-      provider: 'memory'
+      provider: "memory",
     });
   }
 
@@ -140,10 +140,10 @@ class MemoryProvider extends StorageProvider {
       throw new PrimeStorageError(
         `Data not found for ID: ${id}`,
         { id },
-        'STORAGE_NOT_FOUND'
+        "STORAGE_NOT_FOUND",
       );
     }
-    
+
     const stream = new MemoryReadStream(this.storage.get(id), options);
     return stream;
   }
@@ -165,7 +165,7 @@ class MemoryProvider extends StorageProvider {
    * @returns {string} The provider type
    */
   getProviderType() {
-    return 'memory';
+    return "memory";
   }
 
   /**
@@ -175,21 +175,21 @@ class MemoryProvider extends StorageProvider {
    */
   getUsedSpace() {
     let totalSize = 0;
-    
+
     for (const [id, data] of this.storage.entries()) {
       let size = 0;
-      
-      if (typeof data === 'string') {
+
+      if (typeof data === "string") {
         size = data.length * 2; // Approximate for UTF-16
       } else if (Array.isArray(data)) {
         size = this.estimateArraySize(data);
-      } else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) {
+      } else if (typeof Buffer !== "undefined" && Buffer.isBuffer(data)) {
         size = data.length;
       } else if (ArrayBuffer.isView(data)) {
         size = data.byteLength;
       } else if (data instanceof ArrayBuffer) {
         size = data.byteLength;
-      } else if (typeof data === 'object' && data !== null) {
+      } else if (typeof data === "object" && data !== null) {
         // Estimate object size
         try {
           const json = JSON.stringify(data);
@@ -200,10 +200,10 @@ class MemoryProvider extends StorageProvider {
       } else {
         size = 8; // Default size for primitives
       }
-      
+
       totalSize += size;
     }
-    
+
     return totalSize;
   }
 
@@ -217,21 +217,21 @@ class MemoryProvider extends StorageProvider {
     if (array.length === 0) {
       return 0;
     }
-    
+
     // Sample a few elements to estimate size
     const sampleSize = Math.min(array.length, 10);
     let totalSampleSize = 0;
-    
+
     for (let i = 0; i < sampleSize; i++) {
       const index = Math.floor(array.length * (i / sampleSize));
       let elemSize = 0;
-      
+
       const elem = array[index];
-      if (typeof elem === 'string') {
+      if (typeof elem === "string") {
         elemSize = elem.length * 2;
       } else if (Array.isArray(elem)) {
         elemSize = this.estimateArraySize(elem);
-      } else if (typeof elem === 'object' && elem !== null) {
+      } else if (typeof elem === "object" && elem !== null) {
         try {
           const json = JSON.stringify(elem);
           elemSize = json.length * 2;
@@ -241,10 +241,10 @@ class MemoryProvider extends StorageProvider {
       } else {
         elemSize = 8;
       }
-      
+
       totalSampleSize += elemSize;
     }
-    
+
     const averageElementSize = totalSampleSize / sampleSize;
     return Math.ceil(averageElementSize * array.length);
   }
@@ -261,20 +261,20 @@ class MemoryReadStream extends EventEmitter {
    */
   constructor(data, options = {}) {
     super();
-    
+
     this.data = data;
     this.options = {
       highWaterMark: 16384, // 16KB
       objectMode: true,
       chunkSize: 1024,
-      ...options
+      ...options,
     };
-    
+
     this.position = 0;
     this.flowing = false;
-    
+
     process.nextTick(() => {
-      this.emit('readable');
+      this.emit("readable");
     });
   }
 
@@ -284,20 +284,20 @@ class MemoryReadStream extends EventEmitter {
    */
   _read() {
     this.flowing = true;
-    
+
     // Process data differently based on type
     if (Array.isArray(this.data)) {
       this._readArray();
-    } else if (typeof this.data === 'string') {
+    } else if (typeof this.data === "string") {
       this._readString();
-    } else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(this.data)) {
+    } else if (typeof Buffer !== "undefined" && Buffer.isBuffer(this.data)) {
       this._readBuffer();
     } else if (ArrayBuffer.isView(this.data)) {
       this._readTypedArray();
     } else {
       // For other types, push as is
-      this.emit('data', this.data);
-      this.emit('end');
+      this.emit("data", this.data);
+      this.emit("end");
     }
   }
 
@@ -307,16 +307,16 @@ class MemoryReadStream extends EventEmitter {
    */
   _readArray() {
     const chunkSize = this.options.chunkSize;
-    
+
     while (this.position < this.data.length) {
       const end = Math.min(this.position + chunkSize, this.data.length);
       const chunk = this.data.slice(this.position, end);
-      
-      this.emit('data', chunk);
+
+      this.emit("data", chunk);
       this.position = end;
-      
+
       if (this.position >= this.data.length) {
-        this.emit('end');
+        this.emit("end");
         break;
       }
     }
@@ -328,16 +328,16 @@ class MemoryReadStream extends EventEmitter {
    */
   _readString() {
     const chunkSize = this.options.chunkSize;
-    
+
     while (this.position < this.data.length) {
       const end = Math.min(this.position + chunkSize, this.data.length);
       const chunk = this.data.substring(this.position, end);
-      
-      this.emit('data', chunk);
+
+      this.emit("data", chunk);
       this.position = end;
-      
+
       if (this.position >= this.data.length) {
-        this.emit('end');
+        this.emit("end");
         break;
       }
     }
@@ -349,16 +349,16 @@ class MemoryReadStream extends EventEmitter {
    */
   _readBuffer() {
     const chunkSize = this.options.chunkSize;
-    
+
     while (this.position < this.data.length) {
       const end = Math.min(this.position + chunkSize, this.data.length);
       const chunk = this.data.slice(this.position, end);
-      
-      this.emit('data', chunk);
+
+      this.emit("data", chunk);
       this.position = end;
-      
+
       if (this.position >= this.data.length) {
-        this.emit('end');
+        this.emit("end");
         break;
       }
     }
@@ -370,16 +370,16 @@ class MemoryReadStream extends EventEmitter {
    */
   _readTypedArray() {
     const chunkSize = this.options.chunkSize;
-    
+
     while (this.position < this.data.length) {
       const end = Math.min(this.position + chunkSize, this.data.length);
       const chunk = this.data.slice(this.position, end);
-      
-      this.emit('data', chunk);
+
+      this.emit("data", chunk);
       this.position = end;
-      
+
       if (this.position >= this.data.length) {
-        this.emit('end');
+        this.emit("end");
         break;
       }
     }
@@ -413,21 +413,21 @@ class MemoryReadStream extends EventEmitter {
    * @returns {WritableStream} The destination stream
    */
   pipe(destination, options) {
-    this.on('data', (chunk) => {
+    this.on("data", (chunk) => {
       const canContinue = destination.write(chunk);
       if (!canContinue) {
         this.pause();
       }
     });
-    
-    destination.on('drain', () => {
+
+    destination.on("drain", () => {
       this.resume();
     });
-    
-    this.on('end', () => {
+
+    this.on("end", () => {
       destination.end();
     });
-    
+
     this.resume();
     return destination;
   }
@@ -445,15 +445,15 @@ class MemoryWriteStream extends EventEmitter {
    */
   constructor(provider, id, options = {}) {
     super();
-    
+
     this.provider = provider;
     this.id = id;
     this.options = {
       highWaterMark: 16384, // 16KB
       objectMode: true,
-      ...options
+      ...options,
     };
-    
+
     this.chunks = [];
     this.ended = false;
   }
@@ -466,12 +466,12 @@ class MemoryWriteStream extends EventEmitter {
   write(chunk) {
     if (this.ended) {
       throw new PrimeStorageError(
-        'Cannot write to ended stream',
+        "Cannot write to ended stream",
         {},
-        'STORAGE_STREAM_ENDED'
+        "STORAGE_STREAM_ENDED",
       );
     }
-    
+
     this.chunks.push(chunk);
     return true;
   }
@@ -484,55 +484,62 @@ class MemoryWriteStream extends EventEmitter {
     if (chunk) {
       this.write(chunk);
     }
-    
+
     this.ended = true;
-    
+
     // Combine chunks based on their type
     let finalData;
-    
+
     if (this.chunks.length === 0) {
       finalData = null;
     } else if (this.chunks.length === 1) {
       finalData = this.chunks[0];
     } else {
       const firstChunk = this.chunks[0];
-      
-      if (typeof firstChunk === 'string') {
-        finalData = this.chunks.join('');
+
+      if (typeof firstChunk === "string") {
+        finalData = this.chunks.join("");
       } else if (Array.isArray(firstChunk)) {
         finalData = this.chunks.flat();
-      } else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(firstChunk)) {
+      } else if (typeof Buffer !== "undefined" && Buffer.isBuffer(firstChunk)) {
         finalData = Buffer.concat(this.chunks);
       } else if (ArrayBuffer.isView(firstChunk)) {
         // Combine TypedArrays
-        const totalLength = this.chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+        const totalLength = this.chunks.reduce(
+          (sum, chunk) => sum + chunk.length,
+          0,
+        );
         const result = new firstChunk.constructor(totalLength);
-        
+
         let offset = 0;
         for (const chunk of this.chunks) {
           result.set(chunk, offset);
           offset += chunk.length;
         }
-        
+
         finalData = result;
       } else {
         // For other types, just use the last chunk
         finalData = this.chunks;
       }
     }
-    
+
     // Store the final data
-    this.provider.store(finalData, this.id)
+    this.provider
+      .store(finalData, this.id)
       .then(() => {
-        this.emit('finish', this.id);
+        this.emit("finish", this.id);
       })
       .catch((error) => {
-        this.emit('error', new PrimeStorageError(
-          `Failed to store stream data: ${error.message}`,
-          { id: this.id, originalError: error },
-          'STORAGE_STREAM_STORE_FAILED',
-          error
-        ));
+        this.emit(
+          "error",
+          new PrimeStorageError(
+            `Failed to store stream data: ${error.message}`,
+            { id: this.id, originalError: error },
+            "STORAGE_STREAM_STORE_FAILED",
+            error,
+          ),
+        );
       });
   }
 }

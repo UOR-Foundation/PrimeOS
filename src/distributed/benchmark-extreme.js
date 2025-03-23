@@ -5,8 +5,8 @@
  * to ensure numerical stability and performance under challenging conditions.
  */
 
-const { performance } = require('perf_hooks');
-const Prime = require('../mathematics.js');
+const { performance } = require("perf_hooks");
+const Prime = require("../mathematics.js");
 
 /**
  * Benchmark class for numerical operations with extreme values
@@ -215,7 +215,7 @@ class ExtremeValueBenchmark {
     const cases = [];
 
     switch (type) {
-      case 'vector':
+      case "vector":
         // Generate vectors with extreme values
         if (config.includeNormal) {
           cases.push(
@@ -253,7 +253,7 @@ class ExtremeValueBenchmark {
         }
         break;
 
-      case 'matrix':
+      case "matrix":
         // Generate matrices with extreme values
         if (config.includeNormal) {
           cases.push(
@@ -308,7 +308,7 @@ class ExtremeValueBenchmark {
         }
         break;
 
-      case 'mixed':
+      case "mixed":
         // Generate mixed type test cases
         if (config.includeNormal) {
           cases.push([
@@ -399,7 +399,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
   const benchmark = new ExtremeValueBenchmark(options);
 
   // Generate test matrices
-  const normalMatrices = ExtremeValueBenchmark.generateExtremeValues('matrix', {
+  const normalMatrices = ExtremeValueBenchmark.generateExtremeValues("matrix", {
     count: 5,
     dimension: 10,
     includeSmall: false,
@@ -408,7 +408,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
   });
 
   const extremeMatrices = ExtremeValueBenchmark.generateExtremeValues(
-    'matrix',
+    "matrix",
     {
       count: 5,
       dimension: 10,
@@ -416,7 +416,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
     },
   );
 
-  const mixedMatrices = ExtremeValueBenchmark.generateExtremeValues('matrix', {
+  const mixedMatrices = ExtremeValueBenchmark.generateExtremeValues("matrix", {
     count: 5,
     dimension: 10,
     includeNormal: false,
@@ -456,7 +456,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
     benchmarkInversion() {
       // Benchmark with normal matrices
       benchmark.run(
-        'matrix_inversion_normal',
+        "matrix_inversion_normal",
         (matrix) => {
           return math.Matrix
             ? math.Matrix.inverse(matrix)
@@ -467,7 +467,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with extreme matrices
       benchmark.run(
-        'matrix_inversion_extreme',
+        "matrix_inversion_extreme",
         (matrix) => {
           return math.Matrix
             ? math.Matrix.inverse(matrix)
@@ -478,7 +478,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with mixed matrices
       benchmark.run(
-        'matrix_inversion_mixed',
+        "matrix_inversion_mixed",
         (matrix) => {
           return math.Matrix
             ? math.Matrix.inverse(matrix)
@@ -506,7 +506,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with normal matrices
       benchmark.run(
-        'matrix_multiplication_normal',
+        "matrix_multiplication_normal",
         (a, b) => {
           return math.Matrix ? math.Matrix.multiply(a, b) : math.multiply(a, b);
         },
@@ -515,7 +515,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with extreme matrices
       benchmark.run(
-        'matrix_multiplication_extreme',
+        "matrix_multiplication_extreme",
         (a, b) => {
           return math.Matrix ? math.Matrix.multiply(a, b) : math.multiply(a, b);
         },
@@ -524,7 +524,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with mixed matrices
       benchmark.run(
-        'matrix_multiplication_mixed',
+        "matrix_multiplication_mixed",
         (a, b) => {
           return math.Matrix ? math.Matrix.multiply(a, b) : math.multiply(a, b);
         },
@@ -544,7 +544,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with normal matrices
       benchmark.run(
-        'matrix_decomposition_normal',
+        "matrix_decomposition_normal",
         (matrix) => {
           return math.Matrix
             ? math.Matrix.decompose(matrix)
@@ -555,7 +555,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with extreme matrices
       benchmark.run(
-        'matrix_decomposition_extreme',
+        "matrix_decomposition_extreme",
         (matrix) => {
           return math.Matrix
             ? math.Matrix.decompose(matrix)
@@ -566,7 +566,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with mixed matrices
       benchmark.run(
-        'matrix_decomposition_mixed',
+        "matrix_decomposition_mixed",
         (matrix) => {
           return math.Matrix
             ? math.Matrix.decompose(matrix)
@@ -588,7 +588,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with normal matrices
       benchmark.run(
-        'matrix_eigenvalues_normal',
+        "matrix_eigenvalues_normal",
         (matrix) => {
           return math.Matrix
             ? math.Matrix.eigenvalues(matrix)
@@ -599,7 +599,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with extreme matrices
       benchmark.run(
-        'matrix_eigenvalues_extreme',
+        "matrix_eigenvalues_extreme",
         (matrix) => {
           return math.Matrix
             ? math.Matrix.eigenvalues(matrix)
@@ -610,7 +610,7 @@ function createMatrixBenchmarkSuite(math, options = {}) {
 
       // Benchmark with mixed matrices
       benchmark.run(
-        'matrix_eigenvalues_mixed',
+        "matrix_eigenvalues_mixed",
         (matrix) => {
           return math.Matrix
             ? math.Matrix.eigenvalues(matrix)
@@ -636,7 +636,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
   const benchmark = new ExtremeValueBenchmark(options);
 
   // Generate test vectors
-  const normalVectors = ExtremeValueBenchmark.generateExtremeValues('vector', {
+  const normalVectors = ExtremeValueBenchmark.generateExtremeValues("vector", {
     count: 5,
     dimension: 100,
     includeSmall: false,
@@ -644,13 +644,13 @@ function createVectorBenchmarkSuite(math, options = {}) {
     includeMixed: false,
   });
 
-  const extremeVectors = ExtremeValueBenchmark.generateExtremeValues('vector', {
+  const extremeVectors = ExtremeValueBenchmark.generateExtremeValues("vector", {
     count: 5,
     dimension: 100,
     includeNormal: false,
   });
 
-  const mixedVectors = ExtremeValueBenchmark.generateExtremeValues('vector', {
+  const mixedVectors = ExtremeValueBenchmark.generateExtremeValues("vector", {
     count: 5,
     dimension: 100,
     includeNormal: false,
@@ -702,7 +702,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with normal vectors
       benchmark.run(
-        'vector_dot_product_normal',
+        "vector_dot_product_normal",
         (a, b) => {
           return math.Vector ? math.Vector.dot(a, b) : math.dot(a, b);
         },
@@ -711,7 +711,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with extreme vectors
       benchmark.run(
-        'vector_dot_product_extreme',
+        "vector_dot_product_extreme",
         (a, b) => {
           return math.Vector ? math.Vector.dot(a, b) : math.dot(a, b);
         },
@@ -720,7 +720,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with mixed vectors
       benchmark.run(
-        'vector_dot_product_mixed',
+        "vector_dot_product_mixed",
         (a, b) => {
           return math.Vector ? math.Vector.dot(a, b) : math.dot(a, b);
         },
@@ -734,7 +734,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
     benchmarkNorm() {
       // Benchmark with normal vectors
       benchmark.run(
-        'vector_norm_normal',
+        "vector_norm_normal",
         (vector) => {
           return math.Vector ? math.Vector.norm(vector) : math.norm(vector);
         },
@@ -743,7 +743,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with extreme vectors
       benchmark.run(
-        'vector_norm_extreme',
+        "vector_norm_extreme",
         (vector) => {
           return math.Vector ? math.Vector.norm(vector) : math.norm(vector);
         },
@@ -752,7 +752,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with mixed vectors
       benchmark.run(
-        'vector_norm_mixed',
+        "vector_norm_mixed",
         (vector) => {
           return math.Vector ? math.Vector.norm(vector) : math.norm(vector);
         },
@@ -778,7 +778,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with normal vectors
       benchmark.run(
-        'vector_addition_normal',
+        "vector_addition_normal",
         (a, b) => {
           return math.Vector ? math.Vector.add(a, b) : math.add(a, b);
         },
@@ -787,7 +787,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with extreme vectors
       benchmark.run(
-        'vector_addition_extreme',
+        "vector_addition_extreme",
         (a, b) => {
           return math.Vector ? math.Vector.add(a, b) : math.add(a, b);
         },
@@ -796,7 +796,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with mixed vectors
       benchmark.run(
-        'vector_addition_mixed',
+        "vector_addition_mixed",
         (a, b) => {
           return math.Vector ? math.Vector.add(a, b) : math.add(a, b);
         },
@@ -848,7 +848,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with normal vectors
       benchmark.run(
-        'vector_orthogonalization_normal',
+        "vector_orthogonalization_normal",
         (vectors) => {
           return math.Vector
             ? math.Vector.orthogonalize(vectors)
@@ -859,7 +859,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with extreme vectors
       benchmark.run(
-        'vector_orthogonalization_extreme',
+        "vector_orthogonalization_extreme",
         (vectors) => {
           return math.Vector
             ? math.Vector.orthogonalize(vectors)
@@ -870,7 +870,7 @@ function createVectorBenchmarkSuite(math, options = {}) {
 
       // Benchmark with mixed vectors
       benchmark.run(
-        'vector_orthogonalization_mixed',
+        "vector_orthogonalization_mixed",
         (vectors) => {
           return math.Vector
             ? math.Vector.orthogonalize(vectors)
@@ -890,23 +890,23 @@ function createVectorBenchmarkSuite(math, options = {}) {
  * Run example benchmarks
  */
 function runExampleBenchmarks(verbose = false) {
-  console.log('Running extreme value benchmarks...');
+  console.log("Running extreme value benchmarks...");
 
   const options = { verbose };
 
   // Matrix benchmarks
-  console.log('\nMatrix Operations:');
+  console.log("\nMatrix Operations:");
   const matrixSuite = createMatrixBenchmarkSuite(Prime, options);
   const matrixResults = matrixSuite.runAll();
 
   // Vector benchmarks
-  console.log('\nVector Operations:');
+  console.log("\nVector Operations:");
   const vectorSuite = createVectorBenchmarkSuite(Prime, options);
   const vectorResults = vectorSuite.runAll();
 
   // Print summary
-  console.log('\nBenchmark Summary:');
-  console.log('------------------');
+  console.log("\nBenchmark Summary:");
+  console.log("------------------");
 
   Object.entries(matrixResults).forEach(([name, result]) => {
     console.log(

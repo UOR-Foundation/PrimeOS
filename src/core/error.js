@@ -5,7 +5,7 @@
  */
 
 // Import Prime object from prime.js
-const Prime = require('./prime.js');
+const Prime = require("./prime.js");
 
 (function (Prime) {
   /**
@@ -19,16 +19,17 @@ const Prime = require('./prime.js');
      * @param {string|number} [code] - Error code
      * @param {Error} [cause] - Cause of the error
      */
-    constructor(message, context = {}, code = 'PRIME_ERROR', cause = null) {
+    constructor(message, context = {}, code = "PRIME_ERROR", cause = null) {
       super(message);
       this.name = this.constructor.name;
       this.timestamp = new Date().toISOString();
-      
+
       // Ensure context is a plain object
-      this.context = (context && typeof context === 'object') 
-        ? Object.assign({}, context) 
-        : {};
-        
+      this.context =
+        context && typeof context === "object"
+          ? Object.assign({}, context)
+          : {};
+
       this.code = code;
       this.cause = cause;
 
@@ -61,7 +62,7 @@ const Prime = require('./prime.js');
     constructor(
       message,
       context = {},
-      code = 'VALIDATION_ERROR',
+      code = "VALIDATION_ERROR",
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -72,7 +73,7 @@ const Prime = require('./prime.js');
    * Error for configuration issues
    */
   class ConfigurationError extends PrimeError {
-    constructor(message, context = {}, code = 'CONFIG_ERROR', cause = null) {
+    constructor(message, context = {}, code = "CONFIG_ERROR", cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -84,7 +85,7 @@ const Prime = require('./prime.js');
     constructor(
       message,
       context = {},
-      code = 'INVALID_OPERATION',
+      code = "INVALID_OPERATION",
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -98,7 +99,7 @@ const Prime = require('./prime.js');
     constructor(
       message,
       context = {},
-      code = 'UNSUPPORTED_OPERATION',
+      code = "UNSUPPORTED_OPERATION",
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -109,7 +110,7 @@ const Prime = require('./prime.js');
    * Error for timeout issues
    */
   class TimeoutError extends PrimeError {
-    constructor(message, context = {}, code = 'TIMEOUT', cause = null) {
+    constructor(message, context = {}, code = "TIMEOUT", cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -121,7 +122,7 @@ const Prime = require('./prime.js');
     constructor(
       message,
       context = {},
-      code = 'RESOURCE_EXHAUSTED',
+      code = "RESOURCE_EXHAUSTED",
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -135,7 +136,7 @@ const Prime = require('./prime.js');
     constructor(
       message,
       context = {},
-      code = 'SECURITY_VIOLATION',
+      code = "SECURITY_VIOLATION",
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -146,7 +147,7 @@ const Prime = require('./prime.js');
    * Error for network issues
    */
   class NetworkError extends PrimeError {
-    constructor(message, context = {}, code = 'NETWORK_ERROR', cause = null) {
+    constructor(message, context = {}, code = "NETWORK_ERROR", cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -158,7 +159,7 @@ const Prime = require('./prime.js');
     constructor(
       message,
       context = {},
-      code = 'DEPENDENCY_ERROR',
+      code = "DEPENDENCY_ERROR",
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -172,7 +173,7 @@ const Prime = require('./prime.js');
     constructor(
       message,
       context = {},
-      code = 'SERIALIZATION_ERROR',
+      code = "SERIALIZATION_ERROR",
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -183,7 +184,7 @@ const Prime = require('./prime.js');
    * Error for state management issues
    */
   class StateError extends PrimeError {
-    constructor(message, context = {}, code = 'STATE_ERROR', cause = null) {
+    constructor(message, context = {}, code = "STATE_ERROR", cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -195,13 +196,13 @@ const Prime = require('./prime.js');
     constructor(
       message,
       context = {},
-      code = 'COHERENCE_VIOLATION',
+      code = "COHERENCE_VIOLATION",
       cause = null,
     ) {
       super(message, context, code, cause);
     }
   }
-  
+
   /**
    * Error for specific coherence violations with constraint and magnitude
    */
@@ -220,12 +221,12 @@ const Prime = require('./prime.js');
       constraint,
       magnitude,
       context = {},
-      code = 'COHERENCE_VIOLATION',
+      code = "COHERENCE_VIOLATION",
       cause = null,
     ) {
       // Copy the context to avoid modifying the original
       const contextCopy = Object.assign({}, context);
-      
+
       super(message, contextCopy, code, cause);
       this.constraint = constraint;
       this.magnitude = magnitude;
@@ -236,7 +237,7 @@ const Prime = require('./prime.js');
    * Error for component lifecycle issues
    */
   class ComponentError extends PrimeError {
-    constructor(message, context = {}, code = 'COMPONENT_ERROR', cause = null) {
+    constructor(message, context = {}, code = "COMPONENT_ERROR", cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -245,14 +246,79 @@ const Prime = require('./prime.js');
    * Error for mathematical calculation issues
    */
   class MathError extends PrimeError {
-    constructor(message, context = {}, code = 'MATH_ERROR', cause = null) {
+    constructor(message, context = {}, code = "MATH_ERROR", cause = null) {
+      super(message, context, code, cause);
+    }
+  }
+
+  /**
+   * Error for numerical instability issues
+   */
+  class NumericalInstabilityError extends MathError {
+    constructor(
+      message,
+      context = {},
+      code = "NUMERICAL_INSTABILITY",
+      cause = null,
+    ) {
+      super(message, context, code, cause);
+    }
+  }
+
+  /**
+   * Error for matrix singularity issues
+   */
+  class MatrixSingularityError extends MathError {
+    constructor(message, context = {}, code = "MATRIX_SINGULAR", cause = null) {
+      super(message, context, code, cause);
+    }
+  }
+
+  /**
+   * Error for dimension mismatch in mathematical operations
+   */
+  class DimensionMismatchError extends MathError {
+    constructor(
+      message,
+      context = {},
+      code = "DIMENSION_MISMATCH",
+      cause = null,
+    ) {
+      super(message, context, code, cause);
+    }
+  }
+
+  /**
+   * Error for overflow/underflow issues
+   */
+  class NumericOverflowError extends MathError {
+    constructor(
+      message,
+      context = {},
+      code = "NUMERIC_OVERFLOW",
+      cause = null,
+    ) {
+      super(message, context, code, cause);
+    }
+  }
+
+  /**
+   * Error for convergence issues in iterative algorithms
+   */
+  class ConvergenceError extends MathError {
+    constructor(
+      message,
+      context = {},
+      code = "CONVERGENCE_FAILURE",
+      cause = null,
+    ) {
       super(message, context, code, cause);
     }
   }
 
   // Create Errors object if it doesn't exist already
   Prime.Errors = Prime.Errors || {};
-  
+
   // Attach error classes to Prime.Errors namespace
   Prime.Errors.PrimeError = PrimeError;
   Prime.Errors.ValidationError = ValidationError;
@@ -270,7 +336,12 @@ const Prime = require('./prime.js');
   Prime.Errors.CoherenceViolationError = CoherenceViolationError;
   Prime.Errors.ComponentError = ComponentError;
   Prime.Errors.MathError = MathError;
-  
+  Prime.Errors.NumericalInstabilityError = NumericalInstabilityError;
+  Prime.Errors.MatrixSingularityError = MatrixSingularityError;
+  Prime.Errors.DimensionMismatchError = DimensionMismatchError;
+  Prime.Errors.NumericOverflowError = NumericOverflowError;
+  Prime.Errors.ConvergenceError = ConvergenceError;
+
   // For backward compatibility, also attach directly to Prime
   Prime.PrimeError = PrimeError;
   Prime.ValidationError = ValidationError;
@@ -288,9 +359,14 @@ const Prime = require('./prime.js');
   Prime.CoherenceViolationError = CoherenceViolationError;
   Prime.ComponentError = ComponentError;
   Prime.MathError = MathError;
+  Prime.NumericalInstabilityError = NumericalInstabilityError;
+  Prime.MatrixSingularityError = MatrixSingularityError;
+  Prime.DimensionMismatchError = DimensionMismatchError;
+  Prime.NumericOverflowError = NumericOverflowError;
+  Prime.ConvergenceError = ConvergenceError;
 })(Prime);
 
 // CommonJS export
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }

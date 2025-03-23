@@ -4,27 +4,15 @@
  * Specialized validation for manifolds and cross-manifold operations
  */
 
-// Import core if available
-let Prime;
-try {
-  Prime = require('../../core.js');
-} catch (e) {
-  // Handle case where core isn't available yet
-  Prime = {};
-}
+// Import Prime directly from core/prime
+const Prime = require("../../core/prime.js");
 
-// Import Manifold if available
-let Manifold;
-try {
-  const manifestModule = require('./manifold.js');
-  Manifold = manifestModule.Manifold;
-} catch (e) {
-  // Handle case where Manifold isn't available yet
-  Manifold = null;
-}
+// Import Manifold with validation
+const manifestModule = require("./manifold.js");
+const Manifold = manifestModule && manifestModule.Manifold;
 
 // Import the base validator
-const { CoherenceValidator } = require('./coherence-validation.js');
+const { CoherenceValidator } = require("./coherence-validation.js");
 
 /**
  * Class for validating the coherence of mathematical operations
@@ -69,93 +57,93 @@ class MathematicalCoherenceValidator {
 
     // Register basic manifold type constraint
     this.validator.registerManifoldConstraint(
-      'valid_manifold_type',
+      "valid_manifold_type",
       (manifold) => {
         const type = manifold.getType();
-        return typeof type === 'string' && type.length > 0;
+        return typeof type === "string" && type.length > 0;
       },
       {
         priority: 10,
-        type: 'hard',
+        type: "hard",
       },
     );
 
     // Register manifold space constraint
     this.validator.registerManifoldConstraint(
-      'has_valid_spaces',
+      "has_valid_spaces",
       (manifold) => {
         const spaces = manifold.getSpaces();
         return Array.isArray(spaces) && spaces.length > 0;
       },
       {
         priority: 8,
-        type: 'hard',
+        type: "hard",
       },
     );
 
     // Register invariant properties constraint
     this.validator.registerManifoldConstraint(
-      'has_invariant_properties',
+      "has_invariant_properties",
       (manifold) => {
         const invariant = manifold.getInvariant();
         return (
-          typeof invariant === 'object' &&
+          typeof invariant === "object" &&
           invariant !== null &&
           Object.keys(invariant).length > 0
         );
       },
       {
         priority: 7,
-        type: 'soft',
+        type: "soft",
       },
     );
 
     // Register variant properties constraint
     this.validator.registerManifoldConstraint(
-      'has_variant_properties',
+      "has_variant_properties",
       (manifold) => {
         const variant = manifold.getVariant();
         return (
-          typeof variant === 'object' &&
+          typeof variant === "object" &&
           variant !== null &&
           Object.keys(variant).length > 0
         );
       },
       {
         priority: 6,
-        type: 'soft',
+        type: "soft",
       },
     );
 
     // Register coherence threshold constraint
     this.validator.registerManifoldConstraint(
-      'coherence_threshold_valid',
+      "coherence_threshold_valid",
       (manifold) => {
         const threshold = manifold._coherenceThreshold;
         return (
-          typeof threshold === 'number' && threshold >= 0 && threshold <= 1
+          typeof threshold === "number" && threshold >= 0 && threshold <= 1
         );
       },
       {
         priority: 5,
-        type: 'soft',
+        type: "soft",
       },
     );
 
     // Register cross-manifold metric for topological similarity
     this.validator.registerCrossManifoldMetric(
-      'topological_similarity',
+      "topological_similarity",
       (manifold1, manifold2) => {
         // Check if manifolds have the same dimension based on variant properties
         const variant1 = manifold1.getVariant() || {};
         const variant2 = manifold2.getVariant() || {};
 
         const numericKeys1 = Object.keys(variant1).filter(
-          (key) => typeof variant1[key] === 'number',
+          (key) => typeof variant1[key] === "number",
         );
 
         const numericKeys2 = Object.keys(variant2).filter(
-          (key) => typeof variant2[key] === 'number',
+          (key) => typeof variant2[key] === "number",
         );
 
         // Calculate dimension similarity
@@ -183,13 +171,13 @@ class MathematicalCoherenceValidator {
       },
       {
         weight: 1.5,
-        description: 'Measures topological similarity between manifolds',
+        description: "Measures topological similarity between manifolds",
       },
     );
 
     // Register cross-manifold metric for invariant compatibility
     this.validator.registerCrossManifoldMetric(
-      'invariant_compatibility',
+      "invariant_compatibility",
       (manifold1, manifold2) => {
         const invariant1 = manifold1.getInvariant() || {};
         const invariant2 = manifold2.getInvariant() || {};
@@ -200,7 +188,7 @@ class MathematicalCoherenceValidator {
         if (keys1.length === 0 && keys2.length === 0) {
           return {
             value: 1.0,
-            details: { reason: 'Both manifolds have no invariants' },
+            details: { reason: "Both manifolds have no invariants" },
           };
         }
 
@@ -209,7 +197,7 @@ class MathematicalCoherenceValidator {
         if (commonKeys.length === 0) {
           return {
             value: 0.0,
-            details: { reason: 'No common invariant properties' },
+            details: { reason: "No common invariant properties" },
           };
         }
 
@@ -235,7 +223,7 @@ class MathematicalCoherenceValidator {
       },
       {
         weight: 2.0,
-        description: 'Measures compatibility between manifold invariants',
+        description: "Measures compatibility between manifold invariants",
       },
     );
   }
@@ -248,7 +236,7 @@ class MathematicalCoherenceValidator {
    * @returns {Object} Validation result
    */
   validateNumeric(value, context = {}) {
-    return this.validator.validate('numeric', value, context);
+    return this.validator.validate("numeric", value, context);
   }
 
   /**
@@ -259,7 +247,7 @@ class MathematicalCoherenceValidator {
    * @returns {Object} Validation result
    */
   validateVector(vector, context = {}) {
-    return this.validator.validate('vectorSpace', vector, context);
+    return this.validator.validate("vectorSpace", vector, context);
   }
 
   /**
@@ -270,7 +258,7 @@ class MathematicalCoherenceValidator {
    * @returns {Object} Validation result
    */
   validateMatrix(matrix, context = {}) {
-    return this.validator.validate('matrixAlgebra', matrix, context);
+    return this.validator.validate("matrixAlgebra", matrix, context);
   }
 
   /**
@@ -285,7 +273,7 @@ class MathematicalCoherenceValidator {
       return {
         valid: false,
         coherence: 0,
-        message: 'Not a valid manifold object',
+        message: "Not a valid manifold object",
       };
     }
 
@@ -309,7 +297,7 @@ class MathematicalCoherenceValidator {
       return {
         valid: false,
         coherence: 0,
-        message: 'Not valid manifold objects',
+        message: "Not valid manifold objects",
       };
     }
 

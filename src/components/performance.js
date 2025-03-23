@@ -5,12 +5,12 @@
  */
 
 // Import Prime using CommonJS to avoid circular dependency
-const Prime = require('../core.js');
+const Prime = require("../core.js");
 // Ensure all modules are loaded in correct order
-require('../mathematics.js');
-require('../coherence.js');
-require('../framework/index.js');
-require('./base.js');
+require("../mathematics.js");
+require("../coherence.js");
+require("../framework/index.js");
+require("./base.js");
 
 (function (Prime) {
   /**
@@ -24,9 +24,9 @@ require('./base.js');
       useWebAssembly: false,
       useWorkers: false,
       memoizationLimit: 1000,
-      precision: 'double',
-      optimizationLevel: 'balanced',
-      preferredRenderer: 'auto',
+      precision: "double",
+      optimizationLevel: "balanced",
+      preferredRenderer: "auto",
       logPerformance: false,
     },
 
@@ -68,12 +68,12 @@ require('./base.js');
      */
     benchmark: async function (operation, options = {}) {
       if (!Prime.Utils.isFunction(operation)) {
-        throw new Prime.ValidationError('Operation must be a function');
+        throw new Prime.ValidationError("Operation must be a function");
       }
 
       const iterations = options.iterations || 100;
       const warmup = options.warmup || 10;
-      const name = options.name || operation.name || 'anonymous';
+      const name = options.name || operation.name || "anonymous";
       const args = options.args || [];
 
       // Track all timings
@@ -174,7 +174,7 @@ require('./base.js');
      */
     compare: async function (operations, options = {}) {
       if (!Prime.Utils.isArray(operations)) {
-        throw new Prime.ValidationError('Operations must be an array');
+        throw new Prime.ValidationError("Operations must be an array");
       }
 
       // Add names if not provided
@@ -227,14 +227,14 @@ require('./base.js');
      */
     optimize: function (fn, options = {}) {
       if (!Prime.Utils.isFunction(fn)) {
-        throw new Prime.ValidationError('Function is required');
+        throw new Prime.ValidationError("Function is required");
       }
 
       const mergedOptions = {
         memoize: options.memoize !== false,
         memoizeLimit: options.memoizeLimit || this.config.memoizationLimit,
         async:
-          options.async !== false && fn.constructor.name === 'AsyncFunction',
+          options.async !== false && fn.constructor.name === "AsyncFunction",
         monitor: options.monitor !== false,
         validateInput: options.validateInput,
         validateOutput: options.validateOutput,
@@ -248,7 +248,7 @@ require('./base.js');
         const originalFn = optimized;
         optimized = function (...args) {
           if (!mergedOptions.validateInput(...args)) {
-            throw new Prime.ValidationError('Input validation failed');
+            throw new Prime.ValidationError("Input validation failed");
           }
           return originalFn.apply(this, args);
         };
@@ -261,7 +261,7 @@ require('./base.js');
           const result = originalFn.apply(this, args);
 
           if (!mergedOptions.validateOutput(result, ...args)) {
-            throw new Prime.ValidationError('Output validation failed');
+            throw new Prime.ValidationError("Output validation failed");
           }
 
           return result;
@@ -277,7 +277,7 @@ require('./base.js');
 
       // Add performance monitoring if requested
       if (mergedOptions.monitor) {
-        const name = fn.name || 'anonymous';
+        const name = fn.name || "anonymous";
         const monitoredFn = optimized;
 
         if (mergedOptions.async) {
@@ -330,7 +330,7 @@ require('./base.js');
      */
     optimizeAsync: function (fn, options = {}) {
       if (!Prime.Utils.isFunction(fn)) {
-        throw new Prime.ValidationError('Function is required');
+        throw new Prime.ValidationError("Function is required");
       }
 
       const mergedOptions = {
@@ -353,7 +353,7 @@ require('./base.js');
           mergedOptions.validateInput &&
           !mergedOptions.validateInput(...args)
         ) {
-          throw new Prime.ValidationError('Input validation failed');
+          throw new Prime.ValidationError("Input validation failed");
         }
 
         // Generate cache key
@@ -382,13 +382,13 @@ require('./base.js');
             mergedOptions.validateOutput &&
             !mergedOptions.validateOutput(result, ...args)
           ) {
-            throw new Prime.ValidationError('Output validation failed');
+            throw new Prime.ValidationError("Output validation failed");
           }
 
           // Record execution time
           const end = performance.now ? performance.now() : Date.now();
           performance._recordExecution(
-            fn.name || 'anonymous-async',
+            fn.name || "anonymous-async",
             end - start,
           );
 
@@ -415,7 +415,7 @@ require('./base.js');
           // Record failed execution
           const end = performance.now ? performance.now() : Date.now();
           performance._recordExecution(
-            fn.name || 'anonymous-async',
+            fn.name || "anonymous-async",
             end - start,
             error,
           );
@@ -441,9 +441,9 @@ require('./base.js');
       };
 
       optimized.setCacheTime = function (ms) {
-        if (typeof ms !== 'number' || ms < 0) {
+        if (typeof ms !== "number" || ms < 0) {
           throw new Prime.ValidationError(
-            'Cache time must be a positive number',
+            "Cache time must be a positive number",
           );
         }
         mergedOptions.cacheTime = ms;
@@ -525,8 +525,8 @@ require('./base.js');
      */
     isWebAssemblySupported: function () {
       return (
-        typeof WebAssembly === 'object' &&
-        typeof WebAssembly.compile === 'function'
+        typeof WebAssembly === "object" &&
+        typeof WebAssembly.compile === "function"
       );
     },
 
@@ -535,7 +535,7 @@ require('./base.js');
      * @returns {boolean} True if Web Workers are supported
      */
     isWorkersSupported: function () {
-      return typeof Worker === 'function';
+      return typeof Worker === "function";
     },
 
     /**
@@ -547,12 +547,12 @@ require('./base.js');
     runInWorker: function (fn, args = []) {
       if (!this.isWorkersSupported()) {
         throw new Prime.InvalidOperationError(
-          'Web Workers are not supported in this environment',
+          "Web Workers are not supported in this environment",
         );
       }
 
       if (!Prime.Utils.isFunction(fn)) {
-        throw new Prime.ValidationError('Function is required');
+        throw new Prime.ValidationError("Function is required");
       }
 
       return new Promise((resolve, reject) => {
@@ -588,7 +588,7 @@ require('./base.js');
 
         // Create the worker
         const blob = new Blob([workerScript], {
-          type: 'application/javascript',
+          type: "application/javascript",
         });
         const workerUrl = URL.createObjectURL(blob);
         const worker = new Worker(workerUrl);
@@ -599,7 +599,7 @@ require('./base.js');
           worker.terminate();
           URL.revokeObjectURL(workerUrl);
 
-          if (e.data.status === 'success') {
+          if (e.data.status === "success") {
             resolve(e.data.result);
           } else {
             const error = new Error(e.data.error.message);
@@ -684,7 +684,7 @@ require('./base.js');
             Prime.Logger.debug(
               `Pruned ${entriesToRemove.length} entries from memoization cache`,
               {
-                functionName: memoizedFn.name || 'anonymous',
+                functionName: memoizedFn.name || "anonymous",
                 beforeSize: entries.length,
                 afterSize: memoizedFn.cache.size,
                 limit,
@@ -772,15 +772,15 @@ require('./base.js');
   Prime.performance = performance;
 
   // Publish component module loaded event
-  Prime.EventBus.publish('module:loaded', { name: 'component-performance' });
+  Prime.EventBus.publish("module:loaded", { name: "component-performance" });
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.Prime = Prime;
 }

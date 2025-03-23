@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Ensure the distributed namespace exists
 Prime.distributed = Prime.distributed || {};
@@ -13,35 +13,35 @@ Prime.distributed = Prime.distributed || {};
 Prime.distributed.coherence = Prime.distributed.coherence || {};
 
 // Import coherence components directly
-const violations = require('./coherence-violations');
-const recovery = require('./coherence-recovery');
-const metrics = require('./coherence-metrics');
-const core = require('./coherence-core');
+const violations = require("./coherence-violations");
+const recovery = require("./coherence-recovery");
+const metrics = require("./coherence-metrics");
+const core = require("./coherence-core");
 
 // Set up component references with proper circular dependency handling
 const components = [
   {
-    name: 'CoherenceViolations',
+    name: "CoherenceViolations",
     module:
       violations.Distributed && violations.Distributed.Coherence
         ? violations.Distributed.Coherence.Violations
         : {},
   },
   {
-    name: 'CoherenceRecovery',
+    name: "CoherenceRecovery",
     module:
       recovery.Distributed && recovery.Distributed.Coherence
         ? recovery.Distributed.Coherence.Recovery
         : {},
   },
   {
-    name: 'CoherenceMetrics',
+    name: "CoherenceMetrics",
     module:
       metrics.Distributed && metrics.Distributed.Coherence
         ? metrics.Distributed.Coherence.Metrics
         : {},
   },
-  { name: 'CoherenceCore', module: core.CoherenceCore || {} },
+  { name: "CoherenceCore", module: core.CoherenceCore || {} },
 ];
 
 // Add each component to the namespace with circular dependency protection

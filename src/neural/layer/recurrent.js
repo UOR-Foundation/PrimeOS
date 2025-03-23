@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Create the Recurrent Layer module using IIFE
 (function () {
@@ -26,13 +26,13 @@ const Prime = require('../../core');
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          'Layer configuration must be an object',
+          "Layer configuration must be an object",
         );
       }
 
       this.inputSize = config.inputSize;
       this.hiddenSize = config.hiddenSize;
-      this.cellType = config.cellType || 'gru';
+      this.cellType = config.cellType || "gru";
       this.sequenceLength = config.sequenceLength || 1;
       this.returnSequences = config.returnSequences || false;
 
@@ -85,12 +85,12 @@ const Prime = require('../../core');
     _initializeParameters(params) {
       const scale =
         params.scale || Math.sqrt(2 / (this.inputSize + this.hiddenSize));
-      const distribution = params.distribution || 'xavier';
+      const distribution = params.distribution || "xavier";
 
       this.weights = {};
       this.biases = {};
 
-      if (this.cellType === 'lstm') {
+      if (this.cellType === "lstm") {
         // LSTM weights: input gate, forget gate, cell gate, output gate
         // Input weights (applied to input)
         this.weights.Wi = this._initializeMatrix(
@@ -149,7 +149,7 @@ const Prime = require('../../core');
         this.biases.bf = new Array(this.hiddenSize).fill(1); // Initial bias for forget gate is 1 (remember by default)
         this.biases.bc = new Array(this.hiddenSize).fill(0);
         this.biases.bo = new Array(this.hiddenSize).fill(0);
-      } else if (this.cellType === 'gru') {
+      } else if (this.cellType === "gru") {
         // GRU weights: update gate, reset gate, hidden state
         // Input weights
         this.weights.Wz = this._initializeMatrix(
@@ -231,16 +231,16 @@ const Prime = require('../../core');
         for (let j = 0; j < cols; j++) {
           let value;
 
-          if (distribution === 'xavier') {
+          if (distribution === "xavier") {
             // Xavier/Glorot initialization
             value = (Math.random() * 2 - 1) * scale;
-          } else if (distribution === 'he') {
+          } else if (distribution === "he") {
             // He initialization
             value = Math.random() * Math.sqrt(2 / cols);
-          } else if (distribution === 'orthogonal') {
+          } else if (distribution === "orthogonal") {
             // Pseudo-orthogonal (simplified for JavaScript)
             value = (Math.random() * 2 - 1) * Math.sqrt(2 / (rows + cols));
-          } else if (distribution === 'zeros') {
+          } else if (distribution === "zeros") {
             value = 0;
           } else {
             // Default to small random values
@@ -576,7 +576,7 @@ const Prime = require('../../core');
 
       // Validate input shape
       if (!Array.isArray(input)) {
-        throw new Prime.ValidationError('Input must be an array');
+        throw new Prime.ValidationError("Input must be an array");
       }
 
       // Handle both single sample and sequence inputs
@@ -605,7 +605,7 @@ const Prime = require('../../core');
       // Initialize states
       const hiddenStates = new Array(sequence.length + 1);
       const cellStates =
-        this.cellType === 'lstm' ? new Array(sequence.length + 1) : null;
+        this.cellType === "lstm" ? new Array(sequence.length + 1) : null;
       const gateStates = new Array(sequence.length);
 
       // Initial states are zero vectors
@@ -619,11 +619,11 @@ const Prime = require('../../core');
         const x = sequence[t];
 
         let result;
-        if (this.cellType === 'lstm') {
+        if (this.cellType === "lstm") {
           result = this._forwardLSTM(x, hiddenStates[t], cellStates[t]);
           hiddenStates[t + 1] = result.h;
           cellStates[t + 1] = result.c;
-        } else if (this.cellType === 'gru') {
+        } else if (this.cellType === "gru") {
           result = this._forwardGRU(x, hiddenStates[t]);
           hiddenStates[t + 1] = result.h;
         } else {
@@ -1057,12 +1057,12 @@ const Prime = require('../../core');
       if (this.returnSequences) {
         if (!Array.isArray(dY) || !Array.isArray(dY[0])) {
           throw new Prime.ValidationError(
-            'Output gradient must be a sequence of vectors',
+            "Output gradient must be a sequence of vectors",
           );
         }
       } else {
         if (!Array.isArray(dY)) {
-          throw new Prime.ValidationError('Output gradient must be a vector');
+          throw new Prime.ValidationError("Output gradient must be a vector");
         }
       }
 
@@ -1098,7 +1098,7 @@ const Prime = require('../../core');
 
       // Initialize cell state gradients for LSTM
       let dCellStates = null;
-      if (this.cellType === 'lstm') {
+      if (this.cellType === "lstm") {
         dCellStates = new Array(sequence.length + 1);
         for (let t = 0; t <= sequence.length; t++) {
           dCellStates[t] = new Array(this.hiddenSize).fill(0);
@@ -1111,7 +1111,7 @@ const Prime = require('../../core');
         const prevH = hiddenStates[t];
         let result;
 
-        if (this.cellType === 'lstm') {
+        if (this.cellType === "lstm") {
           const prevC = cellStates[t];
           const h = hiddenStates[t + 1];
           const c = cellStates[t + 1];
@@ -1131,7 +1131,7 @@ const Prime = require('../../core');
 
           // Accumulate cell state gradient for previous time step
           dCellStates[t] = result.dPrevC;
-        } else if (this.cellType === 'gru') {
+        } else if (this.cellType === "gru") {
           const h = hiddenStates[t + 1];
 
           result = this._backwardGRU(
@@ -1323,8 +1323,8 @@ const Prime = require('../../core');
 
         // Record coherence violation
         this._recordCoherenceViolation({
-          type: 'gradient_explosion',
-          severity: 'medium',
+          type: "gradient_explosion",
+          severity: "medium",
           details: {
             originalNorm: this.metrics.gradientNorm,
             clippedNorm: maxNorm,
@@ -1530,8 +1530,8 @@ const Prime = require('../../core');
 
       if (maxCellValue > explodingThreshold) {
         this._recordCoherenceViolation({
-          type: 'cell_state_explosion',
-          severity: 'high',
+          type: "cell_state_explosion",
+          severity: "high",
           details: {
             maxValue: maxCellValue,
             threshold: explodingThreshold,
@@ -1547,8 +1547,8 @@ const Prime = require('../../core');
 
       if (avgAbsCellValue < vanishingThreshold) {
         this._recordCoherenceViolation({
-          type: 'cell_state_vanishing',
-          severity: 'medium',
+          type: "cell_state_vanishing",
+          severity: "medium",
           details: {
             avgValue: avgAbsCellValue,
             threshold: vanishingThreshold,
@@ -1568,8 +1568,8 @@ const Prime = require('../../core');
         const instabilityThreshold = 5.0; // Hyperparameter
         if (avgChange > instabilityThreshold) {
           this._recordCoherenceViolation({
-            type: 'cell_state_instability',
-            severity: 'medium',
+            type: "cell_state_instability",
+            severity: "medium",
             details: {
               avgChange,
               threshold: instabilityThreshold,
@@ -1581,8 +1581,8 @@ const Prime = require('../../core');
         const forgettingThreshold = 0.01; // Hyperparameter
         if (avgChange < forgettingThreshold && this.metrics.forwardCount > 20) {
           this._recordCoherenceViolation({
-            type: 'cell_state_forgetting',
-            severity: 'low',
+            type: "cell_state_forgetting",
+            severity: "low",
             details: {
               avgChange,
               threshold: forgettingThreshold,
@@ -1597,8 +1597,8 @@ const Prime = require('../../core');
         forgetGate.reduce((sum, val) => sum + val, 0) / forgetGate.length;
       if (avgForgetGate < 0.1) {
         this._recordCoherenceViolation({
-          type: 'forget_gate_vanishing',
-          severity: 'medium',
+          type: "forget_gate_vanishing",
+          severity: "medium",
           details: {
             avgForgetGate,
             threshold: 0.1,
@@ -1611,8 +1611,8 @@ const Prime = require('../../core');
         inputGate.reduce((sum, val) => sum + val, 0) / inputGate.length;
       if (avgInputGate > 0.9 && maxCellValue > 10.0) {
         this._recordCoherenceViolation({
-          type: 'input_gate_explosion_risk',
-          severity: 'medium',
+          type: "input_gate_explosion_risk",
+          severity: "medium",
           details: {
             avgInputGate,
             maxCellValue,
@@ -1654,7 +1654,7 @@ const Prime = require('../../core');
       let gateBalanceScore = 1.0;
 
       // For each gate type, check if it's being used appropriately
-      if (this.cellType === 'lstm') {
+      if (this.cellType === "lstm") {
         // Check for vanishing gradients (forget gate consistently near 0)
         const forgetGateStats =
           this.usagePatterns.gateActivationStatistics.forget;
@@ -1674,7 +1674,7 @@ const Prime = require('../../core');
         const inputGateBalance = 1 - Math.abs(avgInputGate - 0.5) * 2;
 
         gateBalanceScore = (forgetGateBalance + inputGateBalance) / 2;
-      } else if (this.cellType === 'gru') {
+      } else if (this.cellType === "gru") {
         // Check for reset gate balance
         const resetGateStats =
           this.usagePatterns.gateActivationStatistics.reset;
@@ -1764,8 +1764,8 @@ const Prime = require('../../core');
       // Detect significant coherence drops
       if (coherenceAfter < coherenceBefore * 0.8) {
         this._recordCoherenceViolation({
-          type: 'coherence_drop',
-          severity: 'medium',
+          type: "coherence_drop",
+          severity: "medium",
           details: {
             before: coherenceBefore,
             after: coherenceAfter,
@@ -1791,8 +1791,8 @@ const Prime = require('../../core');
               matrix[i][j] = 0;
 
               this._recordCoherenceViolation({
-                type: 'non_finite_weight',
-                severity: 'high',
+                type: "non_finite_weight",
+                severity: "high",
                 details: {
                   parameter: `weights.${key}[${i}][${j}]`,
                 },
@@ -1811,8 +1811,8 @@ const Prime = require('../../core');
             vector[i] = 0;
 
             this._recordCoherenceViolation({
-              type: 'non_finite_bias',
-              severity: 'high',
+              type: "non_finite_bias",
+              severity: "high",
               details: {
                 parameter: `biases.${key}[${i}]`,
               },
@@ -1867,7 +1867,7 @@ const Prime = require('../../core');
      */
     getArchitecture() {
       return {
-        type: 'recurrent',
+        type: "recurrent",
         cellType: this.cellType,
         inputSize: this.inputSize,
         hiddenSize: this.hiddenSize,

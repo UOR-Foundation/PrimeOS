@@ -5,7 +5,7 @@
  */
 
 // Import Prime object from prime.js
-const Prime = require('./prime.js');
+const Prime = require("./prime.js");
 
 (function (Prime) {
   /**
@@ -69,11 +69,15 @@ const Prime = require('./prime.js');
       subscribe: function (topic, callback) {
         // Validate parameters
         if (!Prime.Utils.isString(topic)) {
-          throw new Prime.ValidationError('Event name must be a string', { topic });
+          throw new Prime.ValidationError("Event name must be a string", {
+            topic,
+          });
         }
-        
+
         if (!Prime.Utils.isFunction(callback)) {
-          throw new Prime.ValidationError('Callback must be a function', { callback });
+          throw new Prime.ValidationError("Callback must be a function", {
+            callback,
+          });
         }
 
         // Create topic array if it doesn't exist
@@ -183,8 +187,8 @@ const Prime = require('./prime.js');
      * @returns {Function} Function to remove this listener
      */
     on(event, callback) {
-      if (typeof callback !== 'function') {
-        throw new Error('Callback must be a function');
+      if (typeof callback !== "function") {
+        throw new Error("Callback must be a function");
       }
 
       if (!this.events.has(event)) {
@@ -309,6 +313,6 @@ const Prime = require('./prime.js');
 })(Prime);
 
 // CommonJS export
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }

@@ -5,7 +5,7 @@
  */
 
 // Import Prime object from prime.js
-const Prime = require('./prime.js');
+const Prime = require("./prime.js");
 
 (function (Prime) {
   /**
@@ -18,14 +18,18 @@ const Prime = require('./prime.js');
      * @returns {string} Environment identifier ('node', 'browser', etc.)
      */
     detectEnvironment: function () {
-      if (typeof process !== 'undefined' && process.versions && process.versions.node) {
-        return 'node';
-      } else if (typeof window !== 'undefined') {
-        return 'browser';
-      } else if (typeof self !== 'undefined' && self.WorkerGlobalScope) {
-        return 'worker';
+      if (
+        typeof process !== "undefined" &&
+        process.versions &&
+        process.versions.node
+      ) {
+        return "node";
+      } else if (typeof window !== "undefined") {
+        return "browser";
+      } else if (typeof self !== "undefined" && self.WorkerGlobalScope) {
+        return "worker";
       } else {
-        return 'unknown';
+        return "unknown";
       }
     },
 
@@ -38,25 +42,26 @@ const Prime = require('./prime.js');
      */
     register: function (name, module) {
       // Get the appropriate error class (handle both namespaces for backwards compatibility)
-      const ValidationError = Prime.Errors && Prime.Errors.ValidationError ? 
-                              Prime.Errors.ValidationError : 
-                              Prime.ValidationError;
-      
+      const ValidationError =
+        Prime.Errors && Prime.Errors.ValidationError
+          ? Prime.Errors.ValidationError
+          : Prime.ValidationError;
+
       // Validate parameters
       if (!Prime.Utils.isString(name)) {
-        throw new ValidationError('Module name must be a string');
+        throw new ValidationError("Module name must be a string");
       }
-      
-      if (name === '' || name.trim() === '') {
-        throw new ValidationError('Module name must not be empty');
+
+      if (name === "" || name.trim() === "") {
+        throw new ValidationError("Module name must not be empty");
       }
 
       if (module === null) {
-        throw new ValidationError('Module must not be null');
+        throw new ValidationError("Module must not be null");
       }
-      
+
       if (!Prime.Utils.isObject(module)) {
-        throw new ValidationError('Module must be an object');
+        throw new ValidationError("Module must be an object");
       }
 
       // No special case handling - treat all modules equally
@@ -80,17 +85,19 @@ const Prime = require('./prime.js');
      */
     require: function (name) {
       // Get the appropriate error classes (handle both namespaces for backwards compatibility)
-      const ValidationError = Prime.Errors && Prime.Errors.ValidationError ? 
-                              Prime.Errors.ValidationError : 
-                              Prime.ValidationError;
-      
-      const ConfigurationError = Prime.Errors && Prime.Errors.ConfigurationError ? 
-                                 Prime.Errors.ConfigurationError : 
-                                 Prime.ConfigurationError;
-      
+      const ValidationError =
+        Prime.Errors && Prime.Errors.ValidationError
+          ? Prime.Errors.ValidationError
+          : Prime.ValidationError;
+
+      const ConfigurationError =
+        Prime.Errors && Prime.Errors.ConfigurationError
+          ? Prime.Errors.ConfigurationError
+          : Prime.ConfigurationError;
+
       // Validate parameter
       if (!Prime.Utils.isString(name)) {
-        throw new ValidationError('Module name must be a string');
+        throw new ValidationError("Module name must be a string");
       }
 
       // Check if module exists
@@ -109,13 +116,14 @@ const Prime = require('./prime.js');
      */
     unregister: function (name) {
       // Get the appropriate error class (handle both namespaces for backwards compatibility)
-      const ValidationError = Prime.Errors && Prime.Errors.ValidationError ? 
-                              Prime.Errors.ValidationError : 
-                              Prime.ValidationError;
-      
+      const ValidationError =
+        Prime.Errors && Prime.Errors.ValidationError
+          ? Prime.Errors.ValidationError
+          : Prime.ValidationError;
+
       // Validate parameter
       if (!Prime.Utils.isString(name)) {
-        throw new ValidationError('Module name must be a string');
+        throw new ValidationError("Module name must be a string");
       }
 
       // Check if module exists
@@ -134,12 +142,13 @@ const Prime = require('./prime.js');
      */
     getModules: function () {
       // Get all keys from Prime that are objects (excluding functions and primitives)
-      return Object.keys(Prime).filter(key => 
-        Prime.Utils.isObject(Prime[key]) && 
-        // Exclude core utilities and internal properties
-        !['Utils', 'Errors', 'EventBus'].includes(key)
+      return Object.keys(Prime).filter(
+        (key) =>
+          Prime.Utils.isObject(Prime[key]) &&
+          // Exclude core utilities and internal properties
+          !["Utils", "Errors", "EventBus"].includes(key),
       );
-    }
+    },
   };
 
   // Attach ModuleLoader to Prime
@@ -147,6 +156,6 @@ const Prime = require('./prime.js');
 })(Prime);
 
 // CommonJS export
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }

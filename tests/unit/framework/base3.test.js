@@ -9,14 +9,14 @@ describe("PrimeOS Framework - Base3", () => {
   let base0;
   let base1;
   let base2;
-  
+
   beforeEach(() => {
     // Create component hierarchy
     base0 = Prime.Base0.createBase0Components();
     base1 = Prime.Base1.connectToBase0(base0);
     base2 = Prime.Base2.connectToBase1(base1);
   });
-  
+
   // Helper function to create a mock DOM element
   function createMockElement() {
     return {
@@ -34,7 +34,7 @@ describe("PrimeOS Framework - Base3", () => {
       },
     };
   }
-  
+
   describe("Application", () => {
     test("creates an application with correct properties", () => {
       // Create an application configuration
@@ -141,14 +141,14 @@ describe("PrimeOS Framework - Base3", () => {
         app.behavior.dispatch("nonexistent");
       }).toThrow(Prime.InvalidOperationError);
     });
-    
+
     test("manages components in structure correctly", () => {
       // Create a minimal app
       const app = Prime.Base3.createApplication({
         id: "component-test-app",
-        name: "Component Test App"
+        name: "Component Test App",
       });
-      
+
       // Set up structure
       app.structure = {
         components: [],

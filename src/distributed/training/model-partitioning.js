@@ -7,7 +7,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Ensure the namespaces exist
 Prime.distributed = Prime.distributed || {};
@@ -28,7 +28,7 @@ class ModelPartitioner {
    */
   constructor(options = {}) {
     // Configuration
-    this.strategy = options.strategy || 'layer';
+    this.strategy = options.strategy || "layer";
     this.pipelineStages = options.pipelineStages || 2;
     this.balanceCompute = options.balanceCompute !== false;
     this.minimizeCommunication = options.minimizeCommunication !== false;
@@ -55,7 +55,7 @@ class ModelPartitioner {
    */
   registerDevice(deviceId, profile) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -65,7 +65,7 @@ class ModelPartitioner {
    */
   analyzeModel(model) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -76,7 +76,7 @@ class ModelPartitioner {
    */
   partitionModel(model, options = {}) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -86,7 +86,7 @@ class ModelPartitioner {
    */
   createCommunicationPlan(partitions) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -97,7 +97,7 @@ class ModelPartitioner {
    */
   _calculateComplexity(modelSegment) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -109,7 +109,7 @@ class ModelPartitioner {
    */
   _estimateCommunicationCost(sourcePartition, targetPartition) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**

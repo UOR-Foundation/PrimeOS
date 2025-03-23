@@ -4,8 +4,8 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
+const Prime = require("../../core/prime.js");
+const MathUtils = require("../math");
 
 /**
  * Interaction Model - Manages state changes and data persistence
@@ -18,10 +18,10 @@ const InteractionModel = {
    */
   create: function (config = {}) {
     return {
-      type: 'interaction',
+      type: "interaction",
       mutations: config.mutations || [],
       validators: config.validators || [],
-      name: config.name || 'InteractionModel',
+      name: config.name || "InteractionModel",
 
       /**
        * Apply a mutation to an object
@@ -46,9 +46,9 @@ const InteractionModel = {
 
         let result;
 
-        if (typeof mutator.apply === 'function') {
+        if (typeof mutator.apply === "function") {
           result = mutator.apply(object, payload);
-        } else if (typeof mutator === 'function') {
+        } else if (typeof mutator === "function") {
           result = mutator(object, payload);
         } else {
           throw new Prime.InvalidOperationError(`Invalid mutation ${mutation}`);
@@ -58,7 +58,7 @@ const InteractionModel = {
         this.validate(result);
 
         // Publish event
-        Prime.EventBus.publish('object:mutated', {
+        Prime.EventBus.publish("object:mutated", {
           original: object,
           mutation,
           payload,
@@ -80,7 +80,7 @@ const InteractionModel = {
 
         // If validation fails and strict option is enabled (default), throw error
         if (!validationResult.valid && options.strict !== false) {
-          throw new Prime.ValidationError('Object validation failed', {
+          throw new Prime.ValidationError("Object validation failed", {
             context: {
               failures: validationResult.failures,
               details: validationResult.details,
@@ -89,10 +89,11 @@ const InteractionModel = {
         }
 
         // Persist the object using configurable storage strategy
-        const storage = options.storage || this._storage || {
-          type: 'memory',
-          data: this._storageData = (this._storageData || new Map())
-        };
+        const storage = options.storage ||
+          this._storage || {
+            type: "memory",
+            data: (this._storageData = this._storageData || new Map()),
+          };
 
         // Additional metadata for the save operation
         const metadata = {
@@ -100,21 +101,23 @@ const InteractionModel = {
           version: options.version || (object.version ? object.version + 1 : 1),
           validationResult: {
             valid: validationResult.valid,
-            failures: validationResult.failures.length
-          }
+            failures: validationResult.failures.length,
+          },
         };
 
         // Execute appropriate storage strategy
-        if (storage.type === 'memory') {
+        if (storage.type === "memory") {
           // In-memory storage implementation
           const id = options.id || object.id || Prime.Utils.uuid();
 
           // Create a versioned deep copy to prevent accidental mutations
-          const storedObject = JSON.parse(JSON.stringify({
-            ...object,
-            id,
-            _metadata: metadata
-          }));
+          const storedObject = JSON.parse(
+            JSON.stringify({
+              ...object,
+              id,
+              _metadata: metadata,
+            }),
+          );
 
           // Store in the memory map
           storage.data.set(id, storedObject);
@@ -126,9 +129,12 @@ const InteractionModel = {
 
           Prime.Logger.info(`Object ${id} saved to memory storage`, {
             version: metadata.version,
-            valid: validationResult.valid
+            valid: validationResult.valid,
           });
-        } else if (storage.type === 'localStorage' && typeof window !== 'undefined') {
+        } else if (
+          storage.type === "localStorage" &&
+          typeof window !== "undefined"
+        ) {
           // Browser localStorage implementation
           const id = options.id || object.id || Prime.Utils.uuid();
 
@@ -137,10 +143,13 @@ const InteractionModel = {
             const storedObject = {
               ...object,
               id,
-              _metadata: metadata
+              _metadata: metadata,
             };
 
-            window.localStorage.setItem(storageKey, JSON.stringify(storedObject));
+            window.localStorage.setItem(
+              storageKey,
+              JSON.stringify(storedObject),
+            );
 
             // Update object with ID if it doesn't have one
             if (!object.id) {
@@ -149,41 +158,51 @@ const InteractionModel = {
 
             Prime.Logger.info(`Object ${id} saved to localStorage`, {
               key: storageKey,
-              version: metadata.version
+              version: metadata.version,
             });
           } catch (error) {
-            Prime.Logger.error(`Failed to save object to localStorage: ${error.message}`);
-            throw new Prime.StorageError('Failed to save to localStorage', {
-              context: { error: error.message }
+            Prime.Logger.error(
+              `Failed to save object to localStorage: ${error.message}`,
+            );
+            throw new Prime.StorageError("Failed to save to localStorage", {
+              context: { error: error.message },
             });
           }
-        } else if (storage.type === 'custom' && typeof storage.save === 'function') {
+        } else if (
+          storage.type === "custom" &&
+          typeof storage.save === "function"
+        ) {
           // Custom storage implementation
           try {
             storage.save(object, metadata, options);
-            Prime.Logger.info('Object saved to custom storage', {
-              storageId: storage.id || 'unknown',
-              valid: validationResult.valid
+            Prime.Logger.info("Object saved to custom storage", {
+              storageId: storage.id || "unknown",
+              valid: validationResult.valid,
             });
           } catch (error) {
-            Prime.Logger.error(`Failed to save object to custom storage: ${error.message}`);
-            throw new Prime.StorageError('Failed to save to custom storage', {
-              context: { error: error.message, storage: storage.id || 'unknown' }
+            Prime.Logger.error(
+              `Failed to save object to custom storage: ${error.message}`,
+            );
+            throw new Prime.StorageError("Failed to save to custom storage", {
+              context: {
+                error: error.message,
+                storage: storage.id || "unknown",
+              },
             });
           }
         } else {
           Prime.Logger.warn(`Unsupported storage type: ${storage.type}`, {
-            fallback: 'event-only'
+            fallback: "event-only",
           });
         }
 
         // Publish event with storage information
-        Prime.EventBus.publish('object:saved', {
+        Prime.EventBus.publish("object:saved", {
           object,
           id: object.id,
           validationResult,
           storage: storage.type,
-          metadata
+          metadata,
         });
 
         return validationResult.valid;
@@ -199,7 +218,7 @@ const InteractionModel = {
         const validationResult = this._validateWithDetails(object);
 
         if (!validationResult.valid) {
-          throw new Prime.ValidationError('Object validation failed', {
+          throw new Prime.ValidationError("Object validation failed", {
             context: {
               failures: validationResult.failures,
               details: validationResult.details,
@@ -223,14 +242,14 @@ const InteractionModel = {
         for (const validator of this.validators) {
           try {
             let valid = false;
-            const validatorName = validator.name || 'anonymous validator';
+            const validatorName = validator.name || "anonymous validator";
 
-            if (typeof validator === 'function') {
+            if (typeof validator === "function") {
               valid = validator(object);
-            } else if (validator && typeof validator.validate === 'function') {
+            } else if (validator && typeof validator.validate === "function") {
               valid = validator.validate(object);
             } else {
-              throw new Prime.InvalidOperationError('Invalid validator');
+              throw new Prime.InvalidOperationError("Invalid validator");
             }
 
             if (!valid) {
@@ -239,13 +258,13 @@ const InteractionModel = {
               // Capture additional context if available
               if (
                 validator.getDetails &&
-                typeof validator.getDetails === 'function'
+                typeof validator.getDetails === "function"
               ) {
                 details[validatorName] = validator.getDetails(object);
               }
             }
           } catch (error) {
-            const validatorName = validator.name || 'anonymous validator';
+            const validatorName = validator.name || "anonymous validator";
             failures.push(`Error in ${validatorName}: ${error.message}`);
             details[validatorName] = {
               error: error.message,
@@ -267,9 +286,9 @@ const InteractionModel = {
        * @returns {Object} Updated interaction model
        */
       addMutation: function (mutation) {
-        if (!mutation.name && typeof mutation !== 'function') {
+        if (!mutation.name && typeof mutation !== "function") {
           throw new Prime.ValidationError(
-            'Mutation must have a name property or be a function',
+            "Mutation must have a name property or be a function",
           );
         }
 
@@ -303,8 +322,8 @@ const InteractionModel = {
         const isPlainObject = (value) => {
           return (
             value !== null &&
-            typeof value === 'object' &&
-            Object.prototype.toString.call(value) === '[object Object]'
+            typeof value === "object" &&
+            Object.prototype.toString.call(value) === "[object Object]"
           );
         };
 
@@ -362,7 +381,7 @@ const InteractionModel = {
               const sourceValue = source[key];
 
               // Handle special numerical values with extra precision
-              if (typeof sourceValue === 'number') {
+              if (typeof sourceValue === "number") {
                 if (!Number.isFinite(sourceValue)) {
                   Prime.Logger.warn(
                     `Non-finite number detected during merge: ${key}=${sourceValue}`,
@@ -391,8 +410,8 @@ const InteractionModel = {
                   // Create a deep copy of the array to avoid reference issues
                   result[key] = Array.isArray(sourceValue)
                     ? sourceValue.map((item) =>
-                      isPlainObject(item) ? merge({}, item, depth + 1) : item,
-                    )
+                        isPlainObject(item) ? merge({}, item, depth + 1) : item,
+                      )
                     : sourceValue;
                 }
               }

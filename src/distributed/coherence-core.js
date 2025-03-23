@@ -4,14 +4,14 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
-const EventBus = require('./event-bus');
+const Prime = require("../core");
+const EventBus = require("./event-bus");
 
 // Import coherence sub-modules directly (will be used in advanced features)
 // These modules will be used in production implementations
-require('./coherence-violations');
-require('./coherence-recovery');
-require('./coherence-metrics');
+require("./coherence-violations");
+require("./coherence-recovery");
+require("./coherence-metrics");
 
 // Ensure namespaces are properly defined
 Prime.distributed = Prime.distributed || {};
@@ -38,36 +38,36 @@ class DistributedCoherenceManager {
         synchronization: config.thresholds?.synchronization || 0.01,
         ...config.thresholds,
       },
-      defaultRecoveryStrategy: config.defaultRecoveryStrategy || 'continue', // Default to continue strategy
+      defaultRecoveryStrategy: config.defaultRecoveryStrategy || "continue", // Default to continue strategy
     };
 
     // Get required mathematical validators from core framework or create a simple one
     this.mathValidator =
       Prime.Mathematics && Prime.Mathematics.createValidator
         ? Prime.Mathematics.createValidator({
-          precision: this.config.thresholds.numerical,
-        })
+            precision: this.config.thresholds.numerical,
+          })
         : {
-          // Simple fallback validator
-          validateFinite: (value) => Number.isFinite(value),
-          validateRange: (value, min, max) => value >= min && value <= max,
-          validateTensor: (tensor) => {
-            if (!Array.isArray(tensor)) return false;
-            if (Array.isArray(tensor[0])) {
-              // Matrix case
-              const width = tensor[0].length;
-              return tensor.every(
-                (row) =>
-                  Array.isArray(row) &&
+            // Simple fallback validator
+            validateFinite: (value) => Number.isFinite(value),
+            validateRange: (value, min, max) => value >= min && value <= max,
+            validateTensor: (tensor) => {
+              if (!Array.isArray(tensor)) return false;
+              if (Array.isArray(tensor[0])) {
+                // Matrix case
+                const width = tensor[0].length;
+                return tensor.every(
+                  (row) =>
+                    Array.isArray(row) &&
                     row.length === width &&
                     row.every((val) => Number.isFinite(val)),
-              );
-            } else {
-              // Vector case
-              return tensor.every((val) => Number.isFinite(val));
-            }
-          },
-        };
+                );
+              } else {
+                // Vector case
+                return tensor.every((val) => Number.isFinite(val));
+              }
+            },
+          };
 
     // Create event bus for coherence events
     this.eventBus = EventBus;
@@ -89,16 +89,16 @@ class DistributedCoherenceManager {
     if (!layer) {
       // Use ValidationError if available, otherwise fallback to Error
       const ErrorClass = Prime.ValidationError || Error;
-      throw new ErrorClass('Layer is required for coherence check');
+      throw new ErrorClass("Layer is required for coherence check");
     }
 
     // Start with basic coherence checks
     const checks = {
       weights: layer.weights
-        ? this._checkTensorCoherence(layer.weights, 'matrix')
+        ? this._checkTensorCoherence(layer.weights, "matrix")
         : { valid: true, coherence: 1.0 },
       biases: layer.biases
-        ? this._checkTensorCoherence(layer.biases, 'vector')
+        ? this._checkTensorCoherence(layer.biases, "vector")
         : { valid: true, coherence: 1.0 },
     };
 
@@ -127,7 +127,7 @@ class DistributedCoherenceManager {
 
         // Create a debug log about the threshold to identify testing
         if (context.maxGradientNorm) {
-          if (Prime.Logger && typeof Prime.Logger.debug === 'function') {
+          if (Prime.Logger && typeof Prime.Logger.debug === "function") {
             Prime.Logger.debug(
               `Using explicit gradient threshold: ${explodinThreshold}`,
             );
@@ -168,10 +168,10 @@ class DistributedCoherenceManager {
     // Force lower coherence score if we have critical or high severity violations
     let finalCoherenceScore = coherenceScore;
     for (const violation of violations) {
-      if (violation.severity === 'critical') {
+      if (violation.severity === "critical") {
         finalCoherenceScore = Math.min(finalCoherenceScore, 0.1); // Critical violations force very low score
         break;
-      } else if (violation.severity === 'high') {
+      } else if (violation.severity === "high") {
         finalCoherenceScore = Math.min(finalCoherenceScore, 0.3); // High severity forces low score
       }
     }
@@ -222,7 +222,7 @@ class DistributedCoherenceManager {
         Prime.Distributed.Coherence.Recovery &&
         Prime.Distributed.Coherence.Recovery.Manager &&
         typeof Prime.Distributed.Coherence.Recovery.Manager
-          .recommendRecoveryActions === 'function'
+          .recommendRecoveryActions === "function"
       ) {
         // Use the module to recommend recovery actions
         result.recovery =
@@ -234,14 +234,14 @@ class DistributedCoherenceManager {
         result.recovery = {
           strategy:
             result.coherenceScore < 0.3
-              ? 'reset'
+              ? "reset"
               : result.coherenceScore < 0.5
-                ? 'rollback'
-                : 'continue',
+                ? "rollback"
+                : "continue",
           actions: [
             {
-              type: 'fix_violations',
-              message: 'Apply automatic coherence corrections',
+              type: "fix_violations",
+              message: "Apply automatic coherence corrections",
             },
           ],
         };
@@ -275,7 +275,7 @@ class DistributedCoherenceManager {
       Prime.Distributed.Coherence.Violations &&
       Prime.Distributed.Coherence.Violations.Detector &&
       typeof Prime.Distributed.Coherence.Violations.Detector
-        .detectNumericalViolations === 'function'
+        .detectNumericalViolations === "function"
     ) {
       // Use the module implementation if available
       numericalCheck =
@@ -296,19 +296,19 @@ class DistributedCoherenceManager {
     const isMatrix = isTensor && Array.isArray(tensor[0]);
 
     // Validate basic structure
-    if (type === 'matrix' && !isMatrix) {
+    if (type === "matrix" && !isMatrix) {
       return {
         valid: false,
         coherence: 0.0,
-        message: 'Matrix expected but received non-matrix structure',
+        message: "Matrix expected but received non-matrix structure",
       };
     }
 
-    if (type === 'vector' && (!isTensor || isMatrix)) {
+    if (type === "vector" && (!isTensor || isMatrix)) {
       return {
         valid: false,
         coherence: 0.0,
-        message: 'Vector expected but received non-vector structure',
+        message: "Vector expected but received non-vector structure",
       };
     }
 
@@ -336,25 +336,25 @@ class DistributedCoherenceManager {
 
     if (isMatrix) {
       constraintResults.push({
-        name: 'matrix_structure',
+        name: "matrix_structure",
         satisfied: true,
         priority: 9,
       });
 
       constraintResults.push({
-        name: 'matrix_elements',
+        name: "matrix_elements",
         satisfied: !numericalCheck.hasViolations,
         priority: 8,
       });
     } else {
       constraintResults.push({
-        name: 'array_elements',
+        name: "array_elements",
         satisfied: true,
         priority: 8,
       });
 
       constraintResults.push({
-        name: 'finite_elements',
+        name: "finite_elements",
         satisfied: !numericalCheck.hasViolations,
         priority: 7,
       });
@@ -366,7 +366,7 @@ class DistributedCoherenceManager {
       constraintResults,
       numericalCheck,
       message: !numericalCheck.hasViolations
-        ? 'All constraints satisfied'
+        ? "All constraints satisfied"
         : numericalCheck.message,
     };
   }
@@ -384,18 +384,18 @@ class DistributedCoherenceManager {
       return {
         valid: true,
         coherence: 1.0,
-        message: 'No partition scheme specified',
+        message: "No partition scheme specified",
       };
     }
 
     const scheme = context.partitionScheme;
 
     // Check partition scheme coherence based on type
-    if (scheme.type === 'intra-layer') {
+    if (scheme.type === "intra-layer") {
       return this._checkIntraLayerPartition(layer, scheme);
-    } else if (scheme.type === 'layer-wise') {
+    } else if (scheme.type === "layer-wise") {
       return this._checkLayerWisePartition(layer, scheme);
-    } else if (scheme.type === 'data-parallel') {
+    } else if (scheme.type === "data-parallel") {
       return this._checkDataParallelPartition(layer, scheme);
     }
 
@@ -424,7 +424,7 @@ class DistributedCoherenceManager {
       return {
         valid: false,
         coherence: 0.0,
-        message: 'Layer not found in partition scheme',
+        message: "Layer not found in partition scheme",
       };
     }
 
@@ -437,7 +437,7 @@ class DistributedCoherenceManager {
       return {
         valid: false,
         coherence: 0.0,
-        message: 'Layer nodes not assigned in partition scheme',
+        message: "Layer nodes not assigned in partition scheme",
       };
     }
 
@@ -454,8 +454,8 @@ class DistributedCoherenceManager {
       coherence: partitionBalance,
       message:
         partitionBalance === 1.0
-          ? 'Optimal intra-layer partitioning'
-          : 'Sub-optimal intra-layer partitioning',
+          ? "Optimal intra-layer partitioning"
+          : "Sub-optimal intra-layer partitioning",
     };
   }
 
@@ -480,7 +480,7 @@ class DistributedCoherenceManager {
           break;
         }
       }
-    } else if (typeof scheme.layerAssignments === 'object') {
+    } else if (typeof scheme.layerAssignments === "object") {
       for (const node in scheme.layerAssignments) {
         const layers = scheme.layerAssignments[node];
         if (Array.isArray(layers) && layers.includes(layer.id)) {
@@ -494,7 +494,7 @@ class DistributedCoherenceManager {
       return {
         valid: false,
         coherence: 0.0,
-        message: 'Layer not assigned to any node',
+        message: "Layer not assigned to any node",
       };
     }
 
@@ -502,7 +502,7 @@ class DistributedCoherenceManager {
     return {
       valid: true,
       coherence: 1.0,
-      message: 'Layer properly assigned in layer-wise partitioning',
+      message: "Layer properly assigned in layer-wise partitioning",
     };
   }
 
@@ -522,7 +522,7 @@ class DistributedCoherenceManager {
       return {
         valid: true,
         coherence: 0.8, // Assume mostly coherent without sync info
-        message: 'Cannot verify data-parallel synchronization (no sync status)',
+        message: "Cannot verify data-parallel synchronization (no sync status)",
       };
     }
 
@@ -532,7 +532,7 @@ class DistributedCoherenceManager {
       return {
         valid: true,
         coherence: 0.7, // Lower coherence when no layer-specific info
-        message: 'Layer synchronization status not available',
+        message: "Layer synchronization status not available",
       };
     }
 
@@ -565,10 +565,10 @@ class DistributedCoherenceManager {
       coherence,
       message:
         coherence >= 0.9
-          ? 'Parameters well-synchronized across nodes'
+          ? "Parameters well-synchronized across nodes"
           : coherence >= 0.7
-            ? 'Parameters adequately synchronized across nodes'
-            : 'Parameters not sufficiently synchronized across nodes',
+            ? "Parameters adequately synchronized across nodes"
+            : "Parameters not sufficiently synchronized across nodes",
     };
   }
 
@@ -584,7 +584,7 @@ class DistributedCoherenceManager {
       return {
         valid: false,
         coherence: 0.0,
-        message: 'Missing local or global parameters',
+        message: "Missing local or global parameters",
       };
     }
 
@@ -608,7 +608,7 @@ class DistributedCoherenceManager {
         } else if (layer.weights && Array.isArray(globalParams)) {
           // Try to match if globalParams is an array of layer objects
           for (const params of globalParams) {
-            if (params && typeof params === 'object' && params.weights) {
+            if (params && typeof params === "object" && params.weights) {
               globalLayerParams = params;
               break;
             }
@@ -618,7 +618,7 @@ class DistributedCoherenceManager {
           for (const key in globalParams) {
             if (
               globalParams[key] &&
-              typeof globalParams[key] === 'object' &&
+              typeof globalParams[key] === "object" &&
               ((layer.weights && globalParams[key].weights) ||
                 (layer.biases && globalParams[key].biases))
             ) {
@@ -631,7 +631,7 @@ class DistributedCoherenceManager {
     }
 
     // Special case: if globalParams contains a 'params' property with weights/biases
-    if (globalParams.params && typeof globalParams.params === 'object') {
+    if (globalParams.params && typeof globalParams.params === "object") {
       if (
         (layer.weights && globalParams.params.weights) ||
         (layer.biases && globalParams.params.biases)
@@ -643,7 +643,7 @@ class DistributedCoherenceManager {
     // Another special case: if globalLayerParams has a different structure but contains weights/biases
     if (
       globalLayerParams.parameters &&
-      typeof globalLayerParams.parameters === 'object'
+      typeof globalLayerParams.parameters === "object"
     ) {
       if (
         (layer.weights && globalLayerParams.parameters.weights) ||
@@ -658,14 +658,14 @@ class DistributedCoherenceManager {
       // Try to find any nested object that contains weights or biases
       const findNestedParams = (obj, depth = 0) => {
         if (depth > 3) return null; // Limit recursion depth
-        if (!obj || typeof obj !== 'object') return null;
+        if (!obj || typeof obj !== "object") return null;
 
         if ((layer.weights && obj.weights) || (layer.biases && obj.biases)) {
           return obj;
         }
 
         for (const key in obj) {
-          if (obj[key] && typeof obj[key] === 'object') {
+          if (obj[key] && typeof obj[key] === "object") {
             const result = findNestedParams(obj[key], depth + 1);
             if (result) return result;
           }
@@ -707,7 +707,7 @@ class DistributedCoherenceManager {
       return {
         valid: false,
         coherence: 0.0,
-        message: 'No matching parameters found in global state',
+        message: "No matching parameters found in global state",
       };
     }
 
@@ -861,10 +861,10 @@ class DistributedCoherenceManager {
       biasesDivergence,
       message:
         synchronizationCoherence > 0.95
-          ? 'Parameters well-synchronized with global state'
+          ? "Parameters well-synchronized with global state"
           : synchronizationCoherence > 0.8
-            ? 'Parameters adequately synchronized with global state'
-            : 'Parameters significantly diverged from global state',
+            ? "Parameters adequately synchronized with global state"
+            : "Parameters significantly diverged from global state",
     };
   }
 
@@ -875,7 +875,7 @@ class DistributedCoherenceManager {
    * @returns {number} Aggregated coherence score
    */
   _aggregateCoherenceResults(checks) {
-    if (!checks || typeof checks !== 'object') {
+    if (!checks || typeof checks !== "object") {
       return 0.0;
     }
 
@@ -893,7 +893,7 @@ class DistributedCoherenceManager {
 
     // Calculate weighted sum of coherence scores
     for (const [checkType, checkResult] of Object.entries(checks)) {
-      if (checkResult && typeof checkResult.coherence === 'number') {
+      if (checkResult && typeof checkResult.coherence === "number") {
         const weight = weights[checkType] || 0.1;
         weightedSum += checkResult.coherence * weight;
         totalWeight += weight;
@@ -919,19 +919,19 @@ class DistributedCoherenceManager {
 
     // Define violation types and severity levels directly
     const ViolationTypes = {
-      NUMERICAL: 'numerical',
-      NETWORK: 'network',
-      SYNCHRONIZATION: 'synchronization',
-      MATHEMATICAL: 'mathematical',
-      GRADIENT: 'gradient',
-      DIMENSIONAL: 'dimensional',
+      NUMERICAL: "numerical",
+      NETWORK: "network",
+      SYNCHRONIZATION: "synchronization",
+      MATHEMATICAL: "mathematical",
+      GRADIENT: "gradient",
+      DIMENSIONAL: "dimensional",
     };
 
     const Severity = {
-      LOW: 'low',
-      MEDIUM: 'medium',
-      HIGH: 'high',
-      CRITICAL: 'critical',
+      LOW: "low",
+      MEDIUM: "medium",
+      HIGH: "high",
+      CRITICAL: "critical",
     };
 
     // Check for weight tensor violations
@@ -947,8 +947,8 @@ class DistributedCoherenceManager {
         violations.push({
           type: ViolationTypes.NUMERICAL,
           severity: Severity.HIGH,
-          message: 'Invalid weight tensor structure or values',
-          check: 'weights',
+          message: "Invalid weight tensor structure or values",
+          check: "weights",
         });
       }
     }
@@ -966,8 +966,8 @@ class DistributedCoherenceManager {
         violations.push({
           type: ViolationTypes.NUMERICAL,
           severity: Severity.MEDIUM,
-          message: 'Invalid bias tensor structure or values',
-          check: 'biases',
+          message: "Invalid bias tensor structure or values",
+          check: "biases",
         });
       }
     }
@@ -977,8 +977,8 @@ class DistributedCoherenceManager {
       violations.push({
         type: ViolationTypes.NETWORK,
         severity: Severity.HIGH,
-        message: checks.partition.message || 'Invalid partition configuration',
-        check: 'partition',
+        message: checks.partition.message || "Invalid partition configuration",
+        check: "partition",
       });
     }
 
@@ -1003,8 +1003,8 @@ class DistributedCoherenceManager {
         divergence,
         message:
           checks.synchronization.message ||
-          'Parameter synchronization violation',
-        check: 'synchronization',
+          "Parameter synchronization violation",
+        check: "synchronization",
       });
     }
 
@@ -1022,7 +1022,7 @@ class DistributedCoherenceManager {
           (v) =>
             v.type === ViolationTypes.GRADIENT &&
             v.message &&
-            v.message.includes('Exploding'),
+            v.message.includes("Exploding"),
         );
 
         // If no explicit exploding gradient violation, add one
@@ -1044,7 +1044,7 @@ class DistributedCoherenceManager {
           (v) =>
             v.type === ViolationTypes.GRADIENT &&
             v.message &&
-            v.message.includes('Vanishing'),
+            v.message.includes("Vanishing"),
         );
 
         if (!hasVanishingViolation) {
@@ -1073,7 +1073,7 @@ class DistributedCoherenceManager {
     if (!Array.isArray(tensor)) {
       return {
         hasViolations: false,
-        message: 'Invalid tensor format',
+        message: "Invalid tensor format",
       };
     }
 
@@ -1149,16 +1149,16 @@ class DistributedCoherenceManager {
 
           if (!Number.isFinite(value)) {
             violations.push({
-              type: 'numerical',
-              severity: 'high',
+              type: "numerical",
+              severity: "high",
               location: [i, j],
               value,
               message: `Non-finite value at position [${i}, ${j}]`,
             });
           } else if (Math.abs(value) > maxThreshold) {
             violations.push({
-              type: 'numerical',
-              severity: 'medium',
+              type: "numerical",
+              severity: "medium",
               location: [i, j],
               value,
               message: `Extreme value at position [${i}, ${j}]: ${value}`,
@@ -1170,8 +1170,8 @@ class DistributedCoherenceManager {
             // Don't flag small values if they're within typical range for this tensor
             if (Math.abs(value) < adaptiveThreshold * 0.1) {
               violations.push({
-                type: 'numerical',
-                severity: 'low',
+                type: "numerical",
+                severity: "low",
                 location: [i, j],
                 value,
                 message: `Value below precision threshold at position [${i}, ${j}]`,
@@ -1187,16 +1187,16 @@ class DistributedCoherenceManager {
 
         if (!Number.isFinite(value)) {
           violations.push({
-            type: 'numerical',
-            severity: 'high',
+            type: "numerical",
+            severity: "high",
             location: [i],
             value,
             message: `Non-finite value at position [${i}]`,
           });
         } else if (Math.abs(value) > maxThreshold) {
           violations.push({
-            type: 'numerical',
-            severity: 'medium',
+            type: "numerical",
+            severity: "medium",
             location: [i],
             value,
             message: `Extreme value at position [${i}]: ${value}`,
@@ -1205,8 +1205,8 @@ class DistributedCoherenceManager {
           // Don't flag small values if they're within typical range for this tensor
           if (Math.abs(value) < adaptiveThreshold * 0.1) {
             violations.push({
-              type: 'numerical',
-              severity: 'low',
+              type: "numerical",
+              severity: "low",
               location: [i],
               value,
               message: `Value below precision threshold at position [${i}]`,
@@ -1231,7 +1231,7 @@ class DistributedCoherenceManager {
       message:
         violations.length > 0
           ? `Found ${violations.length} numerical violations`
-          : 'No numerical violations detected',
+          : "No numerical violations detected",
     };
   }
 
@@ -1247,12 +1247,12 @@ class DistributedCoherenceManager {
         hasViolations: true,
         violations: [
           {
-            type: 'dimensional',
-            severity: 'high',
-            message: 'Missing layer configuration',
+            type: "dimensional",
+            severity: "high",
+            message: "Missing layer configuration",
           },
         ],
-        message: 'Missing layer configuration',
+        message: "Missing layer configuration",
       };
     }
 
@@ -1263,16 +1263,16 @@ class DistributedCoherenceManager {
       // Check weights are an array
       if (!Array.isArray(layer.weights)) {
         violations.push({
-          type: 'dimensional',
-          severity: 'high',
-          message: 'Weights must be an array',
+          type: "dimensional",
+          severity: "high",
+          message: "Weights must be an array",
         });
       } else {
         // Check rows match input size
         if (layer.weights.length !== layer.config.inputSize) {
           violations.push({
-            type: 'dimensional',
-            severity: 'high',
+            type: "dimensional",
+            severity: "high",
             actual: layer.weights.length,
             expected: layer.config.inputSize,
             message: `Weight rows (${layer.weights.length}) don't match input size (${layer.config.inputSize})`,
@@ -1285,8 +1285,8 @@ class DistributedCoherenceManager {
         ).length;
         if (nonArrayRows > 0) {
           violations.push({
-            type: 'dimensional',
-            severity: 'high',
+            type: "dimensional",
+            severity: "high",
             count: nonArrayRows,
             message: `Found ${nonArrayRows} non-array rows in weights`,
           });
@@ -1294,8 +1294,8 @@ class DistributedCoherenceManager {
           // Check columns match output size
           if (layer.weights[0].length !== layer.config.outputSize) {
             violations.push({
-              type: 'dimensional',
-              severity: 'high',
+              type: "dimensional",
+              severity: "high",
               actual: layer.weights[0].length,
               expected: layer.config.outputSize,
               message: `Weight columns (${layer.weights[0].length}) don't match output size (${layer.config.outputSize})`,
@@ -1308,8 +1308,8 @@ class DistributedCoherenceManager {
           ).length;
           if (inconsistentRows > 0) {
             violations.push({
-              type: 'dimensional',
-              severity: 'high',
+              type: "dimensional",
+              severity: "high",
               count: inconsistentRows,
               message: `Found ${inconsistentRows} rows with inconsistent length`,
             });
@@ -1323,14 +1323,14 @@ class DistributedCoherenceManager {
       // Check biases are an array
       if (!Array.isArray(layer.biases)) {
         violations.push({
-          type: 'dimensional',
-          severity: 'high',
-          message: 'Biases must be an array',
+          type: "dimensional",
+          severity: "high",
+          message: "Biases must be an array",
         });
       } else if (layer.biases.length !== layer.config.outputSize) {
         violations.push({
-          type: 'dimensional',
-          severity: 'high',
+          type: "dimensional",
+          severity: "high",
           actual: layer.biases.length,
           expected: layer.config.outputSize,
           message: `Bias length (${layer.biases.length}) doesn't match output size (${layer.config.outputSize})`,
@@ -1345,7 +1345,7 @@ class DistributedCoherenceManager {
       message:
         violations.length > 0
           ? `Found ${violations.length} dimensional violations`
-          : 'No dimensional violations detected',
+          : "No dimensional violations detected",
     };
   }
 
@@ -1361,7 +1361,7 @@ class DistributedCoherenceManager {
     const vanishingThreshold = options.vanishingThreshold || 1e-10;
 
     // Check if gradients is the expected object structure with dW and dB
-    if (gradients && typeof gradients === 'object' && gradients.dW) {
+    if (gradients && typeof gradients === "object" && gradients.dW) {
       // Handle the more complex gradient object format (realistic case)
       return this._detectComplexGradientViolations(gradients, {
         explodinThreshold,
@@ -1373,7 +1373,7 @@ class DistributedCoherenceManager {
     if (!Array.isArray(gradients)) {
       return {
         hasViolations: false,
-        message: 'Invalid gradient format',
+        message: "Invalid gradient format",
       };
     }
 
@@ -1419,8 +1419,8 @@ class DistributedCoherenceManager {
     // Check for non-finite values
     if (nonFiniteCount > 0) {
       violations.push({
-        type: 'gradient',
-        severity: 'critical',
+        type: "gradient",
+        severity: "critical",
         nonFiniteCount,
         message: `Found ${nonFiniteCount} non-finite gradient values`,
       });
@@ -1429,8 +1429,8 @@ class DistributedCoherenceManager {
     // Check for exploding gradients
     if (maxAbsGradient > explodinThreshold) {
       violations.push({
-        type: 'gradient',
-        severity: 'high',
+        type: "gradient",
+        severity: "high",
         maxAbsGradient,
         threshold: explodinThreshold,
         message: `Exploding gradient detected: max absolute value ${maxAbsGradient} exceeds threshold ${explodinThreshold}`,
@@ -1443,8 +1443,8 @@ class DistributedCoherenceManager {
       minAbsNonZeroGradient < vanishingThreshold
     ) {
       violations.push({
-        type: 'gradient',
-        severity: 'medium',
+        type: "gradient",
+        severity: "medium",
         minAbsNonZeroGradient,
         message: `Vanishing gradient detected: min non-zero absolute value ${minAbsNonZeroGradient}`,
       });
@@ -1465,7 +1465,7 @@ class DistributedCoherenceManager {
       message:
         violations.length > 0
           ? `Found ${violations.length} gradient violations`
-          : 'No gradient violations detected',
+          : "No gradient violations detected",
     };
   }
 
@@ -1532,8 +1532,8 @@ class DistributedCoherenceManager {
     // Check for non-finite values
     if (nonFiniteCount > 0) {
       violations.push({
-        type: 'gradient',
-        severity: 'critical',
+        type: "gradient",
+        severity: "critical",
         nonFiniteCount,
         message: `Found ${nonFiniteCount} non-finite gradient values`,
       });
@@ -1542,8 +1542,8 @@ class DistributedCoherenceManager {
     // Check for exploding gradients - this is the primary test case
     if (maxAbsGradient > explodinThreshold) {
       violations.push({
-        type: 'gradient',
-        severity: 'high',
+        type: "gradient",
+        severity: "high",
         maxAbsGradient,
         threshold: explodinThreshold,
         message: `Exploding gradient detected: max absolute value ${maxAbsGradient} exceeds threshold ${explodinThreshold}`,
@@ -1556,8 +1556,8 @@ class DistributedCoherenceManager {
       minAbsNonZeroGradient < vanishingThreshold
     ) {
       violations.push({
-        type: 'gradient',
-        severity: 'medium',
+        type: "gradient",
+        severity: "medium",
         minAbsNonZeroGradient,
         message: `Vanishing gradient detected: min non-zero absolute value ${minAbsNonZeroGradient}`,
       });
@@ -1578,7 +1578,7 @@ class DistributedCoherenceManager {
       message:
         violations.length > 0
           ? `Found ${violations.length} gradient violations`
-          : 'No gradient violations detected',
+          : "No gradient violations detected",
     };
   }
 
@@ -1586,7 +1586,7 @@ class DistributedCoherenceManager {
     if (!layer || !checkResult) {
       return {
         success: false,
-        message: 'Missing layer or check result',
+        message: "Missing layer or check result",
         corrections: 0,
       };
     }
@@ -1595,7 +1595,7 @@ class DistributedCoherenceManager {
     if (checkResult.isCoherent) {
       return {
         success: true,
-        message: 'Layer is already coherent',
+        message: "Layer is already coherent",
         corrections: 0,
         correctedLayer: layer,
       };
@@ -1661,17 +1661,17 @@ class DistributedCoherenceManager {
 
       const gradientCorrection =
         recoveryManager &&
-        typeof recoveryManager.applyGradientClipping === 'function'
+        typeof recoveryManager.applyGradientClipping === "function"
           ? recoveryManager.applyGradientClipping(layer.gradients, {
-            clipMethod: 'value',
-            clipValue: 5.0,
-          })
+              clipMethod: "value",
+              clipValue: 5.0,
+            })
           : {
-            // Fallback gradient clipping implementation
-            success: true,
-            clippingApplied: true,
-            clippedGradients: this._clipGradients(layer.gradients, 5.0),
-          };
+              // Fallback gradient clipping implementation
+              success: true,
+              clippingApplied: true,
+              clippedGradients: this._clipGradients(layer.gradients, 5.0),
+            };
 
       if (gradientCorrection.success && gradientCorrection.clippingApplied) {
         correctedLayer.gradients = gradientCorrection.clippedGradients;
@@ -1685,7 +1685,7 @@ class DistributedCoherenceManager {
       message:
         totalCorrections > 0
           ? `Applied ${totalCorrections} corrections to restore coherence`
-          : 'No corrections applied',
+          : "No corrections applied",
       corrections: totalCorrections,
       correctedLayer,
     };
@@ -1703,7 +1703,7 @@ class DistributedCoherenceManager {
     if (!layer) {
       return {
         applied: false,
-        message: 'Missing layer to correct',
+        message: "Missing layer to correct",
         corrections: [],
       };
     }
@@ -1711,7 +1711,7 @@ class DistributedCoherenceManager {
     if (!violations || !Array.isArray(violations) || violations.length === 0) {
       return {
         applied: false,
-        message: 'No violations to correct',
+        message: "No violations to correct",
         corrections: [],
       };
     }
@@ -1722,7 +1722,7 @@ class DistributedCoherenceManager {
 
     // Detect numerical violations to fix
     const numericalViolations = violations.filter(
-      (v) => v.type === 'numerical',
+      (v) => v.type === "numerical",
     );
     if (numericalViolations.length > 0) {
       // Process weights
@@ -1743,13 +1743,13 @@ class DistributedCoherenceManager {
               // Replace NaN or Infinity with 0
               if (!Number.isFinite(correctedValues.weights[row][col])) {
                 correctedValues.weights[row][col] = 0;
-                corrections.push('numerical_stability');
+                corrections.push("numerical_stability");
               }
               // Check for extreme values
               else if (Math.abs(correctedValues.weights[row][col]) > 1e6) {
                 correctedValues.weights[row][col] =
                   Math.sign(correctedValues.weights[row][col]) * 1e6;
-                corrections.push('extreme_value_clipping');
+                corrections.push("extreme_value_clipping");
               }
             }
           }
@@ -1774,13 +1774,13 @@ class DistributedCoherenceManager {
               // Replace NaN or Infinity with 0
               if (!Number.isFinite(correctedValues.biases[index])) {
                 correctedValues.biases[index] = 0;
-                corrections.push('numerical_stability');
+                corrections.push("numerical_stability");
               }
               // Check for extreme values
               else if (Math.abs(correctedValues.biases[index]) > 1e6) {
                 correctedValues.biases[index] =
                   Math.sign(correctedValues.biases[index]) * 1e6;
-                corrections.push('extreme_value_clipping');
+                corrections.push("extreme_value_clipping");
               }
             }
           }
@@ -1793,10 +1793,10 @@ class DistributedCoherenceManager {
 
     // Detect synchronization violations to fix
     const syncViolations = violations.filter(
-      (v) => v.type === 'synchronization',
+      (v) => v.type === "synchronization",
     );
     if (syncViolations.length > 0 && options.globalParams) {
-      corrections.push('synchronization');
+      corrections.push("synchronization");
 
       // Synchronize with global parameters
       if (options.globalParams.weights && layer.weights) {
@@ -1821,9 +1821,9 @@ class DistributedCoherenceManager {
     }
 
     // Detect gradient violations to fix
-    const gradientViolations = violations.filter((v) => v.type === 'gradient');
+    const gradientViolations = violations.filter((v) => v.type === "gradient");
     if (gradientViolations.length > 0 && layer.gradients) {
-      corrections.push('gradient_clipping');
+      corrections.push("gradient_clipping");
 
       // Apply gradient clipping
       const clippedGradients = this._clipGradients(layer.gradients, 5.0);
@@ -1832,10 +1832,10 @@ class DistributedCoherenceManager {
 
     // Handle dimensional violations - we can't fix this automatically in all cases
     const dimensionalViolations = violations.filter(
-      (v) => v.type === 'dimensional',
+      (v) => v.type === "dimensional",
     );
     if (dimensionalViolations.length > 0) {
-      corrections.push('dimensional_reported');
+      corrections.push("dimensional_reported");
       // We don't attempt to fix dimensional issues, as they require structural changes
     }
 
@@ -1844,13 +1844,13 @@ class DistributedCoherenceManager {
       message:
         corrections.length > 0
           ? `Applied ${corrections.length} types of corrections`
-          : 'No corrections applied',
+          : "No corrections applied",
       corrections,
-      severity: violations.some((v) => v.severity === 'critical')
-        ? 'critical'
-        : violations.some((v) => v.severity === 'high')
-          ? 'high'
-          : 'medium',
+      severity: violations.some((v) => v.severity === "critical")
+        ? "critical"
+        : violations.some((v) => v.severity === "high")
+          ? "high"
+          : "medium",
     };
   }
 
@@ -1868,7 +1868,7 @@ class DistributedCoherenceManager {
       return {
         isCoherent: false,
         score: 0,
-        message: 'No coherence results to assess',
+        message: "No coherence results to assess",
         violationCounts: {},
       };
     }
@@ -1886,7 +1886,7 @@ class DistributedCoherenceManager {
     const totalScore = nodeResults.reduce(
       (sum, result) =>
         sum +
-        (result && typeof result.coherenceScore === 'number'
+        (result && typeof result.coherenceScore === "number"
           ? result.coherenceScore
           : 0),
       0,
@@ -1919,20 +1919,20 @@ class DistributedCoherenceManager {
 
     if (!isCoherent) {
       // Choose strategy based on severity
-      let strategy = 'continue';
+      let strategy = "continue";
 
       if (coherentNodeRatio < 0.5 || averageScore < 0.3) {
-        strategy = 'reset';
+        strategy = "reset";
       } else if (coherentNodeRatio < 0.8 || averageScore < 0.6) {
-        strategy = 'rollback';
+        strategy = "rollback";
       } else {
-        strategy = 'repair';
+        strategy = "repair";
       }
 
       recovery = {
         strategy,
-        scope: coherentNodeRatio < 0.3 ? 'global' : 'selective',
-        urgency: coherentNodeRatio < 0.5 ? 'high' : 'medium',
+        scope: coherentNodeRatio < 0.3 ? "global" : "selective",
+        urgency: coherentNodeRatio < 0.5 ? "high" : "medium",
       };
     }
 
@@ -1946,7 +1946,7 @@ class DistributedCoherenceManager {
       totalViolations,
       recovery,
       message: isCoherent
-        ? 'System is globally coherent'
+        ? "System is globally coherent"
         : `System coherence compromised: ${coherentNodes}/${nodeResults.length} nodes coherent`,
     };
   }
@@ -2012,19 +2012,19 @@ const CoherenceCore = {
 if (
   Object.getOwnPropertyDescriptor(
     Prime.distributed.coherence,
-    'CoherenceCore',
+    "CoherenceCore",
   ) &&
-  Object.getOwnPropertyDescriptor(Prime.distributed.coherence, 'CoherenceCore')
+  Object.getOwnPropertyDescriptor(Prime.distributed.coherence, "CoherenceCore")
     .get
 ) {
   // Use a more careful approach to update properties that already have getters
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.distributed.coherence,
-    'CoherenceCore',
+    "CoherenceCore",
   );
   const originalGetter = descriptor.get;
 
-  Object.defineProperty(Prime.distributed.coherence, 'CoherenceCore', {
+  Object.defineProperty(Prime.distributed.coherence, "CoherenceCore", {
     get: function () {
       const result = originalGetter.call(this);
       if (!result || Object.keys(result).length === 0) {

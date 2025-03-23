@@ -8,7 +8,7 @@
  * - Component tree management
  */
 
-const Prime = require('../../core');
+const Prime = require("../../core/prime.js");
 const { Utils } = Prime;
 
 /**
@@ -19,7 +19,7 @@ const { Utils } = Prime;
 function createApplication(options = {}) {
   // Validate required options
   if (!options.id) {
-    throw new Prime.ValidationError('Application id is required', {
+    throw new Prime.ValidationError("Application id is required", {
       context: { options },
     });
   }
@@ -39,9 +39,9 @@ function createApplication(options = {}) {
   // Initialize application instance
   const app = {
     id: options.id,
-    type: 'application',
+    type: "application",
     name: options.name || options.id,
-    version: options.version || '1.0.0',
+    version: options.version || "1.0.0",
     state: Prime.Utils.deepClone(initialState),
     _isRunning: false,
 
@@ -57,12 +57,12 @@ function createApplication(options = {}) {
       this._isRunning = true;
 
       // Call initialization hook if available
-      if (options.onStart && typeof options.onStart === 'function') {
+      if (options.onStart && typeof options.onStart === "function") {
         options.onStart.call(this);
       }
 
       // Publish start event
-      Prime.EventBus.publish('application:start', {
+      Prime.EventBus.publish("application:start", {
         id: this.id,
         name: this.name,
         timestamp: Date.now(),
@@ -83,12 +83,12 @@ function createApplication(options = {}) {
       this._isRunning = false;
 
       // Call cleanup hook if available
-      if (options.onStop && typeof options.onStop === 'function') {
+      if (options.onStop && typeof options.onStop === "function") {
         options.onStop.call(this);
       }
 
       // Publish stop event
-      Prime.EventBus.publish('application:stop', {
+      Prime.EventBus.publish("application:stop", {
         id: this.id,
         name: this.name,
         timestamp: Date.now(),
@@ -106,7 +106,7 @@ function createApplication(options = {}) {
       this._container = container;
 
       // Call mount hook if available
-      if (options.onMount && typeof options.onMount === 'function') {
+      if (options.onMount && typeof options.onMount === "function") {
         options.onMount.call(this, container);
       }
 
@@ -119,7 +119,7 @@ function createApplication(options = {}) {
      */
     unmount: function () {
       // Call unmount hook if available
-      if (options.onUnmount && typeof options.onUnmount === 'function') {
+      if (options.onUnmount && typeof options.onUnmount === "function") {
         options.onUnmount.call(this);
       }
 
@@ -133,7 +133,7 @@ function createApplication(options = {}) {
      */
     update: function () {
       // Call update hook if available
-      if (options.onUpdate && typeof options.onUpdate === 'function') {
+      if (options.onUpdate && typeof options.onUpdate === "function") {
         options.onUpdate.call(this);
       }
 
@@ -149,7 +149,7 @@ function createApplication(options = {}) {
     useKernel: function (service, ...args) {
       if (!this._kernel) {
         throw new Prime.InvalidOperationError(
-          'Application is not connected to kernel',
+          "Application is not connected to kernel",
         );
       }
 
@@ -167,7 +167,7 @@ function createApplication(options = {}) {
      */
     registerComponent: function (component) {
       if (!component || !component.id) {
-        throw new Prime.ValidationError('Component must have an id', {
+        throw new Prime.ValidationError("Component must have an id", {
           context: { component },
         });
       }
@@ -240,7 +240,7 @@ function createApplication(options = {}) {
      */
     use: function (middleware) {
       if (!Prime.Utils.isFunction(middleware)) {
-        throw new Prime.ValidationError('Middleware must be a function', {
+        throw new Prime.ValidationError("Middleware must be a function", {
           context: { middleware },
         });
       }
@@ -265,7 +265,7 @@ function createApplication(options = {}) {
      */
     dispatch: function (action) {
       if (!action || !action.type) {
-        throw new Prime.ValidationError('Action must have a type property', {
+        throw new Prime.ValidationError("Action must have a type property", {
           context: { action },
         });
       }
@@ -293,7 +293,7 @@ function createApplication(options = {}) {
         if (result === false) {
           prevented = true;
           break;
-        } else if (result && typeof result === 'object') {
+        } else if (result && typeof result === "object") {
           processedAction = result;
         }
       }
@@ -318,7 +318,7 @@ function createApplication(options = {}) {
 
           if (!coherenceResult.isCoherent) {
             throw new Prime.CoherenceError(
-              'State update failed coherence check',
+              "State update failed coherence check",
               {
                 context: {
                   action: processedAction,
@@ -358,7 +358,7 @@ function createApplication(options = {}) {
         !Prime.Utils.isObject(nextState)
       ) {
         // If they're numbers, use precise math
-        if (typeof prevState === 'number' && typeof nextState === 'number') {
+        if (typeof prevState === "number" && typeof nextState === "number") {
           const delta = nextState - prevState;
           return Prime.KahanSum(prevState, delta);
         }
@@ -413,7 +413,7 @@ function createApplication(options = {}) {
 
       // Default processing based on action type
       switch (action.type) {
-        case 'SET_STATE':
+        case "SET_STATE":
           if (action.path && action.value !== undefined) {
             return this._setStateValue(state, action.path, action.value);
           } else if (action.state && Prime.Utils.isObject(action.state)) {
@@ -421,13 +421,13 @@ function createApplication(options = {}) {
           }
           break;
 
-        case 'UPDATE_STATE':
+        case "UPDATE_STATE":
           if (Prime.Utils.isObject(action.updates)) {
             return { ...state, ...action.updates };
           }
           break;
 
-        case 'MERGE_STATE':
+        case "MERGE_STATE":
           if (Prime.Utils.isObject(action.updates)) {
             return Prime.Utils.deepMerge(state, action.updates);
           }
@@ -458,7 +458,7 @@ function createApplication(options = {}) {
      * @returns {Object} Updated state
      */
     _setStateValue: function (state, path, value) {
-      const pathArray = Array.isArray(path) ? path : path.split('.');
+      const pathArray = Array.isArray(path) ? path : path.split(".");
       const result = Prime.Utils.deepClone(state);
 
       let current = result;
@@ -468,7 +468,7 @@ function createApplication(options = {}) {
         if (
           current[key] === undefined ||
           current[key] === null ||
-          typeof current[key] !== 'object'
+          typeof current[key] !== "object"
         ) {
           current[key] = {};
         }
@@ -479,7 +479,7 @@ function createApplication(options = {}) {
       const lastKey = pathArray[pathArray.length - 1];
 
       // If both current and new values are numbers, use Kahan summation for the difference
-      if (typeof current[lastKey] === 'number' && typeof value === 'number') {
+      if (typeof current[lastKey] === "number" && typeof value === "number") {
         const delta = value - current[lastKey];
         current[lastKey] = Prime.KahanSum(current[lastKey], delta);
       } else {
@@ -496,7 +496,7 @@ function createApplication(options = {}) {
      */
     subscribe: function (subscriber) {
       if (!Prime.Utils.isFunction(subscriber)) {
-        throw new Prime.ValidationError('Subscriber must be a function', {
+        throw new Prime.ValidationError("Subscriber must be a function", {
           context: { subscriber },
         });
       }
@@ -540,7 +540,7 @@ function createApplication(options = {}) {
         try {
           subscriber(changeInfo);
         } catch (error) {
-          Prime.Logger.error('Error in state change subscriber:', error);
+          Prime.Logger.error("Error in state change subscriber:", error);
         }
       }
     },
@@ -553,7 +553,7 @@ function createApplication(options = {}) {
      * @param {string} [basePath=''] - Base path
      * @returns {Array} Array of changed paths
      */
-    _calculateChangedPaths: function (prevState, newState, basePath = '') {
+    _calculateChangedPaths: function (prevState, newState, basePath = "") {
       const paths = [];
 
       // Handle non-object cases
@@ -639,7 +639,7 @@ function createApplication(options = {}) {
       this.state = Prime.Utils.deepClone(initialState);
 
       // Create and record reset action
-      const resetAction = { type: 'RESET_STATE' };
+      const resetAction = { type: "RESET_STATE" };
 
       // Add to history
       if (actionHistory.length >= actionHistoryLimit) {

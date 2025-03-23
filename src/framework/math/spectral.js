@@ -4,7 +4,10 @@
  */
 
 // Import Prime directly from core/prime
-const Prime = require('../../core/prime.js');
+const Prime = require("../../core/prime.js");
+
+// Import the StandardMath interface
+const StandardMath = require("./index.js").Standard;
 
 /**
  * Spectral Prime Decomposition implementation based on the Prime Framework
@@ -184,25 +187,25 @@ class SpectralPrimeDecomposition {
   }
 
   /**
-   * Simple eigendecomposition implementation for the Prime Operator
-   * This is a basic implementation and would be replaced with
-   * more efficient algorithms in a production environment
+   * Eigendecomposition implementation for the Prime Operator
+   * Uses StandardMath for numerically stable eigendecomposition
    *
    * @private
    * @param {Array} matrix - Matrix to decompose
    * @returns {Object} Eigenvalues and eigenvectors
    */
   _computeEigendecomposition(matrix) {
-    // Implementation of eigendecomposition
-    // Using power iteration for efficiency with large matrices
-    // Leveraging specialized numerical libraries when available
-
-    // Check if Matrix advanced functionality is available in Prime.Math
-    if (Prime.Math && Prime.Math.eigenvalues) {
-      return Prime.Math.eigenvalues(matrix);
-    } else {
-      // Fallback to simple approach with validation error
-      Prime.Logger && Prime.Logger.warn('Advanced matrix eigendecomposition not available. Using simple approximation.');
+    try {
+      // Use StandardMath Matrix.eigen for a stable, optimized implementation
+      return StandardMath.Matrix.eigen(matrix);
+    } catch (error) {
+      // Log error and fall back to simple approximation if needed
+      Prime.Logger &&
+        Prime.Logger.warn(
+          "Eigendecomposition failed: " +
+            error.message +
+            ". Using simple approximation.",
+        );
       return this._simpleEigendecomposition(matrix);
     }
   }
@@ -311,15 +314,26 @@ class SpectralPrimeDecomposition {
     // Initialize the Prime Operator if not already done
     const H = this.initializePrimeOperator();
 
-    // Matrix-vector multiplication
-    const result = Array(this.dimension).fill(0);
-    for (let i = 0; i < this.dimension; i++) {
-      for (let j = 0; j < this.dimension; j++) {
-        result[i] += H[i][j] * vector[j];
+    try {
+      // Use StandardMath for numerically stable matrix-vector multiplication
+      return StandardMath.Matrix.multiplyMatrixVector(H, vector);
+    } catch (error) {
+      // Log error and fall back to simple implementation if needed
+      Prime.Logger &&
+        Prime.Logger.warn(
+          "Matrix-vector multiplication failed: " +
+            error.message +
+            ". Using simple implementation.",
+        );
+      // Fallback implementation
+      const result = Array(this.dimension).fill(0);
+      for (let i = 0; i < this.dimension; i++) {
+        for (let j = 0; j < this.dimension; j++) {
+          result[i] += H[i][j] * vector[j];
+        }
       }
+      return result;
     }
-
-    return result;
   }
 
   /**
@@ -350,46 +364,82 @@ class SpectralPrimeDecomposition {
   }
 
   /**
-   * Simple determinant calculation for small matrices
-   * Only for demonstration purposes
+   * Calculate matrix determinant using StandardMath for numerical stability
    *
    * @private
    * @param {Array} matrix - Matrix to calculate determinant for
-   * @returns {number} Determinant value
+   * @returns {number} Determinant value with improved numerical stability
    */
   _computeDeterminant(matrix) {
-    const n = matrix.length;
+    try {
+      // Ensure StandardMath.Matrix exists and has determinantWithMetrics
+      if (
+        !StandardMath ||
+        !StandardMath.Matrix ||
+        typeof StandardMath.Matrix.determinantWithMetrics !== "function"
+      ) {
+        // If StandardMath.Matrix.determinantWithMetrics is not available,
+        // throw an error to use the fallback
+        throw new Error(
+          "StandardMath.Matrix.determinantWithMetrics is not available",
+        );
+      }
 
-    // Base cases for recursion
-    if (n === 1) return matrix[0][0];
-    if (n === 2)
-      return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+      // Use StandardMath for numerically stable determinant calculation with metrics
+      const result = StandardMath.Matrix.determinantWithMetrics(matrix);
 
-    let det = 0;
-    let sign = 1;
-
-    for (let j = 0; j < n; j++) {
-      // Create submatrix by removing first row and column j
-      const submatrix = Array(n - 1)
-        .fill()
-        .map(() => Array(n - 1).fill(0));
-
-      for (let i = 1; i < n; i++) {
-        for (let k = 0; k < n; k++) {
-          if (k < j) {
-            submatrix[i - 1][k] = matrix[i][k];
-          } else if (k > j) {
-            submatrix[i - 1][k - 1] = matrix[i][k];
-          }
+      // Log condition number if available
+      if (result.conditionNumber && Prime.Logger) {
+        if (result.conditionNumber > 1e10) {
+          Prime.Logger.warn(
+            `High condition number in determinant: ${result.conditionNumber.toExponential(2)}`,
+          );
         }
       }
 
-      // Recursive call
-      det += sign * matrix[0][j] * this._computeDeterminant(submatrix);
-      sign = -sign;
-    }
+      return result.value;
+    } catch (error) {
+      // Log error and fall back to simple recursive implementation
+      Prime.Logger &&
+        Prime.Logger.warn(
+          "Determinant calculation failed: " +
+            error.message +
+            ". Using simple implementation.",
+        );
+      // Fallback implementation for small matrices
+      const n = matrix.length;
 
-    return det;
+      // Base cases for recursion
+      if (n === 1) return matrix[0][0];
+      if (n === 2)
+        return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+
+      let det = 0;
+      let sign = 1;
+
+      for (let j = 0; j < n; j++) {
+        // Create submatrix by removing first row and column j
+        const submatrix = Array(n - 1)
+          .fill()
+          .map(() => Array(n - 1).fill(0));
+
+        for (let i = 1; i < n; i++) {
+          for (let k = 0; k < n; k++) {
+            if (k < j) {
+              submatrix[i - 1][k] = matrix[i][k];
+            } else if (k > j) {
+              submatrix[i - 1][k - 1] = matrix[i][k];
+            }
+          }
+        }
+
+        // Recursive call
+        det += sign * matrix[0][j] * this._computeDeterminant(submatrix);
+        sign = -sign;
+      }
+
+      return det;
+    }
   }
 
   /**
@@ -437,14 +487,43 @@ class SpectralPrimeDecomposition {
       // Use 5 iterations for signature
       v = this._applyOperator(v);
 
-      // Take the top k components
-      const k = 10;
-      const indices = Array.from({ length: v.length }, (_, i) => i)
-        .sort((a, b) => Math.abs(v[b]) - Math.abs(v[a]))
-        .slice(0, k);
+      try {
+        // Use StandardMath for vector operations with improved numerical stability
+        // Take the top k components by magnitude
+        const k = 10;
 
-      const values = indices.map((i) => v[i]);
-      signatures.push(...values);
+        // Compute vector norms using StandardMath
+        const magnitudes = v.map((val, idx) => ({
+          index: idx,
+          magnitude: StandardMath.Vector.norm([val]),
+        }));
+
+        // Sort by magnitude (descending) and get top k indices
+        const indices = magnitudes
+          .sort((a, b) => b.magnitude - a.magnitude)
+          .slice(0, k)
+          .map((item) => item.index);
+
+        const values = indices.map((idx) => v[idx]);
+        signatures.push(...values);
+      } catch (error) {
+        // Fallback to direct implementation if StandardMath fails
+        Prime.Logger &&
+          Prime.Logger.warn(
+            "Vector operation failed: " +
+              error.message +
+              ". Using direct implementation.",
+          );
+
+        // Take the top k components
+        const k = 10;
+        const indices = Array.from({ length: v.length }, (_, i) => i)
+          .sort((a, b) => Math.abs(v[b]) - Math.abs(v[a]))
+          .slice(0, k);
+
+        const values = indices.map((i) => v[i]);
+        signatures.push(...values);
+      }
     }
 
     return signatures;
@@ -499,11 +578,11 @@ class UniversalNumberEmbedding {
    */
   setBases(bases) {
     if (!Array.isArray(bases) || bases.length === 0) {
-      throw new Error('Bases must be a non-empty array');
+      throw new Error("Bases must be a non-empty array");
     }
 
     if (bases.some((b) => b < 2)) {
-      throw new Error('All bases must be >= 2');
+      throw new Error("All bases must be >= 2");
     }
 
     this.bases = bases.slice();
@@ -616,12 +695,25 @@ class UniversalNumberEmbedding {
    * @returns {number} GCD
    */
   _gcd(a, b) {
-    while (b !== 0) {
-      const temp = b;
-      b = a % b;
-      a = temp;
+    try {
+      // Use StandardMath for GCD calculation with improved numerical stability
+      return StandardMath.gcd(a, b);
+    } catch (error) {
+      // Fall back to Euclidean algorithm if StandardMath fails
+      Prime.Logger &&
+        Prime.Logger.warn(
+          "GCD calculation failed: " +
+            error.message +
+            ". Using Euclidean algorithm.",
+        );
+      // Fallback implementation
+      while (b !== 0) {
+        const temp = b;
+        b = a % b;
+        a = temp;
+      }
+      return a;
     }
-    return a;
   }
 
   /**
@@ -709,13 +801,45 @@ class UniversalNumberEmbedding {
     const firstNum = numbers[0];
     if (numbers.every((n) => n === firstNum)) return 0;
 
-    // Otherwise, calculate variance as a measure of incoherence
-    const mean = numbers.reduce((sum, n) => sum + n, 0) / numbers.length;
-    const variance =
-      numbers.reduce((sum, n) => sum + Math.pow(n - mean, 2), 0) /
-      numbers.length;
+    try {
+      // Use StandardMath for statistically stable variance calculation
+      // This helps avoid numerical instability with large numbers
+      const statistics = StandardMath.Statistics.computeBasicStats(numbers);
+      return Math.sqrt(statistics.variance);
+    } catch (error) {
+      // Fall back to direct calculation if StandardMath fails
+      Prime.Logger &&
+        Prime.Logger.warn(
+          "Statistics calculation failed: " +
+            error.message +
+            ". Using direct calculation.",
+        );
+      // Use Kahan summation for better precision in mean calculation
+      let mean = 0;
+      let c = 0; // Compensation term for Kahan summation
+      for (let i = 0; i < numbers.length; i++) {
+        const y = numbers[i] - c;
+        const t = mean + y;
+        c = t - mean - y;
+        mean = t;
+      }
+      mean /= numbers.length;
 
-    return Math.sqrt(variance);
+      // Use Kahan summation for variance calculation
+      let variance = 0;
+      c = 0; // Reset compensation term
+      for (let i = 0; i < numbers.length; i++) {
+        const deviation = numbers[i] - mean;
+        const squaredDev = deviation * deviation;
+        const y = squaredDev - c;
+        const t = variance + y;
+        c = t - variance - y;
+        variance = t;
+      }
+      variance /= numbers.length;
+
+      return Math.sqrt(variance);
+    }
   }
 
   /**

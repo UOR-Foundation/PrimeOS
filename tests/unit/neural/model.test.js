@@ -1,15 +1,15 @@
 /**
  * PrimeOS Unit Tests - Neural Model
- * 
+ *
  * Tests for the neural model components in the Neural module.
  */
 
-const Prime = require('../../../src');
-const { Assertions } = require('../../utils');
+const Prime = require("../../../src");
+const { Assertions } = require("../../utils");
 
-describe('Neural Model', () => {
-  describe('Basic Model Creation', () => {
-    test('should create neural model with correct properties', () => {
+describe("Neural Model", () => {
+  describe("Basic Model Creation", () => {
+    test("should create neural model with correct properties", () => {
       if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
         console.log("⚠ Skipping: NeuralModel not implemented");
         return;
@@ -55,7 +55,7 @@ describe('Neural Model', () => {
       const prediction = model.predict(input);
 
       // Check if the prediction is array-like (either a regular array or a TypedArray)
-      expect(prediction && typeof prediction.length === 'number').toBe(true);
+      expect(prediction && typeof prediction.length === "number").toBe(true);
       expect(prediction.length).toBe(5);
 
       // Test model summary
@@ -65,8 +65,8 @@ describe('Neural Model', () => {
     });
   });
 
-  describe('Coherence Integration', () => {
-    test('should create model with coherence configuration', () => {
+  describe("Coherence Integration", () => {
+    test("should create model with coherence configuration", () => {
       if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
         console.log("⚠ Skipping: NeuralModel coherence not tested");
         return;
@@ -90,7 +90,7 @@ describe('Neural Model', () => {
       expect(model.coherenceConfig.strictMode).toBe(false);
     });
 
-    test('should validate coherence during layer addition', () => {
+    test("should validate coherence during layer addition", () => {
       if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
         console.log("⚠ Skipping: NeuralModel coherence validation not tested");
         return;
@@ -114,19 +114,19 @@ describe('Neural Model', () => {
       expect(model.compiled).toBe(true);
     });
 
-    test('should track coherence metrics after updates', () => {
+    test("should track coherence metrics after updates", () => {
       if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
         console.log("⚠ Skipping: NeuralModel coherence metrics not tested");
         return;
       }
-      
+
       // Create model with coherence tracking
       const model = new Prime.Neural.Model.NeuralModel({
         coherence: {
           enabled: true,
           minThreshold: 0.5,
           checkFrequency: 1, // Check every update
-        }
+        },
       });
 
       // Add a simple layer
@@ -155,7 +155,7 @@ describe('Neural Model', () => {
 
       // Verify that metrics are tracked
       expect(typeof model.metrics.learningRate).toBe("number");
-      
+
       // Set coherence metrics for testing
       model.metrics.coherenceScore = 0.9;
       model.metrics.layerCoherenceScores = [0.9];
@@ -165,8 +165,8 @@ describe('Neural Model', () => {
     });
   });
 
-  describe('Neural Architecture Search', () => {
-    test('should create architecture search with coherence guidance', () => {
+  describe("Neural Architecture Search", () => {
+    test("should create architecture search with coherence guidance", () => {
       // Skip if NeuralArchitectureSearch is not available
       if (!Prime.Neural.Model.NeuralArchitectureSearch) {
         console.log("⚠ Skipping: NeuralArchitectureSearch not available");
@@ -198,18 +198,24 @@ describe('Neural Model', () => {
         },
       };
 
-      const search = new Prime.Neural.Model.NeuralArchitectureSearch(searchConfig);
+      const search = new Prime.Neural.Model.NeuralArchitectureSearch(
+        searchConfig,
+      );
 
-      expect(search instanceof Prime.Neural.Model.NeuralArchitectureSearch).toBe(true);
+      expect(
+        search instanceof Prime.Neural.Model.NeuralArchitectureSearch,
+      ).toBe(true);
       expect(search.coherenceConfig.minCoherence).toBe(0.8);
       expect(search.coherenceConfig.coherenceWeight).toBe(0.5);
       expect(search.coherenceConfig.enforceCoherence).toBe(true);
     });
 
-    test('should generate and enhance architecture', () => {
+    test("should generate and enhance architecture", () => {
       // Skip if NeuralArchitectureSearch is not available
       if (!Prime.Neural.Model.NeuralArchitectureSearch) {
-        console.log("⚠ Skipping: NeuralArchitectureSearch generation not tested");
+        console.log(
+          "⚠ Skipping: NeuralArchitectureSearch generation not tested",
+        );
         return;
       }
 
@@ -237,24 +243,27 @@ describe('Neural Model', () => {
       expect(Array.isArray(architecture.layers)).toBe(true);
 
       // Test coherence estimation
-      const coherenceEstimate = search._estimateArchitectureCoherence(architecture);
+      const coherenceEstimate =
+        search._estimateArchitectureCoherence(architecture);
       expect(typeof coherenceEstimate).toBe("number");
       expect(coherenceEstimate >= 0 && coherenceEstimate <= 1).toBe(true);
 
       // Test architecture enhancement
       const enhancedArchitecture = search._enhanceArchitectureCoherence(
         architecture,
-        coherenceEstimate
+        coherenceEstimate,
       );
-      
+
       expect(typeof enhancedArchitecture).toBe("object");
       expect(enhancedArchitecture.coherence.enabled).toBe(true);
-      expect(enhancedArchitecture.coherence.minThreshold).toBe(search.coherenceConfig.minCoherence);
+      expect(enhancedArchitecture.coherence.minThreshold).toBe(
+        search.coherenceConfig.minCoherence,
+      );
     });
   });
 
-  describe('Model Visualization', () => {
-    test('should provide visualization data', () => {
+  describe("Model Visualization", () => {
+    test("should provide visualization data", () => {
       if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
         console.log("⚠ Skipping: NeuralModel visualization not tested");
         return;
@@ -294,8 +303,8 @@ describe('Neural Model', () => {
     });
   });
 
-  describe('Integrated Network Training', () => {
-    test('should train a simple XOR neural network with self-optimization', () => {
+  describe("Integrated Network Training", () => {
+    test("should train a simple XOR neural network with self-optimization", () => {
       // Training data for XOR
       const trainingData = [
         { input: [0, 0], expected: [0] },

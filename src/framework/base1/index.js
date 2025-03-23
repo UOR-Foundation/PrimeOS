@@ -5,14 +5,14 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
+const Prime = require("../../core/prime.js");
+const MathUtils = require("../math");
 
 // Import runtime and observation models
-const RuntimeModel = require('./runtime');
-const ObservationModel = require('./observation');
-const InteractionModel = require('./interaction');
-const RepresentationModel = require('./representation');
+const RuntimeModel = require("./runtime");
+const ObservationModel = require("./observation");
+const InteractionModel = require("./interaction");
+const RepresentationModel = require("./representation");
 
 /**
  * Base 1: Resource

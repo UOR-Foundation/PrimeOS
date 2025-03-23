@@ -5,9 +5,9 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
-const { Manifold } = require('./manifold.js');
+const Prime = require("../../core/prime.js");
+const MathUtils = require("../math");
+const { Manifold } = require("./manifold.js");
 
 /**
  * ManifoldTransformations - Transformations for manifolds
@@ -22,13 +22,13 @@ const ManifoldTransformations = {
    */
   alignWith: function (source, target, options = {}) {
     if (!(source instanceof Manifold) || !(target instanceof Manifold)) {
-      throw new Prime.ValidationError('Source and target must be manifolds');
+      throw new Prime.ValidationError("Source and target must be manifolds");
     }
 
-    const strategy = options.strategy || 'projection';
+    const strategy = options.strategy || "projection";
 
     // Different alignment strategies
-    if (strategy === 'projection') {
+    if (strategy === "projection") {
       // Simple projection alignment
       const commonSpaces = source
         .getSpaces()
@@ -36,7 +36,7 @@ const ManifoldTransformations = {
 
       if (commonSpaces.length === 0) {
         throw new Prime.InvalidOperationError(
-          'Manifolds must share at least one space for projection alignment',
+          "Manifolds must share at least one space for projection alignment",
         );
       }
 
@@ -59,8 +59,8 @@ const ManifoldTransformations = {
 
             // For numeric values, maintain the source's scale but align to target's structure
             if (
-              typeof sourceVal === 'number' &&
-              typeof targetVal === 'number'
+              typeof sourceVal === "number" &&
+              typeof targetVal === "number"
             ) {
               if (targetVal !== 0) {
                 // Scale source value to target's magnitude while preserving direction
@@ -95,16 +95,16 @@ const ManifoldTransformations = {
           meta: {
             ...source.getMeta(),
             alignedTo: target.getId(),
-            alignmentStrategy: 'projection',
+            alignmentStrategy: "projection",
           },
         };
       });
 
       // Establish relation to the target
-      aligned.relateTo(target, 'aligned_to');
+      aligned.relateTo(target, "aligned_to");
 
       return aligned;
-    } else if (strategy === 'transformation') {
+    } else if (strategy === "transformation") {
       // Transformation-based alignment
       // Compute a transformation that maps source to target
       const sourceVariant = source.getVariant();
@@ -126,11 +126,11 @@ const ManifoldTransformations = {
 
       // Determine transformation parameters
       const sourceNumeric = Object.entries(sourceVariant)
-        .filter(([_, val]) => typeof val === 'number')
+        .filter(([_, val]) => typeof val === "number")
         .map(([key, val]) => ({ key, val }));
 
       const targetNumeric = Object.entries(targetVariant)
-        .filter(([_, val]) => typeof val === 'number')
+        .filter(([_, val]) => typeof val === "number")
         .map(([key, val]) => ({ key, val }));
 
       // Calculate simple transformation parameters
@@ -154,11 +154,11 @@ const ManifoldTransformations = {
 
           // Apply scaling to all numeric properties
           for (const key in variant) {
-            if (typeof variant[key] === 'number') {
+            if (typeof variant[key] === "number") {
               variant[key] *= averageScale;
             } else if (
               Array.isArray(variant[key]) &&
-              variant[key].every((v) => typeof v === 'number')
+              variant[key].every((v) => typeof v === "number")
             ) {
               variant[key] = variant[key].map((v) => v * averageScale);
             }
@@ -176,7 +176,7 @@ const ManifoldTransformations = {
       });
 
       // Establish relation to the target
-      aligned.relateTo(target, 'aligned_to');
+      aligned.relateTo(target, "aligned_to");
 
       return aligned;
     }
@@ -195,11 +195,11 @@ const ManifoldTransformations = {
    */
   scale: function (manifold, factor, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError('First argument must be a manifold');
+      throw new Prime.ValidationError("First argument must be a manifold");
     }
 
-    if (typeof factor !== 'number' || !isFinite(factor)) {
-      throw new Prime.ValidationError('Factor must be a finite number');
+    if (typeof factor !== "number" || !isFinite(factor)) {
+      throw new Prime.ValidationError("Factor must be a finite number");
     }
 
     // Properties to include in scaling
@@ -235,11 +235,11 @@ const ManifoldTransformations = {
 
       const value = variant[key];
 
-      if (typeof value === 'number') {
+      if (typeof value === "number") {
         variant[key] = value * factor;
       } else if (
         Array.isArray(value) &&
-        value.every((v) => typeof v === 'number')
+        value.every((v) => typeof v === "number")
       ) {
         variant[key] = value.map((v) => v * factor);
       }
@@ -255,7 +255,7 @@ const ManifoldTransformations = {
     });
 
     // Establish relation to the original
-    scaled.relateTo(manifold, 'scaled_from', { factor });
+    scaled.relateTo(manifold, "scaled_from", { factor });
 
     return scaled;
   },
@@ -268,7 +268,7 @@ const ManifoldTransformations = {
    */
   rotate: function (manifold, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError('First argument must be a manifold');
+      throw new Prime.ValidationError("First argument must be a manifold");
     }
 
     // Get the vector properties to rotate
@@ -276,11 +276,11 @@ const ManifoldTransformations = {
     const angles = options.angles || [];
 
     if (properties.length === 0) {
-      throw new Prime.ValidationError('No properties specified for rotation');
+      throw new Prime.ValidationError("No properties specified for rotation");
     }
 
     if (angles.length === 0) {
-      throw new Prime.ValidationError('No rotation angles specified');
+      throw new Prime.ValidationError("No rotation angles specified");
     }
 
     // Create a new manifold with rotated properties
@@ -302,7 +302,7 @@ const ManifoldTransformations = {
     for (const prop of properties) {
       const value = variant[prop];
 
-      if (Array.isArray(value) && value.every((v) => typeof v === 'number')) {
+      if (Array.isArray(value) && value.every((v) => typeof v === "number")) {
         // Only handle 2D and 3D rotation for simplicity
         if (value.length === 2) {
           // 2D rotation
@@ -380,7 +380,7 @@ const ManifoldTransformations = {
     });
 
     // Establish relation to the original
-    rotated.relateTo(manifold, 'rotated_from', { angles });
+    rotated.relateTo(manifold, "rotated_from", { angles });
 
     return rotated;
   },
@@ -393,7 +393,7 @@ const ManifoldTransformations = {
    */
   mirror: function (manifold, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError('First argument must be a manifold');
+      throw new Prime.ValidationError("First argument must be a manifold");
     }
 
     // Get the vector properties to mirror
@@ -401,7 +401,7 @@ const ManifoldTransformations = {
     const axis = options.axis || 0; // Axis to mirror across (index)
 
     if (properties.length === 0) {
-      throw new Prime.ValidationError('No properties specified for mirroring');
+      throw new Prime.ValidationError("No properties specified for mirroring");
     }
 
     // Create a new manifold with mirrored properties
@@ -423,7 +423,7 @@ const ManifoldTransformations = {
     for (const prop of properties) {
       const value = variant[prop];
 
-      if (Array.isArray(value) && value.every((v) => typeof v === 'number')) {
+      if (Array.isArray(value) && value.every((v) => typeof v === "number")) {
         // Create a copy of the array
         const mirrored = [...value];
 
@@ -446,7 +446,7 @@ const ManifoldTransformations = {
     });
 
     // Establish relation to the original
-    mirrored.relateTo(manifold, 'mirrored_from', { axis });
+    mirrored.relateTo(manifold, "mirrored_from", { axis });
 
     return mirrored;
   },

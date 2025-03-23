@@ -6,7 +6,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Ensure the namespaces exist
 Prime.distributed = Prime.distributed || {};
@@ -57,9 +57,9 @@ class ParameterServer {
    * @param {string} [source='master'] - Source of initial parameters
    * @returns {boolean} Success status
    */
-  initialize(parameters, source = 'master') {
+  initialize(parameters, source = "master") {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -70,7 +70,7 @@ class ParameterServer {
    */
   getParameters(clientId, keys = null) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -82,7 +82,7 @@ class ParameterServer {
    */
   updateParameters(clientId, updates, metadata = {}) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -93,7 +93,7 @@ class ParameterServer {
    */
   _checkCoherence(updates) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -102,7 +102,7 @@ class ParameterServer {
    */
   _processUpdateQueue() {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**

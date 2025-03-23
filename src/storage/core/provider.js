@@ -3,7 +3,7 @@
  * Abstract base class for storage providers
  */
 
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 /**
  * Abstract storage provider that defines the interface all providers must implement
@@ -17,9 +17,9 @@ class StorageProvider {
     this.options = {
       chunkSize: 1048576, // 1MB
       compression: false,
-      ...options
+      ...options,
     };
-    
+
     this.isInitialized = false;
   }
 
@@ -29,9 +29,9 @@ class StorageProvider {
    */
   async init() {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: init()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: init()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 
@@ -43,9 +43,9 @@ class StorageProvider {
    */
   async store(data, id) {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: store()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: store()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 
@@ -56,9 +56,9 @@ class StorageProvider {
    */
   async load(id) {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: load()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: load()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 
@@ -69,9 +69,9 @@ class StorageProvider {
    */
   async delete(id) {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: delete()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: delete()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 
@@ -82,9 +82,9 @@ class StorageProvider {
    */
   async exists(id) {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: exists()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: exists()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 
@@ -94,9 +94,9 @@ class StorageProvider {
    */
   async getAllKeys() {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: getAllKeys()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: getAllKeys()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 
@@ -106,9 +106,9 @@ class StorageProvider {
    */
   async clear() {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: clear()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: clear()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 
@@ -118,9 +118,9 @@ class StorageProvider {
    */
   async getStorageInfo() {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: getStorageInfo()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: getStorageInfo()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 
@@ -132,9 +132,9 @@ class StorageProvider {
    */
   createReadStream(id, options = {}) {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: createReadStream()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: createReadStream()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 
@@ -146,9 +146,9 @@ class StorageProvider {
    */
   createWriteStream(id, options = {}) {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: createWriteStream()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: createWriteStream()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 
@@ -158,9 +158,9 @@ class StorageProvider {
    */
   getProviderType() {
     throw new Prime.UnsupportedOperationError(
-      'Method not implemented: getProviderType()',
-      { class: 'StorageProvider' },
-      'STORAGE_NOT_IMPLEMENTED'
+      "Method not implemented: getProviderType()",
+      { class: "StorageProvider" },
+      "STORAGE_NOT_IMPLEMENTED",
     );
   }
 }
@@ -174,7 +174,7 @@ class PrimeStorageError extends Prime.PrimeError {
    * @param {string} [code='STORAGE_ERROR'] - Error code
    * @param {Error} [cause] - Cause of the error
    */
-  constructor(message, context = {}, code = 'STORAGE_ERROR', cause = null) {
+  constructor(message, context = {}, code = "STORAGE_ERROR", cause = null) {
     super(message, context, code, cause);
   }
 }
@@ -182,5 +182,5 @@ class PrimeStorageError extends Prime.PrimeError {
 // Export the provider class
 module.exports = {
   StorageProvider,
-  PrimeStorageError
+  PrimeStorageError,
 };

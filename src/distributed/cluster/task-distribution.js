@@ -4,8 +4,8 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
-const EventBus = require('../event-bus');
+const Prime = require("../../core");
+const EventBus = require("../event-bus");
 
 /**
  * Task states for distributed computation
@@ -13,17 +13,17 @@ const EventBus = require('../event-bus');
  */
 const TaskState = {
   /** Task is created but not yet assigned */
-  PENDING: 'pending',
+  PENDING: "pending",
   /** Task is assigned to a node */
-  ASSIGNED: 'assigned',
+  ASSIGNED: "assigned",
   /** Task is currently executing */
-  EXECUTING: 'executing',
+  EXECUTING: "executing",
   /** Task has completed successfully */
-  COMPLETED: 'completed',
+  COMPLETED: "completed",
   /** Task has failed */
-  FAILED: 'failed',
+  FAILED: "failed",
   /** Task was canceled */
-  CANCELED: 'canceled',
+  CANCELED: "canceled",
 };
 
 /**
@@ -58,15 +58,15 @@ class DistributedTask {
    */
   constructor(config) {
     if (!Prime.Utils.isObject(config)) {
-      throw new Prime.ValidationError('Task configuration must be an object');
+      throw new Prime.ValidationError("Task configuration must be an object");
     }
 
     if (!config.id) {
-      throw new Prime.ValidationError('Task ID is required');
+      throw new Prime.ValidationError("Task ID is required");
     }
 
     if (!config.type) {
-      throw new Prime.ValidationError('Task type is required');
+      throw new Prime.ValidationError("Task type is required");
     }
 
     this.id = config.id;
@@ -285,7 +285,7 @@ class TaskQueue {
   addTask(task) {
     // Check queue size limit
     if (this.tasks.size >= this.config.maxQueueSize) {
-      throw new Prime.InvalidOperationError('Task queue is full');
+      throw new Prime.InvalidOperationError("Task queue is full");
     }
 
     // Convert configuration object to task if needed
@@ -307,7 +307,7 @@ class TaskQueue {
     this._sortPendingTasks();
 
     // Emit event
-    this.eventBus.emit('task:added', {
+    this.eventBus.emit("task:added", {
       taskId: distributedTask.id,
       timestamp: Date.now(),
     });
@@ -325,7 +325,7 @@ class TaskQueue {
     const eligible = this.pendingTasks.filter((task) => {
       // Match criteria
       for (const [key, value] of Object.entries(criteria)) {
-        if (key === 'requiredCapabilities') {
+        if (key === "requiredCapabilities") {
           // Check capabilities
           for (const [capability, minValue] of Object.entries(value)) {
             if (
@@ -375,7 +375,7 @@ class TaskQueue {
       this.pendingTasks = this.pendingTasks.filter((t) => t.id !== taskId);
 
       // Emit event
-      this.eventBus.emit('task:assigned', {
+      this.eventBus.emit("task:assigned", {
         taskId,
         nodeId,
         timestamp: Date.now(),
@@ -401,7 +401,7 @@ class TaskQueue {
 
     if (success) {
       // Emit event
-      this.eventBus.emit('task:executing', {
+      this.eventBus.emit("task:executing", {
         taskId,
         nodeId: task.assignedNodeId,
         timestamp: Date.now(),
@@ -428,7 +428,7 @@ class TaskQueue {
 
     if (success) {
       // Emit event
-      this.eventBus.emit('task:completed', {
+      this.eventBus.emit("task:completed", {
         taskId,
         nodeId: task.assignedNodeId,
         result,
@@ -461,7 +461,7 @@ class TaskQueue {
         this._sortPendingTasks();
 
         // Emit retry event
-        this.eventBus.emit('task:retry', {
+        this.eventBus.emit("task:retry", {
           taskId,
           retryCount: task.retryCount,
           error: error.message,
@@ -469,7 +469,7 @@ class TaskQueue {
         });
       } else {
         // Emit failure event
-        this.eventBus.emit('task:failed', {
+        this.eventBus.emit("task:failed", {
           taskId,
           nodeId: task.assignedNodeId,
           error: error.message,
@@ -501,7 +501,7 @@ class TaskQueue {
       this.pendingTasks = this.pendingTasks.filter((t) => t.id !== taskId);
 
       // Emit event
-      this.eventBus.emit('task:canceled', {
+      this.eventBus.emit("task:canceled", {
         taskId,
         nodeId: task.assignedNodeId,
         timestamp: Date.now(),
@@ -527,7 +527,7 @@ class TaskQueue {
     this.pendingTasks = this.pendingTasks.filter((t) => t.id !== taskId);
 
     // Emit event
-    this.eventBus.emit('task:removed', {
+    this.eventBus.emit("task:removed", {
       taskId,
       timestamp: Date.now(),
     });
@@ -547,7 +547,7 @@ class TaskQueue {
         timedOutTasks.push(taskId);
 
         // Emit timeout event
-        this.eventBus.emit('task:timeout', {
+        this.eventBus.emit("task:timeout", {
           taskId,
           nodeId: task.assignedNodeId,
           assignedAt: task.assignedAt,
@@ -661,7 +661,7 @@ class TaskScheduler {
   constructor(config) {
     if (!config || !config.taskQueue || !config.nodeRegistry) {
       throw new Prime.ValidationError(
-        'Task scheduler requires taskQueue and nodeRegistry',
+        "Task scheduler requires taskQueue and nodeRegistry",
       );
     }
 
@@ -707,7 +707,7 @@ class TaskScheduler {
     }, this.config.schedulingInterval);
 
     // Log start
-    Prime.Logger.info('Task scheduler started', {
+    Prime.Logger.info("Task scheduler started", {
       interval: this.config.schedulingInterval,
       maxTasksPerNode: this.config.maxTasksPerNode,
     });
@@ -733,7 +733,7 @@ class TaskScheduler {
     }
 
     // Log stop
-    Prime.Logger.info('Task scheduler stopped', {
+    Prime.Logger.info("Task scheduler stopped", {
       metrics: this.metrics,
     });
 
@@ -798,18 +798,18 @@ class TaskScheduler {
     for (const taskId of timedOutTasks) {
       const task = this.taskQueue.getTask(taskId);
       if (task) {
-        this.taskQueue.failTask(taskId, new Error('Task timed out'));
+        this.taskQueue.failTask(taskId, new Error("Task timed out"));
       }
     }
 
     // Get available nodes
     const availableNodes = this.nodeRegistry
       .findNodes({
-        state: 'ready',
+        state: "ready",
       })
       .concat(
         this.nodeRegistry.findNodes({
-          state: 'working',
+          state: "working",
         }),
       );
 
@@ -845,7 +845,7 @@ class TaskScheduler {
           this.taskQueue.markTaskExecuting(pendingTask.id);
 
           // Emit event
-          this.eventBus.emit('task:scheduled', {
+          this.eventBus.emit("task:scheduled", {
             taskId: pendingTask.id,
             nodeId: bestNode.id,
             timestamp: Date.now(),
@@ -858,7 +858,7 @@ class TaskScheduler {
           if (taskAssigned && !nodeAccepted) {
             this.taskQueue.failTask(
               pendingTask.id,
-              new Error('Node rejected task assignment'),
+              new Error("Node rejected task assignment"),
             );
           }
         }

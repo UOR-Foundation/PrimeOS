@@ -3,11 +3,11 @@
  * Central manager for storage operations
  */
 
-const Prime = require('../../core');
-const { StorageProvider, PrimeStorageError } = require('./provider');
-const Serializer = require('./serializer');
-const ChunkManager = require('./chunk');
-const { EventEmitter } = require('events');
+const Prime = require("../../core");
+const { StorageProvider, PrimeStorageError } = require("./provider");
+const Serializer = require("./serializer");
+const ChunkManager = require("./chunk");
+const { EventEmitter } = require("events");
 
 /**
  * Storage manager that orchestrates storage operations
@@ -19,34 +19,34 @@ class StorageManager extends EventEmitter {
    */
   constructor(options = {}) {
     super();
-    
+
     this.options = {
-      provider: 'auto',
+      provider: "auto",
       chunkSize: 1048576, // 1MB
       useSwapSpace: true,
       compression: false,
-      ...options
+      ...options,
     };
-    
+
     this.isInitialized = false;
     this.provider = null;
     this.serializer = new Serializer({
       preserveInstances: true,
-      compression: this.options.compression
+      compression: this.options.compression,
     });
-    
+
     this.chunkManager = new ChunkManager({
-      defaultChunkSize: this.options.chunkSize
+      defaultChunkSize: this.options.chunkSize,
     });
-    
+
     this.swapSpace = null;
     if (this.options.useSwapSpace) {
       this.swapSpace = new SwapSpaceManager({
         maxMemoryUsage: this.options.maxMemoryUsage,
-        storagePath: this.options.storagePath
+        storagePath: this.options.storagePath,
       });
     }
-    
+
     // Cache for frequently accessed data
     this.cache = new Map();
     this.metadataCache = new Map();
@@ -60,28 +60,28 @@ class StorageManager extends EventEmitter {
     if (this.isInitialized) {
       return;
     }
-    
+
     try {
       // Create provider based on environment and options
       this.provider = this.createProvider();
-      
+
       // Initialize the provider
       await this.provider.init();
-      
+
       // Initialize swap space if used
       if (this.swapSpace) {
         await this.swapSpace.init(this);
       }
-      
+
       this.isInitialized = true;
-      this.emit('initialized');
+      this.emit("initialized");
     } catch (error) {
-      this.emit('error', error);
+      this.emit("error", error);
       throw new PrimeStorageError(
         `Failed to initialize storage manager: ${error.message}`,
         { originalError: error },
-        'STORAGE_INIT_FAILED',
-        error
+        "STORAGE_INIT_FAILED",
+        error,
       );
     }
   }
@@ -93,58 +93,64 @@ class StorageManager extends EventEmitter {
    */
   createProvider() {
     const requestedProvider = this.options.provider.toLowerCase();
-    
+
     // If auto, detect the environment
-    if (requestedProvider === 'auto') {
+    if (requestedProvider === "auto") {
       const env = this.getEnvironment();
-      
-      if (env === 'browser') {
+
+      if (env === "browser") {
         try {
           // Try IndexedDB first
-          if (typeof window !== 'undefined' && window.indexedDB) {
-            const IndexedDBProvider = require('../browser/indexeddb');
+          if (typeof window !== "undefined" && window.indexedDB) {
+            const IndexedDBProvider = require("../browser/indexeddb");
             return new IndexedDBProvider(this.options);
           }
         } catch (error) {
-          Prime.Logger.warn('Failed to create IndexedDB provider, falling back to memory', {
-            error: error.message
-          });
+          Prime.Logger.warn(
+            "Failed to create IndexedDB provider, falling back to memory",
+            {
+              error: error.message,
+            },
+          );
         }
-      } else if (env === 'node') {
+      } else if (env === "node") {
         try {
-          const FilesystemProvider = require('../node/filesystem');
+          const FilesystemProvider = require("../node/filesystem");
           return new FilesystemProvider(this.options);
         } catch (error) {
-          Prime.Logger.warn('Failed to create filesystem provider, falling back to memory', {
-            error: error.message
-          });
+          Prime.Logger.warn(
+            "Failed to create filesystem provider, falling back to memory",
+            {
+              error: error.message,
+            },
+          );
         }
       }
-      
+
       // Fall back to memory provider
-      const MemoryProvider = require('./memory');
+      const MemoryProvider = require("./memory");
       return new MemoryProvider(this.options);
     }
-    
+
     // If explicit provider requested
     switch (requestedProvider) {
-      case 'indexeddb':
-        const IndexedDBProvider = require('../browser/indexeddb');
+      case "indexeddb":
+        const IndexedDBProvider = require("../browser/indexeddb");
         return new IndexedDBProvider(this.options);
-      
-      case 'filesystem':
-        const FilesystemProvider = require('../node/filesystem');
+
+      case "filesystem":
+        const FilesystemProvider = require("../node/filesystem");
         return new FilesystemProvider(this.options);
-      
-      case 'memory':
-        const MemoryProvider = require('./memory');
+
+      case "memory":
+        const MemoryProvider = require("./memory");
         return new MemoryProvider(this.options);
-      
+
       default:
         throw new PrimeStorageError(
           `Unknown storage provider: ${requestedProvider}`,
           { provider: requestedProvider },
-          'STORAGE_UNKNOWN_PROVIDER'
+          "STORAGE_UNKNOWN_PROVIDER",
         );
     }
   }
@@ -154,15 +160,19 @@ class StorageManager extends EventEmitter {
    * @returns {string} 'browser', 'node', or 'unknown'
    */
   getEnvironment() {
-    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-      return 'browser';
+    if (typeof window !== "undefined" && typeof document !== "undefined") {
+      return "browser";
     }
-    
-    if (typeof process !== 'undefined' && process.versions && process.versions.node) {
-      return 'node';
+
+    if (
+      typeof process !== "undefined" &&
+      process.versions &&
+      process.versions.node
+    ) {
+      return "node";
     }
-    
-    return 'unknown';
+
+    return "unknown";
   }
 
   /**
@@ -172,9 +182,9 @@ class StorageManager extends EventEmitter {
   ensureInitialized() {
     if (!this.isInitialized) {
       throw new PrimeStorageError(
-        'Storage manager is not initialized',
+        "Storage manager is not initialized",
         {},
-        'STORAGE_NOT_INITIALIZED'
+        "STORAGE_NOT_INITIALIZED",
       );
     }
   }
@@ -187,73 +197,82 @@ class StorageManager extends EventEmitter {
    */
   async store(data, id) {
     this.ensureInitialized();
-    
+
     try {
       const dataId = id || Prime.Utils.uuid();
-      
+
       // Check swap space limits before storing
       if (this.swapSpace) {
         await this.swapSpace.checkMemoryLimits();
       }
-      
+
       // For small data, store directly
       const dataSize = this.chunkManager.getDataSize(data);
-      
+
       if (dataSize <= this.options.chunkSize) {
         const { serialized, metadata } = await this.serializer.serialize(data);
         await this.provider.store(serialized, dataId);
-        
+
         // Cache metadata
         this.metadataCache.set(dataId, metadata);
-        
+
         return dataId;
       }
-      
+
       // For large data, split into chunks
-      const chunks = this.chunkManager.splitData(data, dataId, this.options.chunkSize);
-      
+      const chunks = this.chunkManager.splitData(
+        data,
+        dataId,
+        this.options.chunkSize,
+      );
+
       // Store each chunk with a derived ID
       const storePromises = chunks.map(async (chunk, index) => {
         const chunkId = `${dataId}_chunk_${index}`;
-        const { serialized, metadata } = await this.serializer.serialize(chunk.data);
-        
+        const { serialized, metadata } = await this.serializer.serialize(
+          chunk.data,
+        );
+
         // Store chunk data
         await this.provider.store(serialized, chunkId);
-        
+
         // Cache metadata
         this.metadataCache.set(chunkId, {
           ...metadata,
           isChunk: true,
           chunkIndex: index,
           totalChunks: chunks.length,
-          parentId: dataId
+          parentId: dataId,
         });
       });
-      
+
       await Promise.all(storePromises);
-      
+
       // Store metadata about the chunks
       const chunksMetadata = {
         id: dataId,
         totalChunks: chunks.length,
         chunkSize: this.options.chunkSize,
         originalSize: dataSize,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      
-      await this.provider.store(JSON.stringify(chunksMetadata), `${dataId}_metadata`);
-      
+
+      await this.provider.store(
+        JSON.stringify(chunksMetadata),
+        `${dataId}_metadata`,
+      );
+
       // Cache the metadata
       this.metadataCache.set(dataId, chunksMetadata);
-      
+
       return dataId;
     } catch (error) {
-      this.emit('error', error);
+      this.emit("error", error);
       throw new PrimeStorageError(
         `Failed to store data: ${error.message}`,
         { originalError: error },
-        'STORAGE_STORE_FAILED',
-        error
+        "STORAGE_STORE_FAILED",
+        error,
       );
     }
   }
@@ -265,80 +284,89 @@ class StorageManager extends EventEmitter {
    */
   async load(id) {
     this.ensureInitialized();
-    
+
     try {
       // Check cache first
       if (this.cache.has(id)) {
-        this.emit('cache-hit', id);
+        this.emit("cache-hit", id);
         return this.cache.get(id);
       }
-      
+
       // Check if this is chunked data
       let metadataId = `${id}_metadata`;
       let isChunked = await this.provider.exists(metadataId);
-      
+
       if (isChunked) {
         // Load and parse metadata
         const metadataStr = await this.provider.load(metadataId);
         const metadata = JSON.parse(metadataStr);
-        
+
         // Load all chunks
-        const chunkIds = Array.from({ length: metadata.totalChunks }, (_, i) => `${id}_chunk_${i}`);
-        
+        const chunkIds = Array.from(
+          { length: metadata.totalChunks },
+          (_, i) => `${id}_chunk_${i}`,
+        );
+
         const chunkPromises = chunkIds.map(async (chunkId) => {
           const chunkData = await this.provider.load(chunkId);
           const chunkMetadata = this.metadataCache.get(chunkId) || {};
-          
+
           return {
             data: chunkData,
-            metadata: chunkMetadata
+            metadata: chunkMetadata,
           };
         });
-        
+
         const chunks = await Promise.all(chunkPromises);
-        
+
         // Reconstruct data from chunks
         const deserializedChunks = await Promise.all(
           chunks.map(async (chunk) => {
             return {
-              data: await this.serializer.deserialize(chunk.data, chunk.metadata),
+              data: await this.serializer.deserialize(
+                chunk.data,
+                chunk.metadata,
+              ),
               metadata: {
                 index: parseInt(chunk.metadata.chunkIndex || 0),
-                totalChunks: metadata.totalChunks
-              }
+                totalChunks: metadata.totalChunks,
+              },
             };
-          })
+          }),
         );
-        
-        const reassembled = this.chunkManager.reassembleChunks(deserializedChunks);
-        
+
+        const reassembled =
+          this.chunkManager.reassembleChunks(deserializedChunks);
+
         // Cache the result if not too large
         if (metadata.originalSize <= this.options.chunkSize * 2) {
           this.cache.set(id, reassembled);
         }
-        
+
         return reassembled;
       } else {
         // Load data directly
         const serialized = await this.provider.load(id);
         const metadata = this.metadataCache.get(id) || {};
-        
+
         const data = await this.serializer.deserialize(serialized, metadata);
-        
+
         // Cache the result if not too large
-        if (this.chunkManager.getDataSize(serialized) <= this.options.chunkSize) {
+        if (
+          this.chunkManager.getDataSize(serialized) <= this.options.chunkSize
+        ) {
           this.cache.set(id, data);
         }
-        
+
         return data;
       }
     } catch (error) {
-      this.emit('error', error);
+      this.emit("error", error);
       throw new PrimeStorageError(
         `Failed to load data with ID ${id}: ${error.message}`,
         { id, originalError: error },
-        'STORAGE_LOAD_FAILED',
-        error
+        "STORAGE_LOAD_FAILED",
+        error,
       );
     }
   }
@@ -350,44 +378,47 @@ class StorageManager extends EventEmitter {
    */
   async delete(id) {
     this.ensureInitialized();
-    
+
     try {
       // Check if this is chunked data
       let metadataId = `${id}_metadata`;
       let isChunked = await this.provider.exists(metadataId);
-      
+
       if (isChunked) {
         // Load and parse metadata
         const metadataStr = await this.provider.load(metadataId);
         const metadata = JSON.parse(metadataStr);
-        
+
         // Delete all chunks
-        const chunkIds = Array.from({ length: metadata.totalChunks }, (_, i) => `${id}_chunk_${i}`);
-        
+        const chunkIds = Array.from(
+          { length: metadata.totalChunks },
+          (_, i) => `${id}_chunk_${i}`,
+        );
+
         for (const chunkId of chunkIds) {
           await this.provider.delete(chunkId);
           this.metadataCache.delete(chunkId);
         }
-        
+
         // Delete metadata
         await this.provider.delete(metadataId);
       }
-      
+
       // Delete the main data
       await this.provider.delete(id);
-      
+
       // Remove from caches
       this.cache.delete(id);
       this.metadataCache.delete(id);
-      
+
       return true;
     } catch (error) {
-      this.emit('error', error);
+      this.emit("error", error);
       throw new PrimeStorageError(
         `Failed to delete data with ID ${id}: ${error.message}`,
         { id, originalError: error },
-        'STORAGE_DELETE_FAILED',
-        error
+        "STORAGE_DELETE_FAILED",
+        error,
       );
     }
   }
@@ -399,16 +430,16 @@ class StorageManager extends EventEmitter {
    */
   async exists(id) {
     this.ensureInitialized();
-    
+
     try {
       return this.provider.exists(id);
     } catch (error) {
-      this.emit('error', error);
+      this.emit("error", error);
       throw new PrimeStorageError(
         `Failed to check existence for ID ${id}: ${error.message}`,
         { id, originalError: error },
-        'STORAGE_EXISTS_FAILED',
-        error
+        "STORAGE_EXISTS_FAILED",
+        error,
       );
     }
   }
@@ -419,22 +450,21 @@ class StorageManager extends EventEmitter {
    */
   async getAllKeys() {
     this.ensureInitialized();
-    
+
     try {
       const allKeys = await this.provider.getAllKeys();
-      
+
       // Filter out chunk and metadata keys
-      return allKeys.filter(key => 
-        !key.includes('_chunk_') && 
-        !key.endsWith('_metadata')
+      return allKeys.filter(
+        (key) => !key.includes("_chunk_") && !key.endsWith("_metadata"),
       );
     } catch (error) {
-      this.emit('error', error);
+      this.emit("error", error);
       throw new PrimeStorageError(
         `Failed to list keys: ${error.message}`,
         { originalError: error },
-        'STORAGE_KEYS_FAILED',
-        error
+        "STORAGE_KEYS_FAILED",
+        error,
       );
     }
   }
@@ -445,18 +475,18 @@ class StorageManager extends EventEmitter {
    */
   async clear() {
     this.ensureInitialized();
-    
+
     try {
       await this.provider.clear();
       this.cache.clear();
       this.metadataCache.clear();
     } catch (error) {
-      this.emit('error', error);
+      this.emit("error", error);
       throw new PrimeStorageError(
         `Failed to clear storage: ${error.message}`,
         { originalError: error },
-        'STORAGE_CLEAR_FAILED',
-        error
+        "STORAGE_CLEAR_FAILED",
+        error,
       );
     }
   }
@@ -467,16 +497,16 @@ class StorageManager extends EventEmitter {
    */
   async getStorageInfo() {
     this.ensureInitialized();
-    
+
     try {
       return this.provider.getStorageInfo();
     } catch (error) {
-      this.emit('error', error);
+      this.emit("error", error);
       throw new PrimeStorageError(
         `Failed to get storage info: ${error.message}`,
         { originalError: error },
-        'STORAGE_INFO_FAILED',
-        error
+        "STORAGE_INFO_FAILED",
+        error,
       );
     }
   }
@@ -486,7 +516,7 @@ class StorageManager extends EventEmitter {
    * @returns {string} The provider type
    */
   getProviderType() {
-    return this.provider ? this.provider.getProviderType() : 'none';
+    return this.provider ? this.provider.getProviderType() : "none";
   }
 
   /**
@@ -495,21 +525,21 @@ class StorageManager extends EventEmitter {
    */
   async getMemoryStats() {
     this.ensureInitialized();
-    
+
     const stats = {
       memoryUsed: 0,
       memoryLimit: this.options.maxMemoryUsage || 0,
       swapUsed: 0,
       itemsCached: this.cache.size,
-      itemsSwapped: 0
+      itemsSwapped: 0,
     };
-    
+
     if (this.swapSpace) {
       const swapStats = await this.swapSpace.getStats();
       stats.swapUsed = swapStats.swapUsed;
       stats.itemsSwapped = swapStats.itemsSwapped;
     }
-    
+
     return stats;
   }
 
@@ -544,12 +574,12 @@ class StorageManager extends EventEmitter {
    */
   createVirtualArray(id, size, itemFactory) {
     this.ensureInitialized();
-    
+
     return new VirtualArray({
       storageManager: this,
       id,
       length: size,
-      itemFactory
+      itemFactory,
     });
   }
 
@@ -561,26 +591,27 @@ class StorageManager extends EventEmitter {
    */
   async storeModel(model, id) {
     // Special handling for neural models with toJSON method
-    if (model && typeof model.toJSON === 'function') {
+    if (model && typeof model.toJSON === "function") {
       const modelData = model.toJSON();
       return this.store(modelData, id);
     }
-    
+
     // Special handling for neural models with layers and getLayer method
-    if (model && model.layers && typeof model.getLayer === 'function') {
+    if (model && model.layers && typeof model.getLayer === "function") {
       const modelData = {
-        name: model.name || 'unnamed_model',
-        layers: model.layers.map(layer => ({
+        name: model.name || "unnamed_model",
+        layers: model.layers.map((layer) => ({
           type: layer.constructor.name,
-          config: typeof layer.getConfig === 'function' ? layer.getConfig() : {},
+          config:
+            typeof layer.getConfig === "function" ? layer.getConfig() : {},
           weights: layer.weights,
-          biases: layer.biases
-        }))
+          biases: layer.biases,
+        })),
       };
-      
+
       return this.store(modelData, id);
     }
-    
+
     // Default handling for other models
     return this.store(model, id);
   }
@@ -592,64 +623,67 @@ class StorageManager extends EventEmitter {
    */
   async loadModel(id) {
     const modelData = await this.load(id);
-    
+
     // Check if this is a neural model
     if (modelData && modelData.layers && Array.isArray(modelData.layers)) {
-      const Prime = require('../../');
-      
+      const Prime = require("../../");
+
       // If the NeuralModel class has a fromJSON method, use it
-      if (Prime.Neural.Model.NeuralModel && typeof Prime.Neural.Model.NeuralModel.fromJSON === 'function') {
+      if (
+        Prime.Neural.Model.NeuralModel &&
+        typeof Prime.Neural.Model.NeuralModel.fromJSON === "function"
+      ) {
         return Prime.Neural.Model.NeuralModel.fromJSON(modelData);
       }
-      
+
       // Otherwise, create a model manually
       const model = new Prime.Neural.Model({
-        name: modelData.name
+        name: modelData.name,
       });
-      
+
       for (const layerData of modelData.layers) {
         let layer;
-        
+
         // Create the correct layer type
         switch (layerData.type) {
-          case 'Dense':
-          case 'DenseLayer':
+          case "Dense":
+          case "DenseLayer":
             layer = new Prime.Neural.Layer.Dense(
               layerData.config.inputSize,
               layerData.config.outputSize,
-              { activation: layerData.config.activation }
+              { activation: layerData.config.activation },
             );
             break;
-          case 'Convolutional':
-          case 'ConvolutionalLayer':
+          case "Convolutional":
+          case "ConvolutionalLayer":
             layer = new Prime.Neural.Layer.Convolutional(
               layerData.config.inputShape,
               layerData.config.filterShape,
-              layerData.config
+              layerData.config,
             );
             break;
-          case 'Recurrent':
-          case 'RecurrentLayer':
+          case "Recurrent":
+          case "RecurrentLayer":
             layer = new Prime.Neural.Layer.Recurrent(
               layerData.config.inputSize,
               layerData.config.hiddenSize,
-              layerData.config
+              layerData.config,
             );
             break;
           default:
             throw new Error(`Unknown layer type: ${layerData.type}`);
         }
-        
+
         // Set weights and biases
         if (layerData.weights) layer.weights = layerData.weights;
         if (layerData.biases) layer.biases = layerData.biases;
-        
+
         model.addLayer(layer);
       }
-      
+
       return model;
     }
-    
+
     // Return the model data as is
     return modelData;
   }
@@ -662,24 +696,24 @@ class StorageManager extends EventEmitter {
    */
   async loadModelWeights(model, id) {
     const modelData = await this.load(id);
-    
+
     // Check if this is a neural model with layers
     if (modelData && modelData.layers && Array.isArray(modelData.layers)) {
       // Verify the model structure is compatible
       if (model.layers.length !== modelData.layers.length) {
         throw new PrimeStorageError(
-          'Model architecture mismatch',
+          "Model architecture mismatch",
           { expected: modelData.layers.length, actual: model.layers.length },
-          'STORAGE_MODEL_MISMATCH'
+          "STORAGE_MODEL_MISMATCH",
         );
       }
-      
+
       // Load weights for each layer
       for (let i = 0; i < model.layers.length; i++) {
         if (modelData.layers[i].weights) {
           model.layers[i].weights = modelData.layers[i].weights;
         }
-        
+
         if (modelData.layers[i].biases) {
           model.layers[i].biases = modelData.layers[i].biases;
         }
@@ -696,20 +730,20 @@ class StorageManager extends EventEmitter {
   async storeComponentState(component, id) {
     if (!component || !component.state) {
       throw new PrimeStorageError(
-        'Invalid component or missing state',
+        "Invalid component or missing state",
         { component },
-        'STORAGE_INVALID_COMPONENT'
+        "STORAGE_INVALID_COMPONENT",
       );
     }
-    
+
     const stateId = id || `component_${component.name}_${Prime.Utils.uuid()}`;
-    
+
     const stateData = {
       name: component.name,
       state: component.state,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     return this.store(stateData, stateId);
   }
 
@@ -722,22 +756,22 @@ class StorageManager extends EventEmitter {
   async loadComponentState(component, id) {
     if (!component) {
       throw new PrimeStorageError(
-        'Invalid component',
+        "Invalid component",
         { id },
-        'STORAGE_INVALID_COMPONENT'
+        "STORAGE_INVALID_COMPONENT",
       );
     }
-    
+
     const stateData = await this.load(id);
-    
+
     if (!stateData || !stateData.state) {
       throw new PrimeStorageError(
-        'Invalid or missing component state data',
+        "Invalid or missing component state data",
         { id },
-        'STORAGE_INVALID_STATE'
+        "STORAGE_INVALID_STATE",
       );
     }
-    
+
     // Apply the state to the component
     component.state = stateData.state;
   }
@@ -749,15 +783,17 @@ class StorageManager extends EventEmitter {
    */
   createDataProvider(options) {
     this.ensureInitialized();
-    
+
     // Use the DataProvider class directly
     const provider = new DataProvider(this, options);
-    
+
     // Initialize the provider immediately
-    provider.init().catch(err => {
-      Prime.Logger.error('Failed to initialize data provider', { error: err.message });
+    provider.init().catch((err) => {
+      Prime.Logger.error("Failed to initialize data provider", {
+        error: err.message,
+      });
     });
-    
+
     return provider;
   }
 }
@@ -775,9 +811,9 @@ class SwapSpaceManager {
   constructor(options = {}) {
     this.options = {
       maxMemoryUsage: 100 * 1024 * 1024, // 100MB default
-      ...options
+      ...options,
     };
-    
+
     this.storageManager = null;
     this.swappedItems = new Map();
     this.isInitialized = false;
@@ -805,15 +841,15 @@ class SwapSpaceManager {
       this.swappedItems.set(id, { isSwapped: false, size: 0 });
       return;
     }
-    
+
     const size = this.storageManager.chunkManager.getDataSize(data);
-    
+
     this.swappedItems.set(id, {
       isSwapped: false,
       size,
-      data
+      data,
     });
-    
+
     // Check memory limits and swap if needed
     await this.checkMemoryLimits();
   }
@@ -825,26 +861,26 @@ class SwapSpaceManager {
   async checkMemoryLimits() {
     // Calculate total memory usage
     let totalMemory = 0;
-    
+
     for (const [id, item] of this.swappedItems.entries()) {
       if (!item.isSwapped) {
         totalMemory += item.size;
       }
     }
-    
+
     // If memory usage is too high, swap some items
     if (totalMemory > this.options.maxMemoryUsage) {
       // Sort items by size (largest first)
       const sortedItems = Array.from(this.swappedItems.entries())
         .filter(([_, item]) => !item.isSwapped && item.data)
         .sort((a, b) => b[1].size - a[1].size);
-      
+
       // Swap items until memory usage is acceptable
       for (const [id, item] of sortedItems) {
         if (totalMemory <= this.options.maxMemoryUsage) {
           break;
         }
-        
+
         await this.swapToDisk(id);
         totalMemory -= item.size;
       }
@@ -858,47 +894,47 @@ class SwapSpaceManager {
    */
   async swapToDisk(id) {
     const item = this.swappedItems.get(id);
-    
+
     if (!item || item.isSwapped) {
       return;
     }
-    
+
     try {
       // Store the data in storage
       const swapId = `swap_${id}`;
       await this.storageManager.store(item.data, swapId);
-      
+
       // Update the item
       this.swappedItems.set(id, {
         isSwapped: true,
         size: item.size,
-        swapId
+        swapId,
       });
-      
+
       // Remove the data reference
       item.data = null;
     } catch (error) {
       Prime.Logger.error(`Failed to swap data to disk: ${error.message}`, {
         id,
-        error
+        error,
       });
     }
   }
-  
+
   /**
    * Flush all pending items to disk
    * @returns {Promise<void>}
    */
   async flushToDisk() {
     const promises = [];
-    
+
     // Identify items that need to be swapped
     for (const [id, item] of this.swappedItems.entries()) {
       if (!item.isSwapped && item.data) {
         promises.push(this.swapToDisk(id));
       }
     }
-    
+
     // Wait for all swap operations to complete
     await Promise.all(promises);
   }
@@ -910,29 +946,32 @@ class SwapSpaceManager {
    */
   async loadFromDisk(id) {
     const item = this.swappedItems.get(id);
-    
+
     if (!item || !item.isSwapped) {
       return null;
     }
-    
+
     try {
       // Load the data from storage
       const data = await this.storageManager.load(item.swapId);
-      
+
       // Update the item
       this.swappedItems.set(id, {
         isSwapped: false,
         size: item.size,
-        data
+        data,
       });
-      
+
       return data;
     } catch (error) {
-      Prime.Logger.error(`Failed to load swapped data from disk: ${error.message}`, {
-        id,
-        error
-      });
-      
+      Prime.Logger.error(
+        `Failed to load swapped data from disk: ${error.message}`,
+        {
+          id,
+          error,
+        },
+      );
+
       return null;
     }
   }
@@ -944,11 +983,11 @@ class SwapSpaceManager {
    */
   async free(id) {
     const item = this.swappedItems.get(id);
-    
+
     if (!item) {
       return;
     }
-    
+
     if (item.isSwapped) {
       try {
         // Delete the swap file
@@ -957,11 +996,11 @@ class SwapSpaceManager {
         Prime.Logger.warn(`Failed to delete swap file: ${error.message}`, {
           id,
           swapId: item.swapId,
-          error
+          error,
         });
       }
     }
-    
+
     // Remove the item
     this.swappedItems.delete(id);
   }
@@ -973,18 +1012,18 @@ class SwapSpaceManager {
   async getStats() {
     let swapUsed = 0;
     let itemsSwapped = 0;
-    
+
     for (const [id, item] of this.swappedItems.entries()) {
       if (item.isSwapped) {
         swapUsed += item.size;
         itemsSwapped++;
       }
     }
-    
+
     return {
       swapUsed,
       itemsSwapped,
-      totalItems: this.swappedItems.size
+      totalItems: this.swappedItems.size,
     };
   }
 }
@@ -1007,7 +1046,7 @@ class VirtualArray {
     this.length = options.length;
     this.itemFactory = options.itemFactory;
     this.chunkSize = options.chunkSize || 1000;
-    
+
     this.cache = new Map();
   }
 
@@ -1021,43 +1060,43 @@ class VirtualArray {
       throw new PrimeStorageError(
         `Index out of bounds: ${index}`,
         { index, length: this.length },
-        'STORAGE_INDEX_OUT_OF_BOUNDS'
+        "STORAGE_INDEX_OUT_OF_BOUNDS",
       );
     }
-    
+
     // Check cache first
     if (this.cache.has(index)) {
       return this.cache.get(index);
     }
-    
+
     // If we have an item factory, use it
     if (this.itemFactory) {
       const item = this.itemFactory(index);
       this.cache.set(index, item);
       return item;
     }
-    
+
     // Otherwise, load from storage
     try {
       const data = await this.storageManager.load(this.id);
-      
+
       if (Array.isArray(data) && index < data.length) {
         const item = data[index];
         this.cache.set(index, item);
         return item;
       }
-      
+
       throw new PrimeStorageError(
         `Failed to get item at index ${index}`,
         { index },
-        'STORAGE_ITEM_NOT_FOUND'
+        "STORAGE_ITEM_NOT_FOUND",
       );
     } catch (error) {
       throw new PrimeStorageError(
         `Failed to get item at index ${index}: ${error.message}`,
         { index, originalError: error },
-        'STORAGE_GET_ITEM_FAILED',
-        error
+        "STORAGE_GET_ITEM_FAILED",
+        error,
       );
     }
   }
@@ -1071,39 +1110,39 @@ class VirtualArray {
     for (let i = 0; i < this.length; i += chunkSize) {
       const chunkLength = Math.min(chunkSize, this.length - i);
       const chunk = new Array(chunkLength);
-      
+
       // If we have an item factory, use it
       if (this.itemFactory) {
         for (let j = 0; j < chunkLength; j++) {
           chunk[j] = this.itemFactory(i + j);
         }
-        
+
         yield chunk;
         continue;
       }
-      
+
       // Otherwise, load from storage
       try {
         const data = await this.storageManager.load(this.id);
-        
+
         if (Array.isArray(data)) {
           const end = Math.min(i + chunkSize, data.length);
           const dataChunk = data.slice(i, end);
-          
+
           yield dataChunk;
         } else {
           throw new PrimeStorageError(
-            'Data is not an array',
+            "Data is not an array",
             { id: this.id },
-            'STORAGE_NOT_ARRAY'
+            "STORAGE_NOT_ARRAY",
           );
         }
       } catch (error) {
         throw new PrimeStorageError(
           `Failed to iterate chunks: ${error.message}`,
           { originalError: error },
-          'STORAGE_ITERATE_FAILED',
-          error
+          "STORAGE_ITERATE_FAILED",
+          error,
         );
       }
     }
@@ -1124,17 +1163,17 @@ class DataProvider {
     this.options = {
       batchSize: 32,
       shuffle: true,
-      ...options
+      ...options,
     };
-    
+
     if (!this.options.inputId) {
       throw new PrimeStorageError(
-        'Input ID is required',
+        "Input ID is required",
         { options },
-        'STORAGE_MISSING_INPUT_ID'
+        "STORAGE_MISSING_INPUT_ID",
       );
     }
-    
+
     this.currentBatch = 0;
     this.totalBatches = 0;
     this.dataSize = 0;
@@ -1149,50 +1188,52 @@ class DataProvider {
     if (this.initialized) {
       return;
     }
-    
+
     try {
       // Load input data to get size
       const inputData = await this.storageManager.load(this.options.inputId);
-      
+
       if (!Array.isArray(inputData)) {
         throw new PrimeStorageError(
-          'Input data is not an array',
+          "Input data is not an array",
           { id: this.options.inputId },
-          'STORAGE_NOT_ARRAY'
+          "STORAGE_NOT_ARRAY",
         );
       }
-      
+
       this.dataSize = inputData.length;
       this.totalBatches = Math.ceil(this.dataSize / this.options.batchSize);
-      
+
       // If output ID is provided, verify size
       if (this.options.outputId) {
-        const outputData = await this.storageManager.load(this.options.outputId);
-        
+        const outputData = await this.storageManager.load(
+          this.options.outputId,
+        );
+
         if (!Array.isArray(outputData)) {
           throw new PrimeStorageError(
-            'Output data is not an array',
+            "Output data is not an array",
             { id: this.options.outputId },
-            'STORAGE_NOT_ARRAY'
+            "STORAGE_NOT_ARRAY",
           );
         }
-        
+
         if (outputData.length !== this.dataSize) {
           throw new PrimeStorageError(
-            'Input and output data sizes do not match',
+            "Input and output data sizes do not match",
             { inputSize: this.dataSize, outputSize: outputData.length },
-            'STORAGE_SIZE_MISMATCH'
+            "STORAGE_SIZE_MISMATCH",
           );
         }
       }
-      
+
       this.initialized = true;
     } catch (error) {
       throw new PrimeStorageError(
         `Failed to initialize data provider: ${error.message}`,
         { originalError: error },
-        'STORAGE_PROVIDER_INIT_FAILED',
-        error
+        "STORAGE_PROVIDER_INIT_FAILED",
+        error,
       );
     }
   }
@@ -1205,38 +1246,40 @@ class DataProvider {
     if (!this.initialized) {
       await this.init();
     }
-    
+
     if (this.currentBatch >= this.totalBatches) {
       // Reset batch counter and shuffle if needed
       this.currentBatch = 0;
-      
+
       if (this.options.shuffle) {
         // Note: This doesn't actually shuffle the data in storage,
         // instead we would use a shuffled index array in a real implementation
       }
     }
-    
+
     try {
       const start = this.currentBatch * this.options.batchSize;
       const end = Math.min(start + this.options.batchSize, this.dataSize);
-      
+
       // Load input batch
       const inputData = await this.storageManager.load(this.options.inputId);
       const inputBatch = inputData.slice(start, end);
-      
+
       // Apply preprocessing if provided
       if (this.options.preprocessInput) {
         for (let i = 0; i < inputBatch.length; i++) {
           inputBatch[i] = this.options.preprocessInput(inputBatch[i]);
         }
       }
-      
+
       // Load output batch if provided
       let outputBatch = null;
       if (this.options.outputId) {
-        const outputData = await this.storageManager.load(this.options.outputId);
+        const outputData = await this.storageManager.load(
+          this.options.outputId,
+        );
         outputBatch = outputData.slice(start, end);
-        
+
         // Apply preprocessing if provided
         if (this.options.preprocessOutput) {
           for (let i = 0; i < outputBatch.length; i++) {
@@ -1244,21 +1287,21 @@ class DataProvider {
           }
         }
       }
-      
+
       this.currentBatch++;
-      
+
       return {
         input: inputBatch,
         output: outputBatch,
         batchIndex: this.currentBatch - 1,
-        totalBatches: this.totalBatches
+        totalBatches: this.totalBatches,
       };
     } catch (error) {
       throw new PrimeStorageError(
         `Failed to get next batch: ${error.message}`,
         { batch: this.currentBatch, originalError: error },
-        'STORAGE_BATCH_FAILED',
-        error
+        "STORAGE_BATCH_FAILED",
+        error,
       );
     }
   }

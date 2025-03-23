@@ -4,8 +4,8 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
-const EventBus = require('../event-bus');
+const Prime = require("../../core");
+const EventBus = require("../event-bus");
 
 /**
  * Node types for distributed computation
@@ -13,11 +13,11 @@ const EventBus = require('../event-bus');
  */
 const NodeType = {
   /** Coordinates the cluster and distributes work */
-  COORDINATOR: 'coordinator',
+  COORDINATOR: "coordinator",
   /** Processes distributed neural computations */
-  WORKER: 'worker',
+  WORKER: "worker",
   /** Both coordinates and processes computations */
-  HYBRID: 'hybrid',
+  HYBRID: "hybrid",
 };
 
 /**
@@ -26,15 +26,15 @@ const NodeType = {
  */
 const NodeState = {
   /** Node is being initialized */
-  INITIALIZING: 'initializing',
+  INITIALIZING: "initializing",
   /** Node is ready to accept work */
-  READY: 'ready',
+  READY: "ready",
   /** Node is actively processing work */
-  WORKING: 'working',
+  WORKING: "working",
   /** Node encountered an error */
-  ERROR: 'error',
+  ERROR: "error",
   /** Node is shutting down */
-  TERMINATING: 'terminating',
+  TERMINATING: "terminating",
 };
 
 /**
@@ -54,20 +54,20 @@ class ClusterNode {
    */
   constructor(config) {
     if (!Prime.Utils.isObject(config)) {
-      throw new Prime.ValidationError('Node configuration must be an object');
+      throw new Prime.ValidationError("Node configuration must be an object");
     }
 
     if (!config.id) {
-      throw new Prime.ValidationError('Node ID is required');
+      throw new Prime.ValidationError("Node ID is required");
     }
 
     if (!Object.values(NodeType).includes(config.type)) {
-      throw new Prime.ValidationError('Invalid node type');
+      throw new Prime.ValidationError("Invalid node type");
     }
 
     this.id = config.id;
     this.type = config.type;
-    this.address = config.address || 'localhost';
+    this.address = config.address || "localhost";
     this.port = config.port || 0;
     this.capabilities = config.capabilities || {};
     this.maxConcurrency = config.maxConcurrency || 1;
@@ -97,8 +97,8 @@ class ClusterNode {
   _initialize() {
     try {
       // Set up event listeners
-      this.eventBus.on('task:completed', this._handleTaskCompleted.bind(this));
-      this.eventBus.on('task:error', this._handleTaskError.bind(this));
+      this.eventBus.on("task:completed", this._handleTaskCompleted.bind(this));
+      this.eventBus.on("task:error", this._handleTaskError.bind(this));
 
       // Update state to ready
       this.state = NodeState.READY;
@@ -179,7 +179,7 @@ class ClusterNode {
     });
 
     // Emit event
-    this.eventBus.emit('task:assigned', { taskId: task.id, nodeId: this.id });
+    this.eventBus.emit("task:assigned", { taskId: task.id, nodeId: this.id });
 
     return true;
   }
@@ -214,7 +214,7 @@ class ClusterNode {
     }
 
     // Emit completion event
-    this.eventBus.emit('task:completed', {
+    this.eventBus.emit("task:completed", {
       taskId,
       nodeId: this.id,
       result,
@@ -250,7 +250,7 @@ class ClusterNode {
     }
 
     // Emit error event
-    this.eventBus.emit('task:error', {
+    this.eventBus.emit("task:error", {
       taskId,
       nodeId: this.id,
       error: error.message,
@@ -269,7 +269,7 @@ class ClusterNode {
     this.metrics.coherenceViolations++;
 
     // Emit violation event
-    this.eventBus.emit('coherence:violation', {
+    this.eventBus.emit("coherence:violation", {
       nodeId: this.id,
       violation,
       timestamp: Date.now(),
@@ -284,7 +284,7 @@ class ClusterNode {
 
     // For numerical stability violations, attempt automatic recovery
     if (
-      violation.type === 'numerical' &&
+      violation.type === "numerical" &&
       Prime.Distributed &&
       Prime.Distributed.Coherence &&
       Prime.Distributed.Coherence.DistributedCoherenceManager
@@ -333,7 +333,7 @@ class ClusterNode {
         });
 
       // Apply corrections based on violation type
-      if (violation.type === 'numerical') {
+      if (violation.type === "numerical") {
         // For numerical stability issues, apply corrections to task data
         if (task.data && task.data.parameters) {
           // Apply numerical stability fixes to parameters
@@ -388,7 +388,7 @@ class ClusterNode {
    * @returns {Object} Clipped gradients
    */
   _applyGradientClipping(gradients, maxValue = 1000.0) {
-    if (!gradients || typeof gradients !== 'object') {
+    if (!gradients || typeof gradients !== "object") {
       return gradients;
     }
 
@@ -404,7 +404,7 @@ class ClusterNode {
 
     // Process all gradient values recursively
     const processObject = (obj) => {
-      if (!obj || typeof obj !== 'object') {
+      if (!obj || typeof obj !== "object") {
         return;
       }
 
@@ -413,7 +413,7 @@ class ClusterNode {
         for (let i = 0; i < obj.length; i++) {
           if (Array.isArray(obj[i])) {
             processObject(obj[i]); // Process nested arrays
-          } else if (typeof obj[i] === 'number') {
+          } else if (typeof obj[i] === "number") {
             obj[i] = clipValue(obj[i]); // Clip numeric values
           }
         }
@@ -422,9 +422,9 @@ class ClusterNode {
       else {
         for (const key in obj) {
           if (obj.hasOwnProperty(key)) {
-            if (obj[key] && typeof obj[key] === 'object') {
+            if (obj[key] && typeof obj[key] === "object") {
               processObject(obj[key]); // Process nested objects
-            } else if (typeof obj[key] === 'number') {
+            } else if (typeof obj[key] === "number") {
               obj[key] = clipValue(obj[key]); // Clip numeric values
             }
           }
@@ -486,7 +486,7 @@ class ClusterNode {
     this.eventBus.removeAllListeners();
 
     // Emit termination event
-    this.eventBus.emit('node:terminated', {
+    this.eventBus.emit("node:terminated", {
       nodeId: this.id,
       timestamp: Date.now(),
     });
@@ -554,7 +554,7 @@ class NodeRegistry {
     this.nodes.set(clusterNode.id, clusterNode);
 
     // Emit event
-    this.eventBus.emit('node:registered', {
+    this.eventBus.emit("node:registered", {
       nodeId: clusterNode.id,
       timestamp: Date.now(),
     });
@@ -580,7 +580,7 @@ class NodeRegistry {
     this.nodes.delete(nodeId);
 
     // Emit event
-    this.eventBus.emit('node:unregistered', {
+    this.eventBus.emit("node:unregistered", {
       nodeId,
       timestamp: Date.now(),
     });
@@ -607,7 +607,7 @@ class NodeRegistry {
     return Array.from(this.nodes.values()).filter((node) => {
       // Match criteria
       for (const [key, value] of Object.entries(criteria)) {
-        if (key === 'capabilities') {
+        if (key === "capabilities") {
           // Check capabilities
           for (const [capability, minValue] of Object.entries(value)) {
             if (

@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Create the Dense class
 class Dense {
@@ -19,14 +19,14 @@ class Dense {
     const config = {
       inputSize,
       outputSize,
-      activation: options.activation || 'sigmoid',
+      activation: options.activation || "sigmoid",
       useTypedArrays: options.useTypedArrays || false,
-      initParams: options.initParams || {}
+      initParams: options.initParams || {},
     };
-    
+
     // Create underlying layer implementation
     this.layer = new Prime.Neural.Layer.DenseLayer(config);
-    
+
     // Copy properties for convenience
     this.inputSize = inputSize;
     this.outputSize = outputSize;
@@ -34,7 +34,7 @@ class Dense {
     this.weights = this.layer.weights;
     this.biases = this.layer.biases;
   }
-  
+
   /**
    * Forward pass through layer
    * @param {Array|TypedArray} input - Input data
@@ -45,7 +45,7 @@ class Dense {
     const result = this.layer.forward(input, options);
     return result.activation;
   }
-  
+
   /**
    * Backward pass through layer
    * @param {Array|TypedArray} gradient - Gradient from next layer
@@ -57,12 +57,12 @@ class Dense {
     const fullCache = {
       input: cache.input || [],
       z: cache.z || [],
-      activation: cache.activation || []
+      activation: cache.activation || [],
     };
-    
+
     return this.layer.backward(gradient, fullCache);
   }
-  
+
   /**
    * Update layer parameters
    * @param {Object} gradients - Weight and bias gradients
@@ -71,12 +71,12 @@ class Dense {
    */
   update(gradients, learningRate, options) {
     this.layer.update(gradients, learningRate, options);
-    
+
     // Update local references
     this.weights = this.layer.weights;
     this.biases = this.layer.biases;
   }
-  
+
   /**
    * Get configuration for serialization
    * @returns {Object} Layer configuration
@@ -85,10 +85,10 @@ class Dense {
     return {
       inputSize: this.inputSize,
       outputSize: this.outputSize,
-      activation: this.activation
+      activation: this.activation,
     };
   }
-  
+
   /**
    * Get a summary of the layer
    * @returns {Object} Layer summary

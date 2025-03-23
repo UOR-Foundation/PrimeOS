@@ -15,15 +15,15 @@
 // Try to import core if available
 let Prime;
 try {
-  Prime = require('../core.js');
+  Prime = require("../core.js");
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
 }
 
 // Import required modules
-const MathUtils = require('../framework/math/index.js');
-const { Manifold } = require('../framework/base0/manifold.js');
+const MathUtils = require("../framework/math/index.js");
+const { Manifold } = require("../framework/base0/manifold.js");
 
 /**
  * AttentionMechanism provides mechanisms for focusing on areas of high coherence gradient
@@ -285,8 +285,8 @@ class AttentionMechanism {
     }
 
     // Add overall coherence if available in state
-    if (typeof state.coherence === 'number') {
-      coherenceMap['global'] = state.coherence;
+    if (typeof state.coherence === "number") {
+      coherenceMap["global"] = state.coherence;
     }
 
     return coherenceMap;
@@ -317,7 +317,7 @@ class AttentionMechanism {
           1,
           Math.abs(entry.value) * this.gradientSensitivity,
         ),
-        type: entry.value > 0 ? 'increasing' : 'decreasing',
+        type: entry.value > 0 ? "increasing" : "decreasing",
       });
     }
 
@@ -372,10 +372,10 @@ class AttentionMechanism {
     }
 
     // Adjust global attention based on overall coherence change
-    if (this.lastCoherenceMap['global'] !== undefined) {
+    if (this.lastCoherenceMap["global"] !== undefined) {
       const globalGradient =
-        this.lastCoherenceMap['global'] -
-        (this.lastCoherenceMap['global'] || 0.5);
+        this.lastCoherenceMap["global"] -
+        (this.lastCoherenceMap["global"] || 0.5);
 
       if (globalGradient > 0) {
         // Increasing global coherence raises attention
@@ -855,25 +855,25 @@ class AttentionMechanism {
     for (let i = 0; i < this.fieldDimension; i++) {
       switch (i) {
         case 0:
-          dimensionLabels.push('Attention');
+          dimensionLabels.push("Attention");
           break;
         case 1:
-          dimensionLabels.push('Awareness');
+          dimensionLabels.push("Awareness");
           break;
         case 2:
-          dimensionLabels.push('Coherence');
+          dimensionLabels.push("Coherence");
           break;
         case 3:
-          dimensionLabels.push('Integration');
+          dimensionLabels.push("Integration");
           break;
         case 4:
-          dimensionLabels.push('Differentiation');
+          dimensionLabels.push("Differentiation");
           break;
         case 5:
-          dimensionLabels.push('Self-Reference');
+          dimensionLabels.push("Self-Reference");
           break;
         case 6:
-          dimensionLabels.push('Temporal Binding');
+          dimensionLabels.push("Temporal Binding");
           break;
         default:
           dimensionLabels.push(`Dimension ${i}`);

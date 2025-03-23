@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from prime.js
-const Prime = require('./prime');
+const Prime = require("./prime");
 
 // Create the Logger module using IIFE
 (function () {
@@ -38,7 +38,7 @@ const Prime = require('./prime');
         this.currentLevel = level;
       } else {
         throw new Prime.ValidationError(
-          'Log level must be a valid string or number',
+          "Log level must be a valid string or number",
         );
       }
     },
@@ -64,12 +64,12 @@ const Prime = require('./prime');
     format: function (level, message, context) {
       // Format message with optional context
       let formattedMessage = `[Prime] [${level}] ${message}`;
-      
+
       // Add context if available
-      if (context && typeof context === 'object') {
+      if (context && typeof context === "object") {
         formattedMessage += `\nContext: ${JSON.stringify(context)}`;
       }
-      
+
       return formattedMessage;
     },
 
@@ -78,8 +78,11 @@ const Prime = require('./prime');
      * @param {...any} args - Log arguments
      */
     debug: function (...args) {
-      if (this.shouldLog('DEBUG')) {
-        console.debug(this.format('DEBUG', args[0]), ...(args.length > 1 ? args.slice(1) : []));
+      if (this.shouldLog("DEBUG")) {
+        console.debug(
+          this.format("DEBUG", args[0]),
+          ...(args.length > 1 ? args.slice(1) : []),
+        );
       }
     },
 
@@ -88,8 +91,11 @@ const Prime = require('./prime');
      * @param {...any} args - Log arguments
      */
     info: function (...args) {
-      if (this.shouldLog('INFO')) {
-        console.info(this.format('INFO', args[0]), ...(args.length > 1 ? args.slice(1) : []));
+      if (this.shouldLog("INFO")) {
+        console.info(
+          this.format("INFO", args[0]),
+          ...(args.length > 1 ? args.slice(1) : []),
+        );
       }
     },
 
@@ -98,8 +104,11 @@ const Prime = require('./prime');
      * @param {...any} args - Log arguments
      */
     warn: function (...args) {
-      if (this.shouldLog('WARN')) {
-        console.warn(this.format('WARN', args[0]), ...(args.length > 1 ? args.slice(1) : []));
+      if (this.shouldLog("WARN")) {
+        console.warn(
+          this.format("WARN", args[0]),
+          ...(args.length > 1 ? args.slice(1) : []),
+        );
       }
     },
 
@@ -108,8 +117,11 @@ const Prime = require('./prime');
      * @param {...any} args - Log arguments
      */
     error: function (...args) {
-      if (this.shouldLog('ERROR')) {
-        console.error(this.format('ERROR', args[0]), ...(args.length > 1 ? args.slice(1) : []));
+      if (this.shouldLog("ERROR")) {
+        console.error(
+          this.format("ERROR", args[0]),
+          ...(args.length > 1 ? args.slice(1) : []),
+        );
       }
     },
   };

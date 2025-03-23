@@ -6,7 +6,7 @@
  */
 
 // Import Prime core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Import mathematics module if needed in the future
 // const Mathematics = require('../mathematics');
@@ -41,7 +41,7 @@ function calculateCoherenceScore(tensor) {
       for (const element of t) {
         processTensor(element);
       }
-    } else if (typeof t === 'number') {
+    } else if (typeof t === "number") {
       totalCount++;
 
       // Check for non-finite values
@@ -163,7 +163,7 @@ function improveCoherence(tensor, learningRate) {
       for (let i = 0; i < t.length; i++) {
         processTensor(t[i], [...path, i]);
       }
-    } else if (typeof t === 'number') {
+    } else if (typeof t === "number") {
       // Fix non-finite values
       if (!Number.isFinite(t)) {
         setNestedValue(result, path, 0);

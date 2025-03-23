@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Create the SGD Optimizer module using IIFE
 (function () {
@@ -56,7 +56,7 @@ const Prime = require('../../core');
             const rows = paramValue.length;
             const cols = paramValue[0].length;
 
-            if (this.useTypedArrays && typeof Float32Array !== 'undefined') {
+            if (this.useTypedArrays && typeof Float32Array !== "undefined") {
               // For TypedArrays, we create a flat array and reshape it
               const flatVelocity = new Float32Array(rows * cols);
               this.velocities[paramName] = new Array(rows);
@@ -70,7 +70,7 @@ const Prime = require('../../core');
               }
 
               // Store reference to the flat array for efficient operations
-              Object.defineProperty(this.velocities[paramName], '_flatArray', {
+              Object.defineProperty(this.velocities[paramName], "_flatArray", {
                 value: flatVelocity,
               });
             } else {
@@ -82,13 +82,13 @@ const Prime = require('../../core');
             }
           } else {
             // 1D array (vector)
-            if (this.useTypedArrays && typeof Float32Array !== 'undefined') {
+            if (this.useTypedArrays && typeof Float32Array !== "undefined") {
               this.velocities[paramName] = new Float32Array(paramValue.length);
             } else {
               this.velocities[paramName] = new Array(paramValue.length).fill(0);
             }
           }
-        } else if (typeof paramValue === 'number') {
+        } else if (typeof paramValue === "number") {
           // Scalar value
           this.velocities[paramName] = 0;
         }
@@ -117,7 +117,7 @@ const Prime = require('../../core');
           // 1D array
           this.metrics.parameterCount += paramValue.length;
         }
-      } else if (typeof paramValue === 'number') {
+      } else if (typeof paramValue === "number") {
         // Scalar
         this.metrics.parameterCount += 1;
       }
@@ -152,7 +152,7 @@ const Prime = require('../../core');
               count++;
             }
           }
-        } else if (typeof grad === 'number') {
+        } else if (typeof grad === "number") {
           // Scalar
           sumSquared += grad * grad;
           count++;
@@ -193,7 +193,7 @@ const Prime = require('../../core');
                 grad[i] += this.weightDecay * param[i];
               }
             }
-          } else if (typeof grad === 'number') {
+          } else if (typeof grad === "number") {
             // Scalar
             gradients[paramName] += this.weightDecay * param;
           }
@@ -293,7 +293,7 @@ const Prime = require('../../core');
                 param[i] += update;
               }
             }
-          } else if (typeof grad === 'number') {
+          } else if (typeof grad === "number") {
             // Scalar value
             velocity = this.momentum * velocity - lr * grad;
             this.velocities[paramName] = velocity;
@@ -330,7 +330,7 @@ const Prime = require('../../core');
      */
     getConfig() {
       return {
-        name: 'SGD',
+        name: "SGD",
         learningRate: this.learningRate,
         momentum: this.momentum,
         weightDecay: this.weightDecay,

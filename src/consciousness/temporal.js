@@ -14,7 +14,7 @@
 // Try to import core if available
 let Prime;
 try {
-  Prime = require('../core.js');
+  Prime = require("../core.js");
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
@@ -51,9 +51,9 @@ class TemporalIntegration {
 
     // Time scales for integration
     this.timeScales = [
-      { name: 'immediate', span: 3, weight: 0.6 },
-      { name: 'recent', span: 10, weight: 0.3 },
-      { name: 'extended', span: 30, weight: 0.1 },
+      { name: "immediate", span: 3, weight: 0.6 },
+      { name: "recent", span: 10, weight: 0.3 },
+      { name: "extended", span: 30, weight: 0.1 },
     ];
 
     // Internal state
@@ -342,15 +342,15 @@ class TemporalIntegration {
 
     // Add common properties
     for (const prop of [
-      'attention',
-      'awareness',
-      'coherence',
-      'integration',
-      'differentiation',
-      'selfReference',
-      'temporalBinding',
+      "attention",
+      "awareness",
+      "coherence",
+      "integration",
+      "differentiation",
+      "selfReference",
+      "temporalBinding",
     ]) {
-      if (typeof state[prop] === 'number') {
+      if (typeof state[prop] === "number") {
         vector.push(state[prop]);
       } else {
         vector.push(0);
@@ -523,13 +523,13 @@ class TemporalIntegration {
 
     // Update common properties
     const props = [
-      'attention',
-      'awareness',
-      'coherence',
-      'integration',
-      'differentiation',
-      'selfReference',
-      'temporalBinding',
+      "attention",
+      "awareness",
+      "coherence",
+      "integration",
+      "differentiation",
+      "selfReference",
+      "temporalBinding",
     ];
 
     for (let i = 0; i < props.length && i < vector.length; i++) {
@@ -653,7 +653,7 @@ class TemporalIntegration {
     blended._temporal.partialIntegration = true;
 
     // Set temporal binding based on previous value
-    if (typeof this._currentIntegration.temporalBinding === 'number') {
+    if (typeof this._currentIntegration.temporalBinding === "number") {
       blended.temporalBinding = this._currentIntegration.temporalBinding * 0.95;
     }
 
@@ -685,7 +685,7 @@ class TemporalIntegration {
     }
 
     // For integrated states, use temporal binding
-    if (typeof state.temporalBinding === 'number') {
+    if (typeof state.temporalBinding === "number") {
       return state.temporalBinding;
     }
 

@@ -7,7 +7,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Ensure the namespaces exist
 Prime.distributed = Prime.distributed || {};
@@ -28,7 +28,7 @@ class GradientAggregator {
    */
   constructor(options = {}) {
     // Configuration
-    this.strategy = options.strategy || 'average';
+    this.strategy = options.strategy || "average";
     this.useCompression = options.useCompression || false;
     this.compressionThreshold = options.compressionThreshold || 0.01;
     this.clipOutliers = options.clipOutliers || false;
@@ -55,7 +55,7 @@ class GradientAggregator {
    */
   registerClient(clientId, weight = 1.0) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -67,7 +67,7 @@ class GradientAggregator {
    */
   submitGradients(clientId, gradients, metadata = {}) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -77,7 +77,7 @@ class GradientAggregator {
    */
   aggregate(clientIds = null) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -88,7 +88,7 @@ class GradientAggregator {
    */
   _compressGradients(gradients) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -99,7 +99,7 @@ class GradientAggregator {
    */
   _decompressGradients(compressedGradients) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -110,7 +110,7 @@ class GradientAggregator {
    */
   _removeOutliers(gradientsList) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
 
   /**

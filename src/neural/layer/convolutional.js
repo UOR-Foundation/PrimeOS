@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Create the Convolutional Layer module using IIFE
 (function () {
@@ -27,19 +27,19 @@ const Prime = require('../../core');
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          'Layer configuration must be an object',
+          "Layer configuration must be an object",
         );
       }
 
       if (!Array.isArray(config.inputShape) || config.inputShape.length !== 3) {
         throw new Prime.ValidationError(
-          'Input shape must be an array [height, width, channels]',
+          "Input shape must be an array [height, width, channels]",
         );
       }
 
       if (!Array.isArray(config.kernelSize) || config.kernelSize.length !== 2) {
         throw new Prime.ValidationError(
-          'Kernel size must be an array [height, width]',
+          "Kernel size must be an array [height, width]",
         );
       }
 
@@ -47,8 +47,8 @@ const Prime = require('../../core');
       this.kernelSize = [...config.kernelSize]; // [height, width]
       this.filters = config.filters;
       this.strides = config.strides || [1, 1];
-      this.padding = config.padding || 'valid';
-      this.activation = config.activation || 'relu';
+      this.padding = config.padding || "valid";
+      this.activation = config.activation || "relu";
 
       // Calculate output shape
       this.outputShape = this._calculateOutputShape();
@@ -170,7 +170,7 @@ const Prime = require('../../core');
 
       let outputHeight, outputWidth;
 
-      if (this.padding === 'same') {
+      if (this.padding === "same") {
         outputHeight = Math.ceil(inputHeight / strideY);
         outputWidth = Math.ceil(inputWidth / strideX);
       } else {
@@ -228,7 +228,7 @@ const Prime = require('../../core');
           let outputHeight, outputWidth;
           let paddedInput = input;
 
-          if (padding === 'same') {
+          if (padding === "same") {
             const padHeight = (kernelHeight - 1) / 2;
             const padWidth = (kernelWidth - 1) / 2;
             paddedInput = this._padArray(
@@ -303,13 +303,13 @@ const Prime = require('../../core');
 
           const applyActivation = (value) => {
             switch (activationType) {
-              case 'relu':
+              case "relu":
                 return Math.max(0, value);
-              case 'sigmoid':
+              case "sigmoid":
                 return 1 / (1 + Math.exp(-value));
-              case 'tanh':
+              case "tanh":
                 return Math.tanh(value);
-              case 'linear':
+              case "linear":
                 return value;
               default:
                 return Math.max(0, value); // Default to ReLU
@@ -340,18 +340,18 @@ const Prime = require('../../core');
           const applyGradient = (value, outputGrad) => {
             let derivValue;
             switch (activationType) {
-              case 'relu':
+              case "relu":
                 derivValue = value > 0 ? 1 : 0;
                 break;
-              case 'sigmoid':
+              case "sigmoid":
                 const sigValue = 1 / (1 + Math.exp(-value));
                 derivValue = sigValue * (1 - sigValue);
                 break;
-              case 'tanh':
+              case "tanh":
                 const tanhValue = Math.tanh(value);
                 derivValue = 1 - tanhValue * tanhValue;
                 break;
-              case 'linear':
+              case "linear":
                 derivValue = 1;
                 break;
               default:
@@ -551,7 +551,7 @@ const Prime = require('../../core');
         Math.sqrt(
           2 / (this.kernelSize[0] * this.kernelSize[1] * this.inputShape[2]),
         );
-      const distribution = params.distribution || 'he';
+      const distribution = params.distribution || "he";
 
       // Create weights tensor [filters, kernel_height, kernel_width, input_channels]
       const weights = this._createTensor([
@@ -567,13 +567,13 @@ const Prime = require('../../core');
         () => {
           let value;
 
-          if (distribution === 'xavier') {
+          if (distribution === "xavier") {
             // Xavier/Glorot initialization
             value = (Math.random() * 2 - 1) * scale;
-          } else if (distribution === 'he') {
+          } else if (distribution === "he") {
             // He initialization
             value = Math.random() * scale;
-          } else if (distribution === 'zeros') {
+          } else if (distribution === "zeros") {
             value = 0;
           } else {
             // Default to small random values
@@ -718,7 +718,7 @@ const Prime = require('../../core');
       );
 
       if (!valid) {
-        throw new Prime.CoherenceError('Tensor contains non-finite values');
+        throw new Prime.CoherenceError("Tensor contains non-finite values");
       }
     }
 
@@ -735,7 +735,7 @@ const Prime = require('../../core');
         input[0][0].length !== this.inputShape[2]
       ) {
         throw new Prime.ValidationError(
-          `Input must be a tensor with shape [${this.inputShape.join(', ')}]`,
+          `Input must be a tensor with shape [${this.inputShape.join(", ")}]`,
         );
       }
 
@@ -784,7 +784,7 @@ const Prime = require('../../core');
         dY[0][0].length !== this.outputShape[2]
       ) {
         throw new Prime.ValidationError(
-          `Output gradient must have shape [${this.outputShape.join(', ')}]`,
+          `Output gradient must have shape [${this.outputShape.join(", ")}]`,
         );
       }
 
@@ -1429,7 +1429,7 @@ const Prime = require('../../core');
      */
     getArchitecture() {
       return {
-        type: 'convolutional',
+        type: "convolutional",
         inputShape: [...this.inputShape],
         outputShape: [...this.outputShape],
         kernelSize: [...this.kernelSize],

@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 /**
  * Coherence violation types for distributed systems
@@ -12,17 +12,17 @@ const Prime = require('../core');
  */
 const CoherenceViolationType = {
   /** Numerical precision violations */
-  NUMERICAL: 'numerical',
+  NUMERICAL: "numerical",
   /** Network split/partition violations */
-  NETWORK: 'network',
+  NETWORK: "network",
   /** Parameter synchronization violations */
-  SYNCHRONIZATION: 'synchronization',
+  SYNCHRONIZATION: "synchronization",
   /** Mathematical property violations */
-  MATHEMATICAL: 'mathematical',
+  MATHEMATICAL: "mathematical",
   /** Gradient divergence violations */
-  GRADIENT: 'gradient',
+  GRADIENT: "gradient",
   /** Dimensionality violations */
-  DIMENSIONAL: 'dimensional',
+  DIMENSIONAL: "dimensional",
 };
 
 /**
@@ -31,13 +31,13 @@ const CoherenceViolationType = {
  */
 const ViolationSeverity = {
   /** Minor issues that can be automatically corrected */
-  LOW: 'low',
+  LOW: "low",
   /** Significant issues requiring attention */
-  MEDIUM: 'medium',
+  MEDIUM: "medium",
   /** Critical issues requiring immediate action */
-  HIGH: 'high',
+  HIGH: "high",
   /** Fatal issues requiring system shutdown */
-  CRITICAL: 'critical',
+  CRITICAL: "critical",
 };
 
 /**
@@ -54,7 +54,7 @@ const ViolationDetector = {
     if (!Array.isArray(tensor)) {
       return {
         hasViolations: false,
-        message: 'Invalid tensor format',
+        message: "Invalid tensor format",
       };
     }
 
@@ -119,7 +119,7 @@ const ViolationDetector = {
       message:
         violations.length > 0
           ? `Found ${violations.length} numerical violations`
-          : 'No numerical violations detected',
+          : "No numerical violations detected",
     };
   },
 
@@ -136,7 +136,7 @@ const ViolationDetector = {
     if (!Array.isArray(gradients)) {
       return {
         hasViolations: false,
-        message: 'Invalid gradient format',
+        message: "Invalid gradient format",
       };
     }
 
@@ -227,7 +227,7 @@ const ViolationDetector = {
       message:
         violations.length > 0
           ? `Found ${violations.length} gradient violations`
-          : 'No gradient violations detected',
+          : "No gradient violations detected",
     };
   },
 
@@ -244,10 +244,10 @@ const ViolationDetector = {
           {
             type: CoherenceViolationType.DIMENSIONAL,
             severity: ViolationSeverity.HIGH,
-            message: 'Missing layer configuration',
+            message: "Missing layer configuration",
           },
         ],
-        message: 'Missing layer configuration',
+        message: "Missing layer configuration",
       };
     }
 
@@ -260,7 +260,7 @@ const ViolationDetector = {
         violations.push({
           type: CoherenceViolationType.DIMENSIONAL,
           severity: ViolationSeverity.HIGH,
-          message: 'Weights must be an array',
+          message: "Weights must be an array",
         });
       } else {
         // Check rows match input size
@@ -320,7 +320,7 @@ const ViolationDetector = {
         violations.push({
           type: CoherenceViolationType.DIMENSIONAL,
           severity: ViolationSeverity.HIGH,
-          message: 'Biases must be an array',
+          message: "Biases must be an array",
         });
       } else if (layer.biases.length !== layer.config.outputSize) {
         violations.push({
@@ -340,7 +340,7 @@ const ViolationDetector = {
       message:
         violations.length > 0
           ? `Found ${violations.length} dimensional violations`
-          : 'No dimensional violations detected',
+          : "No dimensional violations detected",
     };
   },
 };

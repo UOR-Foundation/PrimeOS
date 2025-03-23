@@ -5,7 +5,7 @@
  */
 
 // Import core using CommonJS to avoid circular dependency
-const Prime = require('./core.js');
+const Prime = require("./core.js");
 
 (function (Prime) {
   /**
@@ -57,7 +57,7 @@ const Prime = require('./core.js');
      */
     setAlgebra(algebra) {
       if (!(algebra instanceof CliffordAlgebra)) {
-        throw new Prime.ValidationError('Expected a CliffordAlgebra instance');
+        throw new Prime.ValidationError("Expected a CliffordAlgebra instance");
       }
 
       this._algebra = algebra;
@@ -72,7 +72,7 @@ const Prime = require('./core.js');
      */
     getAlgebra() {
       if (!this._algebra) {
-        throw new Prime.MathematicalError('Algebra not set for multivector');
+        throw new Prime.MathematicalError("Algebra not set for multivector");
       }
       return this._algebra;
     }
@@ -155,7 +155,7 @@ const Prime = require('./core.js');
      */
     scale(scalar) {
       if (!Prime.Utils.isNumber(scalar)) {
-        throw new Prime.ValidationError('Scalar must be a number', {
+        throw new Prime.ValidationError("Scalar must be a number", {
           context: { providedType: typeof scalar },
         });
       }
@@ -450,7 +450,7 @@ const Prime = require('./core.js');
     grade(n) {
       if (!Prime.Utils.isNumber(n) || n < 0 || !Number.isInteger(n)) {
         throw new Prime.ValidationError(
-          'Grade must be a non-negative integer',
+          "Grade must be a non-negative integer",
           {
             context: { providedValue: n },
           },
@@ -560,7 +560,7 @@ const Prime = require('./core.js');
       const scalarPart = product.scalar();
 
       // Handle potential numerical inaccuracies in the scalar part
-      if (!scalarPart.components[0] || !scalarPart.components[0]['1']) {
+      if (!scalarPart.components[0] || !scalarPart.components[0]["1"]) {
         // Calculate the norm as a fallback by summing squares of components
         let sumOfSquares = 0;
 
@@ -575,7 +575,7 @@ const Prime = require('./core.js');
       }
 
       // Handle potential negative values from numerical errors
-      const scalarValue = scalarPart.components[0]['1'];
+      const scalarValue = scalarPart.components[0]["1"];
 
       // Use absolute value to ensure we don't try to take sqrt of negative number
       // due to floating point errors
@@ -606,7 +606,7 @@ const Prime = require('./core.js');
      */
     isScalar() {
       const grades = Object.keys(this.components);
-      return grades.length === 0 || (grades.length === 1 && grades[0] === '0');
+      return grades.length === 0 || (grades.length === 1 && grades[0] === "0");
     }
 
     /**
@@ -616,14 +616,14 @@ const Prime = require('./core.js');
      */
     scalarValue() {
       if (!this.isScalar()) {
-        throw new Prime.MathematicalError('Multivector is not a scalar');
+        throw new Prime.MathematicalError("Multivector is not a scalar");
       }
 
-      if (!this.components[0] || !this.components[0]['1']) {
+      if (!this.components[0] || !this.components[0]["1"]) {
         return 0;
       }
 
-      return this.components[0]['1'];
+      return this.components[0]["1"];
     }
 
     /**
@@ -670,13 +670,13 @@ const Prime = require('./core.js');
 
           if (value !== 0) {
             const valueStr =
-              value === 1 && basis !== '1'
-                ? ''
-                : value === -1 && basis !== '1'
-                  ? '-'
+              value === 1 && basis !== "1"
+                ? ""
+                : value === -1 && basis !== "1"
+                  ? "-"
                   : value;
             const basisStr =
-              basis === '1' ? (value === 1 || value === -1 ? '1' : '') : basis;
+              basis === "1" ? (value === 1 || value === -1 ? "1" : "") : basis;
             const term = valueStr + basisStr;
             terms.push(term);
           }
@@ -684,10 +684,10 @@ const Prime = require('./core.js');
       }
 
       if (terms.length === 0) {
-        return '0';
+        return "0";
       }
 
-      return terms.join(' + ').replace(/\+ -/g, '- ');
+      return terms.join(" + ").replace(/\+ -/g, "- ");
     }
 
     /**
@@ -698,7 +698,7 @@ const Prime = require('./core.js');
      */
     _checkAlgebraCompatibility(other) {
       if (!(other instanceof Multivector)) {
-        throw new Prime.ValidationError('Expected a Multivector instance', {
+        throw new Prime.ValidationError("Expected a Multivector instance", {
           context: { providedType: typeof other },
         });
       }
@@ -729,7 +729,7 @@ const Prime = require('./core.js');
         );
 
         if (!sameDimension || !sameSignature) {
-          throw new Prime.MathematicalError('Incompatible Clifford algebras', {
+          throw new Prime.MathematicalError("Incompatible Clifford algebras", {
             context: {
               algebra1: {
                 dimension: this._algebra.dimension,
@@ -765,7 +765,7 @@ const Prime = require('./core.js');
         !Number.isInteger(this.dimension)
       ) {
         throw new Prime.ValidationError(
-          'Dimension must be a non-negative integer',
+          "Dimension must be a non-negative integer",
           {
             context: { providedValue: this.dimension },
           },
@@ -780,7 +780,7 @@ const Prime = require('./core.js');
         this.signature.length !== this.dimension
       ) {
         throw new Prime.ValidationError(
-          'Signature must be an array matching the dimension',
+          "Signature must be an array matching the dimension",
           {
             context: {
               dimension: this.dimension,
@@ -803,11 +803,11 @@ const Prime = require('./core.js');
      * @returns {string[]} Array of basis element names
      */
     _generateBasis() {
-      const basis = ['1']; // Scalar basis
+      const basis = ["1"]; // Scalar basis
 
       // Generate all basis elements using binary counting (2^dimension of them)
       for (let i = 1; i < 1 << this.dimension; i++) {
-        let name = '';
+        let name = "";
         for (let j = 0; j < this.dimension; j++) {
           if (i & (1 << j)) {
             name += `e${j + 1}`;
@@ -829,8 +829,8 @@ const Prime = require('./core.js');
 
       // Initialize with scalar multiplication (identity)
       for (const b of this.basis) {
-        table['1,' + b] = { grade: this._getGrade(b), basis: b, sign: 1 };
-        table[b + ',1'] = { grade: this._getGrade(b), basis: b, sign: 1 };
+        table["1," + b] = { grade: this._getGrade(b), basis: b, sign: 1 };
+        table[b + ",1"] = { grade: this._getGrade(b), basis: b, sign: 1 };
       }
 
       // Handle vector basis elements (e1, e2, etc.)
@@ -841,7 +841,7 @@ const Prime = require('./core.js');
         const signatureValue = this.signature[i - 1];
         table[`${ei},${ei}`] = {
           grade: 0,
-          basis: '1',
+          basis: "1",
           sign: signatureValue,
         };
 
@@ -900,7 +900,7 @@ const Prime = require('./core.js');
      * @returns {number} Grade of the basis element
      */
     _getGrade(basis) {
-      if (basis === '1') return 0;
+      if (basis === "1") return 0;
 
       // Count the number of vector basis elements in the product
       const matches = basis.match(/e\d+/g);
@@ -916,8 +916,8 @@ const Prime = require('./core.js');
      */
     getMultiplicationResult(a, b) {
       // Validate input basis elements
-      if (typeof a !== 'string' || typeof b !== 'string') {
-        throw new Prime.ValidationError('Basis elements must be strings', {
+      if (typeof a !== "string" || typeof b !== "string") {
+        throw new Prime.ValidationError("Basis elements must be strings", {
           context: { a_type: typeof a, b_type: typeof b },
         });
       }
@@ -930,11 +930,11 @@ const Prime = require('./core.js');
       }
 
       // Special case handling for identity ('1')
-      if (a === '1') {
+      if (a === "1") {
         return { grade: this._getGrade(b), basis: b, sign: 1 };
       }
 
-      if (b === '1') {
+      if (b === "1") {
         return { grade: this._getGrade(a), basis: a, sign: 1 };
       }
 
@@ -942,7 +942,7 @@ const Prime = require('./core.js');
       // and multiply component by component.
       try {
         // Handle decomposition of a if it's not a primitive basis
-        if (a !== '1' && !a.match(/^e\d+$/)) {
+        if (a !== "1" && !a.match(/^e\d+$/)) {
           // Split a into first vector and rest
           const firstVectorMatch = a.match(/^e\d+/);
 
@@ -975,7 +975,7 @@ const Prime = require('./core.js');
         }
 
         // Handle decomposition of b if it's not a primitive basis
-        if (b !== '1' && !b.match(/^e\d+$/)) {
+        if (b !== "1" && !b.match(/^e\d+$/)) {
           // Split b into first vector and rest
           const firstVectorMatch = b.match(/^e\d+/);
 
@@ -1020,7 +1020,7 @@ const Prime = require('./core.js');
               const signatureValue = this.signature[aIndex - 1];
               return {
                 grade: 0,
-                basis: '1',
+                basis: "1",
                 sign: signatureValue,
               };
             }
@@ -1082,7 +1082,7 @@ const Prime = require('./core.js');
      */
     scalar(value) {
       if (!Prime.Utils.isNumber(value)) {
-        throw new Prime.ValidationError('Scalar value must be a number', {
+        throw new Prime.ValidationError("Scalar value must be a number", {
           context: { providedType: typeof value },
         });
       }
@@ -1102,7 +1102,7 @@ const Prime = require('./core.js');
      */
     vector(components) {
       if (!Prime.Utils.isArray(components)) {
-        throw new Prime.ValidationError('Vector components must be an array', {
+        throw new Prime.ValidationError("Vector components must be an array", {
           context: { providedType: typeof components },
         });
       }
@@ -1126,7 +1126,7 @@ const Prime = require('./core.js');
     bivector(components) {
       if (!Prime.Utils.isArray(components)) {
         throw new Prime.ValidationError(
-          'Bivector components must be an array',
+          "Bivector components must be an array",
           {
             context: { providedType: typeof components },
           },
@@ -1145,7 +1145,7 @@ const Prime = require('./core.js');
         for (let i = 0; i < components.length; i++) {
           if (!Prime.Utils.isArray(components[i])) {
             throw new Prime.ValidationError(
-              'Bivector matrix row must be an array',
+              "Bivector matrix row must be an array",
               {
                 context: { rowIndex: i, providedType: typeof components[i] },
               },
@@ -1173,7 +1173,7 @@ const Prime = require('./core.js');
         for (const component of components) {
           if (!Prime.Utils.isArray(component) || component.length !== 3) {
             throw new Prime.ValidationError(
-              'Each bivector component must be a [i,j,value] array',
+              "Each bivector component must be a [i,j,value] array",
               {
                 context: { providedValue: component },
               },
@@ -1230,7 +1230,7 @@ const Prime = require('./core.js');
     pseudoscalar() {
       const components = {};
       components[this.dimension.toString()] = {
-        [`e${''.padStart(this.dimension, '1')}`]: 1,
+        [`e${"".padStart(this.dimension, "1")}`]: 1,
       };
 
       return new Multivector(components, this);
@@ -1245,7 +1245,7 @@ const Prime = require('./core.js');
       // This is a placeholder. Actual implementation would depend on the specific
       // matrix representation and algebra dimension
       throw new Prime.MathematicalError(
-        'Matrix conversion not implemented for this algebra',
+        "Matrix conversion not implemented for this algebra",
       );
     }
   }
@@ -1292,12 +1292,12 @@ const Prime = require('./core.js');
      * @throws {InvalidOperationError} If the generator is not found
      */
     generator(basis) {
-      if (typeof basis === 'string') {
+      if (typeof basis === "string") {
         const gen = this.generators.find((g) => g.name === basis);
         if (gen) {
           return new LieAlgebraElement(this, gen.name, gen.matrix);
         }
-      } else if (typeof basis === 'number') {
+      } else if (typeof basis === "number") {
         if (basis >= 0 && basis < this.generators.length) {
           const gen = this.generators[basis];
           return new LieAlgebraElement(this, gen.name, gen.matrix);
@@ -1320,7 +1320,7 @@ const Prime = require('./core.js');
      */
     rotation(axis, angle) {
       // Would be implemented differently for each group
-      return this.element({ type: 'rotation', axis, angle });
+      return this.element({ type: "rotation", axis, angle });
     }
 
     /**
@@ -1330,7 +1330,7 @@ const Prime = require('./core.js');
      */
     reflection(normal) {
       // Would be implemented differently for each group
-      return this.element({ type: 'reflection', normal });
+      return this.element({ type: "reflection", normal });
     }
 
     /**
@@ -1340,7 +1340,7 @@ const Prime = require('./core.js');
      */
     translation(vector) {
       // Would be implemented differently for each group
-      return this.element({ type: 'translation', vector });
+      return this.element({ type: "translation", vector });
     }
 
     /**
@@ -1353,7 +1353,7 @@ const Prime = require('./core.js');
     product(a, b) {
       if (!(a instanceof LieGroupElement) || !(b instanceof LieGroupElement)) {
         throw new Prime.InvalidOperationError(
-          'Arguments must be Lie group elements',
+          "Arguments must be Lie group elements",
           {
             context: {
               aType: a ? a.constructor.name : typeof a,
@@ -1365,7 +1365,7 @@ const Prime = require('./core.js');
 
       if (a.group !== this || b.group !== this) {
         throw new Prime.InvalidOperationError(
-          'Elements must belong to the same Lie group',
+          "Elements must belong to the same Lie group",
           {
             context: {
               expectedGroup: this.name,
@@ -1402,7 +1402,7 @@ const Prime = require('./core.js');
       // The adjoint action is: Ad_g(X) = g X g^(-1)
       // This is a placeholder for a proper implementation
       throw new Prime.MathematicalError(
-        'Adjoint action not implemented for this group',
+        "Adjoint action not implemented for this group",
       );
     }
   }
@@ -1415,7 +1415,7 @@ const Prime = require('./core.js');
      */
     constructor(group, params) {
       if (!(group instanceof LieGroup)) {
-        throw new Prime.ValidationError('Expected a LieGroup instance', {
+        throw new Prime.ValidationError("Expected a LieGroup instance", {
           context: { providedType: typeof group },
         });
       }
@@ -1438,18 +1438,18 @@ const Prime = require('./core.js');
 
       // Based on the transformation type, compute the appropriate matrix
       switch (this.params.type) {
-        case 'rotation':
+        case "rotation":
           return this._computeRotationMatrix();
-        case 'reflection':
+        case "reflection":
           return this._computeReflectionMatrix();
-        case 'translation':
+        case "translation":
           return this._computeTranslationMatrix();
-        case 'exponential':
+        case "exponential":
           return this._computeExponentialMatrix();
-        case 'composite':
+        case "composite":
           // This should be handled by the caller providing the matrix
           throw new Prime.MathematicalError(
-            'Composite element requires a matrix parameter',
+            "Composite element requires a matrix parameter",
           );
         default:
           // Default to identity matrix
@@ -1475,7 +1475,7 @@ const Prime = require('./core.js');
 
       if (!Prime.Utils.isArray(axis) || !Prime.Utils.isNumber(angle)) {
         throw new Prime.ValidationError(
-          'Rotation requires axis array and angle',
+          "Rotation requires axis array and angle",
           {
             context: {
               axisType: typeof axis,
@@ -1489,13 +1489,13 @@ const Prime = require('./core.js');
       const norm = Math.sqrt(axis.reduce((sum, v) => sum + v * v, 0));
 
       if (norm === 0) {
-        throw new Prime.ValidationError('Rotation axis cannot be zero vector');
+        throw new Prime.ValidationError("Rotation axis cannot be zero vector");
       }
 
       const normalizedAxis = axis.map((v) => v / norm);
 
       // For SO(3), use Rodrigues' formula
-      if (this.group.name === 'SO(3)' && normalizedAxis.length === 3) {
+      if (this.group.name === "SO(3)" && normalizedAxis.length === 3) {
         // Precompute trigonometric values
         const cosTheta = Math.cos(angle);
         const sinTheta = Math.sin(angle);
@@ -1543,7 +1543,7 @@ const Prime = require('./core.js');
 
       if (!Prime.Utils.isArray(normal)) {
         throw new Prime.ValidationError(
-          'Reflection requires normal vector array',
+          "Reflection requires normal vector array",
           {
             context: { normalType: typeof normal },
           },
@@ -1555,7 +1555,7 @@ const Prime = require('./core.js');
 
       if (norm === 0) {
         throw new Prime.ValidationError(
-          'Reflection normal cannot be zero vector',
+          "Reflection normal cannot be zero vector",
         );
       }
 
@@ -1586,7 +1586,7 @@ const Prime = require('./core.js');
       const vector = this.params.vector;
 
       if (!Prime.Utils.isArray(vector)) {
-        throw new Prime.ValidationError('Translation requires vector array', {
+        throw new Prime.ValidationError("Translation requires vector array", {
           context: { vectorType: typeof vector },
         });
       }
@@ -1610,7 +1610,7 @@ const Prime = require('./core.js');
 
       if (!generator || !generator.matrix) {
         throw new Prime.ValidationError(
-          'Exponential requires generator with matrix',
+          "Exponential requires generator with matrix",
           {
             context: { generatorType: typeof generator },
           },
@@ -1623,7 +1623,7 @@ const Prime = require('./core.js');
       );
 
       // Handle specific cases for known Lie groups
-      if (this.group.name === 'SO(2)') {
+      if (this.group.name === "SO(2)") {
         // For SO(2), the exponential of [[0, -θ], [θ, 0]] is [[cos(θ), -sin(θ)], [sin(θ), cos(θ)]]
         if (scaledMatrix.length === 2 && scaledMatrix[0].length === 2) {
           // Extract the angle parameter (assuming skew-symmetric matrix)
@@ -1665,7 +1665,7 @@ const Prime = require('./core.js');
             [sinTheta, cosTheta],
           ];
         }
-      } else if (this.group.name === 'SO(3)') {
+      } else if (this.group.name === "SO(3)") {
         // For SO(3), we can use Rodrigues' formula for the exponential map
         if (scaledMatrix.length === 3 && scaledMatrix[0].length === 3) {
           // Extract the skew-symmetric components
@@ -1873,7 +1873,7 @@ const Prime = require('./core.js');
       }
 
       throw new Prime.InvalidOperationError(
-        'Cannot apply transformation to the given object',
+        "Cannot apply transformation to the given object",
         {
           context: { objectType: typeof vector },
         },
@@ -1914,7 +1914,7 @@ const Prime = require('./core.js');
     multiply(other) {
       if (!(other instanceof LieGroupElement)) {
         throw new Prime.InvalidOperationError(
-          'Argument must be a Lie group element',
+          "Argument must be a Lie group element",
           {
             context: { providedType: typeof other },
           },
@@ -1923,7 +1923,7 @@ const Prime = require('./core.js');
 
       if (this.group !== other.group) {
         throw new Prime.InvalidOperationError(
-          'Elements must belong to the same Lie group',
+          "Elements must belong to the same Lie group",
           {
             context: {
               thisGroup: this.group.name,
@@ -1949,7 +1949,7 @@ const Prime = require('./core.js');
 
       // Create a new element with the resulting matrix
       return new LieGroupElement(this.group, {
-        type: 'composite',
+        type: "composite",
         matrix: result,
       });
     }
@@ -1961,7 +1961,7 @@ const Prime = require('./core.js');
      */
     invert() {
       // For orthogonal matrices (SO(n)), the inverse is the transpose
-      if (this.group.name.startsWith('SO')) {
+      if (this.group.name.startsWith("SO")) {
         const inverse = this.matrix.map((row) => [...row]); // Copy
 
         // Transpose
@@ -1974,7 +1974,7 @@ const Prime = require('./core.js');
         }
 
         return new LieGroupElement(this.group, {
-          type: 'inverse',
+          type: "inverse",
           matrix: inverse,
         });
       }
@@ -1990,7 +1990,7 @@ const Prime = require('./core.js');
      * @returns {string} String representation
      */
     toString() {
-      return `LieGroupElement(${this.group.name}, ${this.params.type || 'custom'})`;
+      return `LieGroupElement(${this.group.name}, ${this.params.type || "custom"})`;
     }
   }
 
@@ -2003,7 +2003,7 @@ const Prime = require('./core.js');
      */
     constructor(group, name, matrix) {
       if (!(group instanceof LieGroup)) {
-        throw new Prime.ValidationError('Expected a LieGroup instance', {
+        throw new Prime.ValidationError("Expected a LieGroup instance", {
           context: { providedType: typeof group },
         });
       }
@@ -2025,7 +2025,7 @@ const Prime = require('./core.js');
       // For SO(3), we can use Rodrigues' formula
 
       return this.group.element({
-        type: 'exponential',
+        type: "exponential",
         generator: this,
         parameter: t,
       });
@@ -2040,7 +2040,7 @@ const Prime = require('./core.js');
     add(other) {
       if (!(other instanceof LieAlgebraElement)) {
         throw new Prime.InvalidOperationError(
-          'Argument must be a Lie algebra element',
+          "Argument must be a Lie algebra element",
           {
             context: { providedType: typeof other },
           },
@@ -2049,7 +2049,7 @@ const Prime = require('./core.js');
 
       if (this.group !== other.group) {
         throw new Prime.InvalidOperationError(
-          'Elements must belong to the same Lie algebra',
+          "Elements must belong to the same Lie algebra",
           {
             context: {
               thisGroup: this.group.name,
@@ -2078,7 +2078,7 @@ const Prime = require('./core.js');
      */
     scale(scalar) {
       if (!Prime.Utils.isNumber(scalar)) {
-        throw new Prime.ValidationError('Scalar must be a number', {
+        throw new Prime.ValidationError("Scalar must be a number", {
           context: { providedType: typeof scalar },
         });
       }
@@ -2104,7 +2104,7 @@ const Prime = require('./core.js');
     bracket(other) {
       if (!(other instanceof LieAlgebraElement)) {
         throw new Prime.InvalidOperationError(
-          'Argument must be a Lie algebra element',
+          "Argument must be a Lie algebra element",
           {
             context: { providedType: typeof other },
           },
@@ -2113,7 +2113,7 @@ const Prime = require('./core.js');
 
       if (this.group !== other.group) {
         throw new Prime.InvalidOperationError(
-          'Elements must belong to the same Lie algebra',
+          "Elements must belong to the same Lie algebra",
           {
             context: {
               thisGroup: this.group.name,
@@ -2180,7 +2180,7 @@ const Prime = require('./core.js');
      * Construct a new SO(3) group
      */
     constructor() {
-      super('SO(3)', 3);
+      super("SO(3)", 3);
     }
 
     /**
@@ -2194,7 +2194,7 @@ const Prime = require('./core.js');
       // They correspond to the basis of the Lie algebra so(3)
       return [
         {
-          name: 'X',
+          name: "X",
           matrix: [
             [0, 0, 0],
             [0, 0, -1],
@@ -2202,7 +2202,7 @@ const Prime = require('./core.js');
           ],
         },
         {
-          name: 'Y',
+          name: "Y",
           matrix: [
             [0, 0, 1],
             [0, 0, 0],
@@ -2210,7 +2210,7 @@ const Prime = require('./core.js');
           ],
         },
         {
-          name: 'Z',
+          name: "Z",
           matrix: [
             [0, -1, 0],
             [1, 0, 0],
@@ -2228,7 +2228,7 @@ const Prime = require('./core.js');
      */
     rotation(axis, angle) {
       if (!Prime.Utils.isArray(axis) || axis.length !== 3) {
-        throw new Prime.ValidationError('Axis must be a 3D vector array', {
+        throw new Prime.ValidationError("Axis must be a 3D vector array", {
           context: {
             providedType: typeof axis,
             length: axis ? axis.length : null,
@@ -2237,7 +2237,7 @@ const Prime = require('./core.js');
       }
 
       if (!Prime.Utils.isNumber(angle)) {
-        throw new Prime.ValidationError('Angle must be a number', {
+        throw new Prime.ValidationError("Angle must be a number", {
           context: { providedType: typeof angle },
         });
       }
@@ -2246,14 +2246,14 @@ const Prime = require('./core.js');
       const norm = Math.sqrt(axis.reduce((sum, v) => sum + v * v, 0));
 
       if (norm === 0) {
-        throw new Prime.ValidationError('Rotation axis cannot be zero vector');
+        throw new Prime.ValidationError("Rotation axis cannot be zero vector");
       }
 
       const normalizedAxis = axis.map((v) => v / norm);
 
       // Create the rotation element
       return new LieGroupElement(this, {
-        type: 'rotation',
+        type: "rotation",
         axis: normalizedAxis,
         angle: angle,
       });
@@ -2299,7 +2299,7 @@ const Prime = require('./core.js');
      */
     fromArray: function (arr) {
       if (!Prime.Utils.isArray(arr)) {
-        throw new Prime.ValidationError('Expected an array', {
+        throw new Prime.ValidationError("Expected an array", {
           context: { providedType: typeof arr },
         });
       }
@@ -2376,9 +2376,9 @@ const Prime = require('./core.js');
      */
     isEnabled: function () {
       return (
-        (typeof process !== 'undefined' &&
-          process.env.EXTENDED_PRECISION === 'true') ||
-        (typeof window !== 'undefined' && window.EXTENDED_PRECISION === true)
+        (typeof process !== "undefined" &&
+          process.env.EXTENDED_PRECISION === "true") ||
+        (typeof window !== "undefined" && window.EXTENDED_PRECISION === true)
       );
     },
 
@@ -2390,7 +2390,7 @@ const Prime = require('./core.js');
      */
     sum: function (values) {
       if (!Array.isArray(values)) {
-        throw new Prime.ValidationError('Expected an array of values');
+        throw new Prime.ValidationError("Expected an array of values");
       }
 
       let sum = 0.0;
@@ -2414,12 +2414,12 @@ const Prime = require('./core.js');
      */
     dotProduct: function (v1, v2) {
       if (!Array.isArray(v1) || !Array.isArray(v2)) {
-        throw new Prime.ValidationError('Expected arrays for dot product');
+        throw new Prime.ValidationError("Expected arrays for dot product");
       }
 
       if (v1.length !== v2.length) {
         throw new Prime.MathematicalError(
-          'Vectors must have the same length for dot product',
+          "Vectors must have the same length for dot product",
         );
       }
 
@@ -2440,7 +2440,7 @@ const Prime = require('./core.js');
      */
     norm: function (vector, p = 2) {
       if (!Array.isArray(vector)) {
-        throw new Prime.ValidationError('Expected array for norm calculation');
+        throw new Prime.ValidationError("Expected array for norm calculation");
       }
 
       if (p === 2) {
@@ -2479,12 +2479,12 @@ const Prime = require('./core.js');
      */
     solveLinearSystem: function (A, b) {
       if (!Array.isArray(A) || !Array.isArray(b)) {
-        throw new Prime.ValidationError('Expected arrays for linear system');
+        throw new Prime.ValidationError("Expected arrays for linear system");
       }
 
       if (A.length !== b.length) {
         throw new Prime.MathematicalError(
-          'Matrix and vector dimensions must match',
+          "Matrix and vector dimensions must match",
         );
       }
 
@@ -2511,7 +2511,7 @@ const Prime = require('./core.js');
 
         if (maxVal < Number.EPSILON) {
           throw new Prime.MathematicalError(
-            'Matrix is singular or near-singular',
+            "Matrix is singular or near-singular",
           );
         }
 
@@ -2551,7 +2551,7 @@ const Prime = require('./core.js');
         // Handle potential underflow/overflow
         if (!Number.isFinite(x[i])) {
           throw new Prime.MathematicalError(
-            'Numerical instability in solution',
+            "Numerical instability in solution",
           );
         }
       }
@@ -2571,12 +2571,12 @@ const Prime = require('./core.js');
         matrix.length === 0 ||
         !Array.isArray(matrix[0])
       ) {
-        throw new Prime.ValidationError('Expected a non-empty matrix');
+        throw new Prime.ValidationError("Expected a non-empty matrix");
       }
 
       const n = matrix.length;
       if (matrix.some((row) => row.length !== n)) {
-        throw new Prime.ValidationError('Matrix must be square');
+        throw new Prime.ValidationError("Matrix must be square");
       }
 
       // Check if matrix is symmetric - we use QR for symmetric matrices
@@ -2592,7 +2592,7 @@ const Prime = require('./core.js');
       // For now, we only implement the symmetric case
       if (!isSymmetric) {
         throw new Prime.NotImplementedError(
-          'Eigendecomposition for non-symmetric matrices not yet implemented',
+          "Eigendecomposition for non-symmetric matrices not yet implemented",
         );
       }
 
@@ -2736,15 +2736,15 @@ const Prime = require('./core.js');
      * @returns {Object} Optimization results
      */
     gradientDescent: function (costFunction, initialParams, options = {}) {
-      if (typeof costFunction !== 'function') {
+      if (typeof costFunction !== "function") {
         throw new Prime.ValidationError(
-          'Expected a function for cost function',
+          "Expected a function for cost function",
         );
       }
 
       if (!Array.isArray(initialParams)) {
         throw new Prime.ValidationError(
-          'Expected array for initial parameters',
+          "Expected array for initial parameters",
         );
       }
 
@@ -2842,12 +2842,12 @@ const Prime = require('./core.js');
      * @returns {number} Definite integral value
      */
     integrate: function (f, a, b, options = {}) {
-      if (typeof f !== 'function') {
-        throw new Prime.ValidationError('Expected a function to integrate');
+      if (typeof f !== "function") {
+        throw new Prime.ValidationError("Expected a function to integrate");
       }
 
       if (!Number.isFinite(a) || !Number.isFinite(b)) {
-        throw new Prime.ValidationError('Integration bounds must be finite');
+        throw new Prime.ValidationError("Integration bounds must be finite");
       }
 
       const tolerance = options.tolerance || 1e-10;
@@ -2897,7 +2897,7 @@ const Prime = require('./core.js');
 
         return adaptiveQuadrature(a, b, fa, fb, 0);
       } catch (e) {
-        throw new Prime.MathematicalError('Integration failed: ' + e.message);
+        throw new Prime.MathematicalError("Integration failed: " + e.message);
       }
     },
   };
@@ -2917,10 +2917,13 @@ const Prime = require('./core.js');
         // Import safely to avoid circular dependencies
         let framework;
         try {
-          framework = require('./framework/math/patternRecognition.js');
+          framework = require("./framework/math/patternRecognition.js");
         } catch (e) {
           framework = {};
-          console.warn('Failed to import pattern recognition module (FiberAlgebra):', e.message);
+          console.warn(
+            "Failed to import pattern recognition module (FiberAlgebra):",
+            e.message,
+          );
         }
         if (framework && framework.FiberAlgebraPatternRecognition) {
           return new framework.FiberAlgebraPatternRecognition(options);
@@ -2930,7 +2933,7 @@ const Prime = require('./core.js');
         return {
           analyzeData: function () {
             throw new Prime.NotImplementedError(
-              'Fiber algebra pattern recognition implementation not available',
+              "Fiber algebra pattern recognition implementation not available",
             );
           },
         };
@@ -2948,10 +2951,13 @@ const Prime = require('./core.js');
         // Import safely to avoid circular dependencies
         let framework;
         try {
-          framework = require('./framework/math/patternRecognition.js');
+          framework = require("./framework/math/patternRecognition.js");
         } catch (e) {
           framework = {};
-          console.warn('Failed to import pattern recognition module (Sequence):', e.message);
+          console.warn(
+            "Failed to import pattern recognition module (Sequence):",
+            e.message,
+          );
         }
         if (framework && framework.SequencePatternRecognition) {
           return new framework.SequencePatternRecognition(options);
@@ -2961,7 +2967,7 @@ const Prime = require('./core.js');
         return {
           analyzeSequence: function () {
             throw new Prime.NotImplementedError(
-              'Sequence pattern recognition implementation not available',
+              "Sequence pattern recognition implementation not available",
             );
           },
         };
@@ -2993,7 +2999,7 @@ const Prime = require('./core.js');
 })(Prime);
 
 // CommonJS export (no ES module export in this file to avoid circular dependency)
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }
 
@@ -3068,7 +3074,7 @@ Prime.ExtremePrecision = {
     // Dot product with Kahan summation for better numerical stability
     const dotProduct = function (a, b) {
       if (a.length !== b.length) {
-        throw new Error('Vector dimensions must match for dot product');
+        throw new Error("Vector dimensions must match for dot product");
       }
 
       const products = new Array(a.length);
@@ -3115,7 +3121,7 @@ Prime.ExtremePrecision = {
       const bCols = b[0].length;
 
       if (aCols !== bRows) {
-        throw new Error('Matrix dimensions incompatible for multiplication');
+        throw new Error("Matrix dimensions incompatible for multiplication");
       }
 
       const result = Array(aRows)
@@ -3213,7 +3219,7 @@ Prime.ExtremePrecision = {
    */
   dotProduct: function (a, b) {
     if (a.length !== b.length) {
-      throw new Prime.MathematicalError('Vectors must have the same dimension');
+      throw new Prime.MathematicalError("Vectors must have the same dimension");
     }
 
     // Use Kahan summation for enhanced precision
@@ -3243,7 +3249,7 @@ Prime.ExtremePrecision = {
 
     if (cols !== vector.length) {
       throw new Prime.MathematicalError(
-        'Matrix columns must match vector length',
+        "Matrix columns must match vector length",
       );
     }
 
@@ -3274,25 +3280,25 @@ try {
   // Import math modules safely using try/catch to avoid circular dependencies
   let mathModule;
   try {
-    mathModule = require('./framework/math/prime-math.js');
+    mathModule = require("./framework/math/prime-math.js");
   } catch (e) {
     mathModule = {};
-    console.warn('Failed to import prime-math module:', e.message);
+    console.warn("Failed to import prime-math module:", e.message);
   }
   Prime.math = mathModule;
 } catch (e) {
-  console.warn('Could not load Prime.math module:', e.message);
+  console.warn("Could not load Prime.math module:", e.message);
   Prime.math = {};
 }
 
 // Load math modules including Matrix and Vector implementations
 try {
-  require('./math/index.js');
+  require("./math/index.js");
 } catch (e) {
-  console.warn('Could not load Prime.Math modules:', e.message);
+  console.warn("Could not load Prime.Math modules:", e.message);
 }
 
 // For browser global scope
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.Prime = Prime;
 }

@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Create the Neural Model module using IIFE
 (function () {
@@ -80,7 +80,8 @@ const Prime = require('../core');
       // If this isn't the first layer and inputSize wasn't specified,
       // set it to the outputSize of the previous layer
       if (this.layers.length > 0 && !updatedConfig.inputSize) {
-        updatedConfig.inputSize = this.layers[this.layers.length - 1].outputSize;
+        updatedConfig.inputSize =
+          this.layers[this.layers.length - 1].outputSize;
       }
 
       // If layerConfig is already a layer instance, use it directly
@@ -98,32 +99,32 @@ const Prime = require('../core');
         layer = updatedConfig;
       } else {
         // Otherwise, create a layer from the configuration
-        const type = (updatedConfig.type || 'dense').toLowerCase();
+        const type = (updatedConfig.type || "dense").toLowerCase();
 
         // Create layer based on type
         switch (type) {
-          case 'dense':
-            layer = Prime.Neural.Neural.createLayer('dense', {
+          case "dense":
+            layer = Prime.Neural.Neural.createLayer("dense", {
               ...updatedConfig,
               useTypedArrays: this.useTypedArrays,
             });
             break;
-          case 'conv':
-          case 'convolutional':
-            layer = Prime.Neural.Neural.createLayer('conv', {
+          case "conv":
+          case "convolutional":
+            layer = Prime.Neural.Neural.createLayer("conv", {
               ...updatedConfig,
               useTypedArrays: this.useTypedArrays,
             });
             break;
-          case 'rnn':
-          case 'recurrent':
-            layer = Prime.Neural.Neural.createLayer('recurrent', {
+          case "rnn":
+          case "recurrent":
+            layer = Prime.Neural.Neural.createLayer("recurrent", {
               ...updatedConfig,
               useTypedArrays: this.useTypedArrays,
             });
             break;
-          case 'self_optimizing':
-          case 'selfoptimizing':
+          case "self_optimizing":
+          case "selfoptimizing":
             layer = new Prime.Neural.Layer.SelfOptimizingLayer({
               ...updatedConfig,
               useTypedArrays: this.useTypedArrays,
@@ -161,11 +162,11 @@ const Prime = require('../core');
      */
     setOptimizer(optimizer) {
       // If optimizer is a string, create from factory
-      if (typeof optimizer === 'string') {
+      if (typeof optimizer === "string") {
         this.optimizer = Prime.Neural.Neural.createOptimizer(optimizer);
       }
       // If optimizer is configuration object, create from factory
-      else if (typeof optimizer === 'object' && optimizer.type) {
+      else if (typeof optimizer === "object" && optimizer.type) {
         this.optimizer = Prime.Neural.Neural.createOptimizer(
           optimizer.type,
           optimizer,
@@ -173,14 +174,14 @@ const Prime = require('../core');
       }
       // If optimizer is already an optimizer instance, use directly
       else if (
-        typeof optimizer === 'object' &&
-        typeof optimizer.update === 'function'
+        typeof optimizer === "object" &&
+        typeof optimizer.update === "function"
       ) {
         this.optimizer = optimizer;
       }
       // Otherwise, throw error
       else {
-        throw new Error('Invalid optimizer configuration');
+        throw new Error("Invalid optimizer configuration");
       }
 
       return this;
@@ -196,34 +197,34 @@ const Prime = require('../core');
     compile(config) {
       // Validate model has layers
       if (this.layers.length === 0) {
-        throw new Error('Model must have at least one layer');
+        throw new Error("Model must have at least one layer");
       }
 
       // Validate optimizer is set
       if (!this.optimizer) {
         // Default to Adam optimizer if none is set
-        this.setOptimizer('adam');
+        this.setOptimizer("adam");
       }
 
       // Set loss function
-      if (typeof config.loss === 'string') {
+      if (typeof config.loss === "string") {
         this.lossFunction = this._getLossFunction(config.loss);
         this.lossName = config.loss; // Store the loss name for testing
-      } else if (typeof config.loss === 'function') {
+      } else if (typeof config.loss === "function") {
         this.lossFunction = config.loss;
-        this.lossName = 'custom'; // Custom function name
+        this.lossName = "custom"; // Custom function name
       } else {
-        throw new Error('Loss function must be a string or function');
+        throw new Error("Loss function must be a string or function");
       }
 
       // Set metric (optional)
       if (config.metric) {
-        if (typeof config.metric === 'string') {
+        if (typeof config.metric === "string") {
           this.metric = this._getMetricFunction(config.metric);
           this.metricName = config.metric; // Store the metric name for testing
-        } else if (typeof config.metric === 'function') {
+        } else if (typeof config.metric === "function") {
           this.metric = config.metric;
-          this.metricName = 'custom'; // Custom function name
+          this.metricName = "custom"; // Custom function name
         }
       }
 
@@ -231,10 +232,10 @@ const Prime = require('../core');
 
       // Update metadata
       this.metadata.compiledAt = new Date().toISOString();
-      if (typeof config.loss === 'string') {
+      if (typeof config.loss === "string") {
         this.metadata.loss = config.loss;
       }
-      if (typeof config.metric === 'string') {
+      if (typeof config.metric === "string") {
         this.metadata.metric = config.metric;
       }
 
@@ -251,7 +252,7 @@ const Prime = require('../core');
      */
     forward(input, options = {}) {
       if (!this.layers.length) {
-        throw new Error('Model has no layers');
+        throw new Error("Model has no layers");
       }
 
       const startTime = performance.now();
@@ -309,7 +310,7 @@ const Prime = require('../core');
      */
     backward(expected, predicted, cache) {
       if (!this.compiled) {
-        throw new Error('Model must be compiled before training');
+        throw new Error("Model must be compiled before training");
       }
 
       const startTime = performance.now();
@@ -349,7 +350,7 @@ const Prime = require('../core');
      */
     async update(gradients) {
       if (!this.optimizer) {
-        throw new Error('Model must have an optimizer');
+        throw new Error("Model must have an optimizer");
       }
 
       // Calculate model coherence before update if needed
@@ -371,8 +372,8 @@ const Prime = require('../core');
         // Use coherence-aware optimizer if available
         if (
           this.coherenceConfig.enabled &&
-          typeof this.optimizer.update === 'function' &&
-          typeof this.optimizer.calculateCoherence === 'function'
+          typeof this.optimizer.update === "function" &&
+          typeof this.optimizer.calculateCoherence === "function"
         ) {
           // Get current parameters
           const params = {
@@ -433,7 +434,7 @@ const Prime = require('../core');
      */
     trainOnBatch(inputs, targets, options = {}) {
       if (!this.compiled) {
-        throw new Error('Model must be compiled before training');
+        throw new Error("Model must be compiled before training");
       }
 
       // Forward pass
@@ -475,7 +476,9 @@ const Prime = require('../core');
     summary() {
       const layerSummaries = this.layers.map((layer, index) => {
         // Count parameters
-        const numWeights = layer.weights ? layer.weights.length * (layer.weights[0]?.length || 0) : 0;
+        const numWeights = layer.weights
+          ? layer.weights.length * (layer.weights[0]?.length || 0)
+          : 0;
         const numBiases = layer.biases ? layer.biases.length : 0;
         const totalParams = numWeights + numBiases;
 
@@ -492,14 +495,17 @@ const Prime = require('../core');
 
       const totalParameters = layerSummaries.reduce(
         (sum, layer) => sum + layer.parameters,
-        0
+        0,
       );
 
       return {
         layers: layerSummaries,
         totalParameters,
         inputShape: this.layers.length > 0 ? [this.layers[0].inputSize] : [],
-        outputShape: this.layers.length > 0 ? [this.layers[this.layers.length - 1].outputSize] : [],
+        outputShape:
+          this.layers.length > 0
+            ? [this.layers[this.layers.length - 1].outputSize]
+            : [],
         compiled: this.compiled,
         optimizer: this.optimizer ? this.optimizer.constructor.name : null,
         lossFunction: this.lossName || null,
@@ -518,7 +524,7 @@ const Prime = require('../core');
       // Calculate coherence for each layer
       const layerCoherences = this.layers.map((layer) => {
         // Use layer's calculateCoherence method if available
-        if (typeof layer.calculateCoherence === 'function') {
+        if (typeof layer.calculateCoherence === "function") {
           return layer.calculateCoherence();
         }
 
@@ -562,7 +568,7 @@ const Prime = require('../core');
     toJSON() {
       // Create base model object
       const modelData = {
-        version: '1.0',
+        version: "1.0",
         timestamp: new Date().toISOString(),
         metadata: this.metadata,
         coherenceConfig: this.coherenceConfig,
@@ -744,7 +750,7 @@ const Prime = require('../core');
 
       // Log correction attempt
       this.history.push({
-        type: 'coherence_correction',
+        type: "coherence_correction",
         timestamp: new Date().toISOString(),
         iteration: this.performance.iterationCount,
         coherenceBefore: coherenceInfo.after,
@@ -762,17 +768,17 @@ const Prime = require('../core');
       const lowerName = name.toLowerCase();
 
       switch (lowerName) {
-        case 'mse':
-        case 'meansquarederror':
+        case "mse":
+        case "meansquarederror":
           return this._meanSquaredError.bind(this);
-        case 'mae':
-        case 'meanabsoluteerror':
+        case "mae":
+        case "meanabsoluteerror":
           return this._meanAbsoluteError.bind(this);
-        case 'bce':
-        case 'binarycrossentropy':
+        case "bce":
+        case "binarycrossentropy":
           return this._binaryCrossEntropy.bind(this);
-        case 'cce':
-        case 'categoricalcrossentropy':
+        case "cce":
+        case "categoricalcrossentropy":
           return this._categoricalCrossEntropy.bind(this);
         default:
           throw new Error(`Unknown loss function: ${name}`);
@@ -789,16 +795,16 @@ const Prime = require('../core');
       const lowerName = name.toLowerCase();
 
       switch (lowerName) {
-        case 'accuracy':
+        case "accuracy":
           return this._accuracyMetric.bind(this);
-        case 'mae':
-        case 'meanabsoluteerror':
+        case "mae":
+        case "meanabsoluteerror":
           return (y_true, y_pred) => {
             const { loss } = this._meanAbsoluteError(y_true, y_pred, false);
             return loss;
           };
-        case 'mse':
-        case 'meansquarederror':
+        case "mse":
+        case "meansquarederror":
           return (y_true, y_pred) => {
             const { loss } = this._meanSquaredError(y_true, y_pred, false);
             return loss;
@@ -1101,8 +1107,8 @@ const Prime = require('../core');
     getSummary() {
       const layerSummaries = this.layers.map((layer, index) => {
         let layerType = layer.constructor.name;
-        if (layerType.includes('Layer')) {
-          layerType = layerType.replace('Layer', '');
+        if (layerType.includes("Layer")) {
+          layerType = layerType.replace("Layer", "");
         }
 
         return {
@@ -1127,7 +1133,7 @@ const Prime = require('../core');
         totalLayers: this.layers.length,
         totalParameters: totalParams,
         compiled: this.compiled,
-        optimizer: this.optimizer ? this.optimizer.constructor.name : 'None',
+        optimizer: this.optimizer ? this.optimizer.constructor.name : "None",
         useTypedArrays: this.useTypedArrays,
         performance: { ...this.performance },
       };

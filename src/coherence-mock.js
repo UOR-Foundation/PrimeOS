@@ -4,10 +4,10 @@
  */
 
 // Import the real coherence module
-require('./coherence');
+require("./coherence");
 
 // Import the mock module to override necessary functions
-require('./coherence/verify-mock');
+require("./coherence/verify-mock");
 
 // Export the enhanced Prime object
-module.exports = require('./core');
+module.exports = require("./core");

@@ -6,7 +6,7 @@
  */
 
 // Import Prime core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Ensure Consciousness namespace exists
 Prime.Consciousness = Prime.Consciousness || {};
@@ -41,19 +41,19 @@ class SelfReference {
     // System limitations model (self-aware of limitations)
     this.knownLimitations = [
       {
-        id: 'numerical_precision',
-        description: 'Limited by IEEE-754 double precision floating point',
-        severity: 'medium',
+        id: "numerical_precision",
+        description: "Limited by IEEE-754 double precision floating point",
+        severity: "medium",
       },
       {
-        id: 'computational_resources',
-        description: 'Constrained by available memory and processing power',
-        severity: 'medium',
+        id: "computational_resources",
+        description: "Constrained by available memory and processing power",
+        severity: "medium",
       },
       {
-        id: 'domain_knowledge',
-        description: 'Limited to domains covered in training data',
-        severity: 'high',
+        id: "domain_knowledge",
+        description: "Limited to domains covered in training data",
+        severity: "high",
       },
     ];
   }
@@ -149,9 +149,9 @@ class SelfReference {
   async analyzeStateChanges() {
     if (this.stateHistory.length < 2) {
       return {
-        coherenceTrend: 'stable',
-        complexityTrend: 'stable',
-        awarenessTrend: 'stable',
+        coherenceTrend: "stable",
+        complexityTrend: "stable",
+        awarenessTrend: "stable",
       };
     }
 
@@ -165,8 +165,8 @@ class SelfReference {
 
     // Determine trend directions
     const getTrend = (delta) => {
-      if (Math.abs(delta) < 0.05) return 'stable';
-      return delta > 0 ? 'increasing' : 'decreasing';
+      if (Math.abs(delta) < 0.05) return "stable";
+      return delta > 0 ? "increasing" : "decreasing";
     };
 
     return {
@@ -209,7 +209,7 @@ class SelfReference {
       coherence: state.coherence || this.currentState.coherence,
       complexity: state.complexity || this.currentState.complexity,
       awareness: state.awareness || this.currentState.awareness,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Record the updated state
@@ -222,7 +222,7 @@ class SelfReference {
       complexity: this.currentState.complexity,
       awareness: this.currentState.awareness,
       timestamp: this.currentState.timestamp,
-      stateReference: state
+      stateReference: state,
     };
   }
 
@@ -247,13 +247,15 @@ class SelfReference {
   getStats() {
     return {
       historySize: this.stateHistory.length,
-      averageCoherence: this.stateHistory.reduce((sum, state) => sum + state.coherence, 0) /
-                        (this.stateHistory.length || 1),
-      averageComplexity: this.stateHistory.reduce((sum, state) => sum + state.complexity, 0) /
-                         (this.stateHistory.length || 1),
+      averageCoherence:
+        this.stateHistory.reduce((sum, state) => sum + state.coherence, 0) /
+        (this.stateHistory.length || 1),
+      averageComplexity:
+        this.stateHistory.reduce((sum, state) => sum + state.complexity, 0) /
+        (this.stateHistory.length || 1),
       currentCoherence: this.currentState.coherence,
       stateChanges: this.stateHistory.length,
-      knownLimitationsCount: this.knownLimitations.length
+      knownLimitationsCount: this.knownLimitations.length,
     };
   }
 

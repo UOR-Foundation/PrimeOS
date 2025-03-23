@@ -24,8 +24,8 @@ class EventBus {
    * @returns {Function} Function to remove this listener
    */
   on(event, callback) {
-    if (typeof callback !== 'function') {
-      throw new Error('Callback must be a function');
+    if (typeof callback !== "function") {
+      throw new Error("Callback must be a function");
     }
 
     if (!this.events.has(event)) {

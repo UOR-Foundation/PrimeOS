@@ -4,11 +4,14 @@
  */
 
 // Import Prime core directly to avoid circular dependencies
-const Prime = require('../../core/prime.js');
+const Prime = require("../../core/prime.js");
 
-// Import math utilities and coherence from specific modules
-const mathUtils = require('./index.js');
-const coherenceModule = require('./coherence.js');
+// Import standardized math utilities and coherence module
+const StandardMath = require("./index.js").Standard;
+const coherenceModule = require("./coherence.js");
+
+// Import type validation
+const TypeValidation = require("./type-validation.js");
 
 /**
  * FiberAlgebraPatternRecognition implementation based on the Prime Framework
@@ -24,6 +27,77 @@ class FiberAlgebraPatternRecognition {
    * @param {number} options.manifoldPoints - Number of points in the reference manifold (default: 5)
    */
   constructor(options = {}) {
+    // Validate options if provided
+    if (options !== undefined) {
+      TypeValidation.assertObject(options, "options", {
+        operation: "FiberAlgebraPatternRecognition.constructor",
+      });
+
+      // Validate dimension if provided
+      if (options.dimension !== undefined) {
+        TypeValidation.assertPositiveInteger(
+          options.dimension,
+          "options.dimension",
+          {
+            operation: "FiberAlgebraPatternRecognition.constructor",
+          },
+        );
+
+        // Check for computationally feasible dimensions
+        if (options.dimension > 12) {
+          Prime.Logger.warn(
+            `Dimension ${options.dimension} may lead to computational overflow`,
+            {
+              operation: "FiberAlgebraPatternRecognition.constructor",
+              recommendedMaximum: 12,
+            },
+          );
+        }
+      }
+
+      // Validate manifoldDim if provided
+      if (options.manifoldDim !== undefined) {
+        TypeValidation.assertPositiveInteger(
+          options.manifoldDim,
+          "options.manifoldDim",
+          {
+            operation: "FiberAlgebraPatternRecognition.constructor",
+          },
+        );
+
+        if (options.manifoldDim > 10) {
+          Prime.Logger.warn(
+            `Manifold dimension ${options.manifoldDim} is unusually high`,
+            {
+              operation: "FiberAlgebraPatternRecognition.constructor",
+              recommendedMaximum: 10,
+            },
+          );
+        }
+      }
+
+      // Validate manifoldPoints if provided
+      if (options.manifoldPoints !== undefined) {
+        TypeValidation.assertPositiveInteger(
+          options.manifoldPoints,
+          "options.manifoldPoints",
+          {
+            operation: "FiberAlgebraPatternRecognition.constructor",
+          },
+        );
+
+        if (options.manifoldPoints > 20) {
+          Prime.Logger.warn(
+            `Number of manifold points ${options.manifoldPoints} is unusually high`,
+            {
+              operation: "FiberAlgebraPatternRecognition.constructor",
+              recommendedMaximum: 20,
+            },
+          );
+        }
+      }
+    }
+
     this.dimension = options.dimension || 8;
     this.manifoldDim = options.manifoldDim || 3;
     this.manifoldPoints = options.manifoldPoints || 5;
@@ -78,8 +152,8 @@ class FiberAlgebraPatternRecognition {
 
     if (!CliffordAlgebraFiber) {
       throw new Prime.MathematicalError(
-        'CliffordAlgebraFiber implementation is required for pattern recognition',
-        { context: { module: 'patternRecognition' } }
+        "CliffordAlgebraFiber implementation is required for pattern recognition",
+        { context: { module: "patternRecognition" } },
       );
     }
 
@@ -104,14 +178,14 @@ class FiberAlgebraPatternRecognition {
    */
   _createLieGenerators() {
     // Define safe dimension limits with validation
-    const maxSafeDimension = 10; 
+    const maxSafeDimension = 10;
     if (this.dimension > maxSafeDimension) {
       Prime.Logger.warn(
         `Dimension ${this.dimension} exceeds safe limit, capping at ${maxSafeDimension}`,
-        { context: { module: 'patternRecognition' } }
+        { context: { module: "patternRecognition" } },
       );
     }
-    
+
     const effectiveDimension = Math.min(maxSafeDimension, this.dimension);
     const maxBasisSize = 1000; // Safe maximum array size
     const nBasis = Math.min(maxBasisSize, Math.pow(2, effectiveDimension));
@@ -127,7 +201,7 @@ class FiberAlgebraPatternRecognition {
         const generator = Array(safeSize)
           .fill()
           .map(() => Array(safeSize).fill(0));
-        
+
         generator[i][j] = 1.0;
         generator[j][i] = -1.0;
         generators.push(generator);
@@ -158,53 +232,49 @@ class FiberAlgebraPatternRecognition {
     // Apply the transformation exp(amount * generator) to the state
     // For small amounts, approximate exp(tG) ≈ I + tG
     const nBasis = state.length;
-    
+
     // Ensure generator dimensions are compatible with state
     // Check if generator is null or undefined
     if (!generator) {
       // Return a copy of the original state if the generator is invalid
       return state.slice();
     }
-    
+
     // Get safe dimensions
     const safeGenRows = generator.length || 0;
-    const safeGenCols = safeGenRows > 0 && Array.isArray(generator[0]) ? generator[0].length : 0;
-    
+    const safeGenCols =
+      safeGenRows > 0 && Array.isArray(generator[0]) ? generator[0].length : 0;
+
     // Use the minimum of these dimensions to avoid accessing undefined elements
     const safeDim = Math.min(nBasis, safeGenRows, safeGenCols);
-    
+
     // Create identity matrix + scaled generator for transformation
-    const transformation = Array(nBasis)
+    const identity = StandardMath.Matrix.identity(nBasis);
+    const generatorMatrix = Array(nBasis)
       .fill()
       .map((_, i) => {
         return Array(nBasis)
           .fill()
           .map((_, j) => {
             // Only access generator elements if within safe bounds
-            const generatorValue = (i < safeDim && j < safeDim) ? generator[i][j] : 0;
-            return (i === j ? 1 : 0) + amount * (generatorValue || 0);
+            return i < safeDim && j < safeDim ? generator[i][j] || 0 : 0;
           });
       });
 
-    // Apply transformation matrix to state
-    const transformed = Array(nBasis).fill(0);
-    for (let i = 0; i < nBasis; i++) {
-      for (let j = 0; j < nBasis; j++) {
-        transformed[i] += transformation[i][j] * state[j];
-      }
-    }
+    // Scale generator by amount
+    const scaledGenerator = StandardMath.Matrix.scale(generatorMatrix, amount);
 
-    // Normalize if needed
-    const norm = Math.sqrt(
-      transformed.reduce((sum, val) => sum + val * val, 0),
+    // Add identity and scaled generator
+    const transformation = StandardMath.Matrix.add(identity, scaledGenerator);
+
+    // Apply transformation matrix to state (matrix-vector multiplication)
+    const transformed = StandardMath.Matrix.multiplyVector(
+      transformation,
+      state,
     );
-    if (norm > 0) {
-      for (let i = 0; i < transformed.length; i++) {
-        transformed[i] /= norm;
-      }
-    }
 
-    return transformed;
+    // Normalize the result
+    return StandardMath.Vector.normalize(transformed);
   }
 
   /**
@@ -214,11 +284,23 @@ class FiberAlgebraPatternRecognition {
    * @returns {Object} Dictionary mapping fiber indices to encoded states
    */
   encodeData(data) {
-    // Validate input data
-    if (!Array.isArray(data)) {
-      throw new Prime.ValidationError('Data must be an array', {
-        context: { actual: typeof data }
+    // Validate data is provided and is an array
+    TypeValidation.assertDefined(data, "data", {
+      operation: "FiberAlgebraPatternRecognition.encodeData",
+    });
+
+    TypeValidation.assertArray(data, "data", {
+      operation: "FiberAlgebraPatternRecognition.encodeData",
+    });
+
+    // Check if data array is empty
+    if (data.length === 0) {
+      Prime.Logger.warn("Empty data array provided to encodeData", {
+        operation: "FiberAlgebraPatternRecognition.encodeData",
       });
+
+      // Return empty encoding for empty data
+      return {};
     }
 
     // Ensure data is 2D array
@@ -226,6 +308,54 @@ class FiberAlgebraPatternRecognition {
     if (!Array.isArray(data[0])) {
       // If 1D array, reshape to 2D with a single sample
       processedData = [data];
+
+      Prime.Logger.info(
+        "Reshaped 1D data array to 2D array with a single sample",
+        {
+          operation: "FiberAlgebraPatternRecognition.encodeData",
+          originalShape: [data.length],
+          newShape: [1, data.length],
+        },
+      );
+    }
+
+    // Validate each sample contains only numbers
+    for (let i = 0; i < processedData.length; i++) {
+      const sample = processedData[i];
+
+      // Validate sample is an array
+      TypeValidation.assertArray(sample, `data[${i}]`, {
+        operation: "FiberAlgebraPatternRecognition.encodeData",
+      });
+
+      // Validate sample contains only numbers
+      try {
+        TypeValidation.assertNumberArray(sample, `data[${i}]`, {
+          operation: "FiberAlgebraPatternRecognition.encodeData",
+        });
+      } catch (error) {
+        // Handle error, maybe clean the data or ignore non-numeric values
+        Prime.Logger.warn(
+          `Sample at index ${i} contains non-numeric values. Attempting to convert to numbers.`,
+          {
+            operation: "FiberAlgebraPatternRecognition.encodeData",
+            sampleIndex: i,
+            ...error.context,
+          },
+        );
+
+        // Try to convert non-numeric values to numbers
+        for (let j = 0; j < sample.length; j++) {
+          if (typeof sample[j] !== "number" || isNaN(sample[j])) {
+            const numValue = Number(sample[j]);
+            if (!isNaN(numValue)) {
+              sample[j] = numValue;
+            } else {
+              sample[j] = 0; // Replace invalid values with 0
+            }
+          }
+        }
+      }
     }
 
     // Ensure data dimensions are compatible with fiber dimension
@@ -251,10 +381,9 @@ class FiberAlgebraPatternRecognition {
       normalizedData = processedData;
     }
 
-    // Normalize data vectors
+    // Normalize data vectors using standardized math
     normalizedData = normalizedData.map((sample) => {
-      const norm = Math.sqrt(sample.reduce((sum, val) => sum + val * val, 0));
-      return norm > 0 ? sample.map((val) => val / norm) : sample;
+      return StandardMath.Vector.normalize(sample).values || sample;
     });
 
     const encodedStates = {};
@@ -264,7 +393,7 @@ class FiberAlgebraPatternRecognition {
       const fiber = this.fibers[idx];
 
       // Define safe dimension limits with validation
-      const maxSafeDimension = 10; 
+      const maxSafeDimension = 10;
       const effectiveDimension = Math.min(maxSafeDimension, this.dimension);
       const maxBasisSize = 1000000; // Safe maximum array size
       const nBasis = Math.min(maxBasisSize, Math.pow(2, effectiveDimension));
@@ -289,24 +418,23 @@ class FiberAlgebraPatternRecognition {
       // Add a contribution to the scalar part
       state[0] = 1.0;
 
-      // Normalize the state
-      const norm = Math.sqrt(state.reduce((sum, val) => sum + val * val, 0));
-      if (norm > 0) {
-        for (let i = 0; i < state.length; i++) {
-          state[i] /= norm;
-        }
+      // Normalize the state using standardized math
+      const normalizedState = StandardMath.Vector.normalize(state);
+      // Copy normalized values back to the original state array
+      for (let i = 0; i < state.length; i++) {
+        state[i] = normalizedState[i];
       }
 
       // Store the encoded state in the fiber
       encodedStates[idx] = state.slice();
 
       // Set the state on the fiber
-      if (typeof fiber.setState === 'function') {
+      if (typeof fiber.setState === "function") {
         fiber.setState(state);
       } else {
         throw new Prime.ValidationError(
-          'Fiber is missing required setState method',
-          { context: { fiberId: idx } }
+          "Fiber is missing required setState method",
+          { context: { fiberId: idx } },
         );
       }
     }
@@ -322,11 +450,63 @@ class FiberAlgebraPatternRecognition {
    * @returns {number} Coherence measure (0 to 1, higher is more coherent)
    */
   computeCoherence(encodedStates) {
-    // Validate input
-    if (!encodedStates || typeof encodedStates !== 'object') {
-      throw new Prime.ValidationError('Encoded states must be a valid object', {
-        context: { actual: typeof encodedStates }
+    // Validate encodedStates is provided and is an object
+    TypeValidation.assertDefined(encodedStates, "encodedStates", {
+      operation: "FiberAlgebraPatternRecognition.computeCoherence",
+    });
+
+    TypeValidation.assertObject(encodedStates, "encodedStates", {
+      operation: "FiberAlgebraPatternRecognition.computeCoherence",
+    });
+
+    // Check if object is empty
+    const keys = Object.keys(encodedStates);
+    if (keys.length === 0) {
+      Prime.Logger.warn(
+        "Empty encodedStates object provided to computeCoherence",
+        {
+          operation: "FiberAlgebraPatternRecognition.computeCoherence",
+        },
+      );
+
+      return 0; // Return minimum coherence for empty states
+    }
+
+    // Validate each encoded state is an array of numbers
+    for (const key in encodedStates) {
+      const state = encodedStates[key];
+
+      // Validate state is an array
+      TypeValidation.assertArray(state, `encodedStates[${key}]`, {
+        operation: "FiberAlgebraPatternRecognition.computeCoherence",
       });
+
+      // Validate state contains only numbers
+      TypeValidation.assertNumberArray(state, `encodedStates[${key}]`, {
+        operation: "FiberAlgebraPatternRecognition.computeCoherence",
+      });
+
+      // Check for extreme values that might cause numerical instability
+      try {
+        TypeValidation.validateArrayMagnitudes(
+          state,
+          `encodedStates[${key}]`,
+          { minMagnitude: 1e-100, maxMagnitude: 1e100, allowZero: true },
+          { operation: "FiberAlgebraPatternRecognition.computeCoherence" },
+        );
+      } catch (error) {
+        // Convert to warning for extreme values instead of error
+        if (error instanceof Prime.NumericOverflowError) {
+          Prime.Logger.warn(
+            `State vector contains extreme values that may cause numerical instability`,
+            {
+              operation: "FiberAlgebraPatternRecognition.computeCoherence",
+              fiberIndex: key,
+              ...error.context,
+            },
+          );
+        }
+      }
     }
 
     // Hash the encoded states for caching
@@ -355,11 +535,8 @@ class FiberAlgebraPatternRecognition {
           const stateI = encodedStates[i];
           const stateJ = encodedStates[j];
 
-          // Compute coherence as inner product
-          let innerProduct = 0;
-          for (let k = 0; k < stateI.length; k++) {
-            innerProduct += stateI[k] * stateJ[k];
-          }
+          // Compute coherence as inner product using standardized math
+          const innerProduct = StandardMath.Vector.dot(stateI, stateJ);
 
           // Take absolute value for coherence measure
           coherenceValues.push(Math.abs(innerProduct));
@@ -397,12 +574,12 @@ class FiberAlgebraPatternRecognition {
    */
   applyTransformations(encodedStates) {
     // Validate input
-    if (!encodedStates || typeof encodedStates !== 'object') {
-      throw new Prime.ValidationError('Encoded states must be a valid object', {
-        context: { actual: typeof encodedStates }
+    if (!encodedStates || typeof encodedStates !== "object") {
+      throw new Prime.ValidationError("Encoded states must be a valid object", {
+        context: { actual: typeof encodedStates },
       });
     }
-    
+
     const transformedStatesList = [];
 
     // Apply each generator with different amounts
@@ -439,17 +616,87 @@ class FiberAlgebraPatternRecognition {
    * @returns {Array} List of extracted patterns with metadata
    */
   findPatterns(data, nPatterns = 3) {
-    // Validate input
-    if (!Array.isArray(data)) {
-      throw new Prime.ValidationError('Data must be an array', {
-        context: { actual: typeof data }
+    // Validate data is provided and is an array
+    TypeValidation.assertDefined(data, "data", {
+      operation: "FiberAlgebraPatternRecognition.findPatterns",
+    });
+
+    TypeValidation.assertArray(data, "data", {
+      operation: "FiberAlgebraPatternRecognition.findPatterns",
+    });
+
+    // Validate nPatterns is a positive integer
+    if (nPatterns !== undefined) {
+      TypeValidation.assertPositiveInteger(nPatterns, "nPatterns", {
+        operation: "FiberAlgebraPatternRecognition.findPatterns",
       });
+
+      // Check for unreasonably large value
+      if (nPatterns > 100) {
+        Prime.Logger.warn(
+          `Requested ${nPatterns} patterns, which is unusually high`,
+          {
+            operation: "FiberAlgebraPatternRecognition.findPatterns",
+            recommendedMaximum: 100,
+          },
+        );
+
+        // Cap at a reasonable number to avoid excessive computation
+        nPatterns = 100;
+      }
     }
-    
+
     // Ensure data is 2D
     let processedData = data;
     if (!Array.isArray(data[0])) {
       processedData = [data];
+
+      Prime.Logger.info(
+        "Reshaped 1D data array to 2D array with a single sample",
+        {
+          operation: "FiberAlgebraPatternRecognition.findPatterns",
+          originalShape: [data.length],
+          newShape: [1, data.length],
+        },
+      );
+    }
+
+    // Validate data contains only numeric values
+    for (let i = 0; i < processedData.length; i++) {
+      const sample = processedData[i];
+
+      // Validate sample is an array
+      TypeValidation.assertArray(sample, `data[${i}]`, {
+        operation: "FiberAlgebraPatternRecognition.findPatterns",
+      });
+
+      // Validate sample contains only numbers, or can be converted to numbers
+      try {
+        TypeValidation.assertNumberArray(sample, `data[${i}]`, {
+          operation: "FiberAlgebraPatternRecognition.findPatterns",
+        });
+      } catch (error) {
+        // Handle error by converting to numbers where possible
+        Prime.Logger.warn(
+          `Sample at index ${i} contains non-numeric values. Converting to numbers or using 0.`,
+          {
+            operation: "FiberAlgebraPatternRecognition.findPatterns",
+            ...error.context,
+          },
+        );
+
+        // Convert non-numeric values
+        for (let j = 0; j < sample.length; j++) {
+          if (typeof sample[j] !== "number" || isNaN(sample[j])) {
+            const numValue = Number(sample[j]);
+            if (!isNaN(numValue)) {
+              sample[j] = numValue;
+            } else {
+              sample[j] = 0; // Replace invalid values with 0
+            }
+          }
+        }
+      }
     }
 
     // Normalize data if needed
@@ -494,7 +741,7 @@ class FiberAlgebraPatternRecognition {
 
     // Add the base pattern
     const basePattern = {
-      type: 'base',
+      type: "base",
       coherence: baseCoherence,
       states: encodedStates,
       transformation: null,
@@ -513,7 +760,7 @@ class FiberAlgebraPatternRecognition {
       const amount = [0.05, 0.1, 0.2][amountIdx];
 
       const pattern = {
-        type: 'transformation',
+        type: "transformation",
         coherence: Math.max(0, Math.min(1, coherence)), // Ensure coherence is in [0,1]
         states: transformedStates,
         transformation: generatorIdx,
@@ -547,22 +794,23 @@ class FiberAlgebraPatternRecognition {
     if (!pattern || !pattern.states) {
       return [];
     }
-    
+
     if (!Array.isArray(data)) {
-      throw new Prime.ValidationError('Data must be an array', {
-        context: { actual: typeof data }
+      throw new Prime.ValidationError("Data must be an array", {
+        context: { actual: typeof data },
       });
     }
-    
+
     // Extract dimensions from data
-    const numFeatures = data.length > 0 && Array.isArray(data[0]) ? data[0].length : 0;
-    
+    const numFeatures =
+      data.length > 0 && Array.isArray(data[0]) ? data[0].length : 0;
+
     // Get pattern states across fibers
     const states = Object.values(pattern.states);
     if (states.length === 0) {
       return [];
     }
-    
+
     // Average state across fibers
     const avgState = new Array(states[0].length).fill(0);
     for (const state of states) {
@@ -570,25 +818,25 @@ class FiberAlgebraPatternRecognition {
         avgState[i] += state[i] / states.length;
       }
     }
-    
+
     // Find top dimensions by magnitude
     const dimensions = avgState
       .map((val, idx) => ({ value: Math.abs(val), index: idx }))
-      .filter(item => Number.isFinite(item.value) && item.value > 0)
+      .filter((item) => Number.isFinite(item.value) && item.value > 0)
       .sort((a, b) => b.value - a.value)
       .slice(0, 20); // Limit to top 20 dimensions
-    
+
     // Analyze each dimension for patterns in original data
     const features = [];
-    
+
     for (const dim of dimensions) {
       // Skip scalar component (index 0)
       if (dim.index === 0) continue;
-      
+
       // For grade-1 components (vector basis), map to original data features
       if (dim.index > 0 && dim.index <= numFeatures) {
         const dataIndex = dim.index - 1; // Index in original data (0-based)
-        
+
         // Calculate the relevance of this feature across data samples
         let relevance = 0;
         if (data.length > 0) {
@@ -599,43 +847,45 @@ class FiberAlgebraPatternRecognition {
           }
           relevance /= data.length;
         }
-        
+
         features.push({
           indices: [dataIndex],
           weight: dim.value * (1 + relevance),
-          type: 'direct',
-          sign: Math.sign(avgState[dim.index])
+          type: "direct",
+          sign: Math.sign(avgState[dim.index]),
         });
-      } 
+      }
       // For higher grade components, map to combinations of features
       else if (dim.index > numFeatures) {
         // Convert basis index to binary to identify which original features are involved
         // For bivectors (grade 2), two bits will be set in the binary representation
         // This is a simplification - a proper implementation would use the basis structure
-        const binaryRep = (dim.index >>> 0).toString(2).padStart(numFeatures + 1, '0');
+        const binaryRep = (dim.index >>> 0)
+          .toString(2)
+          .padStart(numFeatures + 1, "0");
         const involvedIndices = [];
-        
+
         for (let i = 0; i < binaryRep.length; i++) {
-          if (binaryRep[i] === '1') {
+          if (binaryRep[i] === "1") {
             involvedIndices.push(binaryRep.length - 1 - i);
           }
         }
-        
+
         if (involvedIndices.length > 0) {
           features.push({
             indices: involvedIndices,
             weight: dim.value,
-            type: 'composite',
-            sign: Math.sign(avgState[dim.index])
+            type: "composite",
+            sign: Math.sign(avgState[dim.index]),
           });
         }
       }
     }
-    
+
     // Sort by weight and return
     return features.sort((a, b) => b.weight - a.weight);
   }
-  
+
   /**
    * Extract feature vectors from identified patterns
    *
@@ -646,11 +896,11 @@ class FiberAlgebraPatternRecognition {
   extractFeatures(patterns, nFeatures = 10) {
     // Validate input
     if (!Array.isArray(patterns)) {
-      throw new Prime.ValidationError('Patterns must be an array', {
-        context: { actual: typeof patterns }
+      throw new Prime.ValidationError("Patterns must be an array", {
+        context: { actual: typeof patterns },
       });
     }
-    
+
     if (patterns.length === 0) {
       return [];
     }
@@ -667,7 +917,7 @@ class FiberAlgebraPatternRecognition {
       features[i][0] = pattern.coherence;
 
       // Feature 2: Pattern type (0 for base, 1 for transformation)
-      features[i][1] = pattern.type === 'base' ? 0 : 1;
+      features[i][1] = pattern.type === "base" ? 0 : 1;
 
       // Feature 3: Transformation strength (if applicable)
       features[i][2] = pattern.strength || 0;
@@ -731,11 +981,11 @@ class FiberAlgebraPatternRecognition {
   classifyPatterns(features, nClusters = 3) {
     // Validate input
     if (!Array.isArray(features)) {
-      throw new Prime.ValidationError('Features must be an array', {
-        context: { actual: typeof features }
+      throw new Prime.ValidationError("Features must be an array", {
+        context: { actual: typeof features },
       });
     }
-    
+
     if (features.length === 0) {
       return [];
     }
@@ -758,12 +1008,8 @@ class FiberAlgebraPatternRecognition {
 
     for (let i = 0; i < features.length; i++) {
       for (let j = i + 1; j < features.length; j++) {
-        // Calculate Euclidean distance
-        let distance = 0;
-        for (let k = 0; k < features[i].length; k++) {
-          distance += Math.pow(features[i][k] - features[j][k], 2);
-        }
-        distance = Math.sqrt(distance);
+        // Calculate Euclidean distance using standardized math
+        const distance = StandardMath.Vector.distance(features[i], features[j]);
 
         distances[i][j] = distance;
         distances[j][i] = distance;
@@ -830,11 +1076,11 @@ class FiberAlgebraPatternRecognition {
   analyzeData(data, nPatterns = 5) {
     // Validate input
     if (!Array.isArray(data)) {
-      throw new Prime.ValidationError('Data must be an array', {
-        context: { actual: typeof data }
+      throw new Prime.ValidationError("Data must be an array", {
+        context: { actual: typeof data },
       });
     }
-    
+
     // Step 1: Find patterns
     const patterns = this.findPatterns(data, nPatterns);
 
@@ -857,44 +1103,47 @@ class FiberAlgebraPatternRecognition {
 
   /**
    * Create a new fiber at the specified manifold position
-   * 
+   *
    * @param {Array} position - Position in the reference manifold
    * @returns {Object} A new fiber object at the specified position
    */
   createFiber(position) {
     // Validate input
     if (!Array.isArray(position)) {
-      throw new Prime.ValidationError('Position must be an array', {
-        context: { actual: typeof position }
+      throw new Prime.ValidationError("Position must be an array", {
+        context: { actual: typeof position },
       });
     }
-    
+
     const CliffordAlgebraFiber = coherenceModule.CliffordAlgebraFiber;
-    
+
     if (!CliffordAlgebraFiber) {
       throw new Prime.MathematicalError(
-        'CliffordAlgebraFiber implementation is required for fiber creation',
-        { context: { module: 'patternRecognition' } }
+        "CliffordAlgebraFiber implementation is required for fiber creation",
+        { context: { module: "patternRecognition" } },
       );
     }
-    
+
     // Use the CliffordAlgebraFiber class
     const fiber = new CliffordAlgebraFiber({
       dimension: this.dimension,
       position: position,
     });
-    
+
     // Initialize the state
     const maxSafeDimension = 10;
-    const maxBasisSize = 1000000; 
-    const nBasis = Math.min(maxBasisSize, Math.pow(2, Math.min(maxSafeDimension, this.dimension)));
+    const maxBasisSize = 1000000;
+    const nBasis = Math.min(
+      maxBasisSize,
+      Math.pow(2, Math.min(maxSafeDimension, this.dimension)),
+    );
     const initialState = new Array(nBasis).fill(0);
-    
+
     // Set initial values in the first few positions
     for (let i = 0; i < Math.min(position.length, initialState.length); i++) {
       initialState[i] = position[i];
     }
-    
+
     fiber.setState(initialState);
     return fiber;
   }
@@ -913,6 +1162,76 @@ class SequencePatternRecognition {
    * @param {boolean} options.useCoherence - Whether to use coherence measures (default: true)
    */
   constructor(options = {}) {
+    // Validate options if provided
+    if (options !== undefined) {
+      TypeValidation.assertObject(options, "options", {
+        operation: "SequencePatternRecognition.constructor",
+      });
+
+      // Validate maxPatternLength if provided
+      if (options.maxPatternLength !== undefined) {
+        TypeValidation.assertPositiveInteger(
+          options.maxPatternLength,
+          "options.maxPatternLength",
+          {
+            operation: "SequencePatternRecognition.constructor",
+          },
+        );
+
+        // Check for reasonable value
+        if (options.maxPatternLength > 1000) {
+          Prime.Logger.warn(
+            `Maximum pattern length ${options.maxPatternLength} is very large`,
+            {
+              operation: "SequencePatternRecognition.constructor",
+              recommendedMaximum: 1000,
+            },
+          );
+        }
+      }
+
+      // Validate minSupport if provided
+      if (options.minSupport !== undefined) {
+        TypeValidation.assertNumber(options.minSupport, "options.minSupport", {
+          operation: "SequencePatternRecognition.constructor",
+        });
+
+        // Check for value in range [0,1]
+        if (options.minSupport < 0 || options.minSupport > 1) {
+          throw new Prime.ValidationError(
+            `Minimum support must be between 0 and 1`,
+            {
+              operation: "SequencePatternRecognition.constructor",
+              providedValue: options.minSupport,
+              allowedRange: [0, 1],
+            },
+          );
+        }
+
+        // Check for very small value that might lead to excessive patterns
+        if (options.minSupport < 0.01) {
+          Prime.Logger.warn(
+            `Very small minimum support ${options.minSupport} may lead to excessive pattern generation`,
+            {
+              operation: "SequencePatternRecognition.constructor",
+              recommendedMinimum: 0.01,
+            },
+          );
+        }
+      }
+
+      // Validate useCoherence if provided
+      if (options.useCoherence !== undefined) {
+        TypeValidation.assertBoolean(
+          options.useCoherence,
+          "options.useCoherence",
+          {
+            operation: "SequencePatternRecognition.constructor",
+          },
+        );
+      }
+    }
+
     this.maxPatternLength = options.maxPatternLength || 10;
     this.minSupport = options.minSupport || 0.1;
     this.useCoherence = options.useCoherence !== false;
@@ -930,8 +1249,8 @@ class SequencePatternRecognition {
   findPatterns(sequence, maxPatterns = 10) {
     // Validate input
     if (!Array.isArray(sequence)) {
-      throw new Prime.ValidationError('Input must be an array', {
-        context: { actual: typeof sequence }
+      throw new Prime.ValidationError("Input must be an array", {
+        context: { actual: typeof sequence },
       });
     }
 
@@ -995,16 +1314,53 @@ class SequencePatternRecognition {
    * @returns {number} Coherence score between 0 and 1
    */
   computePatternCoherence(pattern, fullSequence) {
-    // Validate inputs
-    if (!Array.isArray(pattern) || !Array.isArray(fullSequence)) {
-      throw new Prime.ValidationError('Pattern and sequence must be arrays', {
-        context: { 
-          patternType: typeof pattern,
-          sequenceType: typeof fullSequence
-        }
+    // Validate pattern is provided and is an array
+    TypeValidation.assertDefined(pattern, "pattern", {
+      operation: "SequencePatternRecognition.computePatternCoherence",
+    });
+
+    TypeValidation.assertArray(pattern, "pattern", {
+      operation: "SequencePatternRecognition.computePatternCoherence",
+    });
+
+    // Validate fullSequence is provided and is an array
+    TypeValidation.assertDefined(fullSequence, "fullSequence", {
+      operation: "SequencePatternRecognition.computePatternCoherence",
+    });
+
+    TypeValidation.assertArray(fullSequence, "fullSequence", {
+      operation: "SequencePatternRecognition.computePatternCoherence",
+    });
+
+    // Check for empty pattern
+    if (pattern.length === 0) {
+      Prime.Logger.warn("Empty pattern provided to computePatternCoherence", {
+        operation: "SequencePatternRecognition.computePatternCoherence",
       });
+
+      return 0; // No coherence for empty pattern
     }
-    
+
+    // Check for empty sequence
+    if (fullSequence.length === 0) {
+      Prime.Logger.warn("Empty sequence provided to computePatternCoherence", {
+        operation: "SequencePatternRecognition.computePatternCoherence",
+      });
+
+      return 0; // No coherence with empty sequence
+    }
+
+    // Check if pattern is longer than sequence
+    if (pattern.length > fullSequence.length) {
+      Prime.Logger.warn("Pattern is longer than the full sequence", {
+        operation: "SequencePatternRecognition.computePatternCoherence",
+        patternLength: pattern.length,
+        sequenceLength: fullSequence.length,
+      });
+
+      return 0; // Cannot have coherence if pattern doesn't fit in sequence
+    }
+
     if (!this.useCoherence) {
       return 1.0;
     }
@@ -1058,11 +1414,11 @@ class SequencePatternRecognition {
   analyzeSequence(sequence, options = {}) {
     // Validate input
     if (!Array.isArray(sequence)) {
-      throw new Prime.ValidationError('Sequence must be an array', {
-        context: { actual: typeof sequence }
+      throw new Prime.ValidationError("Sequence must be an array", {
+        context: { actual: typeof sequence },
       });
     }
-    
+
     const maxPatterns = options.maxPatterns || 10;
 
     // Find frequent patterns
@@ -1090,9 +1446,9 @@ class SequencePatternRecognition {
         const strB = JSON.stringify(patternB);
 
         if (strA.includes(strB)) {
-          relationship = 'contains';
+          relationship = "contains";
         } else if (strB.includes(strA)) {
-          relationship = 'contained_in';
+          relationship = "contained_in";
         } else {
           // Check for overlap
           const overlapThreshold =
@@ -1128,7 +1484,7 @@ class SequencePatternRecognition {
           }
 
           if (maxOverlap >= overlapThreshold) {
-            relationship = 'overlaps';
+            relationship = "overlaps";
           }
         }
 

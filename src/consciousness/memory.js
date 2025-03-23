@@ -14,14 +14,14 @@
 // Try to import core if available
 let Prime;
 try {
-  Prime = require('../core.js');
+  Prime = require("../core.js");
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
 }
 
 // Import required modules
-const MathUtils = require('../framework/math/index.js');
+const MathUtils = require("../framework/math/index.js");
 
 /**
  * MemoryStructure provides mechanisms for storing and retrieving experiences
@@ -165,8 +165,8 @@ class MemoryStructure {
     for (const memory of candidates) {
       // Skip based on options
       if (
-        (!includeShortTerm && memory.storage === 'short-term') ||
-        (!includeLongTerm && memory.storage === 'long-term')
+        (!includeShortTerm && memory.storage === "short-term") ||
+        (!includeLongTerm && memory.storage === "long-term")
       ) {
         continue;
       }
@@ -325,7 +325,7 @@ class MemoryStructure {
       context: { ...context },
       coherence: stateCopy.coherence || 0.5,
       significance: this._calculateSignificance(stateCopy, vector),
-      storage: 'short-term',
+      storage: "short-term",
       retrievalCount: 0,
       lastRetrieved: null,
       traces: [],
@@ -372,7 +372,7 @@ class MemoryStructure {
     const patterns = this._extractPatternsFromVector(memory.vector);
 
     for (const pattern of patterns) {
-      const patternKey = `p_${pattern.join('_')}`;
+      const patternKey = `p_${pattern.join("_")}`;
 
       if (!this.patternIndex[patternKey]) {
         this.patternIndex[patternKey] = [];
@@ -515,7 +515,7 @@ class MemoryStructure {
     const patterns = this._extractPatternsFromVector(vector);
 
     for (const pattern of patterns) {
-      const patternKey = `p_${pattern.join('_')}`;
+      const patternKey = `p_${pattern.join("_")}`;
 
       if (this.patternIndex[patternKey]) {
         for (const id of this.patternIndex[patternKey]) {
@@ -640,7 +640,7 @@ class MemoryStructure {
 
     for (const memory of memories) {
       // Skip if already in long-term memory
-      if (memory.storage === 'long-term') {
+      if (memory.storage === "long-term") {
         continue;
       }
 
@@ -651,7 +651,7 @@ class MemoryStructure {
       ) {
         // Create compressed version for long-term storage
         const compressedMemory = this._compressMemory(memory);
-        compressedMemory.storage = 'long-term';
+        compressedMemory.storage = "long-term";
 
         // Add to long-term memory
         this.longTermMemory.push(compressedMemory);
@@ -808,7 +808,7 @@ class MemoryStructure {
       const patterns = this._extractPatternsFromVector(memory.vector);
 
       for (const pattern of patterns) {
-        const key = pattern.join('_');
+        const key = pattern.join("_");
 
         if (!allFeatures.has(key)) {
           allFeatures.set(key, {
@@ -884,7 +884,7 @@ class MemoryStructure {
 
         // Check if outcome dimension matches
         if (
-          typeof outcomeDim === 'number' &&
+          typeof outcomeDim === "number" &&
           memory.vector[outcomeDim] >= 0.5
         ) {
           matchingOutcomes++;

@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Create the Neural Model I/O module using IIFE
 (function () {
@@ -24,7 +24,7 @@ const Prime = require('../core');
      */
     static serialize(model, options = {}) {
       if (!model || !model.toJSON) {
-        throw new Error('Invalid model provided for serialization');
+        throw new Error("Invalid model provided for serialization");
       }
 
       // Get model data
@@ -47,8 +47,8 @@ const Prime = require('../core');
 
       // Add serialization metadata
       modelData.serializationInfo = {
-        library: 'PrimeOS Neural',
-        version: Prime.version || '1.0.0',
+        library: "PrimeOS Neural",
+        version: Prime.version || "1.0.0",
         timestamp: new Date().toISOString(),
         options: { ...options },
       };
@@ -70,12 +70,12 @@ const Prime = require('../core');
 
         // Validate model data
         if (!modelData.layers) {
-          throw new Error('Invalid model data: missing layers');
+          throw new Error("Invalid model data: missing layers");
         }
 
         // Check version compatibility if in strict mode
         if (options.strict && modelData.serializationInfo) {
-          const currentVersion = Prime.version || '1.0.0';
+          const currentVersion = Prime.version || "1.0.0";
           const serializedVersion = modelData.serializationInfo.version;
 
           // Simple version check (in real implementation, would do proper semver comparison)
@@ -104,22 +104,22 @@ const Prime = require('../core');
     static async saveToFile(model, filePath, options = {}) {
       // Check if running in Node.js
       if (
-        typeof process === 'undefined' ||
+        typeof process === "undefined" ||
         !process.versions ||
         !process.versions.node
       ) {
-        throw new Error('saveToFile is only available in Node.js environment');
+        throw new Error("saveToFile is only available in Node.js environment");
       }
 
       // Dynamically import fs module
-      const fs = require('fs').promises;
+      const fs = require("fs").promises;
 
       try {
         // Serialize model
         const json = this.serialize(model, options);
 
         // Write to file
-        await fs.writeFile(filePath, json, 'utf8');
+        await fs.writeFile(filePath, json, "utf8");
       } catch (error) {
         throw new Error(`Failed to save model: ${error.message}`);
       }
@@ -134,21 +134,21 @@ const Prime = require('../core');
     static async loadFromFile(filePath, options = {}) {
       // Check if running in Node.js
       if (
-        typeof process === 'undefined' ||
+        typeof process === "undefined" ||
         !process.versions ||
         !process.versions.node
       ) {
         throw new Error(
-          'loadFromFile is only available in Node.js environment',
+          "loadFromFile is only available in Node.js environment",
         );
       }
 
       // Dynamically import fs module
-      const fs = require('fs').promises;
+      const fs = require("fs").promises;
 
       try {
         // Read file
-        const json = await fs.readFile(filePath, 'utf8');
+        const json = await fs.readFile(filePath, "utf8");
 
         // Deserialize model
         return this.deserialize(json, options);
@@ -164,7 +164,7 @@ const Prime = require('../core');
      */
     static extractWeights(model) {
       if (!model || !model.layers) {
-        throw new Error('Invalid model provided for weight extraction');
+        throw new Error("Invalid model provided for weight extraction");
       }
 
       const weights = {
@@ -202,11 +202,11 @@ const Prime = require('../core');
      */
     static applyWeights(model, weights, validateStructure = true) {
       if (!model || !model.layers) {
-        throw new Error('Invalid model provided for weight application');
+        throw new Error("Invalid model provided for weight application");
       }
 
       if (!weights || !weights.layers) {
-        throw new Error('Invalid weights object');
+        throw new Error("Invalid weights object");
       }
 
       // Validate weights structure against model if required
@@ -287,7 +287,7 @@ const Prime = require('../core');
      */
     static mergeWeights(weightsArray) {
       if (!Array.isArray(weightsArray) || weightsArray.length === 0) {
-        throw new Error('Invalid weights array');
+        throw new Error("Invalid weights array");
       }
 
       // Use first weights object as template
@@ -387,7 +387,7 @@ const Prime = require('../core');
      */
     static toWebFormat(model) {
       if (!model || !model.toJSON) {
-        throw new Error('Invalid model provided for web format conversion');
+        throw new Error("Invalid model provided for web format conversion");
       }
 
       // Get base model data
@@ -434,8 +434,8 @@ const Prime = require('../core');
 
       // Add web format metadata
       modelData.format = {
-        type: 'primeos-web',
-        version: '1.0',
+        type: "primeos-web",
+        version: "1.0",
         timestamp: new Date().toISOString(),
       };
 
@@ -449,11 +449,11 @@ const Prime = require('../core');
      */
     static fromWebFormat(webModel) {
       if (!webModel || !webModel.layers || !webModel.format) {
-        throw new Error('Invalid web format model data');
+        throw new Error("Invalid web format model data");
       }
 
       // Verify format
-      if (webModel.format.type !== 'primeos-web') {
+      if (webModel.format.type !== "primeos-web") {
         throw new Error(`Unsupported model format: ${webModel.format.type}`);
       }
 

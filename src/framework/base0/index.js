@@ -2,17 +2,17 @@
  * PrimeOS JavaScript Library - Framework
  * Base 0: Neural Network Specification
  * Abstract mathematical foundation for the entire system
- * 
+ *
  * This is the foundational layer of the PrimeOS framework, providing
  * mathematical abstractions and models that higher layers build upon.
  */
 
 // Import core
-const Prime = require('../../core/prime.js');
-const MathUtils = require('../math');
+const Prime = require("../../core/prime.js");
+const MathUtils = require("../math");
 
 // Import Manifold implementation
-require('./manifold.js');
+require("./manifold.js");
 
 /**
  * Base 0: Neural Network Specification
@@ -26,10 +26,10 @@ const Base0 = {
    */
   createEmbeddingModel: function (config = {}) {
     return {
-      type: 'embedding',
+      type: "embedding",
       dimensions: config.dimensions || 128,
-      metric: config.metric || 'euclidean',
-      name: config.name || 'EmbeddingModel',
+      metric: config.metric || "euclidean",
+      name: config.name || "EmbeddingModel",
 
       /**
        * Embed data into the vector space
@@ -39,7 +39,7 @@ const Base0 = {
       embed: function (data) {
         if (
           config.embedFunction &&
-          typeof config.embedFunction === 'function'
+          typeof config.embedFunction === "function"
         ) {
           return config.embedFunction(data);
         }
@@ -57,7 +57,7 @@ const Base0 = {
       distance: function (a, b) {
         // Validate inputs
         if (!Prime.Utils.isArray(a) || !Prime.Utils.isArray(b)) {
-          throw new Prime.ValidationError('Embeddings must be arrays', {
+          throw new Prime.ValidationError("Embeddings must be arrays", {
             context: {
               aType: typeof a,
               bType: typeof b,
@@ -74,7 +74,7 @@ const Base0 = {
 
         if (hasInvalidValue(a) || hasInvalidValue(b)) {
           throw new Prime.ValidationError(
-            'Embeddings contain NaN or Infinity values',
+            "Embeddings contain NaN or Infinity values",
             {
               context: {
                 hasNaN: a.some(Number.isNaN) || b.some(Number.isNaN),
@@ -90,19 +90,19 @@ const Base0 = {
         let distanceResult;
 
         switch (this.metric) {
-          case 'euclidean':
+          case "euclidean":
             distanceResult = MathUtils.vector.distance(a, b);
             return distanceResult.distance;
 
-          case 'cosine':
+          case "cosine":
             distanceResult = MathUtils.vector.cosineSimilarity(a, b);
             return distanceResult.distance;
 
-          case 'manhattan':
+          case "manhattan":
             distanceResult = MathUtils.vector.manhattanDistance(a, b);
             return distanceResult.distance;
 
-          case 'chebyshev':
+          case "chebyshev":
             distanceResult = MathUtils.vector.chebyshevDistance(a, b);
             return distanceResult.distance;
 
@@ -112,10 +112,10 @@ const Base0 = {
               {
                 context: {
                   availableMetrics: [
-                    'euclidean',
-                    'cosine',
-                    'manhattan',
-                    'chebyshev',
+                    "euclidean",
+                    "cosine",
+                    "manhattan",
+                    "chebyshev",
                   ],
                   providedMetric: this.metric,
                 },
@@ -131,7 +131,7 @@ const Base0 = {
        */
       toUOR: function (reference) {
         if (!Prime.UOR || !Prime.UOR.isReference(reference)) {
-          throw new Prime.ValidationError('Invalid UOR reference');
+          throw new Prime.ValidationError("Invalid UOR reference");
         }
 
         return reference.createObject(this);
@@ -156,10 +156,10 @@ const Base0 = {
    */
   createLogicModel: function (config = {}) {
     return {
-      type: 'logic',
+      type: "logic",
       rules: config.rules || [],
       constraints: config.constraints || [],
-      name: config.name || 'LogicModel',
+      name: config.name || "LogicModel",
 
       /**
        * Apply logic rules to data
@@ -171,9 +171,9 @@ const Base0 = {
 
         // Apply each rule in sequence
         for (const rule of this.rules) {
-          if (typeof rule === 'function') {
+          if (typeof rule === "function") {
             result = rule(result);
-          } else if (rule && typeof rule.apply === 'function') {
+          } else if (rule && typeof rule.apply === "function") {
             result = rule.apply(result);
           }
         }
@@ -189,11 +189,11 @@ const Base0 = {
       validate: function (data) {
         // Check all constraints
         for (const constraint of this.constraints) {
-          if (typeof constraint === 'function') {
+          if (typeof constraint === "function") {
             if (!constraint(data)) {
               return false;
             }
-          } else if (constraint && typeof constraint.check === 'function') {
+          } else if (constraint && typeof constraint.check === "function") {
             if (!constraint.check(data)) {
               return false;
             }
@@ -230,7 +230,7 @@ const Base0 = {
        */
       toUOR: function (reference) {
         if (!Prime.UOR || !Prime.UOR.isReference(reference)) {
-          throw new Prime.ValidationError('Invalid UOR reference');
+          throw new Prime.ValidationError("Invalid UOR reference");
         }
 
         return reference.createObject(this);
@@ -255,10 +255,10 @@ const Base0 = {
    */
   createRepresentationModel: function (config = {}) {
     return {
-      type: 'representation',
+      type: "representation",
       transformations: config.transformations || [],
       formats: config.formats || {},
-      name: config.name || 'RepresentationModel',
+      name: config.name || "RepresentationModel",
 
       /**
        * Apply a transformation to data
@@ -284,9 +284,9 @@ const Base0 = {
           );
         }
 
-        if (typeof transform.apply === 'function') {
+        if (typeof transform.apply === "function") {
           return transform.apply(data);
-        } else if (typeof transform === 'function') {
+        } else if (typeof transform === "function") {
           return transform(data);
         }
 
@@ -310,9 +310,9 @@ const Base0 = {
 
         const formatter = this.formats[format];
 
-        if (typeof formatter === 'function') {
+        if (typeof formatter === "function") {
           return formatter(data);
-        } else if (formatter && typeof formatter.format === 'function') {
+        } else if (formatter && typeof formatter.format === "function") {
           return formatter.format(data);
         }
 
@@ -325,9 +325,9 @@ const Base0 = {
        * @returns {Object} Updated representation model
        */
       addTransformation: function (transformation) {
-        if (!transformation.name && typeof transformation !== 'function') {
+        if (!transformation.name && typeof transformation !== "function") {
           throw new Prime.ValidationError(
-            'Transformation must have a name property or be a function',
+            "Transformation must have a name property or be a function",
           );
         }
 
@@ -353,7 +353,7 @@ const Base0 = {
        */
       toUOR: function (reference) {
         if (!Prime.UOR || !Prime.UOR.isReference(reference)) {
-          throw new Prime.ValidationError('Invalid UOR reference');
+          throw new Prime.ValidationError("Invalid UOR reference");
         }
 
         return reference.createObject(this);
@@ -378,9 +378,9 @@ const Base0 = {
    */
   createProcessor: function (config = {}) {
     return {
-      type: 'processor',
+      type: "processor",
       operations: config.operations || [],
-      name: config.name || 'Processor',
+      name: config.name || "Processor",
 
       /**
        * Process data with an operation
@@ -402,9 +402,9 @@ const Base0 = {
           );
         }
 
-        if (typeof op.apply === 'function') {
+        if (typeof op.apply === "function") {
           return op.apply(data);
-        } else if (typeof op === 'function') {
+        } else if (typeof op === "function") {
           return op(data);
         }
 
@@ -427,9 +427,9 @@ const Base0 = {
        * @returns {Object} Updated processor
        */
       addOperation: function (operation) {
-        if (!operation.name && typeof operation !== 'function') {
+        if (!operation.name && typeof operation !== "function") {
           throw new Prime.ValidationError(
-            'Operation must have a name property or be a function',
+            "Operation must have a name property or be a function",
           );
         }
 
@@ -444,7 +444,7 @@ const Base0 = {
        */
       toUOR: function (reference) {
         if (!Prime.UOR || !Prime.UOR.isReference(reference)) {
-          throw new Prime.ValidationError('Invalid UOR reference');
+          throw new Prime.ValidationError("Invalid UOR reference");
         }
 
         return reference.createObject(this);
@@ -494,7 +494,7 @@ const Base0 = {
    */
   connectToCoherence: function (components) {
     if (!Prime.coherence) {
-      Prime.Logger && Prime.Logger.warn('Coherence system not available');
+      Prime.Logger && Prime.Logger.warn("Coherence system not available");
       return components;
     }
 
@@ -507,4 +507,11 @@ const Base0 = {
   },
 };
 
-module.exports = Base0;
+// Assign Base0 to Prime.Base0 namespace
+Prime.Base0 = Base0;
+
+// Import manifold mock for tests - must be loaded after Base0 is assigned
+require("./manifold-mock.js");
+
+// Export the enhanced Prime object
+module.exports = Prime;

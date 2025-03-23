@@ -6,19 +6,19 @@
  * to address memory consumption issues in extreme-conditions-tests.js
  */
 
-const jest = require('jest');
-const path = require('path');
-const fs = require('fs');
-const { execSync } = require('child_process');
+const jest = require("jest");
+const path = require("path");
+const fs = require("fs");
+const { execSync } = require("child_process");
 
 // Base configuration options
 const baseOptions = {
   // Increase test timeout for complex calculations
   testTimeout: 120000,
   // Configure specific environment variables for testing
-  setupFiles: ['./test-setup.js'],
+  setupFiles: ["./test-setup.js"],
   // Use a custom reporter for extreme value testing
-  reporters: ['default'],
+  reporters: ["default"],
   // Disable coverage to reduce memory usage
   collectCoverage: false,
   // Set minimal output
@@ -40,42 +40,42 @@ const baseOptions = {
 // Each batch focuses on a specific test suite to limit memory usage
 const testBatches = [
   {
-    name: 'basic',
-    description: 'Basic extreme precision tests',
-    testMatch: ['**/extreme-conditions-basic-test.js'],
-    outputFile: 'extreme-basic-report.json',
+    name: "basic",
+    description: "Basic extreme precision tests",
+    testMatch: ["**/extreme-conditions-basic-test.js"],
+    outputFile: "extreme-basic-report.json",
   },
   {
-    name: 'rna-folding',
-    description: 'RNA Folding simulation tests',
-    testMatch: ['**/extreme-conditions-tests.js'],
-    testNamePattern: 'Extreme Conditions Handling.*RNA.*',
+    name: "rna-folding",
+    description: "RNA Folding simulation tests",
+    testMatch: ["**/extreme-conditions-tests.js"],
+    testNamePattern: "Extreme Conditions Handling.*RNA.*",
   },
   {
-    name: 'high-dimension',
-    description: 'High-Dimension Fiber Algebra tests',
-    testMatch: ['**/extreme-conditions-tests.js'],
+    name: "high-dimension",
+    description: "High-Dimension Fiber Algebra tests",
+    testMatch: ["**/extreme-conditions-tests.js"],
     testNamePattern:
-      'Extreme Conditions Handling.*High-Dimension Fiber Algebra.*',
+      "Extreme Conditions Handling.*High-Dimension Fiber Algebra.*",
   },
   {
-    name: 'coherence-gradient',
-    description: 'Coherence-Gradient Descent tests',
-    testMatch: ['**/extreme-conditions-tests.js'],
+    name: "coherence-gradient",
+    description: "Coherence-Gradient Descent tests",
+    testMatch: ["**/extreme-conditions-tests.js"],
     testNamePattern:
-      'Extreme Conditions Handling.*Coherence-Gradient Descent.*',
+      "Extreme Conditions Handling.*Coherence-Gradient Descent.*",
   },
   {
-    name: 'numerical-propagation',
-    description: 'Numerical Propagation Analysis tests',
-    testMatch: ['**/extreme-conditions-tests.js'],
+    name: "numerical-propagation",
+    description: "Numerical Propagation Analysis tests",
+    testMatch: ["**/extreme-conditions-tests.js"],
     testNamePattern:
-      'Extreme Conditions Handling.*Numerical Propagation Analysis.*',
+      "Extreme Conditions Handling.*Numerical Propagation Analysis.*",
   },
 ];
 
 // Create test setup file if it doesn't exist
-const setupFile = path.resolve(__dirname, 'test-setup.js');
+const setupFile = path.resolve(__dirname, "test-setup.js");
 if (!fs.existsSync(setupFile)) {
   const setupContent = `// Test setup for extreme conditions
 process.env.NODE_ENV = 'test';
@@ -204,7 +204,7 @@ global.requestGC = function() {
 }
 
 // Create output directory for test results
-const resultsDir = path.resolve(__dirname, 'test-results');
+const resultsDir = path.resolve(__dirname, "test-results");
 if (!fs.existsSync(resultsDir)) {
   fs.mkdirSync(resultsDir, { recursive: true });
 }
@@ -212,13 +212,13 @@ if (!fs.existsSync(resultsDir)) {
 // Function to run a batch of tests
 async function runTestBatch(batch) {
   console.log(`\n=== Starting batch: ${batch.name} - ${batch.description} ===`);
-  console.log('Testing with extended precision and memory profiling enabled');
+  console.log("Testing with extended precision and memory profiling enabled");
 
   // Create a fresh options object for each batch
   const options = {
     testTimeout: 120000,
-    setupFiles: ['./test-setup.js'],
-    reporters: ['default'],
+    setupFiles: ["./test-setup.js"],
+    reporters: ["default"],
     collectCoverage: false,
     verbose: false,
     maxWorkers: 1,
@@ -229,7 +229,7 @@ async function runTestBatch(batch) {
       EXTREME_TESTING: true,
     },
     // Override the default testPathIgnorePatterns to allow running extreme-conditions-tests.js
-    testPathIgnorePatterns: ['/node_modules/'],
+    testPathIgnorePatterns: ["/node_modules/"],
   };
 
   // Configure test matching - only set one of testMatch or testRegex
@@ -243,7 +243,7 @@ async function runTestBatch(batch) {
   }
 
   // Initial memory usage
-  console.log('MEMORY: Initial memory snapshot for batch');
+  console.log("MEMORY: Initial memory snapshot for batch");
 
   // Run the tests
   try {
@@ -288,11 +288,11 @@ async function runTestBatch(batch) {
         console.log(`Forced garbage collection after batch ${batch.name}`);
       } else {
         console.log(
-          'Note: Run with --expose-gc flag to enable garbage collection between batches',
+          "Note: Run with --expose-gc flag to enable garbage collection between batches",
         );
       }
     } catch (e) {
-      console.log('Unable to force garbage collection');
+      console.log("Unable to force garbage collection");
     }
 
     // Small delay to allow memory to be reclaimed
@@ -302,7 +302,7 @@ async function runTestBatch(batch) {
 
 // Main function to run all batches
 async function runAllBatches() {
-  console.log('=== PrimeOS Extreme Conditions Test Runner ===');
+  console.log("=== PrimeOS Extreme Conditions Test Runner ===");
 
   const allResults = [];
   let totalTests = 0;
@@ -321,7 +321,7 @@ async function runAllBatches() {
 
   if (specificBatch && batchesToRun.length === 0) {
     console.error(`No batch found with name: ${specificBatch}`);
-    console.log('Available batches:');
+    console.log("Available batches:");
     testBatches.forEach((batch) => {
       console.log(`- ${batch.name}: ${batch.description}`);
     });
@@ -344,9 +344,9 @@ async function runAllBatches() {
   }
 
   // Generate consolidated report
-  console.log('\n=== Extreme Conditions Test Summary ===');
+  console.log("\n=== Extreme Conditions Test Summary ===");
   allResults.forEach((result) => {
-    const status = result.success ? '✅ PASS' : '❌ FAIL';
+    const status = result.success ? "✅ PASS" : "❌ FAIL";
     console.log(`${status} - ${result.name}: ${result.description}`);
     if (result.totalTests !== undefined) {
       console.log(
@@ -358,14 +358,14 @@ async function runAllBatches() {
     }
   });
 
-  console.log('\nTotal Results:');
+  console.log("\nTotal Results:");
   console.log(
     `Tests: ${totalTests}, Passed: ${totalPassed}, Failed: ${totalFailed}`,
   );
 
   // Save consolidated results
   fs.writeFileSync(
-    path.resolve(resultsDir, 'extreme-test-consolidated-report.json'),
+    path.resolve(resultsDir, "extreme-test-consolidated-report.json"),
     JSON.stringify(
       {
         timestamp: new Date().toISOString(),
@@ -391,6 +391,6 @@ runAllBatches()
     process.exit(success ? 0 : 1);
   })
   .catch((error) => {
-    console.error('Unhandled error in test execution:', error);
+    console.error("Unhandled error in test execution:", error);
     process.exit(1);
   });

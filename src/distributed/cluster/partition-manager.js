@@ -4,8 +4,8 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
-const EventBus = require('../event-bus');
+const Prime = require("../../core");
+const EventBus = require("../event-bus");
 
 /**
  * Partitioning types for distributed computation
@@ -13,13 +13,13 @@ const EventBus = require('../event-bus');
  */
 const PartitionType = {
   /** Partition data across nodes */
-  DATA_PARALLEL: 'data-parallel',
+  DATA_PARALLEL: "data-parallel",
   /** Partition model layers across nodes */
-  LAYER_WISE: 'layer-wise',
+  LAYER_WISE: "layer-wise",
   /** Partition within individual layers */
-  INTRA_LAYER: 'intra-layer',
+  INTRA_LAYER: "intra-layer",
   /** Partition by computation type */
-  FUNCTIONAL: 'functional',
+  FUNCTIONAL: "functional",
 };
 
 /**
@@ -28,15 +28,15 @@ const PartitionType = {
  */
 const PartitionStrategy = {
   /** Equal distribution of work */
-  BALANCED: 'balanced',
+  BALANCED: "balanced",
   /** Based on node capabilities */
-  CAPABILITY_BASED: 'capability-based',
+  CAPABILITY_BASED: "capability-based",
   /** Based on data locality */
-  LOCALITY_BASED: 'locality-based',
+  LOCALITY_BASED: "locality-based",
   /** Based on communication cost */
-  COMMUNICATION_OPTIMIZED: 'communication-optimized',
+  COMMUNICATION_OPTIMIZED: "communication-optimized",
   /** Dynamic adjustment based on performance */
-  ADAPTIVE: 'adaptive',
+  ADAPTIVE: "adaptive",
 };
 
 /**
@@ -52,7 +52,7 @@ class PartitionScheme {
    */
   constructor(config = {}) {
     if (!config.type || !Object.values(PartitionType).includes(config.type)) {
-      throw new Prime.ValidationError('Valid partition type is required');
+      throw new Prime.ValidationError("Valid partition type is required");
     }
 
     this.type = config.type;
@@ -87,7 +87,7 @@ class PartitionScheme {
    */
   configureLayer(layerId, config) {
     if (!layerId) {
-      throw new Prime.ValidationError('Layer ID is required');
+      throw new Prime.ValidationError("Layer ID is required");
     }
 
     this.layerConfig[layerId] = {
@@ -112,7 +112,7 @@ class PartitionScheme {
     }
 
     if (!Array.isArray(nodeIds) || nodeIds.length === 0) {
-      throw new Prime.ValidationError('At least one node ID is required');
+      throw new Prime.ValidationError("At least one node ID is required");
     }
 
     // Update layer assignments
@@ -128,7 +128,7 @@ class PartitionScheme {
     }
 
     // Emit assignment event
-    this.eventBus.emit('partition:layer-assigned', {
+    this.eventBus.emit("partition:layer-assigned", {
       layerId,
       nodeIds,
       timestamp: Date.now(),
@@ -179,7 +179,7 @@ class PartitionScheme {
     };
 
     // Emit sync status update event
-    this.eventBus.emit('partition:sync-updated', {
+    this.eventBus.emit("partition:sync-updated", {
       layerId,
       status: this.syncStatus[layerId],
       timestamp: Date.now(),
@@ -205,7 +205,7 @@ class PartitionScheme {
               source: nodeIds[i],
               target: nodeIds[j],
               layerId,
-              type: 'intra-layer',
+              type: "intra-layer",
             });
           }
         }
@@ -232,7 +232,7 @@ class PartitionScheme {
               target: targetNodeId,
               sourceLayer: currentLayerId,
               targetLayer: nextLayerId,
-              type: 'inter-layer',
+              type: "inter-layer",
             });
           }
         }
@@ -312,10 +312,10 @@ class PartitionScheme {
       communication: {
         paths: communicationPaths.length,
         intraLayerPaths: communicationPaths.filter(
-          (p) => p.type === 'intra-layer',
+          (p) => p.type === "intra-layer",
         ).length,
         interLayerPaths: communicationPaths.filter(
-          (p) => p.type === 'inter-layer',
+          (p) => p.type === "inter-layer",
         ).length,
       },
       metrics: this.metrics,
@@ -352,7 +352,7 @@ class DataParallelPartition extends PartitionScheme {
    */
   calculateBatchSizes(totalBatchSize, nodeCount) {
     if (nodeCount <= 0) {
-      throw new Prime.ValidationError('Node count must be positive');
+      throw new Prime.ValidationError("Node count must be positive");
     }
 
     // Calculate batch size per node
@@ -388,7 +388,7 @@ class DataParallelPartition extends PartitionScheme {
       config.nodeIds.length === 0
     ) {
       throw new Prime.ValidationError(
-        'Total batch size and node IDs are required',
+        "Total batch size and node IDs are required",
       );
     }
 
@@ -482,7 +482,7 @@ class DataParallelPartition extends PartitionScheme {
   applyPartitionPlan(plan, layerIds) {
     if (!plan || !plan.partitions || !Array.isArray(layerIds)) {
       throw new Prime.ValidationError(
-        'Valid partition plan and layer IDs are required',
+        "Valid partition plan and layer IDs are required",
       );
     }
 
@@ -511,7 +511,7 @@ class DataParallelPartition extends PartitionScheme {
     }
 
     // Emit partition applied event
-    this.eventBus.emit('partition:plan-applied', {
+    this.eventBus.emit("partition:plan-applied", {
       type: this.type,
       strategy: this.strategy,
       layerIds,
@@ -553,7 +553,7 @@ class LayerWisePartition extends PartitionScheme {
    */
   createPartitionPlan(config) {
     if (!config.layers || !config.nodeIds || config.nodeIds.length === 0) {
-      throw new Prime.ValidationError('Layers and node IDs are required');
+      throw new Prime.ValidationError("Layers and node IDs are required");
     }
 
     const nodeCount = config.nodeIds.length;
@@ -580,9 +580,9 @@ class LayerWisePartition extends PartitionScheme {
           let score = capabilities.compute || 1.0;
 
           // Adjust score based on layer type
-          if (layer.type === 'conv' && capabilities.gpu) {
+          if (layer.type === "conv" && capabilities.gpu) {
             score *= 1.5; // GPUs are better for convolutional layers
-          } else if (layer.type === 'recurrent' && capabilities.memory) {
+          } else if (layer.type === "recurrent" && capabilities.memory) {
             score *= 1.2; // High memory nodes are better for recurrent layers
           }
 
@@ -686,7 +686,7 @@ class LayerWisePartition extends PartitionScheme {
    */
   applyPartitionPlan(plan) {
     if (!plan || !plan.partitions) {
-      throw new Prime.ValidationError('Valid partition plan is required');
+      throw new Prime.ValidationError("Valid partition plan is required");
     }
 
     // Clear existing assignments
@@ -718,7 +718,7 @@ class LayerWisePartition extends PartitionScheme {
     }
 
     // Emit partition applied event
-    this.eventBus.emit('partition:plan-applied', {
+    this.eventBus.emit("partition:plan-applied", {
       type: this.type,
       strategy: this.strategy,
       layerIds: plan.partitions.map((p) => p.layerId),
@@ -746,7 +746,10 @@ class LayerWisePartition extends PartitionScheme {
     const layerCosts = this._estimateLayerComputationalCosts(layers);
 
     // Step 3: Calculate communication cost matrix between layers
-    const communicationCosts = this._calculateCommunicationCosts(layers, dependencyGraph);
+    const communicationCosts = this._calculateCommunicationCosts(
+      layers,
+      dependencyGraph,
+    );
 
     // Step 4: Apply graph partitioning algorithm to minimize communication costs
     // while balancing computational load
@@ -754,7 +757,7 @@ class LayerWisePartition extends PartitionScheme {
       dependencyGraph,
       communicationCosts,
       layerCosts,
-      nodeCount
+      nodeCount,
     );
   }
 
@@ -766,7 +769,9 @@ class LayerWisePartition extends PartitionScheme {
    */
   _buildLayerDependencyGraph(layers) {
     const layerCount = layers.length;
-    const dependencyGraph = Array(layerCount).fill().map(() => Array(layerCount).fill(0));
+    const dependencyGraph = Array(layerCount)
+      .fill()
+      .map(() => Array(layerCount).fill(0));
 
     // Map layer IDs to indices for faster lookups
     const layerIndexMap = new Map();
@@ -823,31 +828,31 @@ class LayerWisePartition extends PartitionScheme {
    * @returns {Array<number>} Estimated computational cost for each layer
    */
   _estimateLayerComputationalCosts(layers) {
-    return layers.map(layer => {
+    return layers.map((layer) => {
       // Base cost based on input and output sizes
       let cost = (layer.inputSize || 1) * (layer.outputSize || 1);
 
       // Adjust based on layer type
       switch (layer.type) {
-        case 'conv':
+        case "conv":
           // Convolutional layers are more expensive
           const kernelSize = layer.kernelSize || 3;
           const channels = layer.channels || 1;
           cost *= kernelSize * kernelSize * channels;
           break;
 
-        case 'recurrent':
+        case "recurrent":
           // Recurrent layers have sequential dependencies
           const timeSteps = layer.timeSteps || 1;
           cost *= timeSteps;
           break;
 
-        case 'attention':
+        case "attention":
           // Attention mechanisms are very computation-heavy
           cost *= 3; // Multiple matrix multiplies + softmax
           break;
 
-        case 'pooling':
+        case "pooling":
           // Pooling layers are computationally lighter
           cost /= 4;
           break;
@@ -856,15 +861,15 @@ class LayerWisePartition extends PartitionScheme {
       // Adjust for activation function complexity
       if (layer.activation) {
         switch (layer.activation) {
-          case 'relu':
+          case "relu":
             // ReLU is computationally simple
             break;
-          case 'sigmoid':
-          case 'tanh':
+          case "sigmoid":
+          case "tanh":
             // These involve exponentials and are more expensive
             cost *= 1.2;
             break;
-          case 'softmax':
+          case "softmax":
             // Softmax involves exponentials and normalization
             cost *= 1.5;
             break;
@@ -884,7 +889,9 @@ class LayerWisePartition extends PartitionScheme {
    */
   _calculateCommunicationCosts(layers, dependencyGraph) {
     const layerCount = layers.length;
-    const communicationCosts = Array(layerCount).fill().map(() => Array(layerCount).fill(0));
+    const communicationCosts = Array(layerCount)
+      .fill()
+      .map(() => Array(layerCount).fill(0));
 
     for (let i = 0; i < layerCount; i++) {
       for (let j = 0; j < layerCount; j++) {
@@ -914,7 +921,12 @@ class LayerWisePartition extends PartitionScheme {
    * @param {number} nodeCount - Number of available nodes
    * @returns {Array<number>} Node assignments for each layer
    */
-  _partitionLayerGraph(dependencyGraph, communicationCosts, layerCosts, nodeCount) {
+  _partitionLayerGraph(
+    dependencyGraph,
+    communicationCosts,
+    layerCosts,
+    nodeCount,
+  ) {
     const layerCount = layerCosts.length;
 
     // Initialize with equal distribution of layers across nodes
@@ -924,7 +936,8 @@ class LayerWisePartition extends PartitionScheme {
     const targetCostPerNode = totalCost / nodeCount;
 
     // First pass: group strongly connected components
-    const components = this._identifyStronglyConnectedComponents(dependencyGraph);
+    const components =
+      this._identifyStronglyConnectedComponents(dependencyGraph);
 
     // Sort components by total cost (descending)
     components.sort((a, b) => {
@@ -936,7 +949,10 @@ class LayerWisePartition extends PartitionScheme {
     // Assign components to nodes using a bin packing approach
     for (const component of components) {
       // Calculate component cost
-      const componentCost = component.reduce((sum, layerIdx) => sum + layerCosts[layerIdx], 0);
+      const componentCost = component.reduce(
+        (sum, layerIdx) => sum + layerCosts[layerIdx],
+        0,
+      );
 
       // Find best node for this component
       let bestNodeIdx = 0;
@@ -950,7 +966,10 @@ class LayerWisePartition extends PartitionScheme {
       }
 
       // If this component would make the node too unbalanced, try splitting it
-      if (nodeCosts[bestNodeIdx] + componentCost > targetCostPerNode * 1.5 && component.length > 1) {
+      if (
+        nodeCosts[bestNodeIdx] + componentCost > targetCostPerNode * 1.5 &&
+        component.length > 1
+      ) {
         // Find node with second lowest cost
         let secondBestNodeIdx = bestNodeIdx === 0 ? 1 : 0;
         let secondMinCost = nodeCosts[secondBestNodeIdx];
@@ -963,7 +982,9 @@ class LayerWisePartition extends PartitionScheme {
         }
 
         // Try to split component across these two nodes
-        const sortedLayers = [...component].sort((a, b) => layerCosts[b] - layerCosts[a]);
+        const sortedLayers = [...component].sort(
+          (a, b) => layerCosts[b] - layerCosts[a],
+        );
         let firstNodeCost = 0;
         let secondNodeCost = 0;
 
@@ -971,7 +992,10 @@ class LayerWisePartition extends PartitionScheme {
           const cost = layerCosts[layerIdx];
 
           // Assign to node with lower current cost
-          if (nodeCosts[bestNodeIdx] + firstNodeCost <= nodeCosts[secondBestNodeIdx] + secondNodeCost) {
+          if (
+            nodeCosts[bestNodeIdx] + firstNodeCost <=
+            nodeCosts[secondBestNodeIdx] + secondNodeCost
+          ) {
             assignments[layerIdx] = bestNodeIdx;
             firstNodeCost += cost;
           } else {
@@ -998,7 +1022,11 @@ class LayerWisePartition extends PartitionScheme {
     let improvements = true;
     const maxIterations = Math.min(20, layerCount * 2);
 
-    for (let iteration = 0; iteration < maxIterations && improvements; iteration++) {
+    for (
+      let iteration = 0;
+      iteration < maxIterations && improvements;
+      iteration++
+    ) {
       improvements = false;
 
       // For each layer, consider moving it to another node
@@ -1024,7 +1052,11 @@ class LayerWisePartition extends PartitionScheme {
         }
 
         // Try moving to each other node
-        for (let targetNodeIdx = 0; targetNodeIdx < nodeCount; targetNodeIdx++) {
+        for (
+          let targetNodeIdx = 0;
+          targetNodeIdx < nodeCount;
+          targetNodeIdx++
+        ) {
           if (targetNodeIdx === currentNodeIdx) continue;
 
           // Calculate new communication cost if moved to this node
@@ -1050,7 +1082,9 @@ class LayerWisePartition extends PartitionScheme {
 
           // Move if it improves communication cost without severely unbalancing nodes
           const commImprovement = currentCommCost - newCommCost;
-          const balanceEffect = Math.abs(targetNodeNewCost - currentNodeNewCost);
+          const balanceEffect = Math.abs(
+            targetNodeNewCost - currentNodeNewCost,
+          );
 
           if (commImprovement > 0 && balanceEffect < targetCostPerNode * 0.5) {
             // Move layer to target node
@@ -1107,7 +1141,9 @@ class LayerWisePartition extends PartitionScheme {
     }
 
     // Create transposed graph
-    const transposedGraph = Array(n).fill().map(() => Array(n).fill(0));
+    const transposedGraph = Array(n)
+      .fill()
+      .map(() => Array(n).fill(0));
 
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
@@ -1192,7 +1228,7 @@ class IntraLayerPartition extends PartitionScheme {
       ...config,
     });
 
-    this.splitDimension = config.splitDimension || 'output';
+    this.splitDimension = config.splitDimension || "output";
     this.replicationFactor = config.replicationFactor || 1;
   }
 
@@ -1206,7 +1242,7 @@ class IntraLayerPartition extends PartitionScheme {
    */
   createPartitionPlan(config) {
     if (!config.layers || !config.nodeIds || config.nodeIds.length === 0) {
-      throw new Prime.ValidationError('Layers and node IDs are required');
+      throw new Prime.ValidationError("Layers and node IDs are required");
     }
 
     const nodeCount = config.nodeIds.length;
@@ -1261,7 +1297,7 @@ class IntraLayerPartition extends PartitionScheme {
    */
   applyPartitionPlan(plan) {
     if (!plan || !plan.partitions || !plan.layerPartitions) {
-      throw new Prime.ValidationError('Valid partition plan is required');
+      throw new Prime.ValidationError("Valid partition plan is required");
     }
 
     // Clear existing assignments
@@ -1302,7 +1338,7 @@ class IntraLayerPartition extends PartitionScheme {
     }
 
     // Emit partition applied event
-    this.eventBus.emit('partition:plan-applied', {
+    this.eventBus.emit("partition:plan-applied", {
       type: this.type,
       strategy: this.strategy,
       layerIds: Object.keys(plan.layerPartitions),
@@ -1323,7 +1359,7 @@ class IntraLayerPartition extends PartitionScheme {
   _calculateSplitPoints(layer, nodeCount) {
     // Determine dimension to split on
     const dimensionSize =
-      this.splitDimension === 'output' ? layer.outputSize : layer.inputSize;
+      this.splitDimension === "output" ? layer.outputSize : layer.inputSize;
 
     const splits = [];
     const baseSize = Math.floor(dimensionSize / nodeCount);
@@ -1367,7 +1403,7 @@ class PartitionManager {
    */
   createScheme(schemeId, config) {
     if (!schemeId) {
-      throw new Prime.ValidationError('Scheme ID is required');
+      throw new Prime.ValidationError("Scheme ID is required");
     }
 
     if (this.schemes.has(schemeId)) {
@@ -1395,7 +1431,7 @@ class PartitionManager {
     this.schemes.set(schemeId, scheme);
 
     // Emit event
-    this.eventBus.emit('partition:scheme-created', {
+    this.eventBus.emit("partition:scheme-created", {
       schemeId,
       type: scheme.type,
       strategy: scheme.strategy,
@@ -1428,7 +1464,7 @@ class PartitionManager {
     this.schemes.delete(schemeId);
 
     // Emit event
-    this.eventBus.emit('partition:scheme-deleted', {
+    this.eventBus.emit("partition:scheme-deleted", {
       schemeId,
       timestamp: Date.now(),
     });
@@ -1476,7 +1512,7 @@ class FunctionalPartition extends PartitionScheme {
    */
   createPartitionPlan(config) {
     if (!config.layers || !config.nodeIds || config.nodeIds.length === 0) {
-      throw new Prime.ValidationError('Layers and node IDs are required');
+      throw new Prime.ValidationError("Layers and node IDs are required");
     }
 
     // Detect computational patterns in the network
@@ -1489,7 +1525,7 @@ class FunctionalPartition extends PartitionScheme {
     const assignments = this._matchPatternsToNodes(
       patternGroups,
       config.nodeIds,
-      config.nodeCapabilities || {}
+      config.nodeCapabilities || {},
     );
 
     // Create layer-node assignments
@@ -1512,7 +1548,9 @@ class FunctionalPartition extends PartitionScheme {
     // Group by pattern for convenience
     const patternPartitions = {};
     for (const pattern of Object.keys(patternGroups)) {
-      patternPartitions[pattern] = partitions.filter(p => p.pattern === pattern);
+      patternPartitions[pattern] = partitions.filter(
+        (p) => p.pattern === pattern,
+      );
     }
 
     return {
@@ -1534,7 +1572,7 @@ class FunctionalPartition extends PartitionScheme {
    */
   applyPartitionPlan(plan) {
     if (!plan || !plan.partitions) {
-      throw new Prime.ValidationError('Valid partition plan is required');
+      throw new Prime.ValidationError("Valid partition plan is required");
     }
 
     // Clear existing assignments
@@ -1566,11 +1604,11 @@ class FunctionalPartition extends PartitionScheme {
     }
 
     // Emit partition applied event
-    this.eventBus.emit('partition:plan-applied', {
+    this.eventBus.emit("partition:plan-applied", {
       type: this.type,
       strategy: this.strategy,
-      layerIds: plan.partitions.map(p => p.layerId),
-      nodeIds: [...new Set(plan.partitions.map(p => p.nodeId))],
+      layerIds: plan.partitions.map((p) => p.layerId),
+      nodeIds: [...new Set(plan.partitions.map((p) => p.nodeId))],
       timestamp: Date.now(),
     });
 
@@ -1584,27 +1622,35 @@ class FunctionalPartition extends PartitionScheme {
    * @returns {Array<string>} Detected pattern for each layer
    */
   _detectComputationalPatterns(layers) {
-    return layers.map(layer => {
+    return layers.map((layer) => {
       // Detect pattern based on layer type and properties
-      if (layer.type === 'conv') {
-        return 'convolutional';
-      } else if (layer.type === 'recurrent' || layer.type === 'lstm' || layer.type === 'gru') {
-        return 'recurrent';
-      } else if (layer.type === 'attention' || layer.type === 'transformer') {
-        return 'attention';
-      } else if (layer.type === 'pooling' || layer.type === 'max_pool' || layer.type === 'avg_pool') {
-        return 'pooling';
+      if (layer.type === "conv") {
+        return "convolutional";
+      } else if (
+        layer.type === "recurrent" ||
+        layer.type === "lstm" ||
+        layer.type === "gru"
+      ) {
+        return "recurrent";
+      } else if (layer.type === "attention" || layer.type === "transformer") {
+        return "attention";
+      } else if (
+        layer.type === "pooling" ||
+        layer.type === "max_pool" ||
+        layer.type === "avg_pool"
+      ) {
+        return "pooling";
       } else if (layer.sparse === true || layer.sparsity > 0.5) {
-        return 'sparse';
-      } else if (layer.activation === 'softmax' && layer.outputSize > 1000) {
-        return 'classification';
-      } else if (layer.activation === 'sigmoid' && layer.outputSize === 1) {
-        return 'binary';
-      } else if (layer.normalization === true || layer.type === 'batchnorm') {
-        return 'normalization';
+        return "sparse";
+      } else if (layer.activation === "softmax" && layer.outputSize > 1000) {
+        return "classification";
+      } else if (layer.activation === "sigmoid" && layer.outputSize === 1) {
+        return "binary";
+      } else if (layer.normalization === true || layer.type === "batchnorm") {
+        return "normalization";
       } else {
         // Default to dense pattern
-        return 'dense';
+        return "dense";
       }
     });
   }
@@ -1656,21 +1702,21 @@ class FunctionalPartition extends PartitionScheme {
 
         // Adjust affinity based on node capabilities and pattern
         switch (pattern) {
-          case 'convolutional':
+          case "convolutional":
             // GPUs are good for convolutional operations
             if (capabilities.gpu) {
               nodeAffinities[pattern][nodeIdx] *= 2.0;
             }
             break;
 
-          case 'recurrent':
+          case "recurrent":
             // Memory bandwidth is important for recurrent layers
             if (capabilities.memory) {
               nodeAffinities[pattern][nodeIdx] *= 1.5;
             }
             break;
 
-          case 'attention':
+          case "attention":
             // Both compute and memory are critical for attention
             if (capabilities.gpu && capabilities.memory) {
               nodeAffinities[pattern][nodeIdx] *= 2.5;
@@ -1679,14 +1725,14 @@ class FunctionalPartition extends PartitionScheme {
             }
             break;
 
-          case 'sparse':
+          case "sparse":
             // CPUs can be better for sparse operations
             if (capabilities.cpu && !capabilities.gpu) {
               nodeAffinities[pattern][nodeIdx] *= 1.5;
             }
             break;
 
-          case 'dense':
+          case "dense":
             // General compute capability
             if (capabilities.compute) {
               nodeAffinities[pattern][nodeIdx] *= capabilities.compute;

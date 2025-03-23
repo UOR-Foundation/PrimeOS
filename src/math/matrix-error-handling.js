@@ -5,7 +5,7 @@
  */
 
 // Import the Prime object
-const Prime = require('../core');
+const Prime = require("../core");
 
 /**
  * Matrix error handling utilities with recovery strategies
@@ -19,27 +19,30 @@ const MatrixErrorHandling = {
    * @returns {*} - Result of operation or recovered alternative
    * @throws {Error} - Improved error with recovery suggestions if recovery fails
    */
-  recoverFromSingularity: function(operation, args, options = {}) {
+  recoverFromSingularity: function (operation, args, options = {}) {
     try {
       // Try the original operation
       return operation.apply(null, args);
     } catch (error) {
-      if (error.message.includes('singular') || error.message.includes('condition')) {
-        const strategy = options.strategy || 'pseudoinverse';
+      if (
+        error.message.includes("singular") ||
+        error.message.includes("condition")
+      ) {
+        const strategy = options.strategy || "pseudoinverse";
         const MatrixCore = Prime.Math.MatrixCore;
 
         // Matrix that caused the error
         const matrix = args[0];
 
         switch (strategy) {
-          case 'pseudoinverse':
+          case "pseudoinverse":
             // Compute pseudoinverse using SVD if available
             if (Prime.Math.Matrix.pseudoInverse) {
               return Prime.Math.Matrix.pseudoInverse(matrix);
             }
             break;
 
-          case 'regularize':
+          case "regularize":
             // Add a small value to the diagonal (Tikhonov regularization)
             const epsilon = options.epsilon || 1e-10;
             const regularized = MatrixCore.clone(matrix);
@@ -53,7 +56,7 @@ const MatrixErrorHandling = {
             args[0] = regularized;
             return operation.apply(null, args);
 
-          case 'truncate':
+          case "truncate":
             // Use truncated SVD if available
             if (Prime.Math.Matrix.truncatedSVD) {
               const rank = options.rank || Math.floor(matrix.length / 2);
@@ -65,7 +68,7 @@ const MatrixErrorHandling = {
         // If no recovery succeeded, throw enhanced error
         throw new Prime.MathematicalError(
           `Matrix operation failed due to singularity or poor conditioning: ${error.message}. ` +
-          `Try scaling the matrix, adding regularization, or using pseudoinverse.`
+            `Try scaling the matrix, adding regularization, or using pseudoinverse.`,
         );
       }
 
@@ -82,7 +85,7 @@ const MatrixErrorHandling = {
    * @returns {*} - Result of operation with numerically stable approach
    * @throws {Error} - Enhanced error with suggestions if recovery fails
    */
-  handleExtremeValues: function(operation, args, options = {}) {
+  handleExtremeValues: function (operation, args, options = {}) {
     const MatrixCore = Prime.Math.MatrixCore;
     const MatrixValidation = Prime.Math.MatrixValidation;
 
@@ -91,13 +94,13 @@ const MatrixErrorHandling = {
 
     // Input validation
     if (!MatrixValidation.isMatrix(matrix)) {
-      throw new Prime.ValidationError('Input must be a valid matrix');
+      throw new Prime.ValidationError("Input must be a valid matrix");
     }
 
     // Check for NaN and Infinity values
     if (MatrixValidation.hasInvalidValues(matrix)) {
       throw new Prime.ValidationError(
-        'Matrix contains NaN or Infinity values which cannot be processed'
+        "Matrix contains NaN or Infinity values which cannot be processed",
       );
     }
 
@@ -130,10 +133,11 @@ const MatrixErrorHandling = {
     }
 
     // Check for matrices with extreme value range that may cause numerical instability
-    const valueRatio = maxAbs > 0 && minNonZero < Infinity ?
-      maxAbs / minNonZero : 0;
+    const valueRatio =
+      maxAbs > 0 && minNonZero < Infinity ? maxAbs / minNonZero : 0;
 
-    const needsScaling = maxAbs > 1e100 || minNonZero < 1e-100 || valueRatio > 1e200;
+    const needsScaling =
+      maxAbs > 1e100 || minNonZero < 1e-100 || valueRatio > 1e200;
 
     if (needsScaling) {
       // Choose appropriate scaling factor based on matrix properties
@@ -143,7 +147,10 @@ const MatrixErrorHandling = {
         scaleFactor = 1.0 / Math.pow(10, Math.floor(Math.log10(maxAbs)) - 10);
       } else if (minNonZero < 1e-100) {
         // Scale up for very small values
-        scaleFactor = Math.pow(10, Math.abs(Math.floor(Math.log10(minNonZero))) - 10);
+        scaleFactor = Math.pow(
+          10,
+          Math.abs(Math.floor(Math.log10(minNonZero))) - 10,
+        );
       } else {
         // Balance the range
         const logMax = Math.log10(maxAbs);
@@ -164,49 +171,48 @@ const MatrixErrorHandling = {
         const result = operation.apply(null, newArgs);
 
         // Apply inverse scaling based on operation type
-        const operationName = operation.name || '';
+        const operationName = operation.name || "";
 
         // Different operations require different unscaling approaches
-        if (typeof result === 'number') {
+        if (typeof result === "number") {
           // For scalar results like determinant
-          const power = operationName.toLowerCase() === 'determinant' ? rows : 1;
-          return result * Math.pow(1/scaleFactor, power);
-        }
-        else if (result && typeof result === 'object') {
+          const power =
+            operationName.toLowerCase() === "determinant" ? rows : 1;
+          return result * Math.pow(1 / scaleFactor, power);
+        } else if (result && typeof result === "object") {
           // Handle special return types from matrix decompositions
           if (result.L && result.U) {
             // LU decomposition
             result.L = MatrixCore.clone(result.L);
-            result.U = MatrixCore.scale(result.U, 1/scaleFactor);
+            result.U = MatrixCore.scale(result.U, 1 / scaleFactor);
             return result;
-          }
-          else if (result.Q && result.R) {
+          } else if (result.Q && result.R) {
             // QR decomposition
-            result.R = MatrixCore.scale(result.R, 1/scaleFactor);
+            result.R = MatrixCore.scale(result.R, 1 / scaleFactor);
             return result;
-          }
-          else if (result.eigenvalues) {
+          } else if (result.eigenvalues) {
             // Eigenvalue decomposition
-            const scaledEigenvalues = result.eigenvalues.map(v => v / scaleFactor);
+            const scaledEigenvalues = result.eigenvalues.map(
+              (v) => v / scaleFactor,
+            );
             return {
               eigenvalues: scaledEigenvalues,
-              eigenvectors: result.eigenvectors
+              eigenvectors: result.eigenvectors,
             };
           }
           // Default matrix result
-          return MatrixCore.scale(result, 1/scaleFactor);
+          return MatrixCore.scale(result, 1 / scaleFactor);
         }
 
         // Default for other types of results
         return result;
-      }
-      catch (error) {
+      } catch (error) {
         // If scaling fails, provide helpful diagnostic information
         throw new Prime.MathematicalError(
           `Matrix operation failed despite applying scaling: ${error.message}. ` +
-          `Matrix has extreme values (max=${maxAbs.toExponential(5)}, min non-zero=${minNonZero.toExponential(5)}, ` +
-          `condition estimate=${valueRatio.toExponential(5)}). ` +
-          `Consider using an alternative algorithm or preprocessing the data.`
+            `Matrix has extreme values (max=${maxAbs.toExponential(5)}, min non-zero=${minNonZero.toExponential(5)}, ` +
+            `condition estimate=${valueRatio.toExponential(5)}). ` +
+            `Consider using an alternative algorithm or preprocessing the data.`,
         );
       }
     }
@@ -214,17 +220,16 @@ const MatrixErrorHandling = {
     // For matrices in normal range, just execute the operation
     try {
       return operation.apply(null, args);
-    }
-    catch (error) {
+    } catch (error) {
       // Enhance error message with useful diagnostic information
       const normFrobenius = Math.sqrt(sumOfSquares);
       const meanValue = sumOfSquares / (rows * cols);
 
       throw new Prime.MathematicalError(
         `Matrix operation failed: ${error.message}. ` +
-        `Matrix properties: size=${rows}x${cols}, Frobenius norm=${normFrobenius.toExponential(5)}, ` +
-        `RMS value=${Math.sqrt(meanValue).toExponential(5)}. ` +
-        `Try checking matrix conditioning or using regularization techniques.`
+          `Matrix properties: size=${rows}x${cols}, Frobenius norm=${normFrobenius.toExponential(5)}, ` +
+          `RMS value=${Math.sqrt(meanValue).toExponential(5)}. ` +
+          `Try checking matrix conditioning or using regularization techniques.`,
       );
     }
   },
@@ -235,17 +240,17 @@ const MatrixErrorHandling = {
    * @param {number} [tolerance=1e-10] - Singular value threshold (relative to max)
    * @returns {Array|TypedArray} - Pseudoinverse of the matrix
    */
-  pseudoInverse: function(matrix, tolerance = 1e-10) {
+  pseudoInverse: function (matrix, tolerance = 1e-10) {
     const MatrixCore = Prime.Math.MatrixCore;
     const MatrixValidation = Prime.Math.MatrixValidation;
 
     // Input validation
     if (!MatrixCore.isMatrix(matrix)) {
-      throw new Prime.ValidationError('Matrix must be valid');
+      throw new Prime.ValidationError("Matrix must be valid");
     }
 
     if (MatrixValidation.hasInvalidValues(matrix)) {
-      throw new Prime.ValidationError('Matrix contains NaN or Infinity values');
+      throw new Prime.ValidationError("Matrix contains NaN or Infinity values");
     }
 
     const dim = MatrixCore.dimensions(matrix);
@@ -270,10 +275,12 @@ const MatrixErrorHandling = {
 
     try {
       // Import PrimeMath for SVD
-      const PrimeMath = require('../framework/math/prime-math.js');
+      const PrimeMath = require("../framework/math/prime-math.js");
 
       if (!PrimeMath || !PrimeMath.svd) {
-        throw new Prime.ValidationError('SVD implementation required for pseudoinverse');
+        throw new Prime.ValidationError(
+          "SVD implementation required for pseudoinverse",
+        );
       }
 
       // Decide if scaling is necessary
@@ -323,7 +330,9 @@ const MatrixErrorHandling = {
         } else if (S.values[i][i] > 0) {
           // Tikhonov regularization for small singular values
           // This prevents division by very small numbers
-          SInv.values[i][i] = S.values[i][i] / (S.values[i][i] * S.values[i][i] + threshold * threshold);
+          SInv.values[i][i] =
+            S.values[i][i] /
+            (S.values[i][i] * S.values[i][i] + threshold * threshold);
         }
         // Values below numerical precision are left as zero
       }
@@ -337,12 +346,16 @@ const MatrixErrorHandling = {
       let resultMatrix;
       if (scaleFactor !== 1) {
         // Need to scale the result to account for input scaling
-        const scaledPseudoInv = PrimeMath.createMatrix(pseudoInv.rows, pseudoInv.cols);
+        const scaledPseudoInv = PrimeMath.createMatrix(
+          pseudoInv.rows,
+          pseudoInv.cols,
+        );
         const scaleAdjustment = 1 / scaleFactor;
 
         for (let i = 0; i < pseudoInv.rows; i++) {
           for (let j = 0; j < pseudoInv.cols; j++) {
-            scaledPseudoInv.values[i][j] = pseudoInv.values[i][j] * scaleAdjustment;
+            scaledPseudoInv.values[i][j] =
+              pseudoInv.values[i][j] * scaleAdjustment;
           }
         }
         resultMatrix = scaledPseudoInv;
@@ -351,10 +364,15 @@ const MatrixErrorHandling = {
       }
 
       // Convert back to the original matrix format
-      const result = MatrixCore.create(resultMatrix.rows, resultMatrix.cols, 0, {
-        useTypedArray,
-        arrayType,
-      });
+      const result = MatrixCore.create(
+        resultMatrix.rows,
+        resultMatrix.cols,
+        0,
+        {
+          useTypedArray,
+          arrayType,
+        },
+      );
 
       for (let i = 0; i < resultMatrix.rows; i++) {
         for (let j = 0; j < resultMatrix.cols; j++) {
@@ -367,8 +385,8 @@ const MatrixErrorHandling = {
       // Provide informative error for failed pseudoinverse computation
       throw new Prime.MathematicalError(
         `Failed to compute pseudoinverse: ${error.message}. ` +
-        `Matrix is ${rows}x${cols} with largest value ${maxAbs.toExponential(5)}. ` +
-        `Consider preprocessing or using alternative factorization methods.`
+          `Matrix is ${rows}x${cols} with largest value ${maxAbs.toExponential(5)}. ` +
+          `Consider preprocessing or using alternative factorization methods.`,
       );
     }
   },
@@ -379,21 +397,23 @@ const MatrixErrorHandling = {
    * @param {number} rank - Rank to truncate to
    * @returns {Array|TypedArray} - Low-rank approximation of the matrix
    */
-  truncatedSVD: function(matrix, rank) {
+  truncatedSVD: function (matrix, rank) {
     const MatrixCore = Prime.Math.MatrixCore;
 
     if (!MatrixCore.isMatrix(matrix)) {
-      throw new Prime.ValidationError('Matrix must be valid');
+      throw new Prime.ValidationError("Matrix must be valid");
     }
 
     const dim = MatrixCore.dimensions(matrix);
     rank = Math.min(rank, Math.min(dim.rows, dim.cols));
 
     // Import PrimeMath for SVD
-    const PrimeMath = require('../framework/math/prime-math.js');
+    const PrimeMath = require("../framework/math/prime-math.js");
 
     if (!PrimeMath || !PrimeMath.svd) {
-      throw new Prime.ValidationError('SVD implementation required for truncated SVD');
+      throw new Prime.ValidationError(
+        "SVD implementation required for truncated SVD",
+      );
     }
 
     // Create a matrix object and perform SVD
@@ -447,7 +467,7 @@ const MatrixErrorHandling = {
    * @returns {void}
    * @throws {Error} - Detailed error explaining the validation failure
    */
-  validateWithDetails: function(operation, matrices) {
+  validateWithDetails: function (operation, matrices) {
     const MatrixValidation = Prime.Math.MatrixValidation;
     const result = MatrixValidation.validateOperation(operation, matrices);
 
@@ -458,28 +478,38 @@ const MatrixErrorHandling = {
         for (let i = 0; i < matrices.length; i++) {
           if (MatrixValidation.hasInvalidValues(matrices[i])) {
             throw new Prime.ValidationError(
-              `Matrix ${i+1} contains NaN or Infinity values which cannot be processed. ` +
-              `Check for division by zero or overflow in previous calculations.`
+              `Matrix ${i + 1} contains NaN or Infinity values which cannot be processed. ` +
+                `Check for division by zero or overflow in previous calculations.`,
             );
           }
         }
 
         // For operations requiring square matrices
-        const squareOps = ['determinant', 'inverse', 'eigenvalues', 'choleskydecomposition', 'ludecomposition', 'qrdecomposition'];
-        if (squareOps.includes(operation.toLowerCase()) && matrices[0].length !== matrices[0][0].length) {
+        const squareOps = [
+          "determinant",
+          "inverse",
+          "eigenvalues",
+          "choleskydecomposition",
+          "ludecomposition",
+          "qrdecomposition",
+        ];
+        if (
+          squareOps.includes(operation.toLowerCase()) &&
+          matrices[0].length !== matrices[0][0].length
+        ) {
           throw new Prime.ValidationError(
             `The ${operation} operation requires a square matrix. ` +
-            `Current dimensions: ${matrices[0].length}x${matrices[0][0].length}.`
+              `Current dimensions: ${matrices[0].length}x${matrices[0][0].length}.`,
           );
         }
 
         // For multiplication
-        if (operation.toLowerCase() === 'multiply' && matrices.length === 2) {
+        if (operation.toLowerCase() === "multiply" && matrices.length === 2) {
           throw new Prime.ValidationError(
             `Matrix multiplication dimension mismatch. ` +
-            `First matrix: ${matrices[0].length}x${matrices[0][0].length}, ` +
-            `Second matrix: ${matrices[1].length}x${matrices[1][0].length}. ` +
-            `The column count of the first matrix must match the row count of the second.`
+              `First matrix: ${matrices[0].length}x${matrices[0][0].length}, ` +
+              `Second matrix: ${matrices[1].length}x${matrices[1][0].length}. ` +
+              `The column count of the first matrix must match the row count of the second.`,
           );
         }
       }
@@ -487,7 +517,7 @@ const MatrixErrorHandling = {
       // If no specific error was thrown, fall back to the generic message
       throw new Prime.ValidationError(result.error);
     }
-  }
+  },
 };
 
 // Add pseudoInverse and truncatedSVD to Matrix module
@@ -498,17 +528,17 @@ Prime.Math.Matrix.truncatedSVD = MatrixErrorHandling.truncatedSVD;
 
 // Export the MatrixErrorHandling module
 if (
-  Object.getOwnPropertyDescriptor(Prime.Math, 'MatrixErrorHandling') &&
-  Object.getOwnPropertyDescriptor(Prime.Math, 'MatrixErrorHandling').get
+  Object.getOwnPropertyDescriptor(Prime.Math, "MatrixErrorHandling") &&
+  Object.getOwnPropertyDescriptor(Prime.Math, "MatrixErrorHandling").get
 ) {
   // Use a more careful approach to update the property
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.Math,
-    'MatrixErrorHandling',
+    "MatrixErrorHandling",
   );
   const originalGetter = descriptor.get;
 
-  Object.defineProperty(Prime.Math, 'MatrixErrorHandling', {
+  Object.defineProperty(Prime.Math, "MatrixErrorHandling", {
     get: function () {
       const result = originalGetter.call(this);
       // If result is an empty object (placeholder), return our implementation

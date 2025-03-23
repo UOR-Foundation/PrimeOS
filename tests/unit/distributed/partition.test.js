@@ -34,8 +34,12 @@ describe("PrimeOS Distributed Computation Module - Partition", () => {
         layerConfig,
       });
 
-      expect(scheme instanceof Prime.Distributed.Partition.PartitionScheme).toBe(true);
-      expect(scheme.type).toBe(Prime.Distributed.Partition.PartitionType.LAYER_WISE);
+      expect(
+        scheme instanceof Prime.Distributed.Partition.PartitionScheme,
+      ).toBe(true);
+      expect(scheme.type).toBe(
+        Prime.Distributed.Partition.PartitionType.LAYER_WISE,
+      );
       expect(scheme.nodeCount).toBe(2);
 
       // Check layer assignments
@@ -69,7 +73,9 @@ describe("PrimeOS Distributed Computation Module - Partition", () => {
         nodeIds: ["node_0", "node_1"],
       });
 
-      expect(layer instanceof Prime.Distributed.Partition.DistributedLayer).toBe(true);
+      expect(
+        layer instanceof Prime.Distributed.Partition.DistributedLayer,
+      ).toBe(true);
       expect(layer.id).toBe("dist_layer_1");
       expect(Array.isArray(layer.nodeIds)).toBe(true);
       expect(layer.nodeIds.length).toBe(2);
@@ -81,7 +87,9 @@ describe("PrimeOS Distributed Computation Module - Partition", () => {
 
       // Test layer partition scheme
       const scheme = layer.getPartitionScheme();
-      expect(scheme instanceof Prime.Distributed.Partition.PartitionScheme).toBe(true);
+      expect(
+        scheme instanceof Prime.Distributed.Partition.PartitionScheme,
+      ).toBe(true);
     });
 
     test("performs distributed computation correctly", async () => {

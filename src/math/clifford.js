@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Create the Clifford module using IIFE
 (function () {
@@ -20,7 +20,7 @@ const Prime = require('../core');
     constructor(components = {}, dimensions = 3) {
       if (!Prime.Utils.isObject(components)) {
         throw new Prime.ValidationError(
-          'Components must be an object mapping indices to coefficients',
+          "Components must be an object mapping indices to coefficients",
         );
       }
 
@@ -30,7 +30,7 @@ const Prime = require('../core');
         !Number.isInteger(dimensions)
       ) {
         throw new Prime.ValidationError(
-          'Dimensions must be a positive integer',
+          "Dimensions must be a positive integer",
         );
       }
 
@@ -58,7 +58,7 @@ const Prime = require('../core');
      */
     setComponent(index, value) {
       if (!Prime.Utils.isNumber(value)) {
-        throw new Prime.ValidationError('Component value must be a number');
+        throw new Prime.ValidationError("Component value must be a number");
       }
 
       // If value is effectively zero, remove the component to keep storage minimal
@@ -86,7 +86,7 @@ const Prime = require('../core');
      */
     add(mv) {
       if (!(mv instanceof Multivector)) {
-        throw new Prime.ValidationError('Argument must be a Multivector');
+        throw new Prime.ValidationError("Argument must be a Multivector");
       }
 
       const result = this.clone();
@@ -107,7 +107,7 @@ const Prime = require('../core');
      */
     subtract(mv) {
       if (!(mv instanceof Multivector)) {
-        throw new Prime.ValidationError('Argument must be a Multivector');
+        throw new Prime.ValidationError("Argument must be a Multivector");
       }
 
       const result = this.clone();
@@ -128,7 +128,7 @@ const Prime = require('../core');
      */
     scale(scalar) {
       if (!Prime.Utils.isNumber(scalar)) {
-        throw new Prime.ValidationError('Scalar must be a number');
+        throw new Prime.ValidationError("Scalar must be a number");
       }
 
       const result = new Multivector({}, this.dimensions);
@@ -173,7 +173,7 @@ const Prime = require('../core');
 
       if (mag === 0) {
         throw new Prime.MathematicalError(
-          'Cannot normalize a zero multivector',
+          "Cannot normalize a zero multivector",
         );
       }
 
@@ -186,7 +186,7 @@ const Prime = require('../core');
      */
     toString() {
       if (Object.keys(this.components).length === 0) {
-        return '0';
+        return "0";
       }
 
       const terms = [];
@@ -194,23 +194,23 @@ const Prime = require('../core');
       Object.entries(this.components).forEach(([index, value]) => {
         if (Math.abs(value) < 1e-10) return; // Skip near-zero terms
 
-        const basisName = index === '0' ? '' : `e${index}`;
+        const basisName = index === "0" ? "" : `e${index}`;
         const sign =
           terms.length > 0
             ? value >= 0
-              ? ' + '
-              : ' - '
+              ? " + "
+              : " - "
             : value >= 0
-              ? ''
-              : '-';
+              ? ""
+              : "-";
         const absValue = Math.abs(value);
         const valueStr =
-          Math.abs(Math.abs(value) - 1) < 1e-10 ? '' : absValue.toString();
+          Math.abs(Math.abs(value) - 1) < 1e-10 ? "" : absValue.toString();
 
         terms.push(`${sign}${valueStr}${basisName}`);
       });
 
-      return terms.join('');
+      return terms.join("");
     }
   }
 
@@ -235,7 +235,7 @@ const Prime = require('../core');
      */
     vector: function (vector) {
       if (!Array.isArray(vector)) {
-        throw new Prime.ValidationError('Vector must be an array');
+        throw new Prime.ValidationError("Vector must be an array");
       }
 
       const dimensions = vector.length;
@@ -261,14 +261,14 @@ const Prime = require('../core');
         !Array.isArray(matrix) ||
         !matrix.every((row) => Array.isArray(row))
       ) {
-        throw new Prime.ValidationError('Matrix must be a 2D array');
+        throw new Prime.ValidationError("Matrix must be a 2D array");
       }
 
       const dimensions = matrix.length;
 
       // Verify the matrix is square
       if (!matrix.every((row) => row.length === dimensions)) {
-        throw new Prime.ValidationError('Matrix must be square');
+        throw new Prime.ValidationError("Matrix must be square");
       }
 
       const components = {};
@@ -295,12 +295,12 @@ const Prime = require('../core');
      */
     geometricProduct: function (a, b) {
       if (!(a instanceof Multivector) || !(b instanceof Multivector)) {
-        throw new Prime.ValidationError('Arguments must be Multivectors');
+        throw new Prime.ValidationError("Arguments must be Multivectors");
       }
 
       if (a.dimensions !== b.dimensions) {
         throw new Prime.ValidationError(
-          'Multivectors must have the same dimensions',
+          "Multivectors must have the same dimensions",
         );
       }
 
@@ -314,13 +314,13 @@ const Prime = require('../core');
           const product = valueA * valueB;
 
           // For scalar-scalar product
-          if (indexA === '0' && indexB === '0') {
-            result.setComponent('0', (result.getComponent('0') || 0) + product);
+          if (indexA === "0" && indexB === "0") {
+            result.setComponent("0", (result.getComponent("0") || 0) + product);
             return;
           }
 
           // For scalar-blade product
-          if (indexA === '0') {
+          if (indexA === "0") {
             result.setComponent(
               indexB,
               (result.getComponent(indexB) || 0) + product,
@@ -329,7 +329,7 @@ const Prime = require('../core');
           }
 
           // For blade-scalar product
-          if (indexB === '0') {
+          if (indexB === "0") {
             result.setComponent(
               indexA,
               (result.getComponent(indexA) || 0) + product,
@@ -381,14 +381,14 @@ const Prime = require('../core');
 
   // Check if Clifford already has a getter defined, if so, use it
   if (
-    Object.getOwnPropertyDescriptor(Prime.Math, 'Clifford') &&
-    Object.getOwnPropertyDescriptor(Prime.Math, 'Clifford').get
+    Object.getOwnPropertyDescriptor(Prime.Math, "Clifford") &&
+    Object.getOwnPropertyDescriptor(Prime.Math, "Clifford").get
   ) {
     // Use a more careful approach to update the property
-    const descriptor = Object.getOwnPropertyDescriptor(Prime.Math, 'Clifford');
+    const descriptor = Object.getOwnPropertyDescriptor(Prime.Math, "Clifford");
     const originalGetter = descriptor.get;
 
-    Object.defineProperty(Prime.Math, 'Clifford', {
+    Object.defineProperty(Prime.Math, "Clifford", {
       get: function () {
         const result = originalGetter.call(this);
         // If result is an empty object (placeholder), return our implementation

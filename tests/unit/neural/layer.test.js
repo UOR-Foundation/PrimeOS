@@ -1,15 +1,15 @@
 /**
  * PrimeOS Unit Tests - Neural Layer
- * 
+ *
  * Tests for the neural layer components in the Neural module.
  */
 
-const Prime = require('../../../src');
-const { Assertions } = require('../../utils');
+const Prime = require("../../../src");
+const { Assertions } = require("../../utils");
 
-describe('Neural Layer', () => {
-  describe('Base Neural Layer', () => {
-    test('should create a base neural layer with correct properties', () => {
+describe("Neural Layer", () => {
+  describe("Base Neural Layer", () => {
+    test("should create a base neural layer with correct properties", () => {
       const layer = new Prime.Neural.Layer.NeuralLayer({
         inputSize: 3,
         outputSize: 2,
@@ -29,7 +29,7 @@ describe('Neural Layer', () => {
       expect(layer.biases.length).toBe(2);
     });
 
-    test('should perform forward pass correctly', () => {
+    test("should perform forward pass correctly", () => {
       const layer = new Prime.Neural.Layer.NeuralLayer({
         inputSize: 3,
         outputSize: 2,
@@ -53,7 +53,7 @@ describe('Neural Layer', () => {
       expect(result.activation[1]).toBe(3);
     });
 
-    test('should perform backward pass correctly', () => {
+    test("should perform backward pass correctly", () => {
       const layer = new Prime.Neural.Layer.NeuralLayer({
         inputSize: 3,
         outputSize: 2,
@@ -84,7 +84,7 @@ describe('Neural Layer', () => {
       expect(gradients.dB[1]).toBe(1);
     });
 
-    test('should update layer parameters correctly', () => {
+    test("should update layer parameters correctly", () => {
       const layer = new Prime.Neural.Layer.NeuralLayer({
         inputSize: 2,
         outputSize: 1,
@@ -111,8 +111,8 @@ describe('Neural Layer', () => {
     });
   });
 
-  describe('Self-Optimizing Layer', () => {
-    test('should create a self-optimizing layer with correct properties', () => {
+  describe("Self-Optimizing Layer", () => {
+    test("should create a self-optimizing layer with correct properties", () => {
       const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
         inputSize: 4,
         outputSize: 3,
@@ -123,7 +123,9 @@ describe('Neural Layer', () => {
         },
       });
 
-      expect(layer instanceof Prime.Neural.Layer.SelfOptimizingLayer).toBe(true);
+      expect(layer instanceof Prime.Neural.Layer.SelfOptimizingLayer).toBe(
+        true,
+      );
       expect(layer.optimization.enabled).toBe(true);
       expect(layer.optimization.adaptThreshold).toBe(50);
       expect(layer.optimization.coherenceThreshold).toBe(0.75);
@@ -132,7 +134,7 @@ describe('Neural Layer', () => {
       expect(layer.adaptationState.dropoutMask.length).toBe(3);
     });
 
-    test('should adapt the layer correctly', () => {
+    test("should adapt the layer correctly", () => {
       // Create a layer with a very low adaptThreshold to force adaptation
       const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
         inputSize: 5,
@@ -160,7 +162,7 @@ describe('Neural Layer', () => {
       expect(history[0].coherenceAfter).toBeDefined();
     });
 
-    test('should provide layer analysis', () => {
+    test("should provide layer analysis", () => {
       const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
         inputSize: 4,
         outputSize: 3,
@@ -178,8 +180,8 @@ describe('Neural Layer', () => {
     });
   });
 
-  describe('Convolutional Layer', () => {
-    test('should create convolutional layer with correct properties', () => {
+  describe("Convolutional Layer", () => {
+    test("should create convolutional layer with correct properties", () => {
       if (!Prime.Neural.Layer.ConvolutionalLayer) {
         console.log("⚠ Skipping: ConvolutionalLayer not implemented");
         return;
@@ -224,9 +226,11 @@ describe('Neural Layer', () => {
       expect(sameLayer.outputShape[1]).toBe(28);
     });
 
-    test('should perform forward and backward pass correctly', () => {
+    test("should perform forward and backward pass correctly", () => {
       if (!Prime.Neural.Layer.ConvolutionalLayer) {
-        console.log("⚠ Skipping: ConvolutionalLayer forward/backward not tested");
+        console.log(
+          "⚠ Skipping: ConvolutionalLayer forward/backward not tested",
+        );
         return;
       }
 
@@ -251,7 +255,8 @@ describe('Neural Layer', () => {
       layer._initializeKernelUtilization();
 
       // Reinitialize spatial sensitivity
-      layer.usagePatterns.spatialSensitivity = layer._createSpatialSensitivityArray();
+      layer.usagePatterns.spatialSensitivity =
+        layer._createSpatialSensitivityArray();
 
       // Manually set weights for deterministic testing - make sure shape matches what layer expects
       layer.weights = new Array(2); // Two filters
@@ -330,8 +335,8 @@ describe('Neural Layer', () => {
     });
   });
 
-  describe('Recurrent Layer', () => {
-    test('should create recurrent layer with correct properties', () => {
+  describe("Recurrent Layer", () => {
+    test("should create recurrent layer with correct properties", () => {
       if (!Prime.Neural.Layer.RecurrentLayer) {
         console.log("⚠ Skipping: RecurrentLayer not implemented");
         return;
@@ -372,7 +377,7 @@ describe('Neural Layer', () => {
       expect(lstmLayer.weights.Wc).toBeDefined();
     });
 
-    test('should perform forward and backward pass correctly', () => {
+    test("should perform forward and backward pass correctly", () => {
       if (!Prime.Neural.Layer.RecurrentLayer) {
         console.log("⚠ Skipping: RecurrentLayer forward/backward not tested");
         return;

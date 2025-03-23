@@ -6,7 +6,7 @@
  */
 
 // Import Prime core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Initialize Mathematics namespace if not already done
 Prime.Mathematics = Prime.Mathematics || {};
@@ -18,7 +18,7 @@ Prime.Mathematics = Prime.Mathematics || {};
  */
 function spectralAnalysis(sequence) {
   if (!Array.isArray(sequence)) {
-    throw new Error('Input must be an array');
+    throw new Error("Input must be an array");
   }
 
   const N = sequence.length;
@@ -108,7 +108,7 @@ function predictSequenceValues(sequence, options = {}) {
   const { startIndex, endIndex } = options;
 
   if (!startIndex || !endIndex) {
-    throw new Error('Start and end indices required for prediction');
+    throw new Error("Start and end indices required for prediction");
   }
 
   // Extract known values
@@ -166,7 +166,7 @@ function predictSequenceValues(sequence, options = {}) {
       (value) =>
         value === 0 ||
         value === 1 ||
-        (typeof value === 'number' &&
+        (typeof value === "number" &&
           value % 1 === 0 &&
           value >= 0 &&
           value <= 1),
@@ -319,7 +319,7 @@ function spectralBasedPredict(sequence, startIndex, endIndex) {
  */
 function solveEquation(equation) {
   // Parse the equation
-  const cleanEquation = equation.replace(/\s+/g, '');
+  const cleanEquation = equation.replace(/\s+/g, "");
 
   // Check if it's a polynomial equation in standard form
   if (cleanEquation.match(/^([\d.]*x(\^\d+)?[+-])+[\d.]*=0$/)) {
@@ -330,7 +330,7 @@ function solveEquation(equation) {
   return {
     equation,
     solutions: [],
-    error: 'Only polynomial equations are currently supported',
+    error: "Only polynomial equations are currently supported",
   };
 }
 
@@ -400,7 +400,7 @@ function solvePolynomial(equation) {
  */
 function parsePolynomialCoefficients(equation) {
   // Remove the "=0" part
-  const polynomial = equation.replace(/=0$/, '');
+  const polynomial = equation.replace(/=0$/, "");
 
   // Split into terms
   const terms = polynomial.match(/[+-]?[\d.]*x(\^\d+)?/g) || [];
@@ -417,7 +417,7 @@ function parsePolynomialCoefficients(equation) {
     const degreeMatch = term.match(/x\^(\d+)/);
     if (degreeMatch) {
       maxDegree = Math.max(maxDegree, parseInt(degreeMatch[1]));
-    } else if (term.includes('x')) {
+    } else if (term.includes("x")) {
       maxDegree = Math.max(maxDegree, 1);
     }
   }
@@ -434,17 +434,17 @@ function parsePolynomialCoefficients(equation) {
     const coeffMatch = term.match(/^[+-]?[\d.]*/);
     if (
       coeffMatch &&
-      coeffMatch[0] !== '' &&
-      coeffMatch[0] !== '+' &&
-      coeffMatch[0] !== '-'
+      coeffMatch[0] !== "" &&
+      coeffMatch[0] !== "+" &&
+      coeffMatch[0] !== "-"
     ) {
       coefficient = parseFloat(coeffMatch[0]);
-    } else if (term.startsWith('-')) {
+    } else if (term.startsWith("-")) {
       coefficient = -1;
     }
 
     // Extract degree
-    if (term.includes('x')) {
+    if (term.includes("x")) {
       const degreeMatch = term.match(/x\^(\d+)/);
       if (degreeMatch) {
         degree = parseInt(degreeMatch[1]);
@@ -610,7 +610,7 @@ function recursivelyImproveCoherenceModel(
               for (const element of t) {
                 processTensor(element);
               }
-            } else if (typeof t === 'number') {
+            } else if (typeof t === "number") {
               count++;
               sum += t;
               sumSq += t * t;
@@ -668,7 +668,7 @@ function recursivelyImproveCoherenceModel(
  */
 function alignAndTransform(spaces, options = {}) {
   if (!Array.isArray(spaces) || spaces.length === 0) {
-    throw new Error('Spaces must be a non-empty array');
+    throw new Error("Spaces must be a non-empty array");
   }
 
   // Check dimensions
@@ -747,7 +747,7 @@ function predictPrimeNumberPattern(sequence, startIndex, endIndex) {
 
   // Check if pattern looks like prime indicators (0s and 1s)
   const isPrimePattern = knownPattern.every(
-    (v) => v === 0 || v === 1 || (typeof v === 'number' && v >= 0 && v <= 1),
+    (v) => v === 0 || v === 1 || (typeof v === "number" && v >= 0 && v <= 1),
   );
 
   if (!isPrimePattern) {

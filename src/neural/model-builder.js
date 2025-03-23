@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Create the Neural Model Builder module using IIFE
 (function () {
@@ -59,8 +59,8 @@ const Prime = require('../core');
      */
     dense(config) {
       // Validate configuration
-      if (!config || typeof config.units !== 'number') {
-        throw new Error('Dense layer requires units parameter');
+      if (!config || typeof config.units !== "number") {
+        throw new Error("Dense layer requires units parameter");
       }
 
       // Get input size
@@ -68,10 +68,10 @@ const Prime = require('../core');
 
       // Create layer configuration
       const layerConfig = {
-        type: 'dense',
+        type: "dense",
         inputSize: inputSize,
         outputSize: config.units,
-        activation: config.activation || 'sigmoid',
+        activation: config.activation || "sigmoid",
         initParams: config.initParams || {},
         useTypedArrays: this.config.useTypedArrays,
       };
@@ -94,9 +94,9 @@ const Prime = require('../core');
      */
     convolutional(config) {
       // Validate configuration
-      if (!config || typeof config.filters !== 'number' || !config.kernelSize) {
+      if (!config || typeof config.filters !== "number" || !config.kernelSize) {
         throw new Error(
-          'Convolutional layer requires filters and kernelSize parameters',
+          "Convolutional layer requires filters and kernelSize parameters",
         );
       }
 
@@ -105,13 +105,13 @@ const Prime = require('../core');
 
       // Create layer configuration
       const layerConfig = {
-        type: 'convolutional',
+        type: "convolutional",
         inputSize: inputSize,
         filters: config.filters,
         kernelSize: config.kernelSize,
         strides: config.strides || [1, 1],
-        padding: config.padding || 'valid',
-        activation: config.activation || 'relu',
+        padding: config.padding || "valid",
+        activation: config.activation || "relu",
         useTypedArrays: this.config.useTypedArrays,
       };
 
@@ -132,8 +132,8 @@ const Prime = require('../core');
      */
     recurrent(config) {
       // Validate configuration
-      if (!config || typeof config.units !== 'number') {
-        throw new Error('Recurrent layer requires units parameter');
+      if (!config || typeof config.units !== "number") {
+        throw new Error("Recurrent layer requires units parameter");
       }
 
       // Get input size
@@ -141,12 +141,12 @@ const Prime = require('../core');
 
       // Create layer configuration
       const layerConfig = {
-        type: 'recurrent',
+        type: "recurrent",
         inputSize: inputSize,
         outputSize: config.units,
-        cellType: config.cellType || 'lstm',
+        cellType: config.cellType || "lstm",
         returnSequences: config.returnSequences || false,
-        activation: config.activation || 'tanh',
+        activation: config.activation || "tanh",
         useTypedArrays: this.config.useTypedArrays,
       };
 
@@ -166,8 +166,8 @@ const Prime = require('../core');
      */
     selfOptimizing(config) {
       // Validate configuration
-      if (!config || typeof config.units !== 'number') {
-        throw new Error('Self-optimizing layer requires units parameter');
+      if (!config || typeof config.units !== "number") {
+        throw new Error("Self-optimizing layer requires units parameter");
       }
 
       // Get input size
@@ -175,10 +175,10 @@ const Prime = require('../core');
 
       // Create layer configuration
       const layerConfig = {
-        type: 'selfOptimizing',
+        type: "selfOptimizing",
         inputSize: inputSize,
         outputSize: config.units,
-        activation: config.activation || 'sigmoid',
+        activation: config.activation || "sigmoid",
         optimization: config.optimization || {
           enabled: true,
           adaptThreshold: 100,
@@ -204,12 +204,12 @@ const Prime = require('../core');
       // Validate configuration
       if (
         !config ||
-        typeof config.rate !== 'number' ||
+        typeof config.rate !== "number" ||
         config.rate < 0 ||
         config.rate >= 1
       ) {
         throw new Error(
-          'Dropout layer requires rate parameter between 0 and 1',
+          "Dropout layer requires rate parameter between 0 and 1",
         );
       }
 
@@ -218,7 +218,7 @@ const Prime = require('../core');
 
       // Create layer configuration
       const layerConfig = {
-        type: 'dropout',
+        type: "dropout",
         inputSize: inputSize,
         outputSize: inputSize, // Dropout doesn't change dimensions
         rate: config.rate,
@@ -238,15 +238,15 @@ const Prime = require('../core');
      * @returns {ModelBuilder} This builder instance for chaining
      */
     withOptimizer(optimizer, config = {}) {
-      if (typeof optimizer === 'string') {
+      if (typeof optimizer === "string") {
         this.optimizer = {
           type: optimizer,
           ...config,
         };
-      } else if (typeof optimizer === 'object') {
+      } else if (typeof optimizer === "object") {
         this.optimizer = optimizer;
       } else {
-        throw new Error('Invalid optimizer configuration');
+        throw new Error("Invalid optimizer configuration");
       }
 
       return this;
@@ -307,7 +307,7 @@ const Prime = require('../core');
     build() {
       // Validate that we have layers
       if (this.layers.length === 0) {
-        throw new Error('Cannot build model with no layers');
+        throw new Error("Cannot build model with no layers");
       }
 
       // Create model with configuration
@@ -346,7 +346,7 @@ const Prime = require('../core');
     _getInputSize() {
       if (this.layers.length === 0) {
         if (this.initialInputSize === null) {
-          throw new Error('Input size must be specified');
+          throw new Error("Input size must be specified");
         }
         return this.initialInputSize;
       }
@@ -366,7 +366,7 @@ const Prime = require('../core');
     static sequential(layers, config = {}) {
       // Validate layers
       if (!Array.isArray(layers) || layers.length === 0) {
-        throw new Error('Sequential model requires an array of layers');
+        throw new Error("Sequential model requires an array of layers");
       }
 
       const builder = new ModelBuilder(config);
@@ -379,14 +379,14 @@ const Prime = require('../core');
       // Add layers based on type
       layers.forEach((layer) => {
         switch (layer.type.toLowerCase()) {
-          case 'dense':
+          case "dense":
             builder.dense({
               units: layer.units,
               activation: layer.activation,
             });
             break;
-          case 'conv':
-          case 'convolutional':
+          case "conv":
+          case "convolutional":
             builder.convolutional({
               filters: layer.filters,
               kernelSize: layer.kernelSize,
@@ -395,9 +395,9 @@ const Prime = require('../core');
               activation: layer.activation,
             });
             break;
-          case 'recurrent':
-          case 'lstm':
-          case 'gru':
+          case "recurrent":
+          case "lstm":
+          case "gru":
             builder.recurrent({
               units: layer.units,
               cellType: layer.cellType || layer.type.toLowerCase(),
@@ -405,13 +405,13 @@ const Prime = require('../core');
               activation: layer.activation,
             });
             break;
-          case 'dropout':
+          case "dropout":
             builder.dropout({
               rate: layer.rate,
             });
             break;
-          case 'self_optimizing':
-          case 'selfoptimizing':
+          case "self_optimizing":
+          case "selfoptimizing":
             builder.selfOptimizing({
               units: layer.units,
               activation: layer.activation,
@@ -451,94 +451,94 @@ const Prime = require('../core');
       const lowerArch = architecture.toLowerCase();
 
       switch (lowerArch) {
-        case 'mlp':
-        case 'perceptron':
+        case "mlp":
+        case "perceptron":
           // Simple MLP with 2 hidden layers
           return ModelBuilder.sequential(
             [
               {
-                type: 'dense',
+                type: "dense",
                 inputSize: config.inputSize || 10,
                 units: 64,
-                activation: 'relu',
+                activation: "relu",
               },
-              { type: 'dense', units: 32, activation: 'relu' },
+              { type: "dense", units: 32, activation: "relu" },
               {
-                type: 'dense',
+                type: "dense",
                 units: config.outputSize || 1,
-                activation: config.outputActivation || 'sigmoid',
+                activation: config.outputActivation || "sigmoid",
               },
             ],
             {
-              optimizer: { type: 'adam', learningRate: 0.001 },
-              loss: config.loss || 'mse',
-              metric: config.metric || 'accuracy',
+              optimizer: { type: "adam", learningRate: 0.001 },
+              loss: config.loss || "mse",
+              metric: config.metric || "accuracy",
               ...config,
             },
           );
 
-        case 'cnn':
+        case "cnn":
           // Simple CNN for image processing
           return ModelBuilder.sequential(
             [
               {
-                type: 'convolutional',
+                type: "convolutional",
                 inputSize: config.inputSize || 784,
                 filters: 32,
                 kernelSize: 3,
-                activation: 'relu',
+                activation: "relu",
               },
               {
-                type: 'convolutional',
+                type: "convolutional",
                 filters: 64,
                 kernelSize: 3,
-                activation: 'relu',
+                activation: "relu",
               },
-              { type: 'dense', units: 128, activation: 'relu' },
-              { type: 'dropout', rate: 0.2 },
+              { type: "dense", units: 128, activation: "relu" },
+              { type: "dropout", rate: 0.2 },
               {
-                type: 'dense',
+                type: "dense",
                 units: config.outputSize || 10,
-                activation: 'softmax',
+                activation: "softmax",
               },
             ],
             {
-              optimizer: { type: 'adam', learningRate: 0.001 },
-              loss: config.loss || 'categoricalCrossEntropy',
-              metric: config.metric || 'accuracy',
+              optimizer: { type: "adam", learningRate: 0.001 },
+              loss: config.loss || "categoricalCrossEntropy",
+              metric: config.metric || "accuracy",
               ...config,
             },
           );
 
-        case 'rnn':
-        case 'lstm':
+        case "rnn":
+        case "lstm":
           // Simple RNN for sequence processing
           return ModelBuilder.sequential(
             [
               {
-                type: 'recurrent',
+                type: "recurrent",
                 inputSize: config.inputSize || 20,
                 units: 64,
-                cellType: 'lstm',
+                cellType: "lstm",
                 returnSequences: false,
-                activation: 'tanh',
+                activation: "tanh",
               },
-              { type: 'dense', units: 32, activation: 'relu' },
+              { type: "dense", units: 32, activation: "relu" },
               {
-                type: 'dense',
+                type: "dense",
                 units: config.outputSize || 1,
-                activation: config.outputActivation || 'sigmoid',
+                activation: config.outputActivation || "sigmoid",
               },
             ],
             {
-              optimizer: { type: 'adam', learningRate: 0.001 },
-              loss: config.loss || 'mse',
-              metric: config.metric || 'accuracy',
+              optimizer: { type: "adam", learningRate: 0.001 },
+              loss: config.loss || "mse",
+              metric: config.metric || "accuracy",
               ...config,
             },
           );
 
-        case 'autoencoder': {
+        case "autoencoder": {
           // Simple autoencoder
           const encoderSize = config.encoderSize || 32;
           const inputSize = config.inputSize || 784;
@@ -547,46 +547,46 @@ const Prime = require('../core');
             [
               // Encoder
               {
-                type: 'dense',
+                type: "dense",
                 inputSize: inputSize,
                 units: 128,
-                activation: 'relu',
+                activation: "relu",
               },
-              { type: 'dense', units: encoderSize, activation: 'relu' },
+              { type: "dense", units: encoderSize, activation: "relu" },
               // Decoder
-              { type: 'dense', units: 128, activation: 'relu' },
-              { type: 'dense', units: inputSize, activation: 'sigmoid' },
+              { type: "dense", units: 128, activation: "relu" },
+              { type: "dense", units: inputSize, activation: "sigmoid" },
             ],
             {
-              optimizer: { type: 'adam', learningRate: 0.001 },
-              loss: config.loss || 'mse',
+              optimizer: { type: "adam", learningRate: 0.001 },
+              loss: config.loss || "mse",
               ...config,
             },
           );
         }
 
-        case 'self_optimizing':
-        case 'selfoptimizing': {
+        case "self_optimizing":
+        case "selfoptimizing": {
           // Network with self-optimizing layers
           return ModelBuilder.sequential(
             [
               {
-                type: 'dense',
+                type: "dense",
                 inputSize: config.inputSize || 10,
                 units: 32,
-                activation: 'relu',
+                activation: "relu",
               },
-              { type: 'selfOptimizing', units: 32, activation: 'relu' },
+              { type: "selfOptimizing", units: 32, activation: "relu" },
               {
-                type: 'dense',
+                type: "dense",
                 units: config.outputSize || 1,
-                activation: config.outputActivation || 'sigmoid',
+                activation: config.outputActivation || "sigmoid",
               },
             ],
             {
-              optimizer: { type: 'adam', learningRate: 0.001 },
-              loss: config.loss || 'mse',
-              metric: config.metric || 'accuracy',
+              optimizer: { type: "adam", learningRate: 0.001 },
+              loss: config.loss || "mse",
+              metric: config.metric || "accuracy",
               coherence: {
                 enabled: true,
                 minThreshold: 0.7,

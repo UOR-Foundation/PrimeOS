@@ -5,9 +5,9 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
-const { Manifold } = require('./manifold.js');
+const Prime = require("../../core/prime.js");
+const MathUtils = require("../math");
+const { Manifold } = require("./manifold.js");
 
 /**
  * ManifoldVisualization - Visualization utilities for manifolds
@@ -21,12 +21,12 @@ const ManifoldVisualization = {
    */
   createVisualization: function (manifold, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError('First argument must be a manifold');
+      throw new Prime.ValidationError("First argument must be a manifold");
     }
 
-    const format = options.format || 'json';
+    const format = options.format || "json";
     const dimensions = options.dimensions || 3;
-    const method = options.method || 'pca';
+    const method = options.method || "pca";
 
     // Extract manifold information
     const meta = manifold.getMeta();
@@ -34,31 +34,31 @@ const ManifoldVisualization = {
 
     // Convert manifold data to a form suitable for visualization
     const numericProperties = Object.entries(variant)
-      .filter(([_, val]) => typeof val === 'number')
+      .filter(([_, val]) => typeof val === "number")
       .map(([key, val]) => ({ key, value: val }));
 
     const arrayProperties = Object.entries(variant)
       .filter(
         ([_, val]) =>
-          Array.isArray(val) && val.every((item) => typeof item === 'number'),
+          Array.isArray(val) && val.every((item) => typeof item === "number"),
       )
       .map(([key, val]) => ({ key, values: val }));
 
     // Generate visualization based on format
-    if (format === 'json') {
+    if (format === "json") {
       // Create a JSON visualization suitable for any visualization library
       return {
         id: manifold.getId(),
         type: manifold.getType(),
-        name: meta.name || 'Unnamed Manifold',
-        description: meta.description || '',
+        name: meta.name || "Unnamed Manifold",
+        description: meta.description || "",
         properties: {
           numeric: numericProperties,
           arrays: arrayProperties,
           metadata: Object.entries(meta)
             .filter(
               ([key, _]) =>
-                !['id', 'type', 'name', 'description'].includes(key),
+                !["id", "type", "name", "description"].includes(key),
             )
             .reduce((obj, [key, val]) => {
               obj[key] = val;
@@ -78,7 +78,7 @@ const ManifoldVisualization = {
 
             // Extract numeric values for visualization
             for (const key in variant) {
-              if (typeof variant[key] === 'number') {
+              if (typeof variant[key] === "number") {
                 coords.push(variant[key]);
                 if (coords.length >= dimensions) break;
               }
@@ -93,13 +93,13 @@ const ManifoldVisualization = {
           }
         })(),
       };
-    } else if (format === 'graph') {
+    } else if (format === "graph") {
       // Create a graph representation of the manifold and its relations
       const nodes = [
         {
           id: manifold.getId(),
-          type: 'manifold',
-          label: meta.name || 'Unnamed Manifold',
+          type: "manifold",
+          label: meta.name || "Unnamed Manifold",
           properties: {
             coherence: manifold.getCoherenceScore(),
             type: manifold.getType(),
@@ -116,8 +116,8 @@ const ManifoldVisualization = {
         // Add related manifold as a node
         nodes.push({
           id: relation.manifold.getId(),
-          type: 'manifold',
-          label: relation.manifold.getMeta().name || 'Related Manifold',
+          type: "manifold",
+          label: relation.manifold.getMeta().name || "Related Manifold",
           properties: {
             coherence: relation.manifold.getCoherenceScore(),
             type: relation.manifold.getType(),
@@ -139,7 +139,7 @@ const ManifoldVisualization = {
         // Add space as a node
         nodes.push({
           id: `space_${space}`,
-          type: 'space',
+          type: "space",
           label: space,
         });
 
@@ -147,7 +147,7 @@ const ManifoldVisualization = {
         edges.push({
           source: manifold.getId(),
           target: `space_${space}`,
-          type: 'exists_in',
+          type: "exists_in",
         });
       }
 
@@ -156,15 +156,15 @@ const ManifoldVisualization = {
         edges,
         metadata: {
           focusNodeId: manifold.getId(),
-          visualization: 'graph',
+          visualization: "graph",
         },
       };
-    } else if (format === 'coordinates') {
+    } else if (format === "coordinates") {
       // Just return the coordinates for custom visualizations
       return {
         id: manifold.getId(),
         type: manifold.getType(),
-        name: meta.name || 'Unnamed Manifold',
+        name: meta.name || "Unnamed Manifold",
         coordinates: this._generateVisualCoordinates(
           manifold,
           dimensions,
@@ -191,21 +191,21 @@ const ManifoldVisualization = {
       !manifolds.every((m) => m instanceof Manifold)
     ) {
       throw new Prime.ValidationError(
-        'First argument must be an array of manifolds',
+        "First argument must be an array of manifolds",
       );
     }
 
-    const format = options.format || 'graph';
+    const format = options.format || "graph";
     const dimensions = options.dimensions || 3;
 
-    if (format === 'graph') {
+    if (format === "graph") {
       // Create nodes for all manifolds
       const nodes = manifolds.map((manifold) => {
         const meta = manifold.getMeta();
         return {
           id: manifold.getId(),
-          type: 'manifold',
-          label: meta.name || 'Unnamed Manifold',
+          type: "manifold",
+          label: meta.name || "Unnamed Manifold",
           properties: {
             coherence: manifold.getCoherenceScore(),
             type: manifold.getType(),
@@ -226,7 +226,7 @@ const ManifoldVisualization = {
           if (!nodes.some((node) => node.id === `space_${space}`)) {
             nodes.push({
               id: `space_${space}`,
-              type: 'space',
+              type: "space",
               label: space,
             });
           }
@@ -235,7 +235,7 @@ const ManifoldVisualization = {
           edges.push({
             source: manifold.getId(),
             target: `space_${space}`,
-            type: 'exists_in',
+            type: "exists_in",
           });
         }
 
@@ -268,12 +268,12 @@ const ManifoldVisualization = {
         nodes,
         edges,
         metadata: {
-          visualization: 'graph',
+          visualization: "graph",
           manifoldCount: manifolds.length,
           relationCount: edges.length,
         },
       };
-    } else if (format === 'coordinates') {
+    } else if (format === "coordinates") {
       // Return a collection of manifold coordinates
       return manifolds.map((manifold) => {
         // Similar inline fallback for testing
@@ -282,7 +282,7 @@ const ManifoldVisualization = {
           coordinates = this.generateVisualCoordinates(
             manifold,
             dimensions,
-            options.method || 'pca',
+            options.method || "pca",
           );
         } catch (e) {
           // Use simplified implementation
@@ -291,7 +291,7 @@ const ManifoldVisualization = {
 
           // Extract numeric values
           for (const key in variant) {
-            if (typeof variant[key] === 'number') {
+            if (typeof variant[key] === "number") {
               coordinates.push(variant[key]);
               if (coordinates.length >= dimensions) break;
             }
@@ -305,7 +305,7 @@ const ManifoldVisualization = {
         return {
           id: manifold.getId(),
           type: manifold.getType(),
-          name: manifold.getMeta().name || 'Unnamed Manifold',
+          name: manifold.getMeta().name || "Unnamed Manifold",
           coordinates,
           dimension: dimensions,
         };
@@ -333,11 +333,11 @@ const ManifoldVisualization = {
     const numericValues = [];
     for (const key in variant) {
       const value = variant[key];
-      if (typeof value === 'number') {
+      if (typeof value === "number") {
         numericValues.push(value);
       } else if (
         Array.isArray(value) &&
-        value.every((v) => typeof v === 'number')
+        value.every((v) => typeof v === "number")
       ) {
         numericValues.push(...value);
       }
@@ -350,7 +350,7 @@ const ManifoldVisualization = {
         .map((_, i) => (i < numericValues.length ? numericValues[i] : 0));
     }
 
-    if (method === 'pca') {
+    if (method === "pca") {
       // Principal Component Analysis for dimension reduction
       // Convert the array of values into a matrix of observations
       // For single-dimensional data, we'll use a sliding window approach
@@ -381,11 +381,14 @@ const ManifoldVisualization = {
       }
 
       // Center the data (subtract mean)
-      const centeredData = observations.map(obs =>
-        obs.map((val, i) => val - means[i]));
+      const centeredData = observations.map((obs) =>
+        obs.map((val, i) => val - means[i]),
+      );
 
       // Calculate covariance matrix
-      const covMatrix = Array(windowSize).fill().map(() => Array(windowSize).fill(0));
+      const covMatrix = Array(windowSize)
+        .fill()
+        .map(() => Array(windowSize).fill(0));
       for (let i = 0; i < windowSize; i++) {
         for (let j = 0; j < windowSize; j++) {
           for (let k = 0; k < observations.length; k++) {
@@ -401,10 +404,12 @@ const ManifoldVisualization = {
       // Basic power iteration method for finding dominant eigenvalue/vector
       const powerIteration = (matrix, iterations = 100, tolerance = 1e-10) => {
         const n = matrix.length;
-        let vector = Array(n).fill(0).map(() => Math.random());
+        let vector = Array(n)
+          .fill(0)
+          .map(() => Math.random());
         // Normalize
         const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-        vector = vector.map(val => val / norm);
+        vector = vector.map((val) => val / norm);
 
         let eigenvalue = 0;
 
@@ -418,14 +423,22 @@ const ManifoldVisualization = {
           }
 
           // Calculate eigenvalue (Rayleigh quotient)
-          const rayleigh = newVector.reduce((sum, val, i) => sum + val * vector[i], 0);
+          const rayleigh = newVector.reduce(
+            (sum, val, i) => sum + val * vector[i],
+            0,
+          );
 
           // Normalize
-          const newNorm = Math.sqrt(newVector.reduce((sum, val) => sum + val * val, 0));
-          const normalizedNewVector = newVector.map(val => val / newNorm);
+          const newNorm = Math.sqrt(
+            newVector.reduce((sum, val) => sum + val * val, 0),
+          );
+          const normalizedNewVector = newVector.map((val) => val / newNorm);
 
           // Check for convergence
-          const diff = normalizedNewVector.reduce((sum, val, i) => sum + Math.abs(val - vector[i]), 0);
+          const diff = normalizedNewVector.reduce(
+            (sum, val, i) => sum + Math.abs(val - vector[i]),
+            0,
+          );
           if (diff < tolerance) {
             eigenvalue = rayleigh;
             vector = normalizedNewVector;
@@ -441,7 +454,7 @@ const ManifoldVisualization = {
 
       // Find top k eigenvalues/vectors using deflation
       const k = Math.min(dimensions, windowSize);
-      const remainingMatrix = covMatrix.map(row => [...row]);
+      const remainingMatrix = covMatrix.map((row) => [...row]);
 
       for (let i = 0; i < k; i++) {
         const { eigenvalue, eigenvector } = powerIteration(remainingMatrix);
@@ -450,7 +463,8 @@ const ManifoldVisualization = {
         // Deflate the matrix (remove component we just found)
         for (let r = 0; r < windowSize; r++) {
           for (let c = 0; c < windowSize; c++) {
-            remainingMatrix[r][c] -= eigenvalue * eigenvector[r] * eigenvector[c];
+            remainingMatrix[r][c] -=
+              eigenvalue * eigenvector[r] * eigenvector[c];
           }
         }
       }
@@ -459,16 +473,23 @@ const ManifoldVisualization = {
       eigenResults.sort((a, b) => b.eigenvalue - a.eigenvalue);
 
       // Project the original data onto principal components to get coordinates
-      const principalComponents = eigenResults.slice(0, dimensions).map(result => result.eigenvector);
+      const principalComponents = eigenResults
+        .slice(0, dimensions)
+        .map((result) => result.eigenvector);
 
       // Take the last observation and project it to get visual coordinates
       const lastObservation = observations[observations.length - 1];
       const projectedCoordinates = [];
 
-      for (let i = 0; i < Math.min(dimensions, principalComponents.length); i++) {
+      for (
+        let i = 0;
+        i < Math.min(dimensions, principalComponents.length);
+        i++
+      ) {
         let coordinate = 0;
         for (let j = 0; j < windowSize; j++) {
-          coordinate += (lastObservation[j] - means[j]) * principalComponents[i][j];
+          coordinate +=
+            (lastObservation[j] - means[j]) * principalComponents[i][j];
         }
         projectedCoordinates.push(coordinate);
       }
@@ -479,10 +500,10 @@ const ManifoldVisualization = {
       }
 
       return projectedCoordinates;
-    } else if (method === 'slice') {
+    } else if (method === "slice") {
       // Simplest approach - just take the first N values
       return numericValues.slice(0, dimensions);
-    } else if (method === 'random') {
+    } else if (method === "random") {
       // Random selection of dimensions
       const result = [];
       const indices = new Set();
@@ -518,7 +539,7 @@ const ManifoldVisualization = {
    */
   createHeatmap: function (manifold, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError('First argument must be a manifold');
+      throw new Prime.ValidationError("First argument must be a manifold");
     }
 
     const propertyKey = options.property || null;
@@ -588,7 +609,7 @@ const ManifoldVisualization = {
             data.push(row);
           }
         }
-      } else if (typeof value === 'number') {
+      } else if (typeof value === "number") {
         // Single numeric value, represent as 1x1 heatmap
         data = [[value]];
         dimensions = [1, 1];
@@ -601,7 +622,7 @@ const ManifoldVisualization = {
       // No specific property provided, try to find a suitable array
       const arrayProps = Object.entries(variant).filter(
         ([_, val]) =>
-          Array.isArray(val) && val.every((v) => typeof v === 'number'),
+          Array.isArray(val) && val.every((v) => typeof v === "number"),
       );
 
       if (arrayProps.length > 0) {
@@ -618,7 +639,7 @@ const ManifoldVisualization = {
         });
       } else {
         throw new Prime.ValidationError(
-          'Manifold does not have any suitable array properties for heatmap',
+          "Manifold does not have any suitable array properties for heatmap",
         );
       }
     }
@@ -637,7 +658,7 @@ const ManifoldVisualization = {
     return {
       id: manifold.getId(),
       type: manifold.getType(),
-      name: manifold.getMeta().name || 'Unnamed Manifold',
+      name: manifold.getMeta().name || "Unnamed Manifold",
       property: propertyKey,
       data,
       dimensions,

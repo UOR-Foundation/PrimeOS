@@ -5,13 +5,13 @@
  */
 
 // Import core
-const Prime = require('../../core.js');
-const MathUtils = require('../math');
+const Prime = require("../../core/prime.js");
+const MathUtils = require("../math");
 
 // Import component modules
-const ResourceClient = require('./resource-client');
-const ApplicationManager = require('./application-manager');
-const SystemManager = require('./system-manager');
+const ResourceClient = require("./resource-client");
+const ApplicationManager = require("./application-manager");
+const SystemManager = require("./system-manager");
 
 /**
  * Base 2: Kernel
@@ -27,9 +27,9 @@ const Base2 = {
    */
   registerSyscalls: function (syscalls) {
     for (const syscall of syscalls) {
-      if (!syscall.name || typeof syscall.handler !== 'function') {
+      if (!syscall.name || typeof syscall.handler !== "function") {
         throw new Prime.ValidationError(
-          'Syscall must have a name and handler function',
+          "Syscall must have a name and handler function",
         );
       }
 
@@ -77,7 +77,7 @@ const Base2 = {
       Prime.Logger.error(`Error executing syscall ${name}:`, error);
 
       // If it's already a Prime error, add additional context and re-throw
-      if (error instanceof Error && error.name.startsWith('Prime')) {
+      if (error instanceof Error && error.name.startsWith("Prime")) {
         error.context = error.context || {};
         error.context.syscall = name;
         error.context.syscallArgs = args;

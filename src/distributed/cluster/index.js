@@ -4,16 +4,16 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Ensure namespace exists
 Prime.Distributed = Prime.Distributed || {};
 Prime.Distributed.Cluster = Prime.Distributed.Cluster || {};
 
 // Import cluster components
-require('./cluster-nodes');
-require('./task-distribution');
-require('./partition-manager');
+require("./cluster-nodes");
+require("./task-distribution");
+require("./partition-manager");
 
 // Make sure the cluster module components are accessible at the correct paths
 // ClusterNode
@@ -126,7 +126,7 @@ class ClusterManager {
 
     // Cluster configuration
     this.config = {
-      name: config.name || 'PrimeOS Cluster',
+      name: config.name || "PrimeOS Cluster",
       coordinatorId: config.coordinatorId || null,
       maxNodes: config.maxNodes || 100,
       autoStart: config.autoStart !== false,
@@ -168,7 +168,7 @@ class ClusterManager {
     this.status.startedAt = Date.now();
 
     // Log start
-    if (Prime.Logger && typeof Prime.Logger.info === 'function') {
+    if (Prime.Logger && typeof Prime.Logger.info === "function") {
       Prime.Logger.info(`Cluster manager started: ${this.config.name}`, {
         coordinatorId: this.config.coordinatorId,
         maxNodes: this.config.maxNodes,
@@ -196,7 +196,7 @@ class ClusterManager {
     this.status.running = false;
 
     // Log stop
-    if (Prime.Logger && typeof Prime.Logger.info === 'function') {
+    if (Prime.Logger && typeof Prime.Logger.info === "function") {
       Prime.Logger.info(`Cluster manager stopped: ${this.config.name}`, {
         uptime: Date.now() - this.status.startedAt,
         tasksProcessed: this.status.tasksProcessed,
@@ -217,7 +217,7 @@ class ClusterManager {
     // Check max nodes limit
     if (this.nodeRegistry.getAllNodes().length >= this.config.maxNodes) {
       const ErrorClass = Prime.InvalidOperationError || Error;
-      throw new ErrorClass('Maximum number of nodes reached');
+      throw new ErrorClass("Maximum number of nodes reached");
     }
 
     // Register with node registry
@@ -228,7 +228,7 @@ class ClusterManager {
     this.status.lastStatusUpdate = Date.now();
 
     // Log registration
-    if (Prime.Logger && typeof Prime.Logger.info === 'function') {
+    if (Prime.Logger && typeof Prime.Logger.info === "function") {
       Prime.Logger.info(`Node registered: ${node.id}`, {
         type: node.type,
         address: node.address,
@@ -255,7 +255,7 @@ class ClusterManager {
       this.status.lastStatusUpdate = Date.now();
 
       // Log unregistration
-      if (Prime.Logger && typeof Prime.Logger.info === 'function') {
+      if (Prime.Logger && typeof Prime.Logger.info === "function") {
         Prime.Logger.info(`Node unregistered: ${nodeId}`);
       } else {
         console.log(`Node unregistered: ${nodeId}`);
@@ -274,7 +274,7 @@ class ClusterManager {
     // Check if cluster is running
     if (!this.status.running) {
       const ErrorClass = Prime.InvalidOperationError || Error;
-      throw new ErrorClass('Cluster manager is not running');
+      throw new ErrorClass("Cluster manager is not running");
     }
 
     // Submit task to scheduler
@@ -284,7 +284,7 @@ class ClusterManager {
     this.status.lastStatusUpdate = Date.now();
 
     // Log submission
-    if (Prime.Logger && typeof Prime.Logger.info === 'function') {
+    if (Prime.Logger && typeof Prime.Logger.info === "function") {
       Prime.Logger.info(`Task submitted: ${task.id}`, {
         type: task.type,
         priority: task.priority,
@@ -301,11 +301,11 @@ class ClusterManager {
         data: {
           // Mock result data based on task type
           output:
-            taskConfig.type === 'forward_pass'
+            taskConfig.type === "forward_pass"
               ? { prediction: [0.2, 0.8] }
               : null,
           processingTime: 10,
-          processingNode: 'compute_node',
+          processingNode: "compute_node",
           completed: true,
         },
       },
@@ -326,7 +326,7 @@ class ClusterManager {
     this.status.lastStatusUpdate = Date.now();
 
     // Log creation
-    if (Prime.Logger && typeof Prime.Logger.info === 'function') {
+    if (Prime.Logger && typeof Prime.Logger.info === "function") {
       Prime.Logger.info(`Partition scheme created: ${schemeId}`, {
         type: scheme.type,
         strategy: scheme.strategy,
@@ -410,17 +410,17 @@ class ClusterManager {
 
 // Add to Prime namespace with proper circular dependency handling
 if (
-  Object.getOwnPropertyDescriptor(Prime.Distributed.Cluster, 'Manager') &&
-  Object.getOwnPropertyDescriptor(Prime.Distributed.Cluster, 'Manager').get
+  Object.getOwnPropertyDescriptor(Prime.Distributed.Cluster, "Manager") &&
+  Object.getOwnPropertyDescriptor(Prime.Distributed.Cluster, "Manager").get
 ) {
   // Use a more careful approach to update properties that already have getters
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.Distributed.Cluster,
-    'Manager',
+    "Manager",
   );
   const originalGetter = descriptor.get;
 
-  Object.defineProperty(Prime.Distributed.Cluster, 'Manager', {
+  Object.defineProperty(Prime.Distributed.Cluster, "Manager", {
     get: function () {
       const result = originalGetter.call(this);
       if (!result || Object.keys(result).length === 0) {

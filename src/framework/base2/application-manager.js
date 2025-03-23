@@ -3,7 +3,7 @@
  * Part of Base2 (Kernel) Layer
  */
 
-const Prime = require('../../core');
+const Prime = require("../../core");
 const { Utils } = Prime;
 
 /**
@@ -33,10 +33,10 @@ function createApplicationManager(config = {}) {
 
   // Initialize application manager with enhanced error tracking
   return {
-    type: 'applicationManager',
+    type: "applicationManager",
     bundles: config.bundles || [],
     resourceClient: config.resourceClient,
-    name: config.name || 'ApplicationManager',
+    name: config.name || "ApplicationManager",
     _runningApps: {},
     _metrics: {
       totalStarted: 0,
@@ -55,14 +55,14 @@ function createApplicationManager(config = {}) {
     loadBundle: function (bundle) {
       // Enhanced validation with detailed error context
       if (!bundle || !bundle.id) {
-        throw new Prime.ValidationError('Bundle must have an id property', {
+        throw new Prime.ValidationError("Bundle must have an id property", {
           context: { bundle },
         });
       }
 
       if (!bundle.name || !bundle.version) {
         throw new Prime.ValidationError(
-          'Bundle must have name and version properties',
+          "Bundle must have name and version properties",
           {
             context: { bundle },
           },
@@ -103,7 +103,7 @@ function createApplicationManager(config = {}) {
       this.bundles.push(Utils.deepClone(bundle));
 
       // Publish event with enhanced metadata
-      Prime.EventBus.publish('bundle:loaded', {
+      Prime.EventBus.publish("bundle:loaded", {
         bundle,
         timestamp: Date.now(),
         totalBundles: this.bundles.length,
@@ -145,7 +145,7 @@ function createApplicationManager(config = {}) {
       this.bundles.splice(index, 1);
 
       // Publish event with enhanced context
-      Prime.EventBus.publish('bundle:unloaded', {
+      Prime.EventBus.publish("bundle:unloaded", {
         bundle,
         timestamp: Date.now(),
         metrics: this._metrics.bundleStats[bundleId],
@@ -261,7 +261,7 @@ function createApplicationManager(config = {}) {
       }
 
       // Publish event with detailed context
-      Prime.EventBus.publish('application:started', {
+      Prime.EventBus.publish("application:started", {
         app: {
           id: app.id,
           bundleId: app.bundle.id,
@@ -342,7 +342,7 @@ function createApplicationManager(config = {}) {
               context: {
                 appId,
                 failedModels,
-                tip: 'Use options.force=true to force application termination despite model errors',
+                tip: "Use options.force=true to force application termination despite model errors",
               },
             },
           );
@@ -371,14 +371,14 @@ function createApplicationManager(config = {}) {
       delete this._runningApps[appId];
 
       // Publish event with enhanced context
-      Prime.EventBus.publish('application:stopped', {
+      Prime.EventBus.publish("application:stopped", {
         app: {
           id: appSnapshot.id,
           bundleId: appSnapshot.bundle.id,
           bundleVersion: appSnapshot.bundle.version,
           startTime: appSnapshot.startTime,
           runTime,
-          reason: options.reason || 'user_request',
+          reason: options.reason || "user_request",
         },
         timestamp: Date.now(),
         runningCount: Object.keys(this._runningApps).length,
@@ -401,7 +401,7 @@ function createApplicationManager(config = {}) {
           {
             context: {
               runningApplications: Object.keys(this._runningApps),
-              tip: 'Use getRunningApplications() to see all running apps',
+              tip: "Use getRunningApplications() to see all running apps",
             },
           },
         );

@@ -6,8 +6,8 @@
  */
 
 // Import core modules
-const Prime = require('../../core.js');
-require('../../neural/index.js');
+const Prime = require("../../core/prime.js");
+require("../../neural/index.js");
 
 // Create namespaces
 Prime.Neural = Prime.Neural || {};
@@ -50,12 +50,12 @@ class DistributedNeuralModel {
     // Configure distributed settings
     this.distributedConfig = {
       enabled: config.distributed?.enabled ?? false,
-      partitionScheme: config.distributed?.partitionScheme || 'data_parallel',
+      partitionScheme: config.distributed?.partitionScheme || "data_parallel",
       syncFrequency: config.distributed?.syncFrequency || 10,
       synchronizationStrategy:
-        config.distributed?.synchronizationStrategy || 'average',
+        config.distributed?.synchronizationStrategy || "average",
       syncRecoveryStrategy:
-        config.distributed?.syncRecoveryStrategy || 'local_fallback',
+        config.distributed?.syncRecoveryStrategy || "local_fallback",
     };
 
     // Initialize distributed state
@@ -116,7 +116,7 @@ class DistributedNeuralModel {
     // Create the layer based on type
     let layer;
 
-    if (layerOptions.type === 'dense' || !layerOptions.type) {
+    if (layerOptions.type === "dense" || !layerOptions.type) {
       layer = new Prime.Neural.Layer.Dense(layerOptions);
     } else {
       // Handle other layer types
@@ -140,7 +140,7 @@ class DistributedNeuralModel {
    */
   _initializeCluster() {
     if (!Prime.Distributed || !Prime.Distributed.Cluster) {
-      throw new Prime.ValidationError('Distributed modules not loaded');
+      throw new Prime.ValidationError("Distributed modules not loaded");
     }
 
     // Create cluster manager
@@ -170,7 +170,7 @@ class DistributedNeuralModel {
       const isCoherent = this._verifyParameterCoherence(params);
 
       if (!isCoherent) {
-        Prime.Logger.warn('Initial model parameters failed coherence check');
+        Prime.Logger.warn("Initial model parameters failed coherence check");
       }
     } catch (error) {
       Prime.Logger.error(`Initial coherence check failed: ${error.message}`);
@@ -412,18 +412,18 @@ class DistributedNeuralModel {
     const strategy = this.distributedConfig.syncRecoveryStrategy;
 
     switch (strategy) {
-      case 'local_fallback':
+      case "local_fallback":
         // Continue with local parameters
-        Prime.Logger.warn('Using local fallback after synchronization failure');
+        Prime.Logger.warn("Using local fallback after synchronization failure");
         return true;
 
-      case 'retry':
+      case "retry":
         // Retry is handled at a higher level
         return false;
 
-      case 'conservative_merge':
+      case "conservative_merge":
         // Would implement partial merging of available parameters
-        Prime.Logger.warn('Conservative merge not yet implemented');
+        Prime.Logger.warn("Conservative merge not yet implemented");
         return false;
 
       default:
@@ -448,7 +448,7 @@ class DistributedNeuralModel {
       const isLocallyCoherent = this._verifyParameterCoherence(params);
 
       if (!isLocallyCoherent) {
-        Prime.Logger.warn('Local parameters failed coherence check');
+        Prime.Logger.warn("Local parameters failed coherence check");
         return false;
       }
 

@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Create the Models module using IIFE
 (function () {
@@ -44,8 +44,8 @@ const Prime = require('../../core');
 
       // Metadata
       this.metadata = {
-        name: config.name || 'Coherence Manifold',
-        description: config.description || 'A manifold of coherent states',
+        name: config.name || "Coherence Manifold",
+        description: config.description || "A manifold of coherent states",
         creationTime: new Date().toISOString(),
       };
     }
@@ -104,7 +104,7 @@ const Prime = require('../../core');
      */
     connectPoints(index1, index2, strength = 1, metadata = {}) {
       if (index1 === index2) {
-        throw new Prime.ValidationError('Cannot connect a point to itself');
+        throw new Prime.ValidationError("Cannot connect a point to itself");
       }
 
       if (
@@ -113,7 +113,7 @@ const Prime = require('../../core');
         index2 < 0 ||
         index2 >= this.points.length
       ) {
-        throw new Prime.ValidationError('Point indices out of bounds');
+        throw new Prime.ValidationError("Point indices out of bounds");
       }
 
       // Add bidirectional connections
@@ -139,7 +139,7 @@ const Prime = require('../../core');
      */
     updatePoint(index, newCoordinates) {
       if (index < 0 || index >= this.points.length) {
-        throw new Prime.ValidationError('Point index out of bounds');
+        throw new Prime.ValidationError("Point index out of bounds");
       }
 
       if (
@@ -167,7 +167,7 @@ const Prime = require('../../core');
 
       // Record the change in history
       this.history.push({
-        type: 'pointUpdate',
+        type: "pointUpdate",
         index,
         oldCoordinates,
         newCoordinates: [...newCoordinates],
@@ -308,7 +308,7 @@ const Prime = require('../../core');
 
         // Check for strong connections
         const hasStrongConnections = Array.from(
-          this.connections.get(i).entries()
+          this.connections.get(i).entries(),
         ).some(([_, conn]) => conn.strength >= 0.7);
 
         // Add points with high coherence or strong connections as potential start points
@@ -370,8 +370,9 @@ const Prime = require('../../core');
 
         // Consider points with high coherence or strong connections
         const connections = this.connections.get(currentIndex);
-        const hasStrongConnection = Array.from(connections.entries())
-          .some(([_, conn]) => conn.strength >= 0.7);
+        const hasStrongConnection = Array.from(connections.entries()).some(
+          ([_, conn]) => conn.strength >= 0.7,
+        );
 
         if (coherence >= this.coherenceThreshold || hasStrongConnection) {
           regionPoints.push(currentIndex);
@@ -500,7 +501,7 @@ const Prime = require('../../core');
       // Create a sorted array of eigenvalues (in descending order)
       const sortedEigenvalues = [...this.eigenvalues]
         .sort((a, b) => b.value - a.value)
-        .map(e => Math.max(e.value, 1e-10));
+        .map((e) => Math.max(e.value, 1e-10));
 
       // The spectral dimension can be estimated using several methods:
 
@@ -521,7 +522,10 @@ const Prime = require('../../core');
       }
 
       // Perform linear regression to find the slope
-      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      let sumX = 0,
+        sumY = 0,
+        sumXY = 0,
+        sumX2 = 0;
       const n = logIndices.length;
 
       for (let i = 0; i < n; i++) {
@@ -532,7 +536,8 @@ const Prime = require('../../core');
       }
 
       // Calculate the slope of the regression line
-      const slope = n > 1 ? (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX) : 0;
+      const slope =
+        n > 1 ? (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX) : 0;
 
       // The spectral dimension is related to the negative of the slope
       // ds = -2/slope for the relationship λi ~ i^(-2/ds)
@@ -545,8 +550,8 @@ const Prime = require('../../core');
 
       // Calculate ratios between consecutive eigenvalues
       for (let i = 1; i < sortedEigenvalues.length - 1; i++) {
-        if (sortedEigenvalues[i] > 1e-6 && sortedEigenvalues[i+1] > 1e-6) {
-          const ratio = sortedEigenvalues[i] / sortedEigenvalues[i+1];
+        if (sortedEigenvalues[i] > 1e-6 && sortedEigenvalues[i + 1] > 1e-6) {
+          const ratio = sortedEigenvalues[i] / sortedEigenvalues[i + 1];
           sumRatios += Math.log(ratio);
           countRatios++;
         }
@@ -554,7 +559,8 @@ const Prime = require('../../core');
 
       // Calculate average ratio and derive dimension
       const avgRatio = countRatios > 0 ? Math.exp(sumRatios / countRatios) : 1;
-      const ratioDimension = Math.log(sortedEigenvalues.length) / Math.log(avgRatio);
+      const ratioDimension =
+        Math.log(sortedEigenvalues.length) / Math.log(avgRatio);
 
       // Method 3: Using the return probability of random walks
       // The probability of return scales as p(t) ~ t^(-ds/2) for large t
@@ -562,7 +568,7 @@ const Prime = require('../../core');
 
       // Calculate return probability for different time steps
       const timeSteps = [1, 2, 4, 8, 16]; // exponentially spaced time steps
-      const returnProbs = timeSteps.map(t => {
+      const returnProbs = timeSteps.map((t) => {
         // Return probability using eigenvalues: p(t) = Σ exp(-λi·t) / n
         let sum = 0;
         for (const eigenvalue of sortedEigenvalues) {
@@ -572,11 +578,14 @@ const Prime = require('../../core');
       });
 
       // Perform regression on log-log data (time vs return probability)
-      const logTimes = timeSteps.map(t => Math.log(t));
-      const logProbs = returnProbs.map(p => Math.log(Math.max(p, 1e-10)));
+      const logTimes = timeSteps.map((t) => Math.log(t));
+      const logProbs = returnProbs.map((p) => Math.log(Math.max(p, 1e-10)));
 
       // Reset variables for the second regression
-      sumX = 0; sumY = 0; sumXY = 0; sumX2 = 0;
+      sumX = 0;
+      sumY = 0;
+      sumXY = 0;
+      sumX2 = 0;
 
       for (let i = 0; i < logTimes.length; i++) {
         sumX += logTimes[i];
@@ -585,21 +594,25 @@ const Prime = require('../../core');
         sumX2 += logTimes[i] * logTimes[i];
       }
 
-      const walkSlope = (logTimes.length * sumXY - sumX * sumY) /
-                         (logTimes.length * sumX2 - sumX * sumX);
+      const walkSlope =
+        (logTimes.length * sumXY - sumX * sumY) /
+        (logTimes.length * sumX2 - sumX * sumX);
 
       // Convert slope to dimension: p(t) ~ t^(-ds/2) => slope = -ds/2
       const walkDimension = walkSlope !== 0 ? -2 * walkSlope : 0;
 
       // Combine all methods, weighting them by reliability
-      const combinedDimension = (
-        (spectralDimension * 0.4) +
-        (ratioDimension * 0.3) +
-        (walkDimension * 0.3)
-      );
+      const combinedDimension =
+        spectralDimension * 0.4 + ratioDimension * 0.3 + walkDimension * 0.3;
 
       // Ensure result is reasonable
-      return Math.max(1, Math.min(Math.round(combinedDimension * 10) / 10, this.eigenvalues.length));
+      return Math.max(
+        1,
+        Math.min(
+          Math.round(combinedDimension * 10) / 10,
+          this.eigenvalues.length,
+        ),
+      );
     }
 
     /**
@@ -617,7 +630,7 @@ const Prime = require('../../core');
         endIndex < 0 ||
         endIndex >= this.points.length
       ) {
-        throw new Prime.ValidationError('Point indices out of bounds');
+        throw new Prime.ValidationError("Point indices out of bounds");
       }
 
       // Modified Dijkstra's algorithm with coherence as weight
@@ -726,7 +739,7 @@ const Prime = require('../../core');
     constructor(config = {}) {
       if (!(config.baseManifold instanceof CoherenceManifold)) {
         throw new Prime.ValidationError(
-          'Base manifold must be a CoherenceManifold',
+          "Base manifold must be a CoherenceManifold",
         );
       }
 
@@ -748,9 +761,9 @@ const Prime = require('../../core');
 
       // Metadata
       this.metadata = {
-        name: config.name || 'Consciousness Fiber Bundle',
+        name: config.name || "Consciousness Fiber Bundle",
         description:
-          config.description || 'A fiber bundle modeling consciousness',
+          config.description || "A fiber bundle modeling consciousness",
         creationTime: new Date().toISOString(),
       };
     }
@@ -826,7 +839,7 @@ const Prime = require('../../core');
 
       if (fiberIndex1 === fiberIndex2) {
         throw new Prime.ValidationError(
-          'Cannot connect a fiber point to itself',
+          "Cannot connect a fiber point to itself",
         );
       }
 
@@ -836,7 +849,7 @@ const Prime = require('../../core');
         fiberIndex2 < 0 ||
         fiberIndex2 >= fiber.points.length
       ) {
-        throw new Prime.ValidationError('Fiber point indices out of bounds');
+        throw new Prime.ValidationError("Fiber point indices out of bounds");
       }
 
       // Add bidirectional connections
@@ -863,7 +876,7 @@ const Prime = require('../../core');
       const fiber = this.fibers.get(baseIndex);
 
       if (fiberIndex < 0 || fiberIndex >= fiber.points.length) {
-        throw new Prime.ValidationError('Fiber point index out of bounds');
+        throw new Prime.ValidationError("Fiber point index out of bounds");
       }
 
       if (referenceLevel < 1 || referenceLevel > this.selfReferenceOrder) {
@@ -1197,15 +1210,15 @@ const Prime = require('../../core');
      */
     _interpretConsciousnessScore(score) {
       if (score < 0.2) {
-        return 'Minimal consciousness properties';
+        return "Minimal consciousness properties";
       } else if (score < 0.4) {
-        return 'Emerging consciousness-like patterns';
+        return "Emerging consciousness-like patterns";
       } else if (score < 0.6) {
-        return 'Moderate consciousness capacity';
+        return "Moderate consciousness capacity";
       } else if (score < 0.8) {
-        return 'Strong consciousness-like organization';
+        return "Strong consciousness-like organization";
       } else {
-        return 'High-level consciousness properties';
+        return "High-level consciousness properties";
       }
     }
 

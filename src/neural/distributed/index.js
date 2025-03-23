@@ -4,14 +4,14 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Import validators
-require('./dimension-validator');
-require('./coherence-validator');
+require("./dimension-validator");
+require("./coherence-validator");
 
 // Import the implementation from our distributed model file
-const DistributedModelImplementation = require('./distributed-model-impl');
+const DistributedModelImplementation = require("./distributed-model-impl");
 
 // Create the Neural Distributed module using IIFE
 (function () {
@@ -49,12 +49,12 @@ const DistributedModelImplementation = require('./distributed-model-impl');
       // Enhanced distributed configuration
       this.distributedConfig = {
         enabled: config.distributed?.enabled ?? false,
-        partitionScheme: config.distributed?.partitionScheme || 'data_parallel',
+        partitionScheme: config.distributed?.partitionScheme || "data_parallel",
         syncFrequency: config.distributed?.syncFrequency || 10,
         synchronizationStrategy:
-          config.distributed?.synchronizationStrategy || 'average',
+          config.distributed?.synchronizationStrategy || "average",
         syncRecoveryStrategy:
-          config.distributed?.syncRecoveryStrategy || 'local_fallback',
+          config.distributed?.syncRecoveryStrategy || "local_fallback",
         clusterManager: config.distributed?.clusterManager,
         errorTolerance: config.distributed?.errorTolerance || 0.01,
         maxSyncRetries: config.distributed?.maxSyncRetries || 3,
@@ -101,13 +101,17 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         const clusterManager = this.distributedConfig.clusterManager;
 
         // Check for required cluster resources
-        if (!clusterManager || !clusterManager.nodes || clusterManager.nodes.size === 0) {
-          throw new Error('Cluster manager has no nodes available');
+        if (
+          !clusterManager ||
+          !clusterManager.nodes ||
+          clusterManager.nodes.size === 0
+        ) {
+          throw new Error("Cluster manager has no nodes available");
         }
 
         // Initialize cluster connection
         if (!Prime.Distributed || !Prime.Distributed.Cluster) {
-          throw new Prime.ValidationError('Distributed modules not loaded');
+          throw new Prime.ValidationError("Distributed modules not loaded");
         }
 
         // Register with cluster
@@ -119,11 +123,19 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         // Set initialization state
         this.distributedState.isInitialized = true;
 
-        Prime.Logger.info(`Distributed mode initialized with ${this.distributedState.activeNodes.length} active nodes`);
-        Prime.Logger.info(`Using partition scheme: ${this.distributedConfig.partitionScheme}`);
-        Prime.Logger.info(`Using sync strategy: ${this.distributedConfig.synchronizationStrategy}`);
+        Prime.Logger.info(
+          `Distributed mode initialized with ${this.distributedState.activeNodes.length} active nodes`,
+        );
+        Prime.Logger.info(
+          `Using partition scheme: ${this.distributedConfig.partitionScheme}`,
+        );
+        Prime.Logger.info(
+          `Using sync strategy: ${this.distributedConfig.synchronizationStrategy}`,
+        );
       } catch (error) {
-        Prime.Logger.error(`Failed to initialize distributed mode: ${error.message}`);
+        Prime.Logger.error(
+          `Failed to initialize distributed mode: ${error.message}`,
+        );
         this.distributedState.isInitialized = false;
         this.distributedConfig.enabled = false;
       }
@@ -171,9 +183,9 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         const isCoherent = this._verifyParameterCoherence(params);
 
         if (!isCoherent) {
-          Prime.Logger.warn('Initial model parameters failed coherence check');
+          Prime.Logger.warn("Initial model parameters failed coherence check");
         } else {
-          Prime.Logger.debug('Initial coherence check passed successfully');
+          Prime.Logger.debug("Initial coherence check passed successfully");
         }
 
         // Record coherence check time
@@ -202,14 +214,16 @@ const DistributedModelImplementation = require('./distributed-model-impl');
           extractionTime: Date.now(),
           modelConfig: {
             inputSize: this.originalInputSize,
-            layerCount: this.layers.length
-          }
-        }
+            layerCount: this.layers.length,
+          },
+        },
       };
 
       // Validate parameters before returning
       if (!this._validateParameterStructure(parameters)) {
-        throw new Prime.ValidationError('Parameter extraction produced invalid structure');
+        throw new Prime.ValidationError(
+          "Parameter extraction produced invalid structure",
+        );
       }
 
       return parameters;
@@ -223,16 +237,20 @@ const DistributedModelImplementation = require('./distributed-model-impl');
      */
     _validateParameterStructure(parameters) {
       // Basic structure checks
-      if (!parameters ||
-          !Array.isArray(parameters.weights) ||
-          !Array.isArray(parameters.biases) ||
-          !Array.isArray(parameters.layerConfig)) {
+      if (
+        !parameters ||
+        !Array.isArray(parameters.weights) ||
+        !Array.isArray(parameters.biases) ||
+        !Array.isArray(parameters.layerConfig)
+      ) {
         return false;
       }
 
       // Check that arrays have expected length
-      if (parameters.weights.length !== parameters.biases.length ||
-          parameters.weights.length !== parameters.layerConfig.length) {
+      if (
+        parameters.weights.length !== parameters.biases.length ||
+        parameters.weights.length !== parameters.layerConfig.length
+      ) {
         return false;
       }
 
@@ -250,7 +268,10 @@ const DistributedModelImplementation = require('./distributed-model-impl');
           return false;
         }
 
-        if (weights.length > 0 && (!Array.isArray(weights[0]) || weights[0].length !== config.inputSize)) {
+        if (
+          weights.length > 0 &&
+          (!Array.isArray(weights[0]) || weights[0].length !== config.inputSize)
+        ) {
           return false;
         }
 
@@ -270,19 +291,23 @@ const DistributedModelImplementation = require('./distributed-model-impl');
      */
     _applyParameters(parameters) {
       if (!this._validateParameterStructure(parameters)) {
-        Prime.Logger.error('Cannot apply parameters: invalid structure');
+        Prime.Logger.error("Cannot apply parameters: invalid structure");
         return false;
       }
 
       // Verify parameter coherence before applying
       if (!this._verifyParameterCoherence(parameters)) {
-        Prime.Logger.error('Cannot apply parameters: failed coherence check');
+        Prime.Logger.error("Cannot apply parameters: failed coherence check");
         return false;
       }
 
       try {
         // Apply weights and biases to each layer
-        for (let i = 0; i < this.layers.length && i < parameters.weights.length; i++) {
+        for (
+          let i = 0;
+          i < this.layers.length && i < parameters.weights.length;
+          i++
+        ) {
           if (parameters.weights[i]) {
             this.layers[i].weights = parameters.weights[i];
           }
@@ -311,16 +336,21 @@ const DistributedModelImplementation = require('./distributed-model-impl');
       // Use the coherence validator if available
       if (Prime.Neural.Distributed.CoherenceValidator) {
         // Calculate detailed coherence metrics
-        const metrics = Prime.Neural.Distributed.CoherenceValidator.calculateCoherenceMetrics({
-          layers: parameters.layerConfig.map((config, i) => ({
-            ...config,
-            weights: parameters.weights[i],
-            biases: parameters.biases[i]
-          }))
-        });
+        const metrics =
+          Prime.Neural.Distributed.CoherenceValidator.calculateCoherenceMetrics(
+            {
+              layers: parameters.layerConfig.map((config, i) => ({
+                ...config,
+                weights: parameters.weights[i],
+                biases: parameters.biases[i],
+              })),
+            },
+          );
 
         if (Prime.Logger && Prime.Logger.debug) {
-          Prime.Logger.debug(`Parameter coherence metrics: ${JSON.stringify(metrics)}`);
+          Prime.Logger.debug(
+            `Parameter coherence metrics: ${JSON.stringify(metrics)}`,
+          );
         }
 
         return metrics.isCoherent;
@@ -328,7 +358,9 @@ const DistributedModelImplementation = require('./distributed-model-impl');
 
       // Fall back to dimension validator
       if (Prime.Neural.Distributed.DimensionValidator) {
-        return Prime.Neural.Distributed.DimensionValidator.validateParameterCoherence(parameters);
+        return Prime.Neural.Distributed.DimensionValidator.validateParameterCoherence(
+          parameters,
+        );
       }
 
       // Basic coherence check
@@ -357,12 +389,18 @@ const DistributedModelImplementation = require('./distributed-model-impl');
      * @returns {Promise<Boolean>} - True if successful
      */
     async synchronizeParameters() {
-      if (!this.distributedConfig.enabled || !this.distributedState.isInitialized) {
+      if (
+        !this.distributedConfig.enabled ||
+        !this.distributedState.isInitialized
+      ) {
         return true;
       }
 
       // Check if synchronization is needed based on frequency
-      if (this.metrics.iteration - this.distributedState.lastSyncIteration < this.distributedConfig.syncFrequency) {
+      if (
+        this.metrics.iteration - this.distributedState.lastSyncIteration <
+        this.distributedConfig.syncFrequency
+      ) {
         return true;
       }
 
@@ -374,15 +412,22 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         const localParams = this._extractModelParameters();
 
         // Get remote parameters with timeout
-        const syncPromise = this.distributedConfig.clusterManager.getNodeParameters();
+        const syncPromise =
+          this.distributedConfig.clusterManager.getNodeParameters();
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Synchronization timeout')), this.distributedConfig.syncTimeout);
+          setTimeout(
+            () => reject(new Error("Synchronization timeout")),
+            this.distributedConfig.syncTimeout,
+          );
         });
 
         const remoteResults = await Promise.race([syncPromise, timeoutPromise]);
 
         // Apply synchronization strategy to combine parameters
-        const combinedParams = this._combineParameters(localParams, remoteResults);
+        const combinedParams = this._combineParameters(
+          localParams,
+          remoteResults,
+        );
 
         // Apply combined parameters
         const success = this._applyParameters(combinedParams);
@@ -396,7 +441,7 @@ const DistributedModelImplementation = require('./distributed-model-impl');
           timestamp: Date.now(),
           iteration: this.metrics.iteration,
           nodeCount: remoteResults.length + 1,
-          success: true
+          success: true,
         });
 
         if (this.distributedState.syncHistory.length > 10) {
@@ -413,7 +458,7 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         this.distributedState.syncErrors.unshift({
           timestamp: Date.now(),
           message: error.message,
-          iteration: this.metrics.iteration
+          iteration: this.metrics.iteration,
         });
 
         // Keep only last 10 errors
@@ -421,7 +466,9 @@ const DistributedModelImplementation = require('./distributed-model-impl');
           this.distributedState.syncErrors.pop();
         }
 
-        Prime.Logger.error(`Parameter synchronization failed: ${error.message}`);
+        Prime.Logger.error(
+          `Parameter synchronization failed: ${error.message}`,
+        );
 
         // Apply recovery strategy
         return this._handleSynchronizationFailure(error);
@@ -439,18 +486,18 @@ const DistributedModelImplementation = require('./distributed-model-impl');
       const strategy = this.distributedConfig.synchronizationStrategy;
 
       switch (strategy) {
-        case 'average':
+        case "average":
           return this._averageParameters(localParams, remoteParams);
 
-        case 'weighted_average':
+        case "weighted_average":
           return this._weightedAverageParameters(localParams, remoteParams);
 
-        case 'majority_vote':
+        case "majority_vote":
           return this._majorityVoteParameters(localParams, remoteParams);
 
-        case 'parameter_server':
+        case "parameter_server":
           // In parameter server mode, we just use the server's parameters
-          const serverParams = remoteParams.find(p => p.isServer);
+          const serverParams = remoteParams.find((p) => p.isServer);
           return serverParams || localParams;
 
         default:
@@ -472,14 +519,18 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         biases: [],
         layerConfig: localParams.layerConfig,
         metadata: {
-          combinationStrategy: 'average',
+          combinationStrategy: "average",
           nodeCount: remoteParams.length + 1,
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       };
 
       // Process each layer
-      for (let layerIndex = 0; layerIndex < localParams.weights.length; layerIndex++) {
+      for (
+        let layerIndex = 0;
+        layerIndex < localParams.weights.length;
+        layerIndex++
+      ) {
         // Skip if local layer doesn't exist
         if (!localParams.weights[layerIndex]) continue;
 
@@ -550,12 +601,13 @@ const DistributedModelImplementation = require('./distributed-model-impl');
       const localWeight = 1.0;
 
       // Get weights for remote nodes (default to 1.0 if no performance data)
-      const remoteWeights = remoteParams.map(params =>
-        params.metadata?.performance?.weight || 1.0
+      const remoteWeights = remoteParams.map(
+        (params) => params.metadata?.performance?.weight || 1.0,
       );
 
       // Calculate total weight
-      const totalWeight = localWeight + remoteWeights.reduce((sum, w) => sum + w, 0);
+      const totalWeight =
+        localWeight + remoteWeights.reduce((sum, w) => sum + w, 0);
 
       // Initialize result structure
       const result = {
@@ -563,15 +615,19 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         biases: [],
         layerConfig: localParams.layerConfig,
         metadata: {
-          combinationStrategy: 'weighted_average',
+          combinationStrategy: "weighted_average",
           nodeCount: remoteParams.length + 1,
           weights: [localWeight, ...remoteWeights],
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       };
 
       // Process each layer
-      for (let layerIndex = 0; layerIndex < localParams.weights.length; layerIndex++) {
+      for (
+        let layerIndex = 0;
+        layerIndex < localParams.weights.length;
+        layerIndex++
+      ) {
         // Skip if local layer doesn't exist
         if (!localParams.weights[layerIndex]) continue;
 
@@ -656,14 +712,18 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         biases: [],
         layerConfig: localParams.layerConfig,
         metadata: {
-          combinationStrategy: 'majority_vote',
+          combinationStrategy: "majority_vote",
           nodeCount: allParams.length,
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       };
 
       // Process each layer
-      for (let layerIndex = 0; layerIndex < localParams.weights.length; layerIndex++) {
+      for (
+        let layerIndex = 0;
+        layerIndex < localParams.weights.length;
+        layerIndex++
+      ) {
         // Skip if local layer doesn't exist
         if (!localParams.weights[layerIndex]) continue;
 
@@ -732,10 +792,12 @@ const DistributedModelImplementation = require('./distributed-model-impl');
      */
     _handleSynchronizationFailure(error) {
       const strategy = this.distributedConfig.syncRecoveryStrategy;
-      const errorMessage = error.message || 'Unknown error';
+      const errorMessage = error.message || "Unknown error";
 
       // Log detailed error information
-      Prime.Logger.error(`Sync failure (${this.distributedState.syncRetryCount}/${this.distributedConfig.maxSyncRetries}): ${errorMessage}`);
+      Prime.Logger.error(
+        `Sync failure (${this.distributedState.syncRetryCount}/${this.distributedConfig.maxSyncRetries}): ${errorMessage}`,
+      );
 
       // Record failure in history
       this.distributedState.syncHistory.unshift({
@@ -743,7 +805,7 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         iteration: this.metrics.iteration,
         success: false,
         error: errorMessage,
-        strategy
+        strategy,
       });
 
       if (this.distributedState.syncHistory.length > 10) {
@@ -751,15 +813,19 @@ const DistributedModelImplementation = require('./distributed-model-impl');
       }
 
       // Check if we should retry
-      if (this.distributedState.syncRetryCount < this.distributedConfig.maxSyncRetries) {
+      if (
+        this.distributedState.syncRetryCount <
+        this.distributedConfig.maxSyncRetries
+      ) {
         // Exponential backoff for retries
-        const backoffMs = Math.pow(2, this.distributedState.syncRetryCount) * 100;
+        const backoffMs =
+          Math.pow(2, this.distributedState.syncRetryCount) * 100;
 
         Prime.Logger.info(`Retrying synchronization in ${backoffMs}ms...`);
 
         // Schedule retry with backoff
         setTimeout(() => {
-          this.synchronizeParameters().catch(e => {
+          this.synchronizeParameters().catch((e) => {
             Prime.Logger.error(`Retry failed: ${e.message}`);
           });
         }, backoffMs);
@@ -769,30 +835,38 @@ const DistributedModelImplementation = require('./distributed-model-impl');
 
       // Apply recovery strategy based on configuration
       switch (strategy) {
-        case 'local_fallback':
+        case "local_fallback":
           // Continue with local parameters
-          Prime.Logger.warn('Using local fallback after synchronization failure');
+          Prime.Logger.warn(
+            "Using local fallback after synchronization failure",
+          );
           return true;
 
-        case 'conservative_merge':
+        case "conservative_merge":
           // Try to merge with any available parameters
-          Prime.Logger.warn('Attempting conservative merge with available parameters');
+          Prime.Logger.warn(
+            "Attempting conservative merge with available parameters",
+          );
           return this._attemptConservativeMerge();
 
-        case 'checkpoint_rollback':
+        case "checkpoint_rollback":
           // Roll back to last known good state
-          Prime.Logger.warn('Rolling back to last checkpoint');
+          Prime.Logger.warn("Rolling back to last checkpoint");
           return this._rollbackToCheckpoint();
 
-        case 'fail_fast':
+        case "fail_fast":
           // Stop distributed training on error
-          Prime.Logger.error('Distributed training halted due to synchronization failure');
+          Prime.Logger.error(
+            "Distributed training halted due to synchronization failure",
+          );
           this.distributedConfig.enabled = false;
           return false;
 
         default:
           // Default to local fallback
-          Prime.Logger.warn(`Unknown recovery strategy: ${strategy}, falling back to local parameters`);
+          Prime.Logger.warn(
+            `Unknown recovery strategy: ${strategy}, falling back to local parameters`,
+          );
           return true;
       }
     }
@@ -811,7 +885,9 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         const cachedParams = this.distributedState.lastSuccessfulParams;
 
         if (!cachedParams) {
-          Prime.Logger.warn('No cached parameters available for conservative merge');
+          Prime.Logger.warn(
+            "No cached parameters available for conservative merge",
+          );
           return true; // Continue with local parameters
         }
 
@@ -827,8 +903,15 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         const cachedWeight = 0.2;
 
         // Process each layer
-        for (let layerIndex = 0; layerIndex < localParams.weights.length; layerIndex++) {
-          if (!localParams.weights[layerIndex] || !cachedParams.weights[layerIndex]) {
+        for (
+          let layerIndex = 0;
+          layerIndex < localParams.weights.length;
+          layerIndex++
+        ) {
+          if (
+            !localParams.weights[layerIndex] ||
+            !cachedParams.weights[layerIndex]
+          ) {
             mergedParams.weights[layerIndex] = localParams.weights[layerIndex];
             mergedParams.biases[layerIndex] = localParams.biases[layerIndex];
             continue;
@@ -839,7 +922,11 @@ const DistributedModelImplementation = require('./distributed-model-impl');
           for (let i = 0; i < localParams.weights[layerIndex].length; i++) {
             mergedParams.weights[layerIndex][i] = [];
 
-            for (let j = 0; j < localParams.weights[layerIndex][i].length; j++) {
+            for (
+              let j = 0;
+              j < localParams.weights[layerIndex][i].length;
+              j++
+            ) {
               const localVal = localParams.weights[layerIndex][i][j];
               const cachedVal = cachedParams.weights[layerIndex][i][j];
 
@@ -871,7 +958,7 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         const success = this._applyParameters(mergedParams);
 
         if (success) {
-          Prime.Logger.info('Conservative merge applied successfully');
+          Prime.Logger.info("Conservative merge applied successfully");
         }
 
         return success;
@@ -890,7 +977,7 @@ const DistributedModelImplementation = require('./distributed-model-impl');
       try {
         // Check if we have a checkpoint
         if (!this.distributedState.checkpoint) {
-          Prime.Logger.warn('No checkpoint available for rollback');
+          Prime.Logger.warn("No checkpoint available for rollback");
           return true; // Continue with current parameters
         }
 
@@ -898,7 +985,7 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         const success = this._applyParameters(this.distributedState.checkpoint);
 
         if (success) {
-          Prime.Logger.info('Rolled back to last checkpoint successfully');
+          Prime.Logger.info("Rolled back to last checkpoint successfully");
         }
 
         return success;
@@ -919,7 +1006,9 @@ const DistributedModelImplementation = require('./distributed-model-impl');
 
         // Verify parameter coherence
         if (!this._verifyParameterCoherence(params)) {
-          Prime.Logger.warn('Cannot create checkpoint: parameters failed coherence check');
+          Prime.Logger.warn(
+            "Cannot create checkpoint: parameters failed coherence check",
+          );
           return false;
         }
 
@@ -927,7 +1016,7 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         this.distributedState.checkpoint = params;
         this.distributedState.checkpointTime = Date.now();
 
-        Prime.Logger.info('Created parameter checkpoint successfully');
+        Prime.Logger.info("Created parameter checkpoint successfully");
         return true;
       } catch (error) {
         Prime.Logger.error(`Failed to create checkpoint: ${error.message}`);
@@ -940,7 +1029,10 @@ const DistributedModelImplementation = require('./distributed-model-impl');
      * @returns {Promise<Boolean>} - True if coherent
      */
     async performCoherenceCheck() {
-      if (!this.distributedConfig.enabled || !this.distributedState.isInitialized) {
+      if (
+        !this.distributedConfig.enabled ||
+        !this.distributedState.isInitialized
+      ) {
         return true;
       }
 
@@ -952,7 +1044,7 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         const isLocallyCoherent = this._verifyParameterCoherence(params);
 
         if (!isLocallyCoherent) {
-          Prime.Logger.warn('Local parameters failed coherence check');
+          Prime.Logger.warn("Local parameters failed coherence check");
           return false;
         }
 
@@ -961,9 +1053,12 @@ const DistributedModelImplementation = require('./distributed-model-impl');
 
         // If we have the CoherenceValidator, get detailed metrics
         if (Prime.Neural.Distributed.CoherenceValidator) {
-          const metrics = Prime.Neural.Distributed.CoherenceValidator.calculateCoherenceMetrics({
-            layers: this.layers
-          });
+          const metrics =
+            Prime.Neural.Distributed.CoherenceValidator.calculateCoherenceMetrics(
+              {
+                layers: this.layers,
+              },
+            );
 
           if (Prime.Logger && Prime.Logger.debug) {
             Prime.Logger.debug(`Coherence metrics: ${JSON.stringify(metrics)}`);
@@ -1015,19 +1110,27 @@ const DistributedModelImplementation = require('./distributed-model-impl');
       const result = await super.train(input, target);
 
       // Synchronize parameters if needed
-      if (this.distributedConfig.enabled && this.distributedState.isInitialized) {
+      if (
+        this.distributedConfig.enabled &&
+        this.distributedState.isInitialized
+      ) {
         await this.synchronizeParameters();
       }
 
       // Perform coherence check periodically
-      if (this.distributedConfig.enabled &&
-          this.metrics.iteration % (this.distributedConfig.syncFrequency * 5) === 0) {
+      if (
+        this.distributedConfig.enabled &&
+        this.metrics.iteration % (this.distributedConfig.syncFrequency * 5) ===
+          0
+      ) {
         await this.performCoherenceCheck();
       }
 
       // Create checkpoint periodically (every 100 iterations)
-      if (this.distributedConfig.enabled &&
-          this.metrics.iteration % 100 === 0) {
+      if (
+        this.distributedConfig.enabled &&
+        this.metrics.iteration % 100 === 0
+      ) {
         this.createCheckpoint();
       }
 
@@ -1035,8 +1138,9 @@ const DistributedModelImplementation = require('./distributed-model-impl');
         ...result,
         distributed: {
           enabled: this.distributedConfig.enabled,
-          synchronized: this.metrics.iteration === this.distributedState.lastSyncIteration
-        }
+          synchronized:
+            this.metrics.iteration === this.distributedState.lastSyncIteration,
+        },
       };
     }
   }

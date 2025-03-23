@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Create the Adam Optimizer module using IIFE
 (function () {
@@ -63,7 +63,7 @@ const Prime = require('../../core');
             const rows = paramValue.length;
             const cols = paramValue[0].length;
 
-            if (this.useTypedArrays && typeof Float32Array !== 'undefined') {
+            if (this.useTypedArrays && typeof Float32Array !== "undefined") {
               // For TypedArrays, we create flat arrays and reshape them
               // First moment (m)
               const flatM = new Float32Array(rows * cols);
@@ -102,14 +102,14 @@ const Prime = require('../../core');
               }
 
               // Store references to the flat arrays for efficient operations
-              Object.defineProperty(this.m[paramName], '_flatArray', {
+              Object.defineProperty(this.m[paramName], "_flatArray", {
                 value: flatM,
               });
-              Object.defineProperty(this.v[paramName], '_flatArray', {
+              Object.defineProperty(this.v[paramName], "_flatArray", {
                 value: flatV,
               });
               if (this.amsgrad) {
-                Object.defineProperty(this.vMax[paramName], '_flatArray', {
+                Object.defineProperty(this.vMax[paramName], "_flatArray", {
                   value: flatVMax,
                 });
               }
@@ -131,7 +131,7 @@ const Prime = require('../../core');
             }
           } else {
             // 1D array (vector)
-            if (this.useTypedArrays && typeof Float32Array !== 'undefined') {
+            if (this.useTypedArrays && typeof Float32Array !== "undefined") {
               this.m[paramName] = new Float32Array(paramValue.length);
               this.v[paramName] = new Float32Array(paramValue.length);
               if (this.amsgrad) {
@@ -145,7 +145,7 @@ const Prime = require('../../core');
               }
             }
           }
-        } else if (typeof paramValue === 'number') {
+        } else if (typeof paramValue === "number") {
           // Scalar value
           this.m[paramName] = 0;
           this.v[paramName] = 0;
@@ -178,7 +178,7 @@ const Prime = require('../../core');
           // 1D array
           this.metrics.parameterCount += paramValue.length;
         }
-      } else if (typeof paramValue === 'number') {
+      } else if (typeof paramValue === "number") {
         // Scalar
         this.metrics.parameterCount += 1;
       }
@@ -213,7 +213,7 @@ const Prime = require('../../core');
               count++;
             }
           }
-        } else if (typeof grad === 'number') {
+        } else if (typeof grad === "number") {
           // Scalar
           sumSquared += grad * grad;
           count++;
@@ -254,7 +254,7 @@ const Prime = require('../../core');
                 grad[i] += this.weightDecay * param[i];
               }
             }
-          } else if (typeof grad === 'number') {
+          } else if (typeof grad === "number") {
             // Scalar
             gradients[paramName] += this.weightDecay * param;
           }
@@ -394,7 +394,7 @@ const Prime = require('../../core');
                 param[i] += update;
               }
             }
-          } else if (typeof grad === 'number') {
+          } else if (typeof grad === "number") {
             // Scalar value
             // Update biased first moment estimate
             this.m[paramName] = this.beta1 * m + (1 - this.beta1) * grad;
@@ -448,7 +448,7 @@ const Prime = require('../../core');
      */
     getConfig() {
       return {
-        name: 'Adam',
+        name: "Adam",
         learningRate: this.learningRate,
         beta1: this.beta1,
         beta2: this.beta2,

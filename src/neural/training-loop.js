@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 // Create the Neural Training Loop module using IIFE
 (function () {
@@ -28,10 +28,10 @@ const Prime = require('../core');
     constructor(model, config = {}) {
       if (
         !model ||
-        typeof model.forward !== 'function' ||
-        typeof model.backward !== 'function'
+        typeof model.forward !== "function" ||
+        typeof model.backward !== "function"
       ) {
-        throw new Error('Invalid model provided to training loop');
+        throw new Error("Invalid model provided to training loop");
       }
 
       this.model = model;
@@ -181,7 +181,7 @@ const Prime = require('../core');
           batchesProcessed++;
 
           // Call batch end callback if provided
-          if (typeof config.onBatchEnd === 'function') {
+          if (typeof config.onBatchEnd === "function") {
             const batchInfo = {
               epoch,
               batch: this.state.currentBatch,
@@ -250,14 +250,14 @@ const Prime = require('../core');
           let logMessage = `Epoch ${epoch + 1}/${config.epochs} - ${epochTime.toFixed(1)}s - loss: ${epochLoss.toFixed(4)}`;
 
           if (epochMetric !== null) {
-            logMessage += ` - ${config.metric || 'metric'}: ${epochMetric.toFixed(4)}`;
+            logMessage += ` - ${config.metric || "metric"}: ${epochMetric.toFixed(4)}`;
           }
 
           if (valLoss !== null) {
             logMessage += ` - val_loss: ${valLoss.toFixed(4)}`;
 
             if (valMetric !== null) {
-              logMessage += ` - val_${config.metric || 'metric'}: ${valMetric.toFixed(4)}`;
+              logMessage += ` - val_${config.metric || "metric"}: ${valMetric.toFixed(4)}`;
             }
           }
 
@@ -265,7 +265,7 @@ const Prime = require('../core');
         }
 
         // Call epoch end callback if provided
-        if (typeof config.onEpochEnd === 'function') {
+        if (typeof config.onEpochEnd === "function") {
           const epochInfo = {
             epoch,
             loss: epochLoss,
@@ -345,7 +345,7 @@ const Prime = require('../core');
       let loss = 0;
 
       // Use model's loss function
-      if (typeof this.model.lossFunction === 'function') {
+      if (typeof this.model.lossFunction === "function") {
         const result = this.model.lossFunction(y, output, false);
         loss = result.loss;
       }
@@ -419,7 +419,7 @@ const Prime = require('../core');
       this.earlyStoppingConfig = {
         patience: config.patience || 10,
         minDelta: config.minDelta || 0.001,
-        monitor: config.monitor || 'val_loss',
+        monitor: config.monitor || "val_loss",
         ...config,
       };
     }
@@ -446,10 +446,10 @@ const Prime = require('../core');
      */
     _initLearningRateScheduler(config) {
       // Initialize based on scheduler type
-      const type = (config.type || 'step').toLowerCase();
+      const type = (config.type || "step").toLowerCase();
 
       switch (type) {
-        case 'step':
+        case "step":
           // Step decay: reduce learning rate by factor after specified epochs
           this.lrScheduler = (epoch, currentLR, metrics) => {
             const stepSize = config.stepSize || 5;
@@ -462,7 +462,7 @@ const Prime = require('../core');
           };
           break;
 
-        case 'exponential':
+        case "exponential":
           // Exponential decay: lr = initial_lr * decay^epoch
           this.lrScheduler = (epoch, currentLR, metrics) => {
             const initialLR = config.initialLR || currentLR;
@@ -472,13 +472,13 @@ const Prime = require('../core');
           };
           break;
 
-        case 'plateau':
+        case "plateau":
           // Reduce on plateau: reduce when metric stops improving
           this.plateauConfig = {
             patience: config.patience || 5,
             factor: config.factor || 0.5,
             minLR: config.minLR || 1e-6,
-            monitor: config.monitor || 'val_loss',
+            monitor: config.monitor || "val_loss",
             minDelta: config.minDelta || 0.001,
             cooldown: config.cooldown || 0,
             bestValue: null,
@@ -488,7 +488,7 @@ const Prime = require('../core');
 
           this.lrScheduler = (epoch, currentLR, metrics) => {
             const monitor =
-              this.plateauConfig.monitor === 'val_loss'
+              this.plateauConfig.monitor === "val_loss"
                 ? metrics.valLoss
                 : metrics.loss;
 
@@ -534,7 +534,7 @@ const Prime = require('../core');
           };
           break;
 
-        case 'cosine':
+        case "cosine":
           // Cosine annealing: smoothly decrease learning rate
           this.lrScheduler = (epoch, currentLR, metrics) => {
             const initialLR = config.initialLR || currentLR;
@@ -550,11 +550,11 @@ const Prime = require('../core');
           };
           break;
 
-        case 'custom':
+        case "custom":
           // Custom scheduler function provided by user
-          if (typeof config.scheduler !== 'function') {
+          if (typeof config.scheduler !== "function") {
             throw new Error(
-              'Custom learning rate scheduler requires a scheduler function',
+              "Custom learning rate scheduler requires a scheduler function",
             );
           }
           this.lrScheduler = config.scheduler;

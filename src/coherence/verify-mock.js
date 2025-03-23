@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 /**
  * Simplified verify function for coherence checks
@@ -15,7 +15,7 @@ function verify(obj) {
   return {
     valid: true,
     score: 1.0,
-    component: obj ? obj.constructor.name || 'Unknown' : 'Unknown'
+    component: obj ? obj.constructor.name || "Unknown" : "Unknown",
   };
 }
 

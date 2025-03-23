@@ -1,7 +1,7 @@
 // Test setup for extreme conditions
-process.env.NODE_ENV = 'test';
-process.env.EXTENDED_PRECISION = 'true';
-process.env.EXTREME_TESTING = 'true';
+process.env.NODE_ENV = "test";
+process.env.EXTENDED_PRECISION = "true";
+process.env.EXTREME_TESTING = "true";
 
 // Configure global Math helpers if needed
 if (!Math.nextafter) {
@@ -102,13 +102,13 @@ const originalLog = console.log;
 console.log = function (...args) {
   originalLog.apply(console, args);
   if (
-    process.env.EXTREME_TESTING === 'true' &&
+    process.env.EXTREME_TESTING === "true" &&
     args[0] &&
-    typeof args[0] === 'string' &&
-    args[0].includes('MEMORY')
+    typeof args[0] === "string" &&
+    args[0].includes("MEMORY")
   ) {
     const used = process.memoryUsage();
-    originalLog('Memory usage:');
+    originalLog("Memory usage:");
     for (const key in used) {
       originalLog(
         `  ${key}: ${Math.round((used[key] / 1024 / 1024) * 100) / 100} MB`,
@@ -121,10 +121,10 @@ console.log = function (...args) {
 global.requestGC = function () {
   if (global.gc) {
     global.gc();
-    console.log('Manual garbage collection performed');
+    console.log("Manual garbage collection performed");
   } else {
     console.log(
-      'Garbage collection not available. Run node with --expose-gc flag',
+      "Garbage collection not available. Run node with --expose-gc flag",
     );
   }
 };

@@ -9,7 +9,7 @@ const Prime = (function () {
   /**
    * Library version with semantic validation support
    */
-  const VERSION = '1.0.0';
+  const VERSION = "1.0.0";
 
   /**
    * Public API
@@ -60,11 +60,11 @@ const Prime = (function () {
 })();
 
 // CommonJS export (no ES module export to avoid circular dependency)
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.Prime = Prime;
 }

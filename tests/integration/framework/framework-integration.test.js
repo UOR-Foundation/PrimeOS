@@ -112,7 +112,7 @@ describe("PrimeOS Framework - Integration", () => {
     const syscallResult = framework.syscall("testFrameworkSyscall");
     expect(syscallResult).toBe("framework syscall");
   });
-  
+
   test("integrates all framework tiers correctly", () => {
     // Create Prime Framework with customized Base 0
     const embeddingModel = Prime.Base0.createEmbeddingModel({
@@ -213,9 +213,7 @@ describe("PrimeOS Framework - Integration", () => {
 
     app.useKernel = function (service, ...args) {
       if (!this._kernelActions || !this._kernelActions[service]) {
-        throw new Prime.InvalidOperationError(
-          `Service '${service}' not found`,
-        );
+        throw new Prime.InvalidOperationError(`Service '${service}' not found`);
       }
       return this._kernelActions[service](...args);
     };

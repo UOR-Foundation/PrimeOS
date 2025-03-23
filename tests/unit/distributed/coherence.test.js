@@ -8,22 +8,32 @@ const { assertions, mocking } = require("../../utils");
 describe("PrimeOS Distributed Computation Module - Coherence", () => {
   describe("DistributedCoherenceManager", () => {
     test("creates a coherence manager with correct properties", () => {
-      const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager({
-        strictChecking: true,
-        thresholds: {
-          numerical: 1e-8,
-          gradient: 0.5,
-        },
-      });
+      const coherenceManager =
+        new Prime.Distributed.Coherence.DistributedCoherenceManager({
+          strictChecking: true,
+          thresholds: {
+            numerical: 1e-8,
+            gradient: 0.5,
+          },
+        });
 
-      expect(coherenceManager instanceof Prime.Distributed.Coherence.DistributedCoherenceManager).toBe(true);
+      expect(
+        coherenceManager instanceof
+          Prime.Distributed.Coherence.DistributedCoherenceManager,
+      ).toBe(true);
       expect(coherenceManager.config.strictChecking).toBe(true);
       expect(coherenceManager.config.thresholds.numerical).toBe(1e-8);
 
       // Check enums are defined
-      expect(typeof Prime.Distributed.Coherence.CoherenceViolationType).toBe("object");
-      expect(typeof Prime.Distributed.Coherence.ViolationSeverity).toBe("object");
-      expect(typeof Prime.Distributed.Coherence.RecoveryStrategy).toBe("object");
+      expect(typeof Prime.Distributed.Coherence.CoherenceViolationType).toBe(
+        "object",
+      );
+      expect(typeof Prime.Distributed.Coherence.ViolationSeverity).toBe(
+        "object",
+      );
+      expect(typeof Prime.Distributed.Coherence.RecoveryStrategy).toBe(
+        "object",
+      );
 
       // Test metrics initialization
       const metrics = coherenceManager.getMetrics();
@@ -34,7 +44,8 @@ describe("PrimeOS Distributed Computation Module - Coherence", () => {
     });
 
     test("checks layer coherence with valid layer correctly", () => {
-      const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager();
+      const coherenceManager =
+        new Prime.Distributed.Coherence.DistributedCoherenceManager();
 
       // Create a valid layer for checking
       const validLayer = {
@@ -60,7 +71,8 @@ describe("PrimeOS Distributed Computation Module - Coherence", () => {
     });
 
     test("checks layer coherence with invalid layer correctly", () => {
-      const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager();
+      const coherenceManager =
+        new Prime.Distributed.Coherence.DistributedCoherenceManager();
 
       // Create an invalid layer for checking (with NaN values)
       const invalidLayer = {
@@ -85,7 +97,7 @@ describe("PrimeOS Distributed Computation Module - Coherence", () => {
 
       if (result.violations.length > 0) {
         expect(result.violations[0].type).toBe(
-          Prime.Distributed.Coherence.CoherenceViolationType.NUMERICAL
+          Prime.Distributed.Coherence.CoherenceViolationType.NUMERICAL,
         );
       }
 
@@ -93,7 +105,8 @@ describe("PrimeOS Distributed Computation Module - Coherence", () => {
     });
 
     test("applies coherence correction correctly", () => {
-      const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager();
+      const coherenceManager =
+        new Prime.Distributed.Coherence.DistributedCoherenceManager();
 
       // Create a layer with NaN values to correct
       const layerToCorrect = {
@@ -116,12 +129,14 @@ describe("PrimeOS Distributed Computation Module - Coherence", () => {
       // Apply correction
       const correctionResult = coherenceManager.applyCoherenceCorrection(
         layerToCorrect,
-        checkResult.violations
+        checkResult.violations,
       );
 
       expect(correctionResult.applied).toBe(true);
       expect(Array.isArray(correctionResult.corrections)).toBe(true);
-      expect(correctionResult.corrections.includes("numerical_stability")).toBe(true);
+      expect(correctionResult.corrections.includes("numerical_stability")).toBe(
+        true,
+      );
 
       // Now check if the layer is corrected
       for (let i = 0; i < layerToCorrect.weights.length; i++) {
@@ -135,12 +150,14 @@ describe("PrimeOS Distributed Computation Module - Coherence", () => {
       }
 
       // Final coherence check
-      const finalCheckResult = coherenceManager.checkLayerCoherence(layerToCorrect);
+      const finalCheckResult =
+        coherenceManager.checkLayerCoherence(layerToCorrect);
       expect(finalCheckResult.isCoherent).toBe(true);
     });
 
     test("assesses global coherence correctly", () => {
-      const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager();
+      const coherenceManager =
+        new Prime.Distributed.Coherence.DistributedCoherenceManager();
 
       // Create simulated coherence results from different nodes
       const nodeResults = [
@@ -162,7 +179,8 @@ describe("PrimeOS Distributed Computation Module - Coherence", () => {
           isCoherent: false,
           violations: [
             {
-              type: Prime.Distributed.Coherence.CoherenceViolationType.SYNCHRONIZATION,
+              type: Prime.Distributed.Coherence.CoherenceViolationType
+                .SYNCHRONIZATION,
               severity: Prime.Distributed.Coherence.ViolationSeverity.MEDIUM,
               message: "Parameter synchronization coherence violation",
             },
@@ -184,7 +202,8 @@ describe("PrimeOS Distributed Computation Module - Coherence", () => {
     });
 
     test("handles synchronization coherence correctly", () => {
-      const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager();
+      const coherenceManager =
+        new Prime.Distributed.Coherence.DistributedCoherenceManager();
 
       // Create a layer
       const layer = {
@@ -241,11 +260,15 @@ describe("PrimeOS Distributed Computation Module - Coherence", () => {
 
       // Check synchronization coherence if available
       if (divergentResult.checks && divergentResult.checks.synchronization) {
-        expect(divergentResult.checks.synchronization.coherence).toBeLessThan(0.5);
+        expect(divergentResult.checks.synchronization.coherence).toBeLessThan(
+          0.5,
+        );
 
         // Check that the violations include synchronization issues
         const syncViolation = divergentResult.violations.find(
-          (v) => v.type === Prime.Distributed.Coherence.CoherenceViolationType.SYNCHRONIZATION
+          (v) =>
+            v.type ===
+            Prime.Distributed.Coherence.CoherenceViolationType.SYNCHRONIZATION,
         );
 
         expect(syncViolation).toBeDefined();

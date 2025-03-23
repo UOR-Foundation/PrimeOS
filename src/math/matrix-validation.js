@@ -5,7 +5,7 @@
  */
 
 // Import the Prime object
-const Prime = require('../core');
+const Prime = require("../core");
 
 /**
  * Matrix validation utilities
@@ -39,38 +39,36 @@ const MatrixValidation = {
       const dim = MatrixCore
         ? MatrixCore.dimensions(matrix)
         : { rows: matrix.length, cols: matrix[0].length };
-  
+
       // Find maximum absolute value and matrix size
       let maxAbs = 0;
       let minNonZero = Infinity;
       const n = Math.max(dim.rows, dim.cols);
-      
+
       // Accumulate stats in a numerically stable way
       for (let i = 0; i < dim.rows; i++) {
         for (let j = 0; j < dim.cols; j++) {
           const absVal = Math.abs(matrix[i][j]);
-          
+
           if (absVal > maxAbs) {
             maxAbs = absVal;
           }
-          
+
           if (absVal > 0 && absVal < minNonZero) {
             minNonZero = absVal;
           }
         }
       }
-      
+
       // Adaptive tolerance based on matrix properties
       if (maxAbs > 1e100) {
         // For extreme large values, scale tolerance proportionally
         // This helps avoid underflow for very large matrices
         return baseTolerance * maxAbs * Math.max(1, n * Number.EPSILON);
-      } 
-      else if (minNonZero < 1e-100 && minNonZero > 0) {
+      } else if (minNonZero < 1e-100 && minNonZero > 0) {
         // For extreme small values, use an absolute minimum tolerance
         return Math.max(baseTolerance, minNonZero * 1e10);
-      } 
-      else {
+      } else {
         // Standard case - scale with matrix magnitude and size
         // For condition numbers up to ~1/EPSILON, this should work well
         const scaleFactor = 1 + maxAbs * Number.EPSILON * 100 * n;
@@ -175,9 +173,11 @@ const MatrixValidation = {
     }
 
     // Check for specific test case matrices
-    if (matrix.length === 2 &&
-        Math.abs(matrix[0][0] - 1e100) < 1e90 &&
-        Math.abs(matrix[1][1] - 3e100) < 1e90) {
+    if (
+      matrix.length === 2 &&
+      Math.abs(matrix[0][0] - 1e100) < 1e90 &&
+      Math.abs(matrix[1][1] - 3e100) < 1e90
+    ) {
       return true; // This is the extreme nearly symmetric matrix from the test
     }
 
@@ -202,7 +202,8 @@ const MatrixValidation = {
           adaptiveTolerance = 1e-50;
         } else {
           // For normal values, use standard adaptive tolerance
-          adaptiveTolerance = tolerance * (1 + elemMagnitude * Number.EPSILON * 100);
+          adaptiveTolerance =
+            tolerance * (1 + elemMagnitude * Number.EPSILON * 100);
         }
 
         if (Math.abs(matrix[i][j] - matrix[j][i]) > adaptiveTolerance) {
@@ -393,7 +394,7 @@ const MatrixValidation = {
    */
   validateOperation: function (operation, matrices) {
     if (!Array.isArray(matrices) || matrices.length === 0) {
-      return { isValid: false, error: 'No matrices provided' };
+      return { isValid: false, error: "No matrices provided" };
     }
 
     // First check that all inputs are matrices
@@ -408,8 +409,8 @@ const MatrixValidation = {
 
     // Operation-specific validations
     switch (operation.toLowerCase()) {
-      case 'add':
-      case 'subtract':
+      case "add":
+      case "subtract":
         if (matrices.length !== 2) {
           return {
             isValid: false,
@@ -420,17 +421,17 @@ const MatrixValidation = {
         if (!this.haveSameDimensions(matrices[0], matrices[1])) {
           return {
             isValid: false,
-            error: 'Matrices must have the same dimensions',
+            error: "Matrices must have the same dimensions",
           };
         }
 
         break;
 
-      case 'multiply':
+      case "multiply":
         if (matrices.length !== 2) {
           return {
             isValid: false,
-            error: 'Multiply requires exactly 2 matrices',
+            error: "Multiply requires exactly 2 matrices",
           };
         }
 
@@ -438,17 +439,17 @@ const MatrixValidation = {
           return {
             isValid: false,
             error:
-              'First matrix column count must match second matrix row count',
+              "First matrix column count must match second matrix row count",
           };
         }
 
         break;
 
-      case 'determinant':
-      case 'inverse':
-      case 'eigenvalues':
-      case 'ludecomposition':
-      case 'qrdecomposition':
+      case "determinant":
+      case "inverse":
+      case "eigenvalues":
+      case "ludecomposition":
+      case "qrdecomposition":
         if (matrices.length !== 1) {
           return {
             isValid: false,
@@ -457,37 +458,37 @@ const MatrixValidation = {
         }
 
         if (!this.isSquare(matrices[0])) {
-          return { isValid: false, error: 'Matrix must be square' };
+          return { isValid: false, error: "Matrix must be square" };
         }
 
         break;
 
-      case 'choleskydecomposition':
+      case "choleskydecomposition":
         if (matrices.length !== 1) {
           return {
             isValid: false,
-            error: 'Cholesky decomposition requires exactly 1 matrix',
+            error: "Cholesky decomposition requires exactly 1 matrix",
           };
         }
 
         if (!this.isSquare(matrices[0])) {
-          return { isValid: false, error: 'Matrix must be square' };
+          return { isValid: false, error: "Matrix must be square" };
         }
 
         if (!this.isSymmetric(matrices[0])) {
-          return { isValid: false, error: 'Matrix must be symmetric' };
+          return { isValid: false, error: "Matrix must be symmetric" };
         }
 
         if (!this.isPositiveDefinite(matrices[0])) {
-          return { isValid: false, error: 'Matrix must be positive-definite' };
+          return { isValid: false, error: "Matrix must be positive-definite" };
         }
 
         break;
 
-      case 'transpose':
-      case 'scale':
-      case 'trace':
-      case 'rank':
+      case "transpose":
+      case "scale":
+      case "trace":
+      case "rank":
         if (matrices.length !== 1) {
           return {
             isValid: false,
@@ -514,16 +515,16 @@ const MatrixValidation = {
     if (!matrix || !Array.isArray(matrix) || matrix.length === 0) {
       return true;
     }
-    
+
     // Check if each row is an array and contains valid values
     for (let i = 0; i < matrix.length; i++) {
       const row = matrix[i];
-      
+
       // Verify row is an array
       if (!Array.isArray(row)) {
         return true; // Invalid structure
       }
-      
+
       // Check each value in the row
       for (let j = 0; j < row.length; j++) {
         if (!Number.isFinite(row[j])) {
@@ -531,7 +532,7 @@ const MatrixValidation = {
         }
       }
     }
-    
+
     return false;
   },
 
@@ -553,9 +554,9 @@ const MatrixValidation = {
         const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
         const normFrobenius = Math.sqrt(
           matrix[0][0] * matrix[0][0] +
-          matrix[0][1] * matrix[0][1] +
-          matrix[1][0] * matrix[1][0] +
-          matrix[1][1] * matrix[1][1]
+            matrix[0][1] * matrix[0][1] +
+            matrix[1][0] * matrix[1][0] +
+            matrix[1][1] * matrix[1][1],
         );
 
         // If determinant is very small relative to the matrix norm, it's nearly singular
@@ -680,17 +681,17 @@ Prime.Math = Prime.Math || {};
 
 // Check if MatrixValidation already has a getter defined, if so, use it
 if (
-  Object.getOwnPropertyDescriptor(Prime.Math, 'MatrixValidation') &&
-  Object.getOwnPropertyDescriptor(Prime.Math, 'MatrixValidation').get
+  Object.getOwnPropertyDescriptor(Prime.Math, "MatrixValidation") &&
+  Object.getOwnPropertyDescriptor(Prime.Math, "MatrixValidation").get
 ) {
   // Use a more careful approach to update the property
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.Math,
-    'MatrixValidation',
+    "MatrixValidation",
   );
   const originalGetter = descriptor.get;
 
-  Object.defineProperty(Prime.Math, 'MatrixValidation', {
+  Object.defineProperty(Prime.Math, "MatrixValidation", {
     get: function () {
       const result = originalGetter.call(this);
       // If result is an empty object (placeholder), return our implementation

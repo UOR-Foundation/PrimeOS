@@ -3,8 +3,8 @@
  * Utility functions for browser storage providers
  */
 
-const Prime = require('../../core');
-const { PrimeStorageError } = require('../core/provider');
+const Prime = require("../../core");
+const { PrimeStorageError } = require("../core/provider");
 
 /**
  * Utility functions for browser storage
@@ -15,10 +15,10 @@ const BrowserStorageUtils = {
    * @returns {boolean} True if IndexedDB is supported
    */
   isIndexedDBSupported() {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return false;
     }
-    
+
     return Boolean(window.indexedDB);
   },
 
@@ -27,13 +27,13 @@ const BrowserStorageUtils = {
    * @returns {boolean} True if localStorage is supported
    */
   isLocalStorageSupported() {
-    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
       return false;
     }
-    
+
     try {
-      const testKey = '__primeos_test__';
-      localStorage.setItem(testKey, 'test');
+      const testKey = "__primeos_test__";
+      localStorage.setItem(testKey, "test");
       localStorage.removeItem(testKey);
       return true;
     } catch (e) {
@@ -46,10 +46,10 @@ const BrowserStorageUtils = {
    * @returns {boolean} True if File System Access API is supported
    */
   isFileSystemAccessSupported() {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return false;
     }
-    
+
     return Boolean(window.showDirectoryPicker && window.showOpenFilePicker);
   },
 
@@ -61,7 +61,7 @@ const BrowserStorageUtils = {
     return {
       indexedDB: this.isIndexedDBSupported(),
       localStorage: this.isLocalStorageSupported(),
-      fileSystemAccess: this.isFileSystemAccessSupported()
+      fileSystemAccess: this.isFileSystemAccessSupported(),
     };
   },
 
@@ -71,13 +71,13 @@ const BrowserStorageUtils = {
    */
   getBestAvailableStorage() {
     const options = this.getAvailableStorageOptions();
-    
+
     if (options.indexedDB) {
-      return 'indexeddb';
+      return "indexeddb";
     } else if (options.localStorage) {
-      return 'localstorage';
+      return "localstorage";
     } else {
-      return 'memory';
+      return "memory";
     }
   },
 
@@ -86,27 +86,33 @@ const BrowserStorageUtils = {
    * @returns {Promise<Object>} Storage space information
    */
   async estimateStorageSpace() {
-    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
+    if (
+      typeof navigator !== "undefined" &&
+      navigator.storage &&
+      navigator.storage.estimate
+    ) {
       try {
         const estimate = await navigator.storage.estimate();
-        
+
         return {
           quota: estimate.quota || 0,
           usage: estimate.usage || 0,
           available: (estimate.quota || 0) - (estimate.usage || 0),
-          persistent: false
+          persistent: false,
         };
       } catch (error) {
-        Prime.Logger.warn('Failed to estimate storage space', { error: error.message });
+        Prime.Logger.warn("Failed to estimate storage space", {
+          error: error.message,
+        });
       }
     }
-    
+
     // Fallback values if Storage API isn't available
     return {
       quota: 50 * 1024 * 1024, // 50MB
       usage: 0,
       available: 50 * 1024 * 1024,
-      persistent: false
+      persistent: false,
     };
   },
 
@@ -115,15 +121,21 @@ const BrowserStorageUtils = {
    * @returns {Promise<boolean>} True if permission was granted
    */
   async requestPersistentStorage() {
-    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+    if (
+      typeof navigator !== "undefined" &&
+      navigator.storage &&
+      navigator.storage.persist
+    ) {
       try {
         return await navigator.storage.persist();
       } catch (error) {
-        Prime.Logger.warn('Failed to request persistent storage', { error: error.message });
+        Prime.Logger.warn("Failed to request persistent storage", {
+          error: error.message,
+        });
         return false;
       }
     }
-    
+
     return false;
   },
 
@@ -132,15 +144,21 @@ const BrowserStorageUtils = {
    * @returns {Promise<boolean>} True if storage is persistent
    */
   async isStoragePersistent() {
-    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persisted) {
+    if (
+      typeof navigator !== "undefined" &&
+      navigator.storage &&
+      navigator.storage.persisted
+    ) {
       try {
         return await navigator.storage.persisted();
       } catch (error) {
-        Prime.Logger.warn('Failed to check storage persistence', { error: error.message });
+        Prime.Logger.warn("Failed to check storage persistence", {
+          error: error.message,
+        });
         return false;
       }
     }
-    
+
     return false;
   },
 
@@ -151,39 +169,39 @@ const BrowserStorageUtils = {
    * @param {string} [mimeType='application/octet-stream'] - MIME type of the data
    * @returns {string} URL for downloading the data
    */
-  createDownloadLink(data, filename, mimeType = 'application/octet-stream') {
-    if (typeof window === 'undefined' || typeof URL === 'undefined') {
+  createDownloadLink(data, filename, mimeType = "application/octet-stream") {
+    if (typeof window === "undefined" || typeof URL === "undefined") {
       throw new PrimeStorageError(
-        'Download functionality is only available in browser environments',
+        "Download functionality is only available in browser environments",
         {},
-        'STORAGE_BROWSER_ONLY'
+        "STORAGE_BROWSER_ONLY",
       );
     }
-    
+
     let blob;
-    
+
     if (data instanceof Blob) {
       blob = data;
-    } else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) {
+    } else if (typeof Buffer !== "undefined" && Buffer.isBuffer(data)) {
       blob = new Blob([data], { type: mimeType });
     } else if (ArrayBuffer.isView(data) || data instanceof ArrayBuffer) {
       blob = new Blob([data], { type: mimeType });
-    } else if (typeof data === 'string') {
+    } else if (typeof data === "string") {
       blob = new Blob([data], { type: mimeType });
     } else {
       // For other types, try to JSON stringify
       try {
         const jsonStr = JSON.stringify(data);
-        blob = new Blob([jsonStr], { type: 'application/json' });
+        blob = new Blob([jsonStr], { type: "application/json" });
       } catch (e) {
         throw new PrimeStorageError(
-          'Unable to convert data to blob',
+          "Unable to convert data to blob",
           { type: typeof data },
-          'STORAGE_INVALID_DATA'
+          "STORAGE_INVALID_DATA",
         );
       }
     }
-    
+
     return URL.createObjectURL(blob);
   },
 
@@ -193,23 +211,23 @@ const BrowserStorageUtils = {
    * @param {string} filename - Filename for the download
    * @param {string} [mimeType='application/octet-stream'] - MIME type of the data
    */
-  downloadData(data, filename, mimeType = 'application/octet-stream') {
+  downloadData(data, filename, mimeType = "application/octet-stream") {
     const url = this.createDownloadLink(data, filename, mimeType);
-    
-    const a = document.createElement('a');
+
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
-    a.style.display = 'none';
-    
+    a.style.display = "none";
+
     document.body.appendChild(a);
     a.click();
-    
+
     // Clean up
     setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 100);
-  }
+  },
 };
 
 module.exports = BrowserStorageUtils;

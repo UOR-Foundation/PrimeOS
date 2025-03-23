@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
+const Prime = require("../core");
 
 /**
  * Create a simple component for testing
@@ -13,19 +13,19 @@ const Prime = require('../core');
  */
 function createComponent(config = {}) {
   const component = {
-    name: config.name || 'unnamed_component',
+    name: config.name || "unnamed_component",
     state: { ...config.state },
-    methods: { ...config.methods }
+    methods: { ...config.methods },
   };
-  
+
   // Set up methods to use 'this' context correctly
-  Object.keys(component.methods).forEach(methodName => {
+  Object.keys(component.methods).forEach((methodName) => {
     const originalMethod = component.methods[methodName];
-    component.methods[methodName] = function(...args) {
+    component.methods[methodName] = function (...args) {
       return originalMethod.apply(component, args);
     };
   });
-  
+
   return component;
 }
 

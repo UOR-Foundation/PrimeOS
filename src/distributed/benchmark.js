@@ -4,8 +4,8 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../core');
-const EventBus = require('./event-bus');
+const Prime = require("../core");
+const EventBus = require("./event-bus");
 
 // Create the Benchmark module using IIFE
 (function () {
@@ -15,15 +15,15 @@ const EventBus = require('./event-bus');
    */
   const BenchmarkType = {
     /** Network communication benchmarks */
-    COMMUNICATION: 'communication',
+    COMMUNICATION: "communication",
     /** Neural computation benchmarks */
-    COMPUTATION: 'computation',
+    COMPUTATION: "computation",
     /** Cluster operation benchmarks */
-    CLUSTER: 'cluster',
+    CLUSTER: "cluster",
     /** Data partitioning benchmarks */
-    PARTITIONING: 'partitioning',
+    PARTITIONING: "partitioning",
     /** End-to-end system benchmarks */
-    SYSTEM: 'system',
+    SYSTEM: "system",
   };
 
   /**
@@ -40,12 +40,12 @@ const EventBus = require('./event-bus');
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          'Benchmark configuration must be an object',
+          "Benchmark configuration must be an object",
         );
       }
 
       if (!config.id) {
-        throw new Prime.ValidationError('Benchmark ID is required');
+        throw new Prime.ValidationError("Benchmark ID is required");
       }
 
       this.id = config.id;
@@ -78,15 +78,15 @@ const EventBus = require('./event-bus');
      * @returns {BenchmarkSuite} this (for chaining)
      */
     register(name, benchmarkFn, metadata = {}) {
-      if (typeof benchmarkFn !== 'function') {
-        throw new Prime.ValidationError('Benchmark function is required');
+      if (typeof benchmarkFn !== "function") {
+        throw new Prime.ValidationError("Benchmark function is required");
       }
 
       this.benchmarks.set(name, {
         name,
         fn: benchmarkFn,
         type: metadata.type || BenchmarkType.COMPUTATION,
-        description: metadata.description || '',
+        description: metadata.description || "",
         tags: metadata.tags || [],
       });
 
@@ -115,7 +115,7 @@ const EventBus = require('./event-bus');
       });
 
       // Emit start event
-      this.eventBus.emit('benchmark:start', {
+      this.eventBus.emit("benchmark:start", {
         name,
         options: runOptions,
         timestamp: Date.now(),
@@ -176,7 +176,7 @@ const EventBus = require('./event-bus');
 
         // Report progress if requested
         if (runOptions.reportProgress) {
-          this.eventBus.emit('benchmark:progress', {
+          this.eventBus.emit("benchmark:progress", {
             name,
             iteration: i,
             totalIterations: runOptions.iterations,
@@ -242,15 +242,15 @@ const EventBus = require('./event-bus');
       this.results.set(name, result);
 
       // Emit completion event
-      this.eventBus.emit('benchmark:complete', {
+      this.eventBus.emit("benchmark:complete", {
         name,
         stats,
         timestamp: Date.now(),
       });
 
       Prime.Logger.info(`Benchmark ${name} completed`, {
-        mean: stats.mean.toFixed(2) + 'ms',
-        median: stats.median.toFixed(2) + 'ms',
+        mean: stats.mean.toFixed(2) + "ms",
+        median: stats.median.toFixed(2) + "ms",
         opsPerSecond: stats.opsPerSecond.toFixed(2),
       });
 
@@ -271,14 +271,14 @@ const EventBus = require('./event-bus');
       const benchmarkNames = Array.from(this.benchmarks.keys());
 
       if (benchmarkNames.length === 0) {
-        Prime.Logger.warn('No benchmarks registered');
+        Prime.Logger.warn("No benchmarks registered");
         return new Map();
       }
 
       Prime.Logger.info(`Running all ${benchmarkNames.length} benchmarks`);
 
       // Emit start all event
-      this.eventBus.emit('benchmarks:start', {
+      this.eventBus.emit("benchmarks:start", {
         count: benchmarkNames.length,
         names: benchmarkNames,
         timestamp: Date.now(),
@@ -290,7 +290,7 @@ const EventBus = require('./event-bus');
       }
 
       // Emit completion event
-      this.eventBus.emit('benchmarks:complete', {
+      this.eventBus.emit("benchmarks:complete", {
         count: benchmarkNames.length,
         timestamp: Date.now(),
       });
@@ -348,7 +348,7 @@ const EventBus = require('./event-bus');
           {
             type: benchmark.type,
             description: `${benchmark.description} with ${nodeCount} nodes`,
-            tags: [...benchmark.tags, 'scaling', `nodes-${nodeCount}`],
+            tags: [...benchmark.tags, "scaling", `nodes-${nodeCount}`],
           },
         );
 
@@ -371,7 +371,7 @@ const EventBus = require('./event-bus');
       );
 
       if (!baseResult) {
-        throw new Error('No base result found for scaling calculation');
+        throw new Error("No base result found for scaling calculation");
       }
 
       const baseMean = baseResult.result.stats.mean;
@@ -455,7 +455,7 @@ const EventBus = require('./event-bus');
         const storageResult = {
           ...result,
           saved: true,
-          saveTimestamp: Date.now()
+          saveTimestamp: Date.now(),
         };
 
         // Limit to last 100 results per benchmark to avoid memory issues
@@ -468,10 +468,10 @@ const EventBus = require('./event-bus');
         Prime.Logger.debug(`Benchmark results for ${name} saved to storage`);
 
         // Emit storage event
-        this.eventBus.emit('benchmark:stored', {
+        this.eventBus.emit("benchmark:stored", {
           name,
           timestamp: Date.now(),
-          resultCount: this._resultsStorage[name].length
+          resultCount: this._resultsStorage[name].length,
         });
 
         // For a proper implementation with file storage, we would do:
@@ -481,7 +481,7 @@ const EventBus = require('./event-bus');
         // 4. Support optional database backends (SQLite, etc.)
       } catch (error) {
         Prime.Logger.error(`Error saving benchmark results for ${name}`, {
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -548,20 +548,20 @@ const EventBus = require('./event-bus');
      */
     generateReport(options = {}) {
       const reportOptions = {
-        format: options.format || 'json',
+        format: options.format || "json",
         includeIterations: options.includeIterations !== false,
-        sortBy: options.sortBy || 'name',
+        sortBy: options.sortBy || "name",
       };
 
       // Prepare result data
       const resultEntries = Array.from(this.results.entries());
 
       // Sort results
-      if (reportOptions.sortBy === 'name') {
+      if (reportOptions.sortBy === "name") {
         resultEntries.sort((a, b) => a[0].localeCompare(b[0]));
-      } else if (reportOptions.sortBy === 'duration') {
+      } else if (reportOptions.sortBy === "duration") {
         resultEntries.sort((a, b) => a[1].stats.mean - b[1].stats.mean);
-      } else if (reportOptions.sortBy === 'type') {
+      } else if (reportOptions.sortBy === "type") {
         resultEntries.sort((a, b) => a[1].type.localeCompare(b[1].type));
       }
 
@@ -596,23 +596,23 @@ const EventBus = require('./event-bus');
           (fastest, result) => {
             return result.stats.mean < fastest.stats.mean ? result : fastest;
           },
-          { stats: { mean: Infinity }, name: 'none' },
+          { stats: { mean: Infinity }, name: "none" },
         ).name,
         slowestBenchmark: reportData.results.reduce(
           (slowest, result) => {
             return result.stats.mean > slowest.stats.mean ? result : slowest;
           },
-          { stats: { mean: -Infinity }, name: 'none' },
+          { stats: { mean: -Infinity }, name: "none" },
         ).name,
       };
 
       // Format output
-      if (reportOptions.format === 'json') {
+      if (reportOptions.format === "json") {
         return reportData;
-      } else if (reportOptions.format === 'text') {
+      } else if (reportOptions.format === "text") {
         // Simple text format
         return this._formatReportAsText(reportData);
-      } else if (reportOptions.format === 'csv') {
+      } else if (reportOptions.format === "csv") {
         // CSV format
         return this._formatReportAsCsv(reportData);
       }
@@ -633,17 +633,17 @@ const EventBus = require('./event-bus');
       report += `Number of Benchmarks: ${reportData.benchmarkCount}\n\n`;
 
       // Add summary
-      report += 'Summary:\n';
+      report += "Summary:\n";
       report += `  Average Duration: ${reportData.summary.averageDuration.toFixed(2)}ms\n`;
       report += `  Fastest Benchmark: ${reportData.summary.fastestBenchmark}\n`;
       report += `  Slowest Benchmark: ${reportData.summary.slowestBenchmark}\n\n`;
 
       // Add individual results
-      report += 'Benchmark Results:\n';
+      report += "Benchmark Results:\n";
 
       for (const result of reportData.results) {
         report += `  ${result.name} (${result.type}):\n`;
-        report += `    Description: ${result.description || 'N/A'}\n`;
+        report += `    Description: ${result.description || "N/A"}\n`;
         report += `    Mean: ${result.stats.mean.toFixed(2)}ms\n`;
         report += `    Median: ${result.stats.median.toFixed(2)}ms\n`;
         report += `    Min: ${result.stats.min.toFixed(2)}ms\n`;
@@ -656,7 +656,7 @@ const EventBus = require('./event-bus');
           report += `    Mean Heap Used Delta: ${(result.stats.memory.meanHeapUsed / 1024 / 1024).toFixed(2)}MB\n`;
         }
 
-        report += '\n';
+        report += "\n";
       }
 
       return report;
@@ -671,14 +671,14 @@ const EventBus = require('./event-bus');
     _formatReportAsCsv(reportData) {
       // CSV header
       let csv =
-        'Name,Type,Description,Mean (ms),Median (ms),Min (ms),Max (ms),StdDev (ms),Ops/Second\n';
+        "Name,Type,Description,Mean (ms),Median (ms),Min (ms),Max (ms),StdDev (ms),Ops/Second\n";
 
       // Add rows
       for (const result of reportData.results) {
         const row = [
           `"${result.name}"`,
           `"${result.type}"`,
-          `"${result.description || ''}"`,
+          `"${result.description || ""}"`,
           result.stats.mean.toFixed(2),
           result.stats.median.toFixed(2),
           result.stats.min.toFixed(2),
@@ -687,7 +687,7 @@ const EventBus = require('./event-bus');
           result.stats.opsPerSecond.toFixed(2),
         ];
 
-        csv += row.join(',') + '\n';
+        csv += row.join(",") + "\n";
       }
 
       return csv;
@@ -742,7 +742,7 @@ const EventBus = require('./event-bus');
      */
     static registerTo(suite, options = {}) {
       if (!(suite instanceof BenchmarkSuite)) {
-        throw new Prime.ValidationError('Invalid benchmark suite');
+        throw new Prime.ValidationError("Invalid benchmark suite");
       }
 
       const neurOptions = {
@@ -753,7 +753,7 @@ const EventBus = require('./event-bus');
 
       // Register forward pass benchmark
       suite.register(
-        'neural_forward_pass',
+        "neural_forward_pass",
         async (context) => {
           const nodeCount = context.nodeCount || 1;
           const batchSize =
@@ -763,11 +763,11 @@ const EventBus = require('./event-bus');
 
           // Create a distributed layer for benchmark
           const layer = new Prime.Distributed.Partition.DistributedLayer({
-            id: 'bench_layer',
+            id: "bench_layer",
             layerConfig: {
               inputSize: neurOptions.layerSizes[0],
               outputSize: neurOptions.layerSizes[1],
-              activation: 'relu',
+              activation: "relu",
             },
             nodeIds: Array.from({ length: nodeCount }, (_, i) => `node_${i}`),
             partitionScheme: new Prime.Distributed.Partition.PartitionScheme({
@@ -806,14 +806,14 @@ const EventBus = require('./event-bus');
         },
         {
           type: BenchmarkType.COMPUTATION,
-          description: 'Benchmark forward pass across distributed layers',
-          tags: ['neural', 'forward-pass'],
+          description: "Benchmark forward pass across distributed layers",
+          tags: ["neural", "forward-pass"],
         },
       );
 
       // Register backward pass benchmark
       suite.register(
-        'neural_backward_pass',
+        "neural_backward_pass",
         async (context) => {
           const nodeCount = context.nodeCount || 1;
           const batchSize =
@@ -823,11 +823,11 @@ const EventBus = require('./event-bus');
 
           // Create a distributed layer for benchmark
           const layer = new Prime.Distributed.Partition.DistributedLayer({
-            id: 'bench_layer',
+            id: "bench_layer",
             layerConfig: {
               inputSize: neurOptions.layerSizes[0],
               outputSize: neurOptions.layerSizes[1],
-              activation: 'relu',
+              activation: "relu",
             },
             nodeIds: Array.from({ length: nodeCount }, (_, i) => `node_${i}`),
             partitionScheme: new Prime.Distributed.Partition.PartitionScheme({
@@ -871,14 +871,14 @@ const EventBus = require('./event-bus');
         },
         {
           type: BenchmarkType.COMPUTATION,
-          description: 'Benchmark backward pass across distributed layers',
-          tags: ['neural', 'backward-pass'],
+          description: "Benchmark backward pass across distributed layers",
+          tags: ["neural", "backward-pass"],
         },
       );
 
       // Register full network training benchmark
       suite.register(
-        'neural_network_training',
+        "neural_network_training",
         async (context) => {
           const nodeCount = context.nodeCount || 1;
           const batchSize = Math.min(
@@ -900,8 +900,8 @@ const EventBus = require('./event-bus');
                   outputSize: neurOptions.layerSizes[i + 1],
                   activation:
                     i === neurOptions.layerSizes.length - 2
-                      ? 'sigmoid'
-                      : 'relu',
+                      ? "sigmoid"
+                      : "relu",
                 },
                 nodeIds: Array.from(
                   { length: nodeCount },
@@ -913,7 +913,7 @@ const EventBus = require('./event-bus');
                       i % 2 === 0
                         ? Prime.Distributed.Partition.PartitionType.INTRA_LAYER
                         : Prime.Distributed.Partition.PartitionType
-                          .DATA_PARALLEL,
+                            .DATA_PARALLEL,
                     nodeCount,
                     layerConfig: {
                       [`bench_layer_${i}`]: {
@@ -997,8 +997,8 @@ const EventBus = require('./event-bus');
         },
         {
           type: BenchmarkType.SYSTEM,
-          description: 'Benchmark full neural network training',
-          tags: ['neural', 'training', 'end-to-end'],
+          description: "Benchmark full neural network training",
+          tags: ["neural", "training", "end-to-end"],
         },
       );
 
@@ -1018,7 +1018,7 @@ const EventBus = require('./event-bus');
      */
     static registerTo(suite, options = {}) {
       if (!(suite instanceof BenchmarkSuite)) {
-        throw new Prime.ValidationError('Invalid benchmark suite');
+        throw new Prime.ValidationError("Invalid benchmark suite");
       }
 
       const commOptions = {
@@ -1028,7 +1028,7 @@ const EventBus = require('./event-bus');
 
       // Register message roundtrip benchmark
       suite.register(
-        'communication_roundtrip',
+        "communication_roundtrip",
         async (context) => {
           const nodeCount = context.nodeCount || 2;
           const messageSize =
@@ -1038,7 +1038,7 @@ const EventBus = require('./event-bus');
 
           // Create router for benchmark
           const router = new Prime.Distributed.Communication.MessageRouter({
-            nodeId: 'bench_node',
+            nodeId: "bench_node",
           });
 
           // Create message payload
@@ -1056,7 +1056,7 @@ const EventBus = require('./event-bus');
               Prime.Distributed.Communication.MessageType.GRADIENT_SYNC,
               {
                 gradients: payload,
-                layerId: 'benchmark_layer',
+                layerId: "benchmark_layer",
                 iteration: context.iteration,
               },
               {
@@ -1081,14 +1081,14 @@ const EventBus = require('./event-bus');
         },
         {
           type: BenchmarkType.COMMUNICATION,
-          description: 'Benchmark message roundtrip time',
-          tags: ['communication', 'roundtrip'],
+          description: "Benchmark message roundtrip time",
+          tags: ["communication", "roundtrip"],
         },
       );
 
       // Register broadcast benchmark
       suite.register(
-        'communication_broadcast',
+        "communication_broadcast",
         async (context) => {
           const nodeCount = context.nodeCount || 5;
           const messageSize =
@@ -1098,7 +1098,7 @@ const EventBus = require('./event-bus');
 
           // Create router for benchmark
           const router = new Prime.Distributed.Communication.MessageRouter({
-            nodeId: 'bench_node',
+            nodeId: "bench_node",
           });
 
           // Create message payload
@@ -1109,11 +1109,11 @@ const EventBus = require('./event-bus');
 
           // Broadcast to all nodes
           const result = await router.route(
-            'broadcast',
+            "broadcast",
             Prime.Distributed.Communication.MessageType.GRADIENT_SYNC,
             {
               gradients: payload,
-              layerId: 'benchmark_layer',
+              layerId: "benchmark_layer",
               iteration: context.iteration,
             },
           );
@@ -1129,14 +1129,14 @@ const EventBus = require('./event-bus');
         },
         {
           type: BenchmarkType.COMMUNICATION,
-          description: 'Benchmark broadcast performance',
-          tags: ['communication', 'broadcast'],
+          description: "Benchmark broadcast performance",
+          tags: ["communication", "broadcast"],
         },
       );
 
       // Register gradient synchronization benchmark
       suite.register(
-        'communication_gradient_sync',
+        "communication_gradient_sync",
         async (context) => {
           const nodeCount = context.nodeCount || 4;
           const rows =
@@ -1150,7 +1150,7 @@ const EventBus = require('./event-bus');
 
           // Create router for benchmark
           const router = new Prime.Distributed.Communication.MessageRouter({
-            nodeId: 'bench_node',
+            nodeId: "bench_node",
           });
 
           // Create fake gradients matrix
@@ -1166,7 +1166,7 @@ const EventBus = require('./event-bus');
 
           for (let i = 0; i < nodeCount; i++) {
             const promise = router.syncGradients(`node_${i}`, gradients, {
-              layerId: 'benchmark_layer',
+              layerId: "benchmark_layer",
               iteration: context.iteration,
             });
 
@@ -1187,8 +1187,8 @@ const EventBus = require('./event-bus');
         },
         {
           type: BenchmarkType.COMMUNICATION,
-          description: 'Benchmark gradient synchronization',
-          tags: ['communication', 'gradient-sync'],
+          description: "Benchmark gradient synchronization",
+          tags: ["communication", "gradient-sync"],
         },
       );
 
@@ -1208,7 +1208,7 @@ const EventBus = require('./event-bus');
      */
     static registerTo(suite, options = {}) {
       if (!(suite instanceof BenchmarkSuite)) {
-        throw new Prime.ValidationError('Invalid benchmark suite');
+        throw new Prime.ValidationError("Invalid benchmark suite");
       }
 
       const cohOptions = {
@@ -1218,7 +1218,7 @@ const EventBus = require('./event-bus');
 
       // Register coherence calculation benchmark
       suite.register(
-        'coherence_calculation',
+        "coherence_calculation",
         async (context) => {
           const nodeCount = context.nodeCount || 1;
           const matrixSize =
@@ -1235,7 +1235,7 @@ const EventBus = require('./event-bus');
               config: {
                 inputSize: matrixSize,
                 outputSize: matrixSize,
-                activation: 'relu',
+                activation: "relu",
               },
               weights: Array.from({ length: matrixSize }, () =>
                 Array.from({ length: matrixSize }, () => Math.random() * 0.1),
@@ -1260,7 +1260,7 @@ const EventBus = require('./event-bus');
             // Create task for coherence check
             const task = {
               id: `coherence_check_${layer.id}`,
-              type: 'coherence_check',
+              type: "coherence_check",
               data: {
                 layerConfig: layer.config,
                 parameters: {
@@ -1292,14 +1292,14 @@ const EventBus = require('./event-bus');
         },
         {
           type: BenchmarkType.COMPUTATION,
-          description: 'Benchmark coherence calculation performance',
-          tags: ['coherence', 'calculation'],
+          description: "Benchmark coherence calculation performance",
+          tags: ["coherence", "calculation"],
         },
       );
 
       // Register partition optimization benchmark
       suite.register(
-        'coherence_partition_optimize',
+        "coherence_partition_optimize",
         async (context) => {
           const nodeCount = Math.max(2, context.nodeCount || 4);
           const layerCount = context.iteration + 3; // At least 3 layers
@@ -1316,7 +1316,7 @@ const EventBus = require('./event-bus');
             layerConfig[`layer_${i}`] = {
               inputSize: size,
               outputSize: nextSize,
-              activation: i % 2 === 0 ? 'relu' : 'sigmoid',
+              activation: i % 2 === 0 ? "relu" : "sigmoid",
             };
           }
 
@@ -1352,8 +1352,8 @@ const EventBus = require('./event-bus');
         },
         {
           type: BenchmarkType.PARTITIONING,
-          description: 'Benchmark partition optimization performance',
-          tags: ['coherence', 'partitioning'],
+          description: "Benchmark partition optimization performance",
+          tags: ["coherence", "partitioning"],
         },
       );
 

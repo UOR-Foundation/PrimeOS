@@ -4,11 +4,11 @@
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Import specialized optimizers
-require('./sgd-optimizer');
-require('./adam-optimizer');
+require("./sgd-optimizer");
+require("./adam-optimizer");
 
 // Create the Neural Optimization module using IIFE
 (function () {
@@ -26,13 +26,13 @@ require('./adam-optimizer');
       const lowerType = type.toLowerCase();
 
       switch (lowerType) {
-        case 'sgd':
+        case "sgd":
           return new Prime.Neural.Optimization.SGDOptimizer(config);
-        case 'adam':
+        case "adam":
           return new Prime.Neural.Optimization.AdamOptimizer(config);
-        case 'coherence_sgd':
+        case "coherence_sgd":
           return new Prime.Neural.Optimization.CoherenceSGD(config);
-        case 'coherence_adam':
+        case "coherence_adam":
           return new Prime.Neural.Optimization.CoherenceAdam(config);
         default:
           throw new Error(`Unknown optimizer type: ${type}`);
@@ -44,7 +44,7 @@ require('./adam-optimizer');
      * @returns {Array<string>} List of available optimizer types
      */
     static getAvailableTypes() {
-      return ['sgd', 'adam', 'coherence_sgd', 'coherence_adam'];
+      return ["sgd", "adam", "coherence_sgd", "coherence_adam"];
     }
   }
 
@@ -78,7 +78,7 @@ require('./adam-optimizer');
      * @returns {Object} Updated parameters
      */
     update(params, gradients, coherenceFn) {
-      throw new Prime.ValidationError('Method must be implemented by subclass');
+      throw new Prime.ValidationError("Method must be implemented by subclass");
     }
 
     /**
@@ -205,7 +205,7 @@ require('./adam-optimizer');
                 updatedParams[key][i] += velocity[i];
               }
             }
-          } else if (typeof gradient === 'number') {
+          } else if (typeof gradient === "number") {
             // Handle scalar values
             velocity.value =
               this.momentum * velocity.value - effectiveLR * gradient;
@@ -249,7 +249,7 @@ require('./adam-optimizer');
                   updatedParams[key][i] = params[key][i] + scaledVelocity;
                 }
               }
-            } else if (typeof params[key] === 'number') {
+            } else if (typeof params[key] === "number") {
               // Handle scalar values
               const scaledVelocity = velocity.value * scaleFactor;
               updatedParams[key] = params[key] + scaledVelocity;
@@ -276,7 +276,7 @@ require('./adam-optimizer');
           // Handle 1D arrays (vectors)
           return obj.map(() => 0);
         }
-      } else if (typeof obj === 'number') {
+      } else if (typeof obj === "number") {
         // Handle scalar values
         return { value: 0 };
       }
@@ -406,7 +406,7 @@ require('./adam-optimizer');
                   (effectiveLR * mHat) / (Math.sqrt(vHat) + this.epsilon);
               }
             }
-          } else if (typeof gradient === 'number') {
+          } else if (typeof gradient === "number") {
             // Handle scalar values
             // Update biased first moment estimate
             m.value = this.beta1 * m.value + (1 - this.beta1) * gradient;
@@ -511,9 +511,9 @@ require('./adam-optimizer');
                 }
               }
             }
-          } else if (typeof params1[key] === 'number') {
+          } else if (typeof params1[key] === "number") {
             // Handle scalar values
-            if (typeof params2[key] === 'number') {
+            if (typeof params2[key] === "number") {
               result[key] = (1 - alpha) * params1[key] + alpha * params2[key];
             }
           }
@@ -538,7 +538,7 @@ require('./adam-optimizer');
           // Handle 1D arrays (vectors)
           return obj.map(() => 0);
         }
-      } else if (typeof obj === 'number') {
+      } else if (typeof obj === "number") {
         // Handle scalar values
         return { value: 0 };
       }
