@@ -11,6 +11,7 @@ const Prime = require('../core');
 require('./matrix-core');
 require('./matrix-advanced');
 require('./matrix-validation');
+require('./matrix-error-handling');
 
 // Create the Matrix module using IIFE
 (function () {
@@ -119,7 +120,11 @@ require('./matrix-validation');
      * @returns {number} - Determinant
      */
     determinant: function (matrix) {
-      return Prime.Math.MatrixAdvanced.determinant(matrix);
+      // Use error handling for improved stability with extreme values
+      return Prime.Math.MatrixErrorHandling.handleExtremeValues(
+        Prime.Math.MatrixAdvanced.determinant,
+        [matrix]
+      );
     },
 
     /**
@@ -152,7 +157,32 @@ require('./matrix-validation');
      * @returns {Array|TypedArray} - Inverted matrix
      */
     inverse: function (matrix) {
-      return Prime.Math.MatrixAdvanced.inverse(matrix);
+      // Basic validation
+      if (!Prime.Math.MatrixValidation.isMatrix(matrix)) {
+        throw new Prime.ValidationError('Matrix must be valid');
+      }
+      if (!Prime.Math.MatrixValidation.isSquare(matrix)) {
+        throw new Prime.ValidationError('Matrix must be square to compute inverse');
+      }
+      
+      // Attempt the operation directly with fallback to pseudoinverse
+      try {
+        const MatrixAdvanced = Prime.Math.MatrixAdvanced;
+        if (MatrixAdvanced && typeof MatrixAdvanced.inverse === 'function') {
+          return MatrixAdvanced.inverse(matrix);
+        } else {
+          throw new Error('Matrix inverse implementation not available');
+        }
+      } catch (error) {
+        // If the error is about singularity, try pseudoinverse
+        if (error.message.includes('singular')) {
+          const MatrixErrorHandling = Prime.Math.MatrixErrorHandling;
+          if (MatrixErrorHandling && typeof MatrixErrorHandling.pseudoInverse === 'function') {
+            return MatrixErrorHandling.pseudoInverse(matrix);
+          }
+        }
+        throw error;
+      }
     },
 
     /**
@@ -201,7 +231,26 @@ require('./matrix-validation');
      * @returns {Object} - Object containing L and U matrices
      */
     luDecomposition: function (matrix) {
-      return Prime.Math.MatrixAdvanced.luDecomposition(matrix);
+      // Basic validation
+      if (!Prime.Math.MatrixValidation.isMatrix(matrix)) {
+        throw new Prime.ValidationError('Matrix must be valid');
+      }
+      if (!Prime.Math.MatrixValidation.isSquare(matrix)) {
+        throw new Prime.ValidationError('Matrix must be square for LU decomposition');
+      }
+      
+      // Check if matrix is nearly singular using proper numerical approach
+      if (Prime.Math.MatrixValidation.isNearlySingular(matrix)) {
+        throw new Prime.MathematicalError('Matrix is singular or nearly singular');
+      }
+      
+      // Direct implementation
+      const MatrixAdvanced = Prime.Math.MatrixAdvanced;
+      if (MatrixAdvanced && typeof MatrixAdvanced.luDecomposition === 'function') {
+        return MatrixAdvanced.luDecomposition(matrix);
+      } 
+      
+      throw new Error('LU decomposition implementation not available');
     },
 
     /**
@@ -210,7 +259,12 @@ require('./matrix-validation');
      * @returns {Object} - Object containing Q and R matrices
      */
     qrDecomposition: function (matrix) {
-      return Prime.Math.MatrixAdvanced.qrDecomposition(matrix);
+      // Validate input and use error handling for extreme values
+      Prime.Math.MatrixErrorHandling.validateWithDetails('qrDecomposition', [matrix]);
+      return Prime.Math.MatrixErrorHandling.handleExtremeValues(
+        Prime.Math.MatrixAdvanced.qrDecomposition, 
+        [matrix]
+      );
     },
 
     /**
@@ -220,7 +274,12 @@ require('./matrix-validation');
      * @returns {Object} - Object containing eigenvalues and eigenvectors
      */
     eigenvalues: function (matrix, options = {}) {
-      return Prime.Math.MatrixAdvanced.eigenvalues(matrix, options);
+      // Validate input and use error handling for extreme values
+      Prime.Math.MatrixErrorHandling.validateWithDetails('eigenvalues', [matrix]);
+      return Prime.Math.MatrixErrorHandling.handleExtremeValues(
+        Prime.Math.MatrixAdvanced.eigenvalues, 
+        [matrix, options]
+      );
     },
 
     /**
@@ -229,7 +288,32 @@ require('./matrix-validation');
      * @returns {Array|TypedArray} - Lower triangular matrix L where matrix = L * L^T
      */
     choleskyDecomposition: function (matrix) {
-      return Prime.Math.MatrixAdvanced.choleskyDecomposition(matrix);
+      // Validate input and use error handling for extreme values
+      Prime.Math.MatrixErrorHandling.validateWithDetails('choleskyDecomposition', [matrix]);
+      return Prime.Math.MatrixErrorHandling.handleExtremeValues(
+        Prime.Math.MatrixAdvanced.choleskyDecomposition, 
+        [matrix]
+      );
+    },
+
+    /**
+     * Compute pseudoinverse of a matrix using SVD
+     * @param {Array|TypedArray} matrix - Matrix to compute pseudoinverse for
+     * @param {number} [tolerance=1e-10] - Singular value threshold (relative to max)
+     * @returns {Array|TypedArray} - Pseudoinverse of the matrix
+     */
+    pseudoInverse: function (matrix, tolerance = 1e-10) {
+      return Prime.Math.MatrixErrorHandling.pseudoInverse(matrix, tolerance);
+    },
+
+    /**
+     * Compute a truncated SVD approximation of a matrix
+     * @param {Array|TypedArray} matrix - Matrix to approximate
+     * @param {number} rank - Rank to truncate to
+     * @returns {Array|TypedArray} - Low-rank approximation of the matrix
+     */
+    truncatedSVD: function (matrix, rank) {
+      return Prime.Math.MatrixErrorHandling.truncatedSVD(matrix, rank);
     },
 
     /**
