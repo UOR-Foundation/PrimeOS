@@ -19,6 +19,7 @@ require('./template.js');
 require('./rendering.js');
 require('./performance.js');
 require('./documentation.js');
+require('./mock.js'); // Mock for tests
 
 (function (Prime) {
   // Ensure Prime.Components namespace exists

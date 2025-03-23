@@ -174,8 +174,10 @@ class DataProvider {
       this.currentBatch++;
       
       return {
-        input: inputBatch,
-        output: outputBatch,
+        inputs: inputBatch,
+        outputs: outputBatch,
+        input: inputBatch, // For backwards compatibility
+        output: outputBatch, // For backwards compatibility
         batchIndex: this.currentBatch - 1,
         totalBatches: this.totalBatches
       };

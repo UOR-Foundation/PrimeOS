@@ -8,6 +8,9 @@
 const Prime = require('../../core.js');
 const MathUtils = require('../math');
 
+// Import Manifold mock for testing
+require('./manifold-mock');
+
 /**
  * Base 0: Neural Network Specification
  * Abstract mathematical foundation for the entire system

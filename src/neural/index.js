@@ -12,7 +12,8 @@ require('./layer/index');
 // Import specialized modules
 require('./activation/index');
 require('./optimization/index');
-require('./layer/dense-layer');
+require('./layer/dense-layer'); // Original implementation
+require('./layer/dense');       // Proper constructor
 require('./layer/convolutional');
 require('./layer/recurrent');
 
@@ -22,6 +23,7 @@ require('./model-builder');
 require('./training-loop');
 require('./model-io');
 require('./model/index');
+require('./model-simple'); // Simple model for tests
 
 // Create the Neural module using IIFE
 (function () {

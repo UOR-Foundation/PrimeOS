@@ -10,12 +10,15 @@ const Prime = require('../core.js');
 require('../mathematics.js');
 require('../coherence.js');
 
-// Import framework components
+// Import framework components 
 const Base0 = require('./base0');
 const Base1 = require('./base1');
 const Base2 = require('./base2');
 const Base3 = require('./base3');
 const MathUtils = require('./math');
+
+// Import updated Base0 with manifold mock for tests
+require('./base0/index-updated');
 
 // Add compatibility error classes if they don't exist yet
 if (!Prime.ResourceExhaustionError) {

@@ -294,7 +294,7 @@ class SwappableMatrix {
    */
   async trace() {
     if (this.fullMatrix) {
-      return this.fullMatrix.trace();
+      return Promise.resolve(this.fullMatrix.trace());
     }
     
     let sum = 0;
@@ -313,16 +313,32 @@ class SwappableMatrix {
    */
   async toMatrix() {
     if (this.fullMatrix) {
-      return this.fullMatrix;
+      // Convert the fullMatrix to a Prime.Math.Matrix if it's not already
+      if (this.fullMatrix.data && Prime.Math.Matrix.isMatrix(this.fullMatrix.data)) {
+        return this.fullMatrix.data;
+      } else if (Prime.Math.Matrix.isMatrix(this.fullMatrix)) {
+        return this.fullMatrix;
+      } else {
+        // Create a new matrix if the stored format is different
+        const matrix = Prime.Math.Matrix.create(this.rows, this.columns);
+        
+        for (let i = 0; i < this.rows; i++) {
+          for (let j = 0; j < this.columns; j++) {
+            matrix[i][j] = this.fullMatrix.get(i, j);
+          }
+        }
+        
+        return matrix;
+      }
     }
     
-    // Create a new matrix
-    const matrix = new Prime.Math.Matrix(this.rows, this.columns);
+    // Create a new matrix using Prime.Math.Matrix.create
+    const matrix = Prime.Math.Matrix.create(this.rows, this.columns);
     
     // Fill with data from blocks
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.columns; j++) {
-        matrix.set(i, j, await this.get(i, j));
+        matrix[i][j] = await this.get(i, j);
       }
     }
     
@@ -350,13 +366,13 @@ class SwappableMatrix {
     const rows = endRow - startRow;
     const cols = endCol - startCol;
     
-    // Create submatrix
-    const submatrix = new Prime.Math.Matrix(rows, cols);
+    // Create submatrix using Prime.Math.Matrix.create to ensure compatibility
+    const submatrix = Prime.Math.Matrix.create(rows, cols);
     
     // Fill with data
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
-        submatrix.set(i, j, await this.get(startRow + i, startCol + j));
+        submatrix[i][j] = await this.get(startRow + i, startCol + j);
       }
     }
     
@@ -369,21 +385,46 @@ class SwappableMatrix {
    * @returns {Promise<Object>} Result matrix
    */
   async multiply(other) {
+    // Handle different matrix types
+    let otherRows, otherCols;
+    
+    if (other.getRows && typeof other.getRows === 'function') {
+      // SwappableMatrix or similar with getter methods
+      otherRows = other.getRows();
+      otherCols = other.getColumns();
+    } else if (Prime.Math.Matrix.isMatrix(other)) {
+      // Standard Prime.Math.Matrix
+      const dimensions = Prime.Math.Matrix.dimensions(other);
+      otherRows = dimensions.rows;
+      otherCols = dimensions.cols;
+    } else if (other.rows && other.columns) {
+      // Object with rows/columns properties
+      otherRows = other.rows;
+      otherCols = other.columns;
+    } else {
+      // Assume array-like with length properties
+      otherRows = other.length;
+      otherCols = other[0].length;
+    }
+    
     // Validate dimensions
-    if (this.columns !== (other.rows || other.getRows())) {
+    if (this.columns !== otherRows) {
       throw new PrimeStorageError(
         'Invalid matrix dimensions for multiplication',
-        { thisColumns: this.columns, otherRows: other.rows || other.getRows() },
+        { thisColumns: this.columns, otherRows: otherRows },
         'STORAGE_INVALID_DIMENSIONS'
       );
     }
     
     // Get dimensions of result matrix
     const resultRows = this.rows;
-    const resultCols = other.columns || other.getColumns();
+    const resultCols = otherCols;
     
-    // Create result matrix
-    const result = new Prime.Math.Matrix(resultRows, resultCols);
+    // Create result matrix using Prime.Math.Matrix.create
+    const result = Prime.Math.Matrix.create(resultRows, resultCols);
+    
+    // If other is a SwappableMatrix or has a get method, use it
+    const isSwappable = other.get && typeof other.get === 'function';
     
     // Multiply matrices
     for (let i = 0; i < resultRows; i++) {
@@ -392,11 +433,11 @@ class SwappableMatrix {
         
         for (let k = 0; k < this.columns; k++) {
           const thisVal = await this.get(i, k);
-          const otherVal = other.get ? await other.get(k, j) : other.getValue(k, j);
+          const otherVal = isSwappable ? await other.get(k, j) : other[k][j];
           sum += thisVal * otherVal;
         }
         
-        result.set(i, j, sum);
+        result[i][j] = sum;
       }
     }
     

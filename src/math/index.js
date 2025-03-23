@@ -13,10 +13,15 @@ Prime.Math = Prime.Math || {};
 require('./vector-core');
 require('./matrix-core');
 
-// Pre-initialize Vector and Matrix objects to prevent circular dependency warnings
+// Pre-initialize Math objects to prevent circular dependency warnings
 Prime.Math.Vector = {};
 Prime.Math.Matrix = {};
 Prime.Math.MatrixErrorHandling = {};
+
+// Load all core modules immediately to avoid circular dependencies
+require('./vector-validation');
+require('./matrix-validation');
+require('./matrix-error-handling');
 
 /**
  * Lazy-load modules only when needed
@@ -45,59 +50,11 @@ const lazyLoadModules = {
   Spectral: './spectral',
 };
 
-// Create getters for lazy loading - with improved circular dependency handling
-Object.keys(lazyLoadModules).forEach((moduleName) => {
-  if (
-    !Prime.Math[moduleName] ||
-    moduleName === 'Vector' ||
-    moduleName === 'Matrix'
-  ) {
-    let moduleLoaded = false;
-    let moduleExports = null;
-
-    // Create a placeholder that will be returned before the module is fully loaded
-    const tempPlaceholder = Prime.Math[moduleName] || {};
-
-    // Store placeholder before defining property to avoid recursive gets
-    const placeholderMap = new Map();
-    placeholderMap.set(moduleName, tempPlaceholder);
-
-    Object.defineProperty(Prime.Math, moduleName, {
-      get: function () {
-        if (!moduleLoaded) {
-          try {
-            // Set the loaded flag before requiring to break potential cycles
-            moduleLoaded = true;
-
-            // Load the module
-            moduleExports = require(lazyLoadModules[moduleName]);
-
-            // If module exports the enhanced Prime object, return the module's version if it exists
-            if (moduleExports === Prime) {
-              if (
-                typeof Prime.Math[moduleName] === 'object' &&
-                Prime.Math[moduleName] !== null &&
-                Prime.Math[moduleName] !== placeholderMap.get(moduleName) &&
-                Object.keys(Prime.Math[moduleName]).length > 0
-              ) {
-                return Prime.Math[moduleName];
-              }
-              return placeholderMap.get(moduleName);
-            }
-
-            // Otherwise store the module exports for future gets
-            placeholderMap.set(moduleName, moduleExports);
-          } catch (error) {
-            console.error(`Error loading module ${moduleName}:`, error.message);
-          }
-        }
-
-        return placeholderMap.get(moduleName);
-      },
-      configurable: true,
-    });
-  }
-});
+// For circular dependency safety, we'll immediately load the key modules
+// Instead of using lazy loading which can create circular reference issues
+require('./vector');
+require('./matrix');
+require('./clifford');
 
 /**
  * Helper function to load specific modules
@@ -127,17 +84,9 @@ Prime.Math.loadAll = function () {
   });
 };
 
-// For backward compatibility, load the facade modules
-// These provide the original API but delegate to the specialized modules
-require('./vector');
-require('./matrix');
-require('./clifford');
-
+// These modules are already loaded above, no need to load them again
 // Ensure matrix operations are loaded - needed for matrix-extreme-values-tests.js
-// These are required to initialize the MatrixAdvanced module
 require('./matrix-advanced');
-require('./matrix-validation');
-require('./matrix-error-handling');
 
 // Ensure modules are loaded
 const MatrixAdvanced = Prime.Math.MatrixAdvanced;
@@ -332,20 +281,32 @@ Prime.Math.Matrix.rank = function(matrix, tolerance = 1e-10) {
 };
 
 // Core matrix operations
+Prime.Math.Matrix.add = function(a, b, result) {
+  return MatrixCore.add(a, b, result);
+};
+
+Prime.Math.Matrix.subtract = function(a, b, result) {
+  return MatrixCore.subtract(a, b, result);
+};
+
 Prime.Math.Matrix.multiply = function(a, b, result) {
   return MatrixCore.multiply(a, b, result);
 };
+
 Prime.Math.Matrix.transpose = function(matrix, result) {
   return MatrixCore.transpose(matrix, result);
 };
+
 Prime.Math.Matrix.create = function(rows, cols, initialValue = 0, options = {}) {
   return MatrixCore.create(rows, cols, initialValue, options);
 };
+
 Prime.Math.Matrix.dimensions = function(matrix) {
   return MatrixCore.dimensions(matrix);
 };
 
-// Matrix validation methods
+// Matrix validation methods - these were already defined in the initialization block
+
 Prime.Math.Matrix.isSymmetric = function(matrix, tolerance = 1e-10) {
   return MatrixValidation.isSymmetric(matrix, tolerance);
 };

@@ -560,13 +560,19 @@ class StorageManager extends EventEmitter {
    * @returns {Promise<string>} The ID of the stored model
    */
   async storeModel(model, id) {
-    // Special handling for neural models
-    if (model.constructor.name === 'Model' && model.getLayer) {
+    // Special handling for neural models with toJSON method
+    if (model && typeof model.toJSON === 'function') {
+      const modelData = model.toJSON();
+      return this.store(modelData, id);
+    }
+    
+    // Special handling for neural models with layers and getLayer method
+    if (model && model.layers && typeof model.getLayer === 'function') {
       const modelData = {
-        name: model.name,
+        name: model.name || 'unnamed_model',
         layers: model.layers.map(layer => ({
           type: layer.constructor.name,
-          config: layer.getConfig(),
+          config: typeof layer.getConfig === 'function' ? layer.getConfig() : {},
           weights: layer.weights,
           biases: layer.biases
         }))
@@ -591,34 +597,43 @@ class StorageManager extends EventEmitter {
     if (modelData && modelData.layers && Array.isArray(modelData.layers)) {
       const Prime = require('../../');
       
+      // If the NeuralModel class has a fromJSON method, use it
+      if (Prime.Neural.Model.NeuralModel && typeof Prime.Neural.Model.NeuralModel.fromJSON === 'function') {
+        return Prime.Neural.Model.NeuralModel.fromJSON(modelData);
+      }
+      
+      // Otherwise, create a model manually
       const model = new Prime.Neural.Model({
         name: modelData.name
       });
       
-      modelData.layers.forEach(layerData => {
+      for (const layerData of modelData.layers) {
         let layer;
         
         // Create the correct layer type
         switch (layerData.type) {
+          case 'Dense':
           case 'DenseLayer':
             layer = new Prime.Neural.Layer.Dense(
               layerData.config.inputSize,
               layerData.config.outputSize,
-              layerData.config.options
+              { activation: layerData.config.activation }
             );
             break;
+          case 'Convolutional':
           case 'ConvolutionalLayer':
             layer = new Prime.Neural.Layer.Convolutional(
               layerData.config.inputShape,
               layerData.config.filterShape,
-              layerData.config.options
+              layerData.config
             );
             break;
+          case 'Recurrent':
           case 'RecurrentLayer':
             layer = new Prime.Neural.Layer.Recurrent(
               layerData.config.inputSize,
               layerData.config.hiddenSize,
-              layerData.config.options
+              layerData.config
             );
             break;
           default:
@@ -626,11 +641,11 @@ class StorageManager extends EventEmitter {
         }
         
         // Set weights and biases
-        layer.weights = layerData.weights;
-        layer.biases = layerData.biases;
+        if (layerData.weights) layer.weights = layerData.weights;
+        if (layerData.biases) layer.biases = layerData.biases;
         
         model.addLayer(layer);
-      });
+      }
       
       return model;
     }
@@ -735,7 +750,15 @@ class StorageManager extends EventEmitter {
   createDataProvider(options) {
     this.ensureInitialized();
     
-    return new DataProvider(this, options);
+    // Use the DataProvider class directly
+    const provider = new DataProvider(this, options);
+    
+    // Initialize the provider immediately
+    provider.init().catch(err => {
+      Prime.Logger.error('Failed to initialize data provider', { error: err.message });
+    });
+    
+    return provider;
   }
 }
 
@@ -860,6 +883,24 @@ class SwapSpaceManager {
         error
       });
     }
+  }
+  
+  /**
+   * Flush all pending items to disk
+   * @returns {Promise<void>}
+   */
+  async flushToDisk() {
+    const promises = [];
+    
+    // Identify items that need to be swapped
+    for (const [id, item] of this.swappedItems.entries()) {
+      if (!item.isSwapped && item.data) {
+        promises.push(this.swapToDisk(id));
+      }
+    }
+    
+    // Wait for all swap operations to complete
+    await Promise.all(promises);
   }
 
   /**

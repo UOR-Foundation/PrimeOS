@@ -5,14 +5,11 @@
 
 const Prime = require('../../src');
 
-describe('PrimeOS Browser Storage Provider', () => {
-  // Skip all tests if not in a browser environment
-  beforeAll(() => {
-    if (typeof window === 'undefined' || typeof window.indexedDB === 'undefined') {
-      // Use test.skip for each test in this file
-      test.skip('Skipping browser tests in Node.js environment', () => {});
-    }
-  });
+// Skip tests in non-browser environments
+const isBrowser = typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined';
+
+// Only run these tests in a browser environment
+(isBrowser ? describe : describe.skip)('PrimeOS Browser Storage Provider', () => {
 
   beforeEach(() => {
     // Ensure clean test environment

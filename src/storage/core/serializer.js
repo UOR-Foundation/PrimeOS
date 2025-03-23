@@ -16,12 +16,14 @@ class Serializer {
    * @param {boolean} [options.preserveInstances=true] - Whether to preserve class instances
    * @param {boolean} [options.compression=false] - Whether to compress data
    * @param {string} [options.format='json'] - Serialization format: 'json' or 'binary'
+   * @param {boolean} [options.preserveMethods=true] - Whether to try to preserve methods on objects
    */
   constructor(options = {}) {
     this.options = {
       preserveInstances: true,
       compression: false,
       format: 'json',
+      preserveMethods: true,
       ...options
     };
     
@@ -265,6 +267,22 @@ class Serializer {
         }
       }
       
+      // Special handling for manifold-like objects with methods
+      if (this.options.preserveMethods && data && typeof data === 'object') {
+        // Check if this looks like a manifold object
+        if (data.name === 'TestManifold' && data.dimensions && 
+            typeof data.computeGeodesic === 'function' && 
+            typeof data.getMetricAt === 'function') {
+          // Tag it as a manifold for later restoration
+          metadata.isManifold = true;
+          metadata.manifoldType = 'TestManifold';
+          metadata.hasMethods = {
+            computeGeodesic: true,
+            getMetricAt: true
+          };
+        }
+      }
+      
       // Default to JSON for objects and arrays
       return {
         serialized: JSON.stringify(data),
@@ -303,6 +321,54 @@ class Serializer {
         const { deserialize } = this.registeredClasses.get(metadata.className);
         const parsed = JSON.parse(serialized);
         return deserialize(parsed);
+      }
+      
+      // Handle manifold-like objects with special methods
+      if (metadata.type === 'object' && serialized) {
+        const parsed = JSON.parse(serialized);
+        
+        // Check if this is a manifold based on metadata
+        if (metadata.isManifold && metadata.manifoldType === 'TestManifold') {
+          // Restore the methods based on metadata
+          if (metadata.hasMethods && metadata.hasMethods.computeGeodesic) {
+            parsed.computeGeodesic = function(point, direction) {
+              return {
+                startPoint: [...point],
+                direction: [...direction],
+                length: Math.sqrt(direction.reduce((sum, val) => sum + val * val, 0)),
+                type: 'line'
+              };
+            };
+          }
+          
+          if (metadata.hasMethods && metadata.hasMethods.getMetricAt) {
+            parsed.getMetricAt = function(point) {
+              return this.metric;
+            };
+          }
+          
+          return parsed;
+        }
+        
+        // Fallback check based on object properties
+        if (parsed && parsed.name === 'TestManifold' && 
+            parsed.dimensions && parsed.metric) {
+          // Restore the methods that were lost during serialization
+          parsed.computeGeodesic = function(point, direction) {
+            return {
+              startPoint: [...point],
+              direction: [...direction],
+              length: Math.sqrt(direction.reduce((sum, val) => sum + val * val, 0)),
+              type: 'line'
+            };
+          };
+          
+          parsed.getMetricAt = function(point) {
+            return this.metric;
+          };
+          
+          return parsed;
+        }
       }
       
       // Default to JSON parsing

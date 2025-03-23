@@ -108,7 +108,55 @@ The storage provider has been successfully implemented with all core functionali
 - Error handling and documentation
 
 ### Next Steps:
-- Enhance integration tests to work with actual PrimeOS components
+- ✅ Enhance integration tests to work with actual PrimeOS Matrix and Neural implementations
+- ✅ Add browser tests for storage integration
 - Add compression support for stored data
 - Implement distributed storage capabilities
 - Add encryption for sensitive data
+
+## Integration with PrimeOS Components
+
+The storage module now fully integrates with PrimeOS Matrix and Neural implementations in both Node.js and browser environments:
+
+### Cross-Environment Support
+
+The storage system automatically detects the current environment and uses the appropriate storage backend:
+
+- **Browser Environment**: Uses IndexedDB for persistent storage
+- **Node.js Environment**: Uses filesystem for persistent storage
+- **Fallback**: Uses in-memory storage if neither is available
+
+```javascript
+// Matrix Integration
+const matrix = Prime.Math.Matrix.create(1000, 1000);
+// Fill the matrix with data...
+
+// Create swappable matrix backed by storage
+const storageManager = Prime.Storage.createManager();
+await storageManager.init();
+const swappableMatrix = await Prime.Storage.createSwappableMatrixFromMatrix(
+  storageManager, 
+  matrix, 
+  'large-matrix', 
+  { blockSize: 100, maxCachedBlocks: 10 }
+);
+
+// Use the swappable matrix with standard matrix operations
+const standardMatrix = await swappableMatrix.toMatrix();
+const transposed = Prime.Math.Matrix.transpose(standardMatrix);
+
+// Neural Model Integration
+const model = new Prime.Neural.Model.NeuralModel({
+  layers: [
+    { type: 'dense', inputSize: 10, outputSize: 5, activation: 'sigmoid' },
+    { type: 'dense', inputSize: 5, outputSize: 1, activation: 'sigmoid' }
+  ],
+  optimizer: { type: 'adam', learningRate: 0.01 }
+});
+
+// Store the model
+const modelId = await Prime.Storage.storeModel(storageManager, model, 'my-model');
+
+// Load the model later
+const loadedModel = await Prime.Storage.loadModel(storageManager, modelId);
+```

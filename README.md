@@ -118,6 +118,100 @@ for await (const chunk of virtualArray.iterateChunks(1000)) {
 }
 ```
 
+### Matrix Storage Integration
+
+```javascript
+import Prime from '@uor-foundation/primeos';
+
+// Create a large matrix
+const rows = 5000;
+const cols = 5000;
+const matrix = Prime.Math.Matrix.create(rows, cols);
+
+// Fill with data
+for (let i = 0; i < rows; i++) {
+  for (let j = 0; j < cols; j++) {
+    matrix[i][j] = (i * j) % 1000;
+  }
+}
+
+// Create a storage manager
+const storageManager = Prime.Storage.createManager();
+await storageManager.init();
+
+// Store the large matrix
+const swappableMatrix = await Prime.Storage.createSwappableMatrixFromMatrix(
+  storageManager,
+  matrix,
+  'my-large-matrix',
+  {
+    blockSize: 100, // Work with 100x100 blocks
+    maxCachedBlocks: 10 // Keep only 10 blocks in memory at once
+  }
+);
+
+// Free original matrix from memory
+matrix = null;
+
+// Work with the swappable matrix
+const value = await swappableMatrix.get(500, 500);
+await swappableMatrix.set(500, 500, 42);
+const submatrix = await swappableMatrix.submatrix(400, 400, 600, 600);
+const standardMatrix = await swappableMatrix.toMatrix();
+```
+
+### Neural Model Storage and Training
+
+```javascript
+import Prime from '@uor-foundation/primeos';
+
+// Create a neural model
+const model = new Prime.Neural.Model.NeuralModel({
+  layers: [
+    { type: 'dense', inputSize: 10, outputSize: 20, activation: 'relu' },
+    { type: 'dense', inputSize: 20, outputSize: 5, activation: 'softmax' }
+  ],
+  optimizer: { type: 'adam', learningRate: 0.01 }
+});
+
+// Compile the model
+model.compile({ loss: 'categoricalCrossEntropy', metric: 'accuracy' });
+
+// Create a storage manager
+const storageManager = Prime.Storage.createManager();
+await storageManager.init();
+
+// Store large training data
+const trainingInputs = /* large array of input data */;
+const trainingOutputs = /* large array of expected outputs */;
+
+const inputId = await storageManager.store(trainingInputs, 'training-inputs');
+const outputId = await storageManager.store(trainingOutputs, 'training-outputs');
+
+// Create a data provider that streams data from storage
+const dataProvider = Prime.Storage.createDataProvider(storageManager, {
+  inputId,
+  outputId,
+  batchSize: 32,
+  shuffle: true
+});
+
+// Train using mini-batches from storage
+for (let epoch = 0; epoch < 10; epoch++) {
+  for (let i = 0; i < 100; i++) {
+    const batch = await dataProvider.nextBatch();
+    const result = model.trainOnBatch(batch.inputs, batch.outputs);
+    console.log(`Batch ${i}, Loss: ${result.loss}`);
+  }
+}
+
+// Store the trained model
+await Prime.Storage.storeModel(storageManager, model, 'my-trained-model');
+
+// Later, load the model
+const loadedModel = await Prime.Storage.loadModel(storageManager, 'my-trained-model');
+```
+
 ## Documentation
 
 Comprehensive documentation is available in the [primeos-spec.md](./primeos-spec.md) file.

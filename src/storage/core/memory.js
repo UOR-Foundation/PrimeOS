@@ -18,7 +18,7 @@ class MemoryProvider extends StorageProvider {
   constructor(options = {}) {
     super(options);
     
-    this.store = new Map();
+    this.storage = new Map(); // Renamed from 'store' to 'storage' to avoid method conflict
     this.streams = {};
   }
 
@@ -49,7 +49,7 @@ class MemoryProvider extends StorageProvider {
       dataToStore = data;
     }
     
-    this.store.set(dataId, dataToStore);
+    this.storage.set(dataId, dataToStore);
     return Promise.resolve(dataId);
   }
 
@@ -59,7 +59,7 @@ class MemoryProvider extends StorageProvider {
    * @returns {Promise<*>} The loaded data
    */
   async load(id) {
-    if (!this.store.has(id)) {
+    if (!this.storage.has(id)) {
       throw new PrimeStorageError(
         `Data not found for ID: ${id}`,
         { id },
@@ -70,10 +70,10 @@ class MemoryProvider extends StorageProvider {
     // Clone the data to prevent reference issues
     let data;
     try {
-      data = Prime.Utils.deepClone(this.store.get(id));
+      data = Prime.Utils.deepClone(this.storage.get(id));
     } catch (error) {
       // If cloning fails, return as is
-      data = this.store.get(id);
+      data = this.storage.get(id);
     }
     
     return Promise.resolve(data);
@@ -85,7 +85,7 @@ class MemoryProvider extends StorageProvider {
    * @returns {Promise<boolean>} True if successful
    */
   async delete(id) {
-    const result = this.store.delete(id);
+    const result = this.storage.delete(id);
     return Promise.resolve(result);
   }
 
@@ -95,7 +95,7 @@ class MemoryProvider extends StorageProvider {
    * @returns {Promise<boolean>} True if data exists
    */
   async exists(id) {
-    return Promise.resolve(this.store.has(id));
+    return Promise.resolve(this.storage.has(id));
   }
 
   /**
@@ -103,7 +103,7 @@ class MemoryProvider extends StorageProvider {
    * @returns {Promise<string[]>} Array of stored data IDs
    */
   async getAllKeys() {
-    return Promise.resolve(Array.from(this.store.keys()));
+    return Promise.resolve(Array.from(this.storage.keys()));
   }
 
   /**
@@ -111,7 +111,7 @@ class MemoryProvider extends StorageProvider {
    * @returns {Promise<void>}
    */
   async clear() {
-    this.store.clear();
+    this.storage.clear();
     return Promise.resolve();
   }
 
@@ -136,7 +136,7 @@ class MemoryProvider extends StorageProvider {
    * @returns {ReadableStream} A readable stream of the data
    */
   createReadStream(id, options = {}) {
-    if (!this.store.has(id)) {
+    if (!this.storage.has(id)) {
       throw new PrimeStorageError(
         `Data not found for ID: ${id}`,
         { id },
@@ -144,7 +144,7 @@ class MemoryProvider extends StorageProvider {
       );
     }
     
-    const stream = new MemoryReadStream(this.store.get(id), options);
+    const stream = new MemoryReadStream(this.storage.get(id), options);
     return stream;
   }
 
@@ -176,7 +176,7 @@ class MemoryProvider extends StorageProvider {
   getUsedSpace() {
     let totalSize = 0;
     
-    for (const [id, data] of this.store.entries()) {
+    for (const [id, data] of this.storage.entries()) {
       let size = 0;
       
       if (typeof data === 'string') {

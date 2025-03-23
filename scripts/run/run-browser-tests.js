@@ -78,6 +78,19 @@ async function runTests() {
       { timeout: 10000 },
     );
 
+    // Run storage tests as well
+    console.log('Running storage tests...');
+    await page.click('#run-storage');
+    
+    // Wait for storage tests to complete
+    await page.waitForFunction(
+      () => {
+        const output = document.getElementById('test-output');
+        return output && output.textContent.includes('Storage Matrix Integration (Browser)');
+      },
+      { timeout: 10000 }
+    );
+    
     // Extract test results
     const testResults = await page.evaluate(() => {
       const output = document.getElementById('test-output');

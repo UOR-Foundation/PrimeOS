@@ -81,6 +81,7 @@
         <button id="run-component">Run Component Tests</button>
         <button id="run-rendering">Run Rendering Tests</button>
         <button id="run-performance">Run Performance Tests</button>
+        <button id="run-storage">Run Storage Tests</button>
         <button id="clear-output">Clear Output</button>
     </div>
     
@@ -88,6 +89,9 @@
     
     <!-- Load PrimeOS library -->
     <script src="dist/primeos.js"></script>
+    
+    <!-- Load Storage Browser Tests -->
+    <script src="tests/storage/browser-matrix-storage-tests.js"></script>
     
     <!-- Test Runner Script -->
     <script>
@@ -899,6 +903,18 @@ Time:    ${this.results.timings.duration}ms
                 TestRunner.reset();
                 definePerformanceTests();
                 await TestRunner.run({ suite: 'Performance' });
+            });
+
+            // Run storage tests
+            document.getElementById('run-storage').addEventListener('click', async function() {
+                TestRunner.reset();
+                // Storage tests are defined externally in browser-matrix-storage-tests.js
+                if (typeof defineStorageMatrixTests === 'function') {
+                    defineStorageMatrixTests();
+                    await TestRunner.run({ suite: 'Storage Matrix Integration (Browser)' });
+                } else {
+                    TestRunner.log('Error: Storage tests not loaded correctly', 'fail');
+                }
             });
 
             // Clear output
