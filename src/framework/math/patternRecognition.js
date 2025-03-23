@@ -108,10 +108,14 @@ class FiberAlgebraPatternRecognition {
         });
       } else {
         // Create a simplified fiber structure as fallback
+        // Limit array size to avoid "Invalid array length" error with high dimensions
+        const maxArraySize = 1000000; // Safe maximum array size
+        const safeSize = Math.min(maxArraySize, Math.pow(2, Math.min(20, this.dimension)));
+        
         fibers[i] = {
           position: this.manifold[i],
           dimension: this.dimension,
-          state: new Array(Math.pow(2, this.dimension)).fill(0),
+          state: new Array(safeSize).fill(0),
           patterns: [],
         };
       }
@@ -128,8 +132,11 @@ class FiberAlgebraPatternRecognition {
    * @returns {Array} List of Lie group generators
    */
   _createLieGenerators() {
-    // Number of basis elements in the full Clifford algebra
-    const nBasis = Math.pow(2, this.dimension);
+    // Number of basis elements in the full Clifford algebra - with safety limit
+    // Use a safe limit for basis size to avoid memory issues with extreme dimensions
+    const maxSafeDimension = 10; // Limit dimensions to avoid overflow
+    const maxBasisSize = 1000; // Safe maximum array size
+    const nBasis = Math.min(maxBasisSize, Math.pow(2, Math.min(maxSafeDimension, this.dimension)));
 
     // Create antisymmetric matrices as Lie algebra generators
     const generators = [];
@@ -137,10 +144,12 @@ class FiberAlgebraPatternRecognition {
     // Create simple rotation generators (antisymmetric matrices)
     for (let i = 0; i < Math.min(10, nBasis); i++) {
       for (let j = 0; j < i; j++) {
-        // Create a rotation in the i-j plane
-        const generator = Array(nBasis)
+        // Create a rotation in the i-j plane - use smaller dimension for extreme cases
+        const safeSize = Math.min(100, nBasis);
+        const generator = Array(safeSize)
           .fill()
-          .map(() => Array(nBasis).fill(0));
+          .map(() => Array(safeSize).fill(0));
+        
         generator[i][j] = 1.0;
         generator[j][i] = -1.0;
         generators.push(generator);
@@ -171,13 +180,31 @@ class FiberAlgebraPatternRecognition {
     // Apply the transformation exp(amount * generator) to the state
     // For small amounts, approximate exp(tG) ≈ I + tG
     const nBasis = state.length;
+    
+    // Ensure generator dimensions are compatible with state
+    // Check if generator is null or undefined
+    if (!generator) {
+      // Return a copy of the original state if the generator is invalid
+      return state.slice();
+    }
+    
+    // Get safe dimensions
+    const safeGenRows = generator.length || 0;
+    const safeGenCols = safeGenRows > 0 && Array.isArray(generator[0]) ? generator[0].length : 0;
+    
+    // Use the minimum of these dimensions to avoid accessing undefined elements
+    const safeDim = Math.min(nBasis, safeGenRows, safeGenCols);
+    
+    // Create identity matrix + scaled generator for transformation
     const transformation = Array(nBasis)
       .fill()
       .map((_, i) => {
         return Array(nBasis)
           .fill()
           .map((_, j) => {
-            return (i === j ? 1 : 0) + amount * generator[i][j];
+            // Only access generator elements if within safe bounds
+            const generatorValue = (i < safeDim && j < safeDim) ? generator[i][j] : 0;
+            return (i === j ? 1 : 0) + amount * (generatorValue || 0);
           });
       });
 
@@ -251,8 +278,10 @@ class FiberAlgebraPatternRecognition {
     for (const idx in this.fibers) {
       const fiber = this.fibers[idx];
 
-      // Initialize state with zeros
-      const nBasis = Math.pow(2, this.dimension);
+      // Initialize state with zeros - with safety limit for extreme dimensions
+      const maxSafeDimension = 10; // Limit dimensions to avoid overflow
+      const maxBasisSize = 1000000; // Safe maximum array size
+      const nBasis = Math.min(maxBasisSize, Math.pow(2, Math.min(maxSafeDimension, this.dimension)));
       const state = new Array(nBasis).fill(0);
 
       // Embed data into the vector part (grade-1) of the algebra
@@ -497,6 +526,105 @@ class FiberAlgebraPatternRecognition {
   }
 
   /**
+   * Extract features from a pattern for advanced analysis
+   *
+   * @param {Object} pattern - Pattern object from findPatterns
+   * @param {Array} data - Original data used to create the pattern
+   * @returns {Array} Array of extracted feature objects with weights and indices
+   */
+  extractPatternFeatures(pattern, data) {
+    if (!pattern || !pattern.states) {
+      return [];
+    }
+    
+    // Validate inputs
+    if (!Array.isArray(data)) {
+      data = [];
+    }
+    
+    // Extract dimensions from data
+    const numFeatures = data.length > 0 && Array.isArray(data[0]) ? data[0].length : 0;
+    
+    // Get pattern states across fibers
+    const states = Object.values(pattern.states);
+    if (states.length === 0) {
+      return [];
+    }
+    
+    // Average state across fibers
+    const avgState = new Array(states[0].length).fill(0);
+    for (const state of states) {
+      for (let i = 0; i < state.length; i++) {
+        avgState[i] += state[i] / states.length;
+      }
+    }
+    
+    // Find top dimensions by magnitude
+    const dimensions = avgState
+      .map((val, idx) => ({ value: Math.abs(val), index: idx }))
+      .filter(item => Number.isFinite(item.value) && item.value > 0)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 20); // Limit to top 20 dimensions
+    
+    // Analyze each dimension for patterns in original data
+    const features = [];
+    
+    for (const dim of dimensions) {
+      // Skip scalar component (index 0)
+      if (dim.index === 0) continue;
+      
+      // For grade-1 components (vector basis), map to original data features
+      if (dim.index > 0 && dim.index <= numFeatures) {
+        const dataIndex = dim.index - 1; // Index in original data (0-based)
+        
+        // Calculate the relevance of this feature across data samples
+        let relevance = 0;
+        if (data.length > 0) {
+          for (const sample of data) {
+            if (Array.isArray(sample) && dataIndex < sample.length) {
+              relevance += Math.abs(sample[dataIndex]);
+            }
+          }
+          relevance /= data.length;
+        }
+        
+        features.push({
+          indices: [dataIndex],
+          weight: dim.value * (1 + relevance),
+          type: 'direct',
+          sign: Math.sign(avgState[dim.index])
+        });
+      } 
+      // For higher grade components, map to combinations of features
+      else if (dim.index > numFeatures) {
+        // Convert basis index to binary to identify which original features are involved
+        // For bivectors (grade 2), two bits will be set in the binary representation
+        // This is a simplification - a proper implementation would use the basis structure
+        const binaryRep = (dim.index >>> 0).toString(2).padStart(numFeatures + 1, '0');
+        const involvedIndices = [];
+        
+        for (let i = 0; i < binaryRep.length; i++) {
+          if (binaryRep[i] === '1') {
+            involvedIndices.push(binaryRep.length - 1 - i);
+          }
+        }
+        
+        if (involvedIndices.length > 0) {
+          features.push({
+            indices: involvedIndices,
+            weight: dim.value,
+            type: 'composite',
+            sign: Math.sign(avgState[dim.index])
+          });
+        }
+      }
+    }
+    
+    // Sort by weight and return
+    return features.sort((a, b) => b.weight - a.weight);
+  }
+  
+  /**
    * Extract feature vectors from identified patterns
    *
    * @param {Array} patterns - List of patterns from findPatterns
@@ -692,6 +820,81 @@ class FiberAlgebraPatternRecognition {
       labels,
       nPatternsFound: patterns.length,
     };
+  }
+
+  /**
+   * Create a new fiber at the specified manifold position
+   * 
+   * @param {Array} position - Position in the reference manifold
+   * @returns {Object} A new fiber object at the specified position
+   */
+  createFiber(position) {
+    const CliffordAlgebraFiber = coherenceModule.CliffordAlgebraFiber;
+    
+    if (CliffordAlgebraFiber) {
+      // Use the CliffordAlgebraFiber class if available
+      const fiber = new CliffordAlgebraFiber({
+        dimension: this.dimension,
+        position: position,
+      });
+      
+      // Initialize the state
+      const maxSafeDimension = 10;
+      const maxBasisSize = 1000000; 
+      const nBasis = Math.min(maxBasisSize, Math.pow(2, Math.min(maxSafeDimension, this.dimension)));
+      const initialState = new Array(nBasis).fill(0);
+      
+      // Set initial values in the first few positions
+      for (let i = 0; i < Math.min(position.length, initialState.length); i++) {
+        initialState[i] = position[i];
+      }
+      
+      fiber.setState(initialState);
+      return fiber;
+    } else {
+      // Create a simplified fiber structure as fallback
+      // Limit array size to avoid "Invalid array length" error with high dimensions
+      const maxArraySize = 1000000; // Safe maximum array size
+      const safeSize = Math.min(maxArraySize, Math.pow(2, Math.min(10, this.dimension)));
+      const state = new Array(safeSize).fill(0);
+      
+      // Add inner product implementation to the simplified fiber
+      return {
+        position: position,
+        dimension: this.dimension,
+        state: state,
+        patterns: [],
+        
+        // Add simplified implementation of the fiber interface
+        innerProduct: function(otherState) {
+          const minLength = Math.min(this.state.length, otherState.length);
+          let result = 0;
+          
+          // Simple dot product for simplified fiber
+          for (let i = 0; i < minLength; i++) {
+            result += this.state[i] * otherState[i];
+          }
+          
+          return result;
+        },
+        
+        computeNorm: function() {
+          // Compute Euclidean norm
+          let sum = 0;
+          for (let i = 0; i < this.state.length; i++) {
+            sum += this.state[i] * this.state[i];
+          }
+          return Math.sqrt(sum);
+        },
+        
+        updateState: function(newState) {
+          const minLength = Math.min(this.state.length, newState.length);
+          for (let i = 0; i < minLength; i++) {
+            this.state[i] = newState[i];
+          }
+        }
+      };
+    }
   }
 }
 

@@ -41,6 +41,9 @@ require('../framework/index.js');
       config.invariant = {};
     }
 
+    // Log the createComponent call for debugging
+    Prime.Logger.debug('Creating component', { name: config.meta.name });
+
     // Create a coherence-aware component
     const component = {
       // Meta: contextual information and metadata
@@ -106,6 +109,11 @@ require('../framework/index.js');
             // Component is now initialized - set both flags for compatibility
             component.meta.initialized = true;
             component._initialized = true;
+            
+            // Ensure events array exists
+            if (!component._events) {
+              component._events = [];
+            }
 
             // Add default _events array if not already present
             if (!component._events) {
@@ -569,7 +577,7 @@ require('../framework/index.js');
         }
 
         // If no constraints, delegate to coherence system
-        if (Prime.coherence) {
+        if (Prime.coherence && Prime.coherence.norm) {
           return Prime.coherence.norm(this.variant);
         }
 
@@ -646,10 +654,46 @@ require('../framework/index.js');
     ) {
       component.invariant.init.call(component);
       component._initialized = true;
+      component.meta.initialized = true;
     } else {
       // If initialize method exists, call it for compatibility
       component.lifecycle.initialize();
+      // Ensure both initialization flags are set to true
       component._initialized = true;
+      component.meta.initialized = true;
+    }
+
+    // Ensure component has coherenceNorm method - critical for tests
+    if (typeof component.coherenceNorm !== 'function') {
+      Prime.Logger.warn(`Component ${component.meta.id} missing coherenceNorm method, adding it now`);
+      
+      // Add the coherenceNorm method directly
+      component.coherenceNorm = function() {
+        // If there are constraints, calculate coherence based on them
+        if (
+          this.invariant.constraints &&
+          this.invariant.constraints.length > 0
+        ) {
+          let normSquared = 0;
+
+          for (const constraint of this.invariant.constraints) {
+            if (!constraint.check(this.variant)) {
+              const weight = constraint.weight || 1;
+              normSquared += weight * weight;
+            }
+          }
+
+          return Math.sqrt(normSquared);
+        }
+
+        // If no constraints, delegate to coherence system
+        if (Prime.coherence && Prime.coherence.norm) {
+          return Prime.coherence.norm(this.variant);
+        }
+
+        // Default to 0 (perfectly coherent)
+        return 0;
+      };
     }
 
     return component;

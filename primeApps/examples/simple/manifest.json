@@ -1,0 +1,43 @@
+{
+  "name": "simple-example",
+  "displayName": "Simple Example App",
+  "version": "1.0.0",
+  "primeOS": {
+    "version": ">=1.0.0",
+    "apiVersion": "1"
+  },
+  "entry": "./app/index.js",
+  "description": "A simple example PrimeApp",
+  "author": "PrimeOS Team",
+  "license": "MIT",
+  "dependencies": {},
+  "resources": {
+    "storage": {
+      "persistent": "1MB",
+      "temporary": "5MB"
+    },
+    "compute": {
+      "priority": "normal",
+      "background": true
+    },
+    "memory": {
+      "max": "20MB"
+    }
+  },
+  "permissions": [
+    "storage"
+  ],
+  "interfaces": {
+    "provides": ["example-interface"],
+    "consumes": []
+  },
+  "coherence": {
+    "boundaries": "./coherence/boundaries.json",
+    "validators": "./coherence/validators.js",
+    "resolvers": "./coherence/resolvers.js",
+    "minThreshold": 0.7
+  },
+  "schemas": {
+    "registry": "./schema/index.js"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "internal": {
+    "modules": ["messageProcessor"],
+    "threshold": 0.85
+  },
+  "external": {
+    "inputs": {
+      "message": {
+        "type": "string",
+        "validators": ["messageValidator"]
+      }
+    },
+    "outputs": {
+      "processedMessage": {
+        "type": "messageResult",
+        "coherence": {
+          "preserves": ["message.content"],
+          "enhances": ["message.format"]
+        }
+      }
+    }
+  }
+}

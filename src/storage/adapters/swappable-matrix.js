@@ -4,7 +4,7 @@
  */
 
 const Prime = require('../../core');
-const { PrimeStorageError } = require('../core/provider');
+const { StorageError } = require('../index');
 
 /**
  * Matrix implementation that keeps part of the data in memory
@@ -22,9 +22,25 @@ class SwappableMatrix {
     this.storageManager = storageManager;
     this.id = id;
     
-    // Get matrix dimensions
-    this.rows = matrix.rows;
-    this.columns = matrix.columns;
+    // Get matrix dimensions - handle different matrix types
+    if (matrix.rows && matrix.columns) {
+      // Object with rows/columns properties
+      this.rows = matrix.rows;
+      this.columns = matrix.columns;
+    } else if (matrix.getRows && matrix.getColumns) {
+      // Matrix with getter methods
+      this.rows = matrix.getRows();
+      this.columns = matrix.getColumns();
+    } else if (Prime.Math.Matrix.isMatrix(matrix)) {
+      // Standard Matrix
+      const dimensions = Prime.Math.Matrix.dimensions(matrix);
+      this.rows = dimensions.rows;
+      this.columns = dimensions.cols || dimensions.columns;
+    } else {
+      // Handle array-like matrix
+      this.rows = matrix.length;
+      this.columns = matrix[0] ? matrix[0].length : 0;
+    }
     
     this.options = {
       blockSize: options.blockSize || 100,
@@ -42,15 +58,29 @@ class SwappableMatrix {
     this.blockCache = new Map();
     this.accessOrder = []; // For LRU eviction
     
-    // If matrix is small enough, store entire data in memory
-    if (this.rows * this.columns <= this.options.blockSize * this.options.maxCachedBlocks) {
-      this.fullMatrix = matrix;
-    } else {
-      this.fullMatrix = null;
+    // Initialize - we'll split and store blocks after construction
+    this.fullMatrix = this.rows * this.columns <= this.options.blockSize * this.options.maxCachedBlocks ? 
+      matrix : null;
       
-      // Split the matrix into blocks and store them
-      this._splitAndStoreBlocks(matrix);
+    // This property tracks whether we've split and stored the matrix
+    this.initialized = false;
+  }
+  
+  /**
+   * Ensures the matrix is initialized
+   * @private
+   */
+  async _ensureInitialized() {
+    if (this.initialized) {
+      return;
     }
+    
+    if (!this.fullMatrix) {
+      // Split and store the matrix
+      await this._splitAndStoreBlocks(this.originalMatrix);
+    }
+    
+    this.initialized = true;
   }
 
   /**
@@ -100,7 +130,14 @@ class SwappableMatrix {
     for (let i = 0; i < blockRows; i++) {
       blockData[i] = new Array(blockCols);
       for (let j = 0; j < blockCols; j++) {
-        blockData[i][j] = matrix.get(startRow + i, startCol + j);
+        // Handle different matrix types for get operation
+        if (typeof matrix.get === 'function') {
+          blockData[i][j] = matrix.get(startRow + i, startCol + j);
+        } else if (Array.isArray(matrix) && Array.isArray(matrix[startRow + i])) {
+          blockData[i][j] = matrix[startRow + i][startCol + j];
+        } else {
+          throw new StorageError('Unsupported matrix format', { matrixType: typeof matrix });
+        }
       }
     }
     
@@ -226,9 +263,19 @@ class SwappableMatrix {
   async get(row, col) {
     this._validateIndices(row, col);
     
+    // Ensure initialization
+    await this._ensureInitialized();
+    
     // If we have the full matrix in memory, use it directly
     if (this.fullMatrix) {
-      return this.fullMatrix.get(row, col);
+      // Handle different matrix types for get operation
+      if (typeof this.fullMatrix.get === 'function') {
+        return this.fullMatrix.get(row, col);
+      } else if (Array.isArray(this.fullMatrix) && Array.isArray(this.fullMatrix[row])) {
+        return this.fullMatrix[row][col];
+      } else {
+        throw new StorageError('Unsupported matrix format', { matrixType: typeof this.fullMatrix });
+      }
     }
     
     // Get block indices
@@ -250,9 +297,19 @@ class SwappableMatrix {
   async set(row, col, value) {
     this._validateIndices(row, col);
     
+    // Ensure initialization
+    await this._ensureInitialized();
+    
     // If we have the full matrix in memory, update it directly
     if (this.fullMatrix) {
-      this.fullMatrix.set(row, col, value);
+      // Handle different matrix types for set operation
+      if (typeof this.fullMatrix.set === 'function') {
+        this.fullMatrix.set(row, col, value);
+      } else if (Array.isArray(this.fullMatrix) && Array.isArray(this.fullMatrix[row])) {
+        this.fullMatrix[row][col] = value;
+      } else {
+        throw new StorageError('Unsupported matrix format for set operation', { matrixType: typeof this.fullMatrix });
+      }
       
       // Update storage
       await this.storageManager.store(this.fullMatrix, this.id);
@@ -280,7 +337,7 @@ class SwappableMatrix {
    */
   _validateIndices(row, col) {
     if (row < 0 || row >= this.rows || col < 0 || col >= this.columns) {
-      throw new PrimeStorageError(
+      throw new StorageError(
         `Invalid matrix indices: (${row}, ${col})`,
         { row, col, rows: this.rows, columns: this.columns },
         'STORAGE_INVALID_INDICES'
@@ -293,10 +350,32 @@ class SwappableMatrix {
    * @returns {Promise<number>} Matrix trace
    */
   async trace() {
+    // Ensure initialization
+    await this._ensureInitialized();
+    
     if (this.fullMatrix) {
-      return Promise.resolve(this.fullMatrix.trace());
+      // If the matrix has a trace method, use it
+      if (typeof this.fullMatrix.trace === 'function') {
+        return Promise.resolve(this.fullMatrix.trace());
+      }
+      
+      // Otherwise compute manually from the full matrix
+      let sum = 0;
+      const minDim = Math.min(this.rows, this.columns);
+      
+      for (let i = 0; i < minDim; i++) {
+        // Get diagonal elements
+        if (typeof this.fullMatrix.get === 'function') {
+          sum += this.fullMatrix.get(i, i);
+        } else if (Array.isArray(this.fullMatrix) && Array.isArray(this.fullMatrix[i])) {
+          sum += this.fullMatrix[i][i];
+        }
+      }
+      
+      return sum;
     }
     
+    // Compute from blocks
     let sum = 0;
     const minDim = Math.min(this.rows, this.columns);
     
@@ -312,6 +391,9 @@ class SwappableMatrix {
    * @returns {Promise<Object>} Matrix object
    */
   async toMatrix() {
+    // Ensure initialization
+    await this._ensureInitialized();
+    
     if (this.fullMatrix) {
       // Convert the fullMatrix to a Prime.Math.Matrix if it's not already
       if (this.fullMatrix.data && Prime.Math.Matrix.isMatrix(this.fullMatrix.data)) {
@@ -324,7 +406,11 @@ class SwappableMatrix {
         
         for (let i = 0; i < this.rows; i++) {
           for (let j = 0; j < this.columns; j++) {
-            matrix[i][j] = this.fullMatrix.get(i, j);
+            if (typeof this.fullMatrix.get === 'function') {
+              matrix[i][j] = this.fullMatrix.get(i, j);
+            } else if (Array.isArray(this.fullMatrix) && Array.isArray(this.fullMatrix[i])) {
+              matrix[i][j] = this.fullMatrix[i][j];
+            }
           }
         }
         
@@ -356,12 +442,15 @@ class SwappableMatrix {
   async submatrix(startRow, startCol, endRow, endCol) {
     // Validate indices
     if (startRow < 0 || startCol < 0 || endRow > this.rows || endCol > this.columns) {
-      throw new PrimeStorageError(
+      throw new StorageError(
         'Invalid submatrix indices',
         { startRow, startCol, endRow, endCol, rows: this.rows, columns: this.columns },
         'STORAGE_INVALID_INDICES'
       );
     }
+    
+    // Ensure initialization
+    await this._ensureInitialized();
     
     const rows = endRow - startRow;
     const cols = endCol - startCol;
@@ -385,6 +474,9 @@ class SwappableMatrix {
    * @returns {Promise<Object>} Result matrix
    */
   async multiply(other) {
+    // Ensure initialization
+    await this._ensureInitialized();
+    
     // Handle different matrix types
     let otherRows, otherCols;
     
@@ -396,7 +488,7 @@ class SwappableMatrix {
       // Standard Prime.Math.Matrix
       const dimensions = Prime.Math.Matrix.dimensions(other);
       otherRows = dimensions.rows;
-      otherCols = dimensions.cols;
+      otherCols = dimensions.cols || dimensions.columns;
     } else if (other.rows && other.columns) {
       // Object with rows/columns properties
       otherRows = other.rows;
@@ -409,7 +501,7 @@ class SwappableMatrix {
     
     // Validate dimensions
     if (this.columns !== otherRows) {
-      throw new PrimeStorageError(
+      throw new StorageError(
         'Invalid matrix dimensions for multiplication',
         { thisColumns: this.columns, otherRows: otherRows },
         'STORAGE_INVALID_DIMENSIONS'
@@ -425,6 +517,14 @@ class SwappableMatrix {
     
     // If other is a SwappableMatrix or has a get method, use it
     const isSwappable = other.get && typeof other.get === 'function';
+    
+    // For performance, if both matrices are fully in memory, use direct multiplication
+    if (this.fullMatrix && !isSwappable) {
+      // Use Prime.Math.Matrix operations if available
+      if (this.fullMatrix.multiply && typeof this.fullMatrix.multiply === 'function') {
+        return this.fullMatrix.multiply(other);
+      }
+    }
     
     // Multiply matrices
     for (let i = 0; i < resultRows; i++) {

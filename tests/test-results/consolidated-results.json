@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-03-23T14:03:31.909Z",
+  "summary": {
+    "passed": 0,
+    "failed": 1,
+    "pending": 0,
+    "total": 0,
+    "allPassed": false
+  },
+  "testTypes": [
+    {
+      "type": "Unit Tests",
+      "passed": 0,
+      "failed": 1,
+      "pending": 0,
+      "total": 0,
+      "error": "Command failed: node --max-old-space-size=4096 ./node_modules/.bin/jest --config build/jest.config.js --testMatch=\"tests/unit/**/*.test.js\" --testTimeout=60000 --maxWorkers=4 --json\nNo tests found, exiting with code 1\nRun with `--passWithNoTests` to exit with code 0\nIn /workspaces/PrimeOS\n  257 files checked.\n  testMatch: tests/unit/**/*.test.js - 0 matches\n  testPathIgnorePatterns: /node_modules/, tests/primeApps/ - 257 matches\n  testRegex:  - 0 matches\nPattern:  - 0 matches\n"
+    }
+  ]
+}

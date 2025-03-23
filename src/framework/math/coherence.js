@@ -180,6 +180,57 @@ class CliffordAlgebraFiber {
 
     return Math.sqrt(Math.max(0, norm)); // Ensure non-negative
   }
+  
+  /**
+   * Compute the norm of the current state
+   *
+   * @returns {number} Norm value
+   */
+  computeNorm() {
+    return this.calculateNorm(this.state);
+  }
+  
+  /**
+   * Calculate the inner product between the current state and another state
+   *
+   * @param {Array} otherState - Another state vector
+   * @returns {number} Inner product value
+   */
+  innerProduct(otherState) {
+    if (!this.state || !otherState) return 0;
+    
+    let result = 0;
+    const minLength = Math.min(this.state.length, otherState.length);
+    
+    for (let i = 0; i < minLength; i++) {
+      for (let j = 0; j < minLength; j++) {
+        if (i < this.innerProductMetric.length && j < this.innerProductMetric[i].length) {
+          result += this.state[i] * this.innerProductMetric[i][j] * otherState[j];
+        }
+      }
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Update the current state with new values
+   *
+   * @param {Array} newState - New state values
+   */
+  updateState(newState) {
+    if (!Array.isArray(newState)) {
+      throw new Error('New state must be an array');
+    }
+    
+    // Copy values, limiting to valid dimensions
+    this.state = this.state || new Array(this.basis.length).fill(0);
+    
+    const minLength = Math.min(this.state.length, newState.length);
+    for (let i = 0; i < minLength; i++) {
+      this.state[i] = newState[i];
+    }
+  }
 
   /**
    * Store a detected pattern

@@ -1,90 +1,102 @@
-# PrimeOS Consciousness Module Tests
+# PrimeOS Tests
 
-## Overview
+This directory contains tests for the PrimeOS codebase. The tests are organized by type and component, following a standardized structure to improve maintainability and clarity.
 
-This directory contains tests for the PrimeOS Consciousness Module, which implements a coherence-based consciousness simulation. The implementation is based on mathematical principles of coherence and includes components for memory, decision-making, threshold management, and state representation.
+## Test Organization
 
-## Test Structure
+The tests are organized into the following categories:
 
-The tests are organized as follows:
+- **Unit Tests**: Test individual components in isolation (`tests/unit/`)
+- **Integration Tests**: Test interactions between components (`tests/integration/`)
+- **Extreme Condition Tests**: Test behavior under extreme numerical conditions (`tests/extreme/`)
+- **Performance Tests**: Test performance characteristics (`tests/performance/`)
 
-1. **Basic Component Tests** (`/workspaces/PrimeOS/test-consciousness.js`)
-   - Simple tests for individual components (MemoryStructure, DecisionMaking, ThresholdManager)
-   - Verifies each component can be instantiated and its basic methods work
-
-2. **Integration Tests** (`/workspaces/PrimeOS/tests/consciousness-integration-tests.js`)
-   - Comprehensive tests for all components working together
-   - Verifies the full functionality of each component
-   - Tests the ConsciousnessModule as an integration of all components
-
-3. **Neural Integration Tests** (`/workspaces/PrimeOS/tests/consciousness-tests.js`)
-   - Tests integration with the neural network framework
-   - Verifies coherence manifold operations
-   - Tests neural-consciousness interactions
+Each category is further organized by the component or subsystem being tested.
 
 ## Running Tests
 
-To run all tests, use the test runner script:
+Use the provided npm scripts to run tests:
 
 ```bash
-node run-consciousness-tests.js
+# Run all tests
+npm test:all
+
+# Run all unit tests
+npm test:unit
+
+# Run specific unit tests
+npm test:unit:core
+npm test:unit:math
+npm test:unit:components
+# etc.
+
+# Run integration tests
+npm test:integration
+
+# Run extreme condition tests
+npm test:extreme
+
+# Run performance tests
+npm test:performance
 ```
 
-This will run all tests and provide a summary of results.
+## Test Utilities
 
-To run individual test suites:
+Common test utilities are provided in the `tests/utils/` directory:
+
+- **Assertions**: Common assertion helpers in `assertions.js`
+- **Mocking**: Standardized mocking utilities in `mocking.js`
+- **Setup**: Shared setup/teardown utilities in `setup.js`
+- **Environments**: Environment handling utilities in `environments.js`
+
+## Writing New Tests
+
+When writing new tests, follow these guidelines:
+
+1. Create test files in the appropriate directory based on what you're testing
+2. Use the `.test.js` extension for all test files (e.g., `vector.test.js`)
+3. Import utilities from `tests/utils` to maintain consistency
+4. Use the provided templates as a starting point
+
+Example:
+
+```javascript
+/**
+ * PrimeOS Unit Tests - [Component]
+ * 
+ * Tests for the [Component] functionality.
+ */
+
+const Prime = require('../../../src/[path].js');
+const { Assertions, Mocking } = require('../../utils');
+
+describe('[Component Name]', () => {
+  // Tests go here
+});
+```
+
+## Test Matrix
+
+A comprehensive test matrix documenting the coverage of all components can be found in `tests/matrix.md`. This matrix provides an overview of what's tested and where coverage gaps exist.
+
+## Extreme Condition Testing
+
+Extreme condition tests require special treatment due to their resource intensity. These tests use a dedicated test runner (`tests/runners/run-extreme.js`) that runs tests in batches with memory management.
+
+To run a specific extreme test batch:
 
 ```bash
-# Basic component tests
-node test-consciousness.js
-
-# Integration tests
-node tests/consciousness-integration-tests.js
-
-# Neural integration tests
-node tests/consciousness-tests.js
+npm run test:extreme:math
+npm run test:extreme:neural
+# etc.
 ```
 
-## Test Coverage
+## Refactoring Plan
 
-The tests cover:
+A detailed plan for the ongoing test refactoring can be found in `tests/tests-refactor-plan.md`. This document outlines the current status, goals, and tasks for improving the test suite.
 
-- **MemoryStructure**
-  - Memory storage and retrieval
-  - Memory indexing by coherence patterns
-  - Memory consolidation
+## Test Refactoring Completion
 
-- **DecisionMaking**
-  - Fast and deliberative decision modes
-  - Multi-perspective evaluation
-  - Decision outcome tracking
+All tests have been migrated to the new structure and organized according to test type and component. The old test files have been removed, and the test suite now follows a consistent, maintainable structure.
 
-- **ThresholdManager**
-  - Adaptive threshold management
-  - Arousal level modeling
-  - Consciousness level determination
-
-- **ConsciousnessModule**
-  - Component integration
-  - State updating
-  - Event-based communication
-  - API functions (decision making, memory retrieval, etc.)
-
-## Further Improvements
-
-Potential areas for improved test coverage:
-
-1. Performance testing under high load
-2. Edge case testing with extreme state values
-3. Long-duration running tests for stability
-4. Test visualization of consciousness states
-5. Integration tests with distributed systems
-
-## Development Notes
-
-When extending or modifying the consciousness module, make sure to:
-
-1. Update the relevant tests to reflect changes
-2. Run the full test suite to ensure all integration points work
-3. Add new tests for any new functionality
-4. Update this README if the test structure changes
+For historical reference, a mapping of the old test files to their replacements can be found in `tests/DEPRECATED-TESTS.md`.

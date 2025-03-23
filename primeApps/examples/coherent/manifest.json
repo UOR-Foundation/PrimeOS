@@ -1,0 +1,69 @@
+{
+  "name": "coherent-example",
+  "version": "1.0.0",
+  "displayName": "Coherent Example App",
+  "description": "Example app demonstrating coherence boundaries and enforcement",
+  "author": "PrimeOS Team",
+  "license": "MIT",
+  "entry": "./app/index.js",
+  "resources": {
+    "storage": {
+      "persistent": "1MB",
+      "temporary": "5MB"
+    },
+    "compute": {
+      "priority": "normal",
+      "background": true,
+      "concurrency": 3
+    },
+    "memory": {
+      "max": "20MB",
+      "swappable": true
+    }
+  },
+  "permissions": [
+    "storage",
+    "compute",
+    "memory"
+  ],
+  "interfaces": {
+    "provides": ["coherenceTest", "boundaryDemo"],
+    "consumes": []
+  },
+  "coherence": {
+    "minThreshold": 0.7,
+    "boundaries": {
+      "resource": {
+        "memory": {
+          "type": "hard",
+          "threshold": 0.8,
+          "description": "Memory usage boundary"
+        },
+        "compute": {
+          "type": "soft",
+          "threshold": 0.7,
+          "description": "Compute utilization boundary"
+        }
+      },
+      "numerical": {
+        "precision": {
+          "type": "soft",
+          "threshold": 0.95,
+          "description": "Numerical precision boundary"
+        },
+        "finiteness": {
+          "type": "hard",
+          "threshold": 1.0,
+          "description": "Numerical finiteness boundary"
+        }
+      },
+      "logical": {
+        "consistency": {
+          "type": "hard",
+          "threshold": 0.9,
+          "description": "Logical consistency boundary"
+        }
+      }
+    }
+  }
+}

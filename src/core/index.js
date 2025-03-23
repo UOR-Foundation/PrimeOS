@@ -11,5 +11,8 @@ require('./version');
 require('./event-bus');
 require('./logger');
 
+// Import additional modules
+require('../storage');
+
 // Export the fully configured Prime object
 module.exports = Prime;

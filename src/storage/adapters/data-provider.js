@@ -4,7 +4,7 @@
  */
 
 const Prime = require('../../core');
-const { PrimeStorageError } = require('../core/provider');
+const { StorageError } = require('../index');
 
 /**
  * Data provider for training neural models
@@ -25,7 +25,7 @@ class DataProvider {
     };
     
     if (!this.options.inputId) {
-      throw new PrimeStorageError(
+      throw new StorageError(
         'Input ID is required',
         { options },
         'STORAGE_MISSING_INPUT_ID'
@@ -53,7 +53,7 @@ class DataProvider {
       const inputData = await this.storageManager.load(this.options.inputId);
       
       if (!Array.isArray(inputData)) {
-        throw new PrimeStorageError(
+        throw new StorageError(
           'Input data is not an array',
           { id: this.options.inputId },
           'STORAGE_NOT_ARRAY'
@@ -68,7 +68,7 @@ class DataProvider {
         const outputData = await this.storageManager.load(this.options.outputId);
         
         if (!Array.isArray(outputData)) {
-          throw new PrimeStorageError(
+          throw new StorageError(
             'Output data is not an array',
             { id: this.options.outputId },
             'STORAGE_NOT_ARRAY'
@@ -76,7 +76,7 @@ class DataProvider {
         }
         
         if (outputData.length !== this.dataSize) {
-          throw new PrimeStorageError(
+          throw new StorageError(
             'Input and output data sizes do not match',
             { inputSize: this.dataSize, outputSize: outputData.length },
             'STORAGE_SIZE_MISMATCH'
@@ -91,7 +91,7 @@ class DataProvider {
       
       this.initialized = true;
     } catch (error) {
-      throw new PrimeStorageError(
+      throw new StorageError(
         `Failed to initialize data provider: ${error.message}`,
         { originalError: error },
         'STORAGE_PROVIDER_INIT_FAILED',
@@ -182,7 +182,7 @@ class DataProvider {
         totalBatches: this.totalBatches
       };
     } catch (error) {
-      throw new PrimeStorageError(
+      throw new StorageError(
         `Failed to get next batch: ${error.message}`,
         { batch: this.currentBatch, originalError: error },
         'STORAGE_BATCH_FAILED',
