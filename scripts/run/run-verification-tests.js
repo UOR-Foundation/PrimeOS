@@ -12,7 +12,7 @@
  * computing systems cannot address effectively.
  */
 
-const { runAllTests } = require('./tests/prime-os-verification-tests');
+const { runAllTests } = require('../../tests/prime-os-verification-tests');
 const { performance } = require('perf_hooks');
 
 // Parse command line arguments
@@ -118,18 +118,21 @@ runAllTests().then(success => {
         success: true,
         timestamp: new Date().toISOString(),
         duration: duration,
-        results: testResults.details,
-        summary: {
+        results: testResults ? testResults.details : {},
+        summary: testResults ? {
           passed: testResults.passed,
           failed: testResults.failed,
           skipped: testResults.skipped,
           totalTime: testResults.totalTime
-        }
+        } : {}
       };
       
       fs.writeFileSync(options.outputPath, JSON.stringify(report, null, 2));
       console.log(`\nTest report written to ${options.outputPath}`);
     }
+    
+    // Ensure the process exits properly
+    setTimeout(() => process.exit(0), 100);
   } else {
     console.log('\n❌ VERIFICATION INCOMPLETE: Some tests did not pass');
     
@@ -140,13 +143,13 @@ runAllTests().then(success => {
         success: false,
         timestamp: new Date().toISOString(),
         duration: duration,
-        results: testResults.details,
-        summary: {
+        results: testResults ? testResults.details : {},
+        summary: testResults ? {
           passed: testResults.passed,
           failed: testResults.failed,
           skipped: testResults.skipped,
           totalTime: testResults.totalTime
-        }
+        } : {}
       };
       
       fs.writeFileSync(options.outputPath, JSON.stringify(report, null, 2));

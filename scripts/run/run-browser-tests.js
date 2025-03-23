@@ -7,7 +7,7 @@ const path = require('path');
 async function startServer() {
   const server = http.createServer((req, res) => {
     if (req.url === '/') {
-      fs.readFile(path.join(__dirname, 'test.html'), (err, data) => {
+      fs.readFile(path.join(__dirname, '../../test.html'), (err, data) => {
         if (err) {
           res.writeHead(500);
           res.end('Error loading test.html');
@@ -17,7 +17,7 @@ async function startServer() {
         res.end(data);
       });
     } else if (req.url === '/dist/primeos.js') {
-      fs.readFile(path.join(__dirname, 'dist/primeos.js'), (err, data) => {
+      fs.readFile(path.join(__dirname, '../../dist/primeos.js'), (err, data) => {
         if (err) {
           res.writeHead(500);
           res.end('Error loading primeos.js');
