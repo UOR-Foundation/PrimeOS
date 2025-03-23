@@ -3,14 +3,8 @@
  * Enhanced with numerical stability improvements and precision controls
  */
 
-// Import core if available
-let Prime;
-try {
-  Prime = require('../../core.js');
-} catch (e) {
-  // Handle case where core isn't available yet
-  Prime = {};
-}
+// Import Prime directly from core/prime
+const Prime = require('../../core/prime.js');
 
 /**
  * Constants for numerical operations
@@ -1487,41 +1481,66 @@ const integration = {
   },
 };
 
-// Import additional math modules if available
-let patternRecognition;
+// Import additional math modules with proper validation
+let patternRecognition = {};
 try {
   patternRecognition = require('./patternRecognition.js');
+  if (!patternRecognition) {
+    Prime.Logger && Prime.Logger.warn('Pattern recognition module loaded but returned empty object');
+    patternRecognition = {};
+  }
 } catch (e) {
+  Prime.Logger && Prime.Logger.warn('Failed to load pattern recognition module:', e.message);
   patternRecognition = {};
 }
 
-let spectral;
+let spectral = {};
 try {
   spectral = require('./spectral.js');
+  if (!spectral) {
+    Prime.Logger && Prime.Logger.warn('Spectral module loaded but returned empty object');
+    spectral = {};
+  }
 } catch (e) {
+  Prime.Logger && Prime.Logger.warn('Failed to load spectral module:', e.message);
   spectral = {};
 }
 
-let coherence;
+let coherence = {};
 try {
   coherence = require('./coherence.js');
+  if (!coherence) {
+    Prime.Logger && Prime.Logger.warn('Coherence module loaded but returned empty object');
+    coherence = {};
+  }
 } catch (e) {
+  Prime.Logger && Prime.Logger.warn('Failed to load coherence module:', e.message);
   coherence = {};
 }
 
 // Import linear algebra module
-let linalg;
+let linalg = {};
 try {
   linalg = require('./linalg.js');
+  if (!linalg) {
+    Prime.Logger && Prime.Logger.warn('Linear algebra module loaded but returned empty object');
+    linalg = {};
+  }
 } catch (e) {
+  Prime.Logger && Prime.Logger.warn('Failed to load linear algebra module:', e.message);
   linalg = {};
 }
 
 // Import Prime.math module
-let primeMath;
+let primeMath = {};
 try {
   primeMath = require('./prime-math.js');
+  if (!primeMath) {
+    Prime.Logger && Prime.Logger.warn('Prime math module loaded but returned empty object');
+    primeMath = {};
+  }
 } catch (e) {
+  Prime.Logger && Prime.Logger.warn('Failed to load prime math module:', e.message);
   primeMath = {};
 }
 
@@ -1729,22 +1748,21 @@ vector._simpleHash = function (str) {
 };
 
 // Import refactored vector modules if available
-let vectorCore, vectorAdvanced, vectorValidation;
-try {
-  // First try to import from new modular structure - import Prime object
-  const Prime = require('../../core');
+let vectorCore = null;
+let vectorAdvanced = null;
+let vectorValidation = null;
 
-  // Access through the Prime.Math namespace directly
-  // Remove circular dependency by not requiring '../../math/index'
-  vectorCore = Prime.Math && Prime.Math.VectorCore || null;
-  vectorAdvanced = Prime.Math && Prime.Math.VectorAdvanced || null;
-  vectorValidation = Prime.Math && Prime.Math.VectorValidation || null;
-} catch (e) {
-  // Fallback to legacy implementation
-  vectorCore = null;
-  vectorAdvanced = null;
-  vectorValidation = null;
-  console.error('Error loading vector modules:', e.message);
+// Access through the Prime.Math namespace directly
+// This prevents circular dependencies by not requiring additional modules
+if (Prime.Math) {
+  vectorCore = Prime.Math.VectorCore || null;
+  vectorAdvanced = Prime.Math.VectorAdvanced || null;
+  vectorValidation = Prime.Math.VectorValidation || null;
+  
+  // Log only if we expected to have these modules but they're missing
+  if (!vectorCore && !vectorAdvanced && !vectorValidation) {
+    Prime.Logger && Prime.Logger.warn('Vector modules not found in Prime.Math namespace');
+  }
 }
 
 // Enhance vector module with refactored functionality if available
@@ -1772,10 +1790,15 @@ if (vectorCore && vectorAdvanced && vectorValidation) {
 }
 
 // Import tensor operations module with numerical stability enhancements
-let tensorOps;
+let tensorOps = {};
 try {
   tensorOps = require('./tensor-operations.js');
+  if (!tensorOps) {
+    Prime.Logger && Prime.Logger.warn('Tensor operations module loaded but returned empty object');
+    tensorOps = {};
+  }
 } catch (e) {
+  Prime.Logger && Prime.Logger.warn('Failed to load tensor operations module:', e.message);
   tensorOps = {};
 }
 

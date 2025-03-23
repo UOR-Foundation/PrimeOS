@@ -197,17 +197,14 @@ class SpectralPrimeDecomposition {
     // Using power iteration for efficiency with large matrices
     // Leveraging specialized numerical libraries when available
 
-    // Import numerical methods if they exist
-    let numerical;
-    try {
-      numerical = require('./numerical.js');
-    } catch (e) {
-      // Fallback to a very simple approach
+    // Check if Matrix advanced functionality is available in Prime.Math
+    if (Prime.Math && Prime.Math.eigenvalues) {
+      return Prime.Math.eigenvalues(matrix);
+    } else {
+      // Fallback to simple approach with validation error
+      Prime.Logger && Prime.Logger.warn('Advanced matrix eigendecomposition not available. Using simple approximation.');
       return this._simpleEigendecomposition(matrix);
     }
-
-    // This would use the numerical methods library
-    return numerical.eigendecomposition(matrix);
   }
 
   /**

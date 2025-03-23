@@ -4,14 +4,8 @@
  * Extends the Prime.math namespace
  */
 
-// Use dynamic loading to avoid circular dependencies
-let Prime;
-try {
-  Prime = require('../../core.js');
-} catch (e) {
-  Prime = {};
-  console.error('Failed to import core module:', e.message);
-}
+// Import Prime directly from core/prime to avoid circular dependencies
+const Prime = require('../../core/prime.js');
 
 /**
  * Vector operations with enhanced numerical stability

@@ -5,144 +5,221 @@
 
 // Import the Prime object from core
 const Prime = require('../../core/prime');
-const { Matrix, Vector } = Prime.Math || { 
-  Matrix: {
-    identity: size => Array(size).fill().map((_, i) => 
-      Array(size).fill().map((_, j) => i === j ? 1 : 0)
-    ),
-    clone: matrix => matrix.map(row => [...row]),
-    multiply: (A, B) => {
-      const n = A.length;
-      const result = Array(n).fill().map(_ => Array(n).fill(0));
-      for (let i = 0; i < n; i++) {
-        for (let j = 0; j < n; j++) {
-          for (let k = 0; k < n; k++) {
-            result[i][j] += A[i][k] * B[k][j];
-          }
-        }
-      }
-      return result;
-    },
-    inverse: matrix => {
-      // Simple matrix inversion for 2x2 and 3x3 matrices
-      const n = matrix.length;
-      
-      if (n === 2) {
-        const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
-        if (Math.abs(det) < 1e-10) throw new Error('Matrix is singular');
-        
-        const invDet = 1 / det;
-        return [
-          [matrix[1][1] * invDet, -matrix[0][1] * invDet],
-          [-matrix[1][0] * invDet, matrix[0][0] * invDet]
-        ];
-      }
-      
-      if (n === 3) {
-        // Use adjugate method for 3x3
-        const det = 
-          matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1]) -
-          matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0]) +
-          matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0]);
-        
-        if (Math.abs(det) < 1e-10) throw new Error('Matrix is singular');
-        
-        const invDet = 1 / det;
-        
-        const cofactors = [
-          [
-            (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1]),
-            -(matrix[0][1] * matrix[2][2] - matrix[0][2] * matrix[2][1]),
-            (matrix[0][1] * matrix[1][2] - matrix[0][2] * matrix[1][1])
-          ],
-          [
-            -(matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0]),
-            (matrix[0][0] * matrix[2][2] - matrix[0][2] * matrix[2][0]),
-            -(matrix[0][0] * matrix[1][2] - matrix[0][2] * matrix[1][0])
-          ],
-          [
-            (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0]),
-            -(matrix[0][0] * matrix[2][1] - matrix[0][1] * matrix[2][0]),
-            (matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0])
-          ]
-        ];
-        
-        // Multiply by 1/det and transpose
-        return cofactors.map((row, i) => 
-          row.map((val, j) => cofactors[j][i] * invDet)
-        );
-      }
-      
-      throw new Error('Matrix inversion only implemented for 2x2 and 3x3 matrices');
-    },
-    determinant: matrix => {
-      const n = matrix.length;
-      
-      if (n === 2) {
-        return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
-      }
-      
-      if (n === 3) {
-        return (
-          matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1]) -
-          matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0]) +
-          matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0])
-        );
-      }
-      
-      throw new Error('Determinant only implemented for 2x2 and 3x3 matrices');
-    },
-    transpose: matrix => {
-      const rows = matrix.length;
-      const cols = matrix[0].length;
-      const result = Array(cols).fill().map(_ => Array(rows).fill(0));
-      
-      for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < cols; j++) {
-          result[j][i] = matrix[i][j];
-        }
-      }
-      
-      return result;
+
+// Import the needed math utilities or create fallbacks if not available
+const Matrix = (Prime.Math && Prime.Math.Matrix) || {
+  identity: size => {
+    if (!Number.isInteger(size) || size <= 0) {
+      throw new Prime.ValidationError('Size must be a positive integer', { context: { size } });
     }
+    return Array(size).fill().map((_, i) => 
+      Array(size).fill().map((_, j) => i === j ? 1 : 0)
+    );
   },
-  Vector: {
-    magnitude: vector => Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0)),
-    distance: (a, b) => {
-      if (a.length !== b.length) throw new Error('Vectors must have the same dimension');
-      
-      let sum = 0;
-      for (let i = 0; i < a.length; i++) {
-        sum += Math.pow(a[i] - b[i], 2);
+  clone: matrix => {
+    if (!Array.isArray(matrix) || !matrix.length || !Array.isArray(matrix[0])) {
+      throw new Prime.ValidationError('Invalid matrix format', { context: { matrix } });
+    }
+    return matrix.map(row => [...row]);
+  },
+  multiply: (A, B) => {
+    if (!Array.isArray(A) || !Array.isArray(B) || !A.length || !B.length) {
+      throw new Prime.ValidationError('Invalid matrix format', { context: { A, B } });
+    }
+    
+    const n = A.length;
+    const result = Array(n).fill().map(_ => Array(n).fill(0));
+    
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        for (let k = 0; k < n; k++) {
+          result[i][j] += A[i][k] * B[k][j];
+        }
       }
-      return Math.sqrt(sum);
-    },
-    normalize: vector => {
-      const mag = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-      if (mag === 0) return vector.map(_ => 0);
-      return vector.map(val => val / mag);
-    },
-    dot: (a, b) => {
-      if (a.length !== b.length) throw new Error('Vectors must have the same dimension');
-      
-      let sum = 0;
-      for (let i = 0; i < a.length; i++) {
-        sum += a[i] * b[i];
-      }
-      return sum;
-    },
-    cross: (a, b) => {
-      if (a.length !== 3 || b.length !== 3) {
-        throw new Error('Cross product is only defined for 3D vectors');
+    }
+    return result;
+  },
+  inverse: matrix => {
+    if (!Array.isArray(matrix) || !matrix.length || !Array.isArray(matrix[0])) {
+      throw new Prime.ValidationError('Invalid matrix format', { context: { matrix } });
+    }
+    
+    // Simple matrix inversion for 2x2 and 3x3 matrices
+    const n = matrix.length;
+    
+    if (n === 2) {
+      const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+      if (Math.abs(det) < 1e-10) {
+        throw new Prime.MathematicalError('Matrix is singular', { context: { matrix, determinant: det } });
       }
       
+      const invDet = 1 / det;
       return [
-        a[1] * b[2] - a[2] * b[1],
-        a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0]
+        [matrix[1][1] * invDet, -matrix[0][1] * invDet],
+        [-matrix[1][0] * invDet, matrix[0][0] * invDet]
       ];
-    },
-    scale: (vector, scalar) => vector.map(val => val * scalar)
+    }
+    
+    if (n === 3) {
+      // Use adjugate method for 3x3
+      const det = 
+        matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1]) -
+        matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0]) +
+        matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0]);
+      
+      if (Math.abs(det) < 1e-10) {
+        throw new Prime.MathematicalError('Matrix is singular', { context: { matrix, determinant: det } });
+      }
+      
+      const invDet = 1 / det;
+      
+      const cofactors = [
+        [
+          (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1]),
+          -(matrix[0][1] * matrix[2][2] - matrix[0][2] * matrix[2][1]),
+          (matrix[0][1] * matrix[1][2] - matrix[0][2] * matrix[1][1])
+        ],
+        [
+          -(matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0]),
+          (matrix[0][0] * matrix[2][2] - matrix[0][2] * matrix[2][0]),
+          -(matrix[0][0] * matrix[1][2] - matrix[0][2] * matrix[1][0])
+        ],
+        [
+          (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0]),
+          -(matrix[0][0] * matrix[2][1] - matrix[0][1] * matrix[2][0]),
+          (matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0])
+        ]
+      ];
+      
+      // Multiply by 1/det and transpose
+      return cofactors.map((row, i) => 
+        row.map((val, j) => cofactors[j][i] * invDet)
+      );
+    }
+    
+    throw new Prime.MathematicalError('Matrix inversion only implemented for 2x2 and 3x3 matrices', {
+      context: { matrixSize: n }
+    });
+  },
+  determinant: matrix => {
+    if (!Array.isArray(matrix) || !matrix.length || !Array.isArray(matrix[0])) {
+      throw new Prime.ValidationError('Invalid matrix format', { context: { matrix } });
+    }
+    
+    const n = matrix.length;
+    
+    if (n === 2) {
+      return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+    }
+    
+    if (n === 3) {
+      return (
+        matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1]) -
+        matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0]) +
+        matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0])
+      );
+    }
+    
+    throw new Prime.MathematicalError('Determinant only implemented for 2x2 and 3x3 matrices', {
+      context: { matrixSize: n }
+    });
+  },
+  transpose: matrix => {
+    if (!Array.isArray(matrix) || !matrix.length || !Array.isArray(matrix[0])) {
+      throw new Prime.ValidationError('Invalid matrix format', { context: { matrix } });
+    }
+    
+    const rows = matrix.length;
+    const cols = matrix[0].length;
+    const result = Array(cols).fill().map(_ => Array(rows).fill(0));
+    
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        result[j][i] = matrix[i][j];
+      }
+    }
+    
+    return result;
+  }
+};
+
+const Vector = (Prime.Math && Prime.Math.Vector) || {
+  magnitude: vector => {
+    if (!Array.isArray(vector)) {
+      throw new Prime.ValidationError('Vector must be an array', { context: { vector } });
+    }
+    return Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+  },
+  distance: (a, b) => {
+    if (!Array.isArray(a) || !Array.isArray(b)) {
+      throw new Prime.ValidationError('Vectors must be arrays', { context: { a, b } });
+    }
+    
+    if (a.length !== b.length) {
+      throw new Prime.ValidationError('Vectors must have the same dimension', {
+        context: { dimensionA: a.length, dimensionB: b.length }
+      });
+    }
+    
+    let sum = 0;
+    for (let i = 0; i < a.length; i++) {
+      sum += Math.pow(a[i] - b[i], 2);
+    }
+    return Math.sqrt(sum);
+  },
+  normalize: vector => {
+    if (!Array.isArray(vector)) {
+      throw new Prime.ValidationError('Vector must be an array', { context: { vector } });
+    }
+    
+    const mag = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+    if (mag === 0) return vector.map(_ => 0);
+    return vector.map(val => val / mag);
+  },
+  dot: (a, b) => {
+    if (!Array.isArray(a) || !Array.isArray(b)) {
+      throw new Prime.ValidationError('Vectors must be arrays', { context: { a, b } });
+    }
+    
+    if (a.length !== b.length) {
+      throw new Prime.ValidationError('Vectors must have the same dimension', {
+        context: { dimensionA: a.length, dimensionB: b.length }
+      });
+    }
+    
+    let sum = 0;
+    for (let i = 0; i < a.length; i++) {
+      sum += a[i] * b[i];
+    }
+    return sum;
+  },
+  cross: (a, b) => {
+    if (!Array.isArray(a) || !Array.isArray(b)) {
+      throw new Prime.ValidationError('Vectors must be arrays', { context: { a, b } });
+    }
+    
+    if (a.length !== 3 || b.length !== 3) {
+      throw new Prime.ValidationError('Cross product is only defined for 3D vectors', {
+        context: { dimensionA: a.length, dimensionB: b.length }
+      });
+    }
+    
+    return [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0]
+    ];
+  },
+  scale: (vector, scalar) => {
+    if (!Array.isArray(vector)) {
+      throw new Prime.ValidationError('Vector must be an array', { context: { vector } });
+    }
+    
+    if (typeof scalar !== 'number') {
+      throw new Prime.ValidationError('Scalar must be a number', { context: { scalar } });
+    }
+    
+    return vector.map(val => val * scalar);
   }
 };
 
