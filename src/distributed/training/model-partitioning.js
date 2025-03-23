@@ -1,13 +1,13 @@
 /**
  * PrimeOS JavaScript Library - Distributed Training
  * Model Partitioning
- * 
+ *
  * Enables splitting neural network models across multiple devices
  * for efficient distributed training
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Ensure the namespaces exist
 Prime.distributed = Prime.distributed || {};
@@ -28,25 +28,25 @@ class ModelPartitioner {
    */
   constructor(options = {}) {
     // Configuration
-    this.strategy = options.strategy || 'layer';
+    this.strategy = options.strategy || "layer";
     this.pipelineStages = options.pipelineStages || 2;
     this.balanceCompute = options.balanceCompute !== false;
     this.minimizeCommunication = options.minimizeCommunication !== false;
-    
+
     // State
     this.partitions = [];
     this.deviceProfiles = new Map();
     this.communicationCosts = new Map();
-    
+
     // Metrics
     this.metrics = {
       partitionCount: 0,
       communicationCost: 0,
       computeBalance: 1.0,
-      lastPartitionTime: null
+      lastPartitionTime: null,
     };
   }
-  
+
   /**
    * Register a device for model partitioning
    * @param {string} deviceId - Device identifier
@@ -55,9 +55,9 @@ class ModelPartitioner {
    */
   registerDevice(deviceId, profile) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Analyze a model to determine optimal partitioning
    * @param {Object} model - Neural network model to analyze
@@ -65,9 +65,9 @@ class ModelPartitioner {
    */
   analyzeModel(model) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Partition a model across registered devices
    * @param {Object} model - Neural network model to partition
@@ -76,9 +76,9 @@ class ModelPartitioner {
    */
   partitionModel(model, options = {}) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Create a communication plan for partitioned model execution
    * @param {Array<Object>} partitions - Model partitions
@@ -86,9 +86,9 @@ class ModelPartitioner {
    */
   createCommunicationPlan(partitions) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Calculate computational complexity of a model segment
    * @param {Object} modelSegment - Part of a neural network model
@@ -97,9 +97,9 @@ class ModelPartitioner {
    */
   _calculateComplexity(modelSegment) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Estimate communication cost between partitions
    * @param {Object} sourcePartition - Source partition
@@ -109,9 +109,9 @@ class ModelPartitioner {
    */
   _estimateCommunicationCost(sourcePartition, targetPartition) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Get partitioner metrics and status
    * @returns {Object} Partitioner metrics
@@ -122,7 +122,7 @@ class ModelPartitioner {
       deviceCount: this.deviceProfiles.size,
       strategy: this.strategy,
       pipelineStages: this.pipelineStages,
-      partitionCount: this.partitions.length
+      partitionCount: this.partitions.length,
     };
   }
 }

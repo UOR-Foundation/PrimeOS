@@ -5,7 +5,7 @@
  */
 
 // Import Prime object from prime.js
-const Prime = require("./prime.js");
+const Prime = require('./prime.js');
 
 (function (Prime) {
   // Core utility functions
@@ -15,7 +15,7 @@ const Prime = require("./prime.js");
      * @param {*} value - Value to check
      * @returns {boolean} True if value is a function
      */
-    isFunction: (value) => typeof value === "function",
+    isFunction: (value) => typeof value === 'function',
 
     /**
      * Checks if a value is an object
@@ -23,7 +23,7 @@ const Prime = require("./prime.js");
      * @returns {boolean} True if value is an object
      */
     isObject: (value) =>
-      value !== null && typeof value === "object" && !Array.isArray(value),
+      value !== null && typeof value === 'object' && !Array.isArray(value),
 
     /**
      * Checks if a value is an array
@@ -37,28 +37,28 @@ const Prime = require("./prime.js");
      * @param {*} value - Value to check
      * @returns {boolean} True if value is a string
      */
-    isString: (value) => typeof value === "string",
+    isString: (value) => typeof value === 'string',
 
     /**
      * Checks if a value is a number
      * @param {*} value - Value to check
      * @returns {boolean} True if value is a number
      */
-    isNumber: (value) => typeof value === "number" && !isNaN(value),
+    isNumber: (value) => typeof value === 'number' && !isNaN(value),
 
     /**
      * Checks if a value is a boolean
      * @param {*} value - Value to check
      * @returns {boolean} True if value is a boolean
      */
-    isBoolean: (value) => typeof value === "boolean",
+    isBoolean: (value) => typeof value === 'boolean',
 
     /**
      * Checks if a value is undefined
      * @param {*} value - Value to check
      * @returns {boolean} True if value is undefined
      */
-    isUndefined: (value) => typeof value === "undefined",
+    isUndefined: (value) => typeof value === 'undefined',
 
     /**
      * Checks if a value is null
@@ -73,16 +73,16 @@ const Prime = require("./prime.js");
      * @returns {boolean} True if value is null or undefined
      */
     isNullOrUndefined: (value) =>
-      value === null || typeof value === "undefined",
+      value === null || typeof value === 'undefined',
 
     /**
      * Generates a UUID v4
      * @returns {string} A UUID v4 string
      */
     uuid: () => {
-      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         const r = (Math.random() * 16) | 0,
-          v = c === "x" ? r : (r & 0x3) | 0x8;
+          v = c === 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
       });
     },
@@ -93,7 +93,7 @@ const Prime = require("./prime.js");
      * @returns {*} Cloned object
      */
     deepClone: (obj) => {
-      if (obj === null || typeof obj !== "object") return obj;
+      if (obj === null || typeof obj !== 'object') return obj;
 
       // Handle Date
       if (obj instanceof Date) {
@@ -116,7 +116,7 @@ const Prime = require("./prime.js");
         return copy;
       }
 
-      throw new Error("Unable to copy object! Its type is not supported.");
+      throw new Error('Unable to copy object! Its type is not supported.');
     },
 
     /**
@@ -135,7 +135,7 @@ const Prime = require("./prime.js");
           if (Utils.isObject(source[key])) {
             // Initialize if undefined or not an object
             if (
-              typeof target[key] === "undefined" ||
+              typeof target[key] === 'undefined' ||
               !Utils.isObject(target[key])
             ) {
               target[key] = {};
@@ -193,12 +193,12 @@ const Prime = require("./prime.js");
      * @returns {string} Formatted string
      */
     formatString: (str, params) => {
-      if (!Utils.isString(str)) return "";
+      if (!Utils.isString(str)) return '';
       if (!Utils.isObject(params)) return str;
 
       return str.replace(/{([^{}]*)}/g, (match, key) => {
         const value = params[key];
-        return typeof value !== "undefined" ? String(value) : match;
+        return typeof value !== 'undefined' ? String(value) : match;
       });
     },
 
@@ -214,17 +214,17 @@ const Prime = require("./prime.js");
         return defaultValue;
       }
 
-      const keys = path.split(".");
+      const keys = path.split('.');
       let current = obj;
 
       for (let i = 0; i < keys.length; i++) {
-        if (current === null || typeof current === "undefined") {
+        if (current === null || typeof current === 'undefined') {
           return defaultValue;
         }
         current = current[keys[i]];
       }
 
-      return typeof current !== "undefined" ? current : defaultValue;
+      return typeof current !== 'undefined' ? current : defaultValue;
     },
 
     /**
@@ -239,13 +239,13 @@ const Prime = require("./prime.js");
         return obj;
       }
 
-      const keys = path.split(".");
+      const keys = path.split('.');
       let current = obj;
 
       for (let i = 0; i < keys.length - 1; i++) {
         const key = keys[i];
         if (
-          typeof current[key] === "undefined" ||
+          typeof current[key] === 'undefined' ||
           !Utils.isObject(current[key])
         ) {
           current[key] = {};
@@ -263,6 +263,6 @@ const Prime = require("./prime.js");
 })(Prime);
 
 // CommonJS export
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = Prime;
 }

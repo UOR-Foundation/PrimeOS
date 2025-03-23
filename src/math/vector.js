@@ -1,18 +1,18 @@
 /**
  * PrimeOS JavaScript Library - Vector Math
  * Vector operations and utilities
- * 
+ *
  * This file serves as the main entry point for vector operations,
  * importing functionality from the modular components while maintaining
  * backward compatibility.
  */
 
 // Import the Prime object first
-const Prime = require("../core");
+const Prime = require('../core');
 
 // Import the modular vector components - only explicitly require core
 // Let the others be loaded lazily through Prime.Math
-require("./vector-core");
+require('./vector-core');
 
 // Ensure the Math namespace exists
 Prime.Math = Prime.Math || {};
@@ -21,9 +21,9 @@ Prime.Math = Prime.Math || {};
 (function () {
   // Don't strictly require components to be already loaded
   // Instead, use getters to access them with lazy loading handled by math/index.js
-  
+
   // Define helper function to safely get module reference
-  const getVectorModule = function(moduleName) {
+  const getVectorModule = function (moduleName) {
     if (!Prime.Math[moduleName]) {
       // If not loaded, try to load it via the getter in math/index.js
       if (moduleName === 'VectorAdvanced') {
@@ -34,7 +34,7 @@ Prime.Math = Prime.Math || {};
     }
     return Prime.Math[moduleName] || {};
   };
-  
+
   // Get references to the modular components - using our helper function
   const VectorCore = Prime.Math.VectorCore || {};
 
@@ -154,7 +154,7 @@ Prime.Math = Prime.Math || {};
     distance: function (a, b) {
       return VectorCore.distance(a, b);
     },
-    
+
     /**
      * Linear interpolation between two vectors
      * @param {Array} a - Start vector
@@ -166,7 +166,7 @@ Prime.Math = Prime.Math || {};
       const VectorAdvanced = getVectorModule('VectorAdvanced');
       return VectorAdvanced.lerp ? VectorAdvanced.lerp(a, b, t) : [];
     },
-    
+
     /**
      * Calculate the norm (magnitude) of a vector
      * @param {Array} vector - Input vector
@@ -177,7 +177,7 @@ Prime.Math = Prime.Math || {};
     },
 
     // Add new methods not in the original API
-    
+
     /**
      * Create a vector using TypedArray for improved memory efficiency
      * @param {number} dimensions - Number of dimensions
@@ -185,13 +185,17 @@ Prime.Math = Prime.Math || {};
      * @param {string} [arrayType='float64'] - Type of TypedArray ('float64', 'float32', etc.)
      * @returns {TypedArray} - New vector with specified dimensions
      */
-    createTyped: function (dimensions, initialValue = 0, arrayType = 'float64') {
-      return VectorCore.create(dimensions, initialValue, { 
-        useTypedArray: true, 
-        arrayType 
+    createTyped: function (
+      dimensions,
+      initialValue = 0,
+      arrayType = 'float64',
+    ) {
+      return VectorCore.create(dimensions, initialValue, {
+        useTypedArray: true,
+        arrayType,
       });
     },
-    
+
     /**
      * Apply an operation to vector(s) in-place to avoid memory allocation
      * @param {string} operation - Operation name ('add', 'subtract', 'scale', etc.)
@@ -201,84 +205,99 @@ Prime.Math = Prime.Math || {};
      */
     applyInPlace: function (operation, ...args) {
       const result = args.pop(); // Last argument is the result vector
-      
+
       if (!VectorCore.isVector(result)) {
-        throw new Prime.ValidationError("Last argument must be a vector to store the result");
+        throw new Prime.ValidationError(
+          'Last argument must be a vector to store the result',
+        );
       }
-      
+
       switch (operation) {
         case 'add':
           if (args.length !== 2) {
-            throw new Prime.ValidationError("Add operation requires two vectors");
+            throw new Prime.ValidationError(
+              'Add operation requires two vectors',
+            );
           }
           return VectorCore.add(args[0], args[1], result);
-          
+
         case 'subtract':
           if (args.length !== 2) {
-            throw new Prime.ValidationError("Subtract operation requires two vectors");
+            throw new Prime.ValidationError(
+              'Subtract operation requires two vectors',
+            );
           }
           return VectorCore.subtract(args[0], args[1], result);
-          
+
         case 'scale':
           if (args.length !== 2) {
-            throw new Prime.ValidationError("Scale operation requires a vector and a scalar");
+            throw new Prime.ValidationError(
+              'Scale operation requires a vector and a scalar',
+            );
           }
           return VectorCore.scale(args[0], args[1], result);
-          
+
         case 'normalize':
           if (args.length !== 1) {
-            throw new Prime.ValidationError("Normalize operation requires one vector");
+            throw new Prime.ValidationError(
+              'Normalize operation requires one vector',
+            );
           }
           return VectorCore.normalize(args[0], result);
-          
-        case 'lerp':
+
+        case 'lerp': {
           if (args.length !== 3) {
-            throw new Prime.ValidationError("Lerp operation requires two vectors and a parameter");
+            throw new Prime.ValidationError(
+              'Lerp operation requires two vectors and a parameter',
+            );
           }
           const VectorAdvanced = getVectorModule('VectorAdvanced');
           if (VectorAdvanced.lerp) {
             return VectorAdvanced.lerp(args[0], args[1], args[2], result);
           } else {
-            throw new Prime.ValidationError("VectorAdvanced module not properly loaded");
+            throw new Prime.ValidationError(
+              'VectorAdvanced module not properly loaded',
+            );
           }
-          
+        }
+
         default:
           throw new Prime.ValidationError(`Unknown operation: ${operation}`);
       }
     },
-    
+
     /**
      * Check if a value is a valid vector
      * @param {*} v - Value to check
      * @returns {boolean} - True if v is a valid vector
      */
     isVector: VectorCore.isVector,
-    
+
     /**
      * Get detailed diagnostics about a vector
      * @param {*} v - Vector to diagnose
      * @returns {Object} - Diagnostic information
      */
-    getDiagnostics: function(v) {
+    getDiagnostics: function (v) {
       // Load VectorValidation on demand
       const VectorValidation = getVectorModule('VectorValidation');
       if (VectorValidation.getDiagnostics) {
         return VectorValidation.getDiagnostics(v);
       } else {
-        return { error: "VectorValidation module not properly loaded" };
+        return { error: 'VectorValidation module not properly loaded' };
       }
-    }
+    },
   };
 
-  // Add Vector to the Prime.Math namespace 
+  // Add Vector to the Prime.Math namespace
   Prime.Math = Prime.Math || {};
-  
+
   // Safely update the Vector module to avoid overwriting any existing properties
   if (!Prime.Math.Vector) {
     Prime.Math.Vector = Vector;
   } else {
     // If Vector already exists, update it with our implementation
-    Object.keys(Vector).forEach(key => {
+    Object.keys(Vector).forEach((key) => {
       Prime.Math.Vector[key] = Vector[key];
     });
   }

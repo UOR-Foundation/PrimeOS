@@ -17,15 +17,15 @@
 // Import Prime library with all modules
 const Prime = require("../src/index.js");
 
-describe('PrimeOS Integration Tests', () => {
-  describe('Core', () => {
-    test('Prime core exists and exposes essential APIs', () => {
+describe("PrimeOS Integration Tests", () => {
+  describe("Core", () => {
+    test("Prime core exists and exposes essential APIs", () => {
       expect(Prime).toBeDefined();
       expect(typeof Prime.version).toBe("string");
       expect(Prime.Utils).toBeDefined();
     });
 
-    test('Prime utilities handle type checking correctly', () => {
+    test("Prime utilities handle type checking correctly", () => {
       // Test type checking
       expect(Prime.Utils.isObject({})).toBe(true);
       expect(Prime.Utils.isObject(null)).toBe(false);
@@ -35,7 +35,7 @@ describe('PrimeOS Integration Tests', () => {
       expect(Prime.Utils.isNumber(42)).toBe(true);
     });
 
-    test('Prime utilities handle deep cloning correctly', () => {
+    test("Prime utilities handle deep cloning correctly", () => {
       // Test deep clone
       const original = { a: 1, b: { c: 2 } };
       const clone = Prime.Utils.deepClone(original);
@@ -44,7 +44,7 @@ describe('PrimeOS Integration Tests', () => {
       expect(clone).not.toEqual(original);
     });
 
-    test('EventBus behaves correctly', () => {
+    test("EventBus behaves correctly", () => {
       // Check if EventBus is available in some form
       let eventBus;
 
@@ -148,7 +148,7 @@ describe('PrimeOS Integration Tests', () => {
         // Log the payload structure for debugging
         console.log("Received payload structure:", Object.keys(lastPayload));
         throw new Error(
-          "Unable to extract value from payload - invalid payload format"
+          "Unable to extract value from payload - invalid payload format",
         );
       }
 
@@ -172,7 +172,7 @@ describe('PrimeOS Integration Tests', () => {
         payloadValue = lastPayload.data.value;
       } else {
         throw new Error(
-          "Unable to extract value from payload for the second emit - invalid payload format"
+          "Unable to extract value from payload for the second emit - invalid payload format",
         );
       }
 
@@ -246,8 +246,8 @@ describe('PrimeOS Integration Tests', () => {
     });
   });
 
-  describe('Component System', () => {
-    test('Component integration with coherence', () => {
+  describe("Component System", () => {
+    test("Component integration with coherence", () => {
       // Skip if coherence system is not available
       if (!Prime.coherence) {
         throw new Error("Prime.coherence not available");
@@ -307,7 +307,7 @@ describe('PrimeOS Integration Tests', () => {
       }).toThrow(Prime.CoherenceViolationError);
     });
 
-    test('Component lifecycle and events', () => {
+    test("Component lifecycle and events", () => {
       // Skip if component system is not available
       if (!Prime.createComponent) {
         throw new Error("Prime.createComponent not available");
@@ -352,8 +352,8 @@ describe('PrimeOS Integration Tests', () => {
     });
   });
 
-  describe('Mathematics', () => {
-    test('Vector operations', () => {
+  describe("Mathematics", () => {
+    test("Vector operations", () => {
       // Check if math module exists
       if (!Prime.math) {
         throw new Error("Prime.math module not available");
@@ -387,7 +387,7 @@ describe('PrimeOS Integration Tests', () => {
       }
     });
 
-    test('Matrix operations', () => {
+    test("Matrix operations", () => {
       // Check if Matrix class/constructor exists
       if (!Prime.math || !Prime.math.Matrix) {
         throw new Error("Matrix operations not available");
@@ -405,12 +405,14 @@ describe('PrimeOS Integration Tests', () => {
 
       // Test matrix addition
       const sum = m1.add(m2);
-      expect(sum.equals(
-        new Prime.math.Matrix([
-          [6, 8],
-          [10, 12],
-        ])
-      )).toBe(true);
+      expect(
+        sum.equals(
+          new Prime.math.Matrix([
+            [6, 8],
+            [10, 12],
+          ]),
+        ),
+      ).toBe(true);
 
       // Test matrix multiplication
       const product = m1.multiply(m2);
@@ -438,8 +440,8 @@ describe('PrimeOS Integration Tests', () => {
     });
   });
 
-  describe('Framework Integration', () => {
-    test('Complete application lifecycle', () => {
+  describe("Framework Integration", () => {
+    test("Complete application lifecycle", () => {
       // Skip if framework module is not available
       if (!Prime.framework) {
         throw new Error("Prime.framework module not available");
@@ -513,7 +515,7 @@ describe('PrimeOS Integration Tests', () => {
 
         // Check that the specific item was removed
         const itemStillExists = app.state.items.some(
-          (item) => item.id === itemToRemove
+          (item) => item.id === itemToRemove,
         );
         expect(itemStillExists).toBe(false);
       } else {

@@ -6,10 +6,10 @@
 const Prime = require("../src");
 require("../src/neural/layer/index");
 
-describe('Neural Module Tests', () => {
+describe("Neural Module Tests", () => {
   // Neural Layer Tests
-  describe('Neural Layer Tests', () => {
-    test('should create a base neural layer with correct properties', () => {
+  describe("Neural Layer Tests", () => {
+    test("should create a base neural layer with correct properties", () => {
       const layer = new Prime.Neural.Layer.NeuralLayer({
         inputSize: 3,
         outputSize: 2,
@@ -20,16 +20,16 @@ describe('Neural Module Tests', () => {
       expect(layer.inputSize).toBe(3);
       expect(layer.outputSize).toBe(2);
       expect(layer.activation).toBe("sigmoid");
-      
+
       expect(Array.isArray(layer.weights)).toBe(true);
       expect(layer.weights.length).toBe(2);
       expect(layer.weights[0].length).toBe(3);
-      
+
       expect(Array.isArray(layer.biases)).toBe(true);
       expect(layer.biases.length).toBe(2);
     });
 
-    test('should perform forward pass correctly', () => {
+    test("should perform forward pass correctly", () => {
       const layer = new Prime.Neural.Layer.NeuralLayer({
         inputSize: 3,
         outputSize: 2,
@@ -53,7 +53,7 @@ describe('Neural Module Tests', () => {
       expect(result.activation[1]).toBe(3);
     });
 
-    test('should perform backward pass correctly', () => {
+    test("should perform backward pass correctly", () => {
       const layer = new Prime.Neural.Layer.NeuralLayer({
         inputSize: 3,
         outputSize: 2,
@@ -84,7 +84,7 @@ describe('Neural Module Tests', () => {
       expect(gradients.dB[1]).toBe(1);
     });
 
-    test('should update layer parameters correctly', () => {
+    test("should update layer parameters correctly", () => {
       const layer = new Prime.Neural.Layer.NeuralLayer({
         inputSize: 2,
         outputSize: 1,
@@ -112,8 +112,8 @@ describe('Neural Module Tests', () => {
   });
 
   // Self-Optimizing Layer Tests
-  describe('Self-Optimizing Layer Tests', () => {
-    test('should create a self-optimizing layer with correct properties', () => {
+  describe("Self-Optimizing Layer Tests", () => {
+    test("should create a self-optimizing layer with correct properties", () => {
       const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
         inputSize: 4,
         outputSize: 3,
@@ -124,7 +124,9 @@ describe('Neural Module Tests', () => {
         },
       });
 
-      expect(layer instanceof Prime.Neural.Layer.SelfOptimizingLayer).toBe(true);
+      expect(layer instanceof Prime.Neural.Layer.SelfOptimizingLayer).toBe(
+        true,
+      );
       expect(layer.optimization.enabled).toBe(true);
       expect(layer.optimization.adaptThreshold).toBe(50);
       expect(layer.optimization.coherenceThreshold).toBe(0.75);
@@ -133,7 +135,7 @@ describe('Neural Module Tests', () => {
       expect(layer.adaptationState.dropoutMask.length).toBe(3);
     });
 
-    test('should adapt the layer correctly', () => {
+    test("should adapt the layer correctly", () => {
       // Create a layer with a very low adaptThreshold to force adaptation
       const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
         inputSize: 5,
@@ -161,7 +163,7 @@ describe('Neural Module Tests', () => {
       expect(history[0].coherenceAfter).toBeDefined();
     });
 
-    test('should provide layer analysis', () => {
+    test("should provide layer analysis", () => {
       const layer = new Prime.Neural.Layer.SelfOptimizingLayer({
         inputSize: 4,
         outputSize: 3,
@@ -172,29 +174,31 @@ describe('Neural Module Tests', () => {
       layer.forward([1, 2, 3, 4]);
 
       const analysis = layer.analyzeLayer();
-      expect(typeof analysis).toBe('object');
-      expect(typeof analysis.coherence).toBe('number');
-      expect(typeof analysis.utilizationRate).toBe('number');
+      expect(typeof analysis).toBe("object");
+      expect(typeof analysis.coherence).toBe("number");
+      expect(typeof analysis.utilizationRate).toBe("number");
       expect(Array.isArray(analysis.recommendations)).toBe(true);
     });
   });
 
   // Neural Optimization Tests
-  describe('Neural Optimization Tests', () => {
-    test('should create coherence SGD optimizer with correct properties', () => {
+  describe("Neural Optimization Tests", () => {
+    test("should create coherence SGD optimizer with correct properties", () => {
       const optimizer = new Prime.Neural.Optimization.CoherenceSGD({
         learningRate: 0.1,
         momentum: 0.9,
         minCoherence: 0.5,
       });
 
-      expect(optimizer instanceof Prime.Neural.Optimization.CoherenceOptimizer).toBe(true);
+      expect(
+        optimizer instanceof Prime.Neural.Optimization.CoherenceOptimizer,
+      ).toBe(true);
       expect(optimizer.learningRate).toBe(0.1);
       expect(optimizer.momentum).toBe(0.9);
       expect(optimizer.minCoherence).toBe(0.5);
     });
 
-    test('should update parameters with coherence constraint', () => {
+    test("should update parameters with coherence constraint", () => {
       const optimizer = new Prime.Neural.Optimization.CoherenceSGD({
         learningRate: 0.1,
         minCoherence: 0.5,
@@ -223,10 +227,10 @@ describe('Neural Module Tests', () => {
       const updatedParams = optimizer.update(params, gradients, coherenceFn);
 
       expect(updatedParams.weights[0][0]).toBeLessThan(params.weights[0][0]);
-      expect(typeof optimizer.getStatistics().iterations).toBe('number');
+      expect(typeof optimizer.getStatistics().iterations).toBe("number");
     });
 
-    test('should handle coherence violation', () => {
+    test("should handle coherence violation", () => {
       const optimizer = new Prime.Neural.Optimization.CoherenceSGD({
         learningRate: 0.1,
         minCoherence: 0.7,
@@ -262,7 +266,7 @@ describe('Neural Module Tests', () => {
       expect(calls).toBeGreaterThan(1);
     });
 
-    test('should create and use Adam optimizer correctly', () => {
+    test("should create and use Adam optimizer correctly", () => {
       const optimizer = new Prime.Neural.Optimization.CoherenceAdam({
         learningRate: 0.001,
         beta1: 0.9,
@@ -270,7 +274,9 @@ describe('Neural Module Tests', () => {
         minCoherence: 0.5,
       });
 
-      expect(optimizer instanceof Prime.Neural.Optimization.CoherenceOptimizer).toBe(true);
+      expect(
+        optimizer instanceof Prime.Neural.Optimization.CoherenceOptimizer,
+      ).toBe(true);
       expect(optimizer.learningRate).toBe(0.001);
       expect(optimizer.beta1).toBe(0.9);
       expect(optimizer.beta2).toBe(0.999);
@@ -302,8 +308,8 @@ describe('Neural Module Tests', () => {
   });
 
   // Integrated Neural Network Test
-  describe('Integrated Neural Network Tests', () => {
-    test('should train a simple XOR neural network with self-optimization', () => {
+  describe("Integrated Neural Network Tests", () => {
+    test("should train a simple XOR neural network with self-optimization", () => {
       // Create a 2-layer network for XOR problem
       const hiddenLayer = new Prime.Neural.Layer.SelfOptimizingLayer({
         inputSize: 2,
@@ -366,7 +372,7 @@ describe('Neural Module Tests', () => {
       const testSample = trainingData[1]; // [0,1] -> 1
       const hiddenResult = hiddenLayer.forward(testSample.input);
       const outputResult = outputLayer.forward(hiddenResult.activation);
-      
+
       // For a normally trained XOR network, prediction should be closer to 1 than 0 for this sample
       // But we'll use a relaxed assertion since we're testing integration, not XOR learning specifically
       expect(outputResult.activation[0]).toBeGreaterThan(0.4);

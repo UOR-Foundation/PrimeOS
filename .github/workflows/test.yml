@@ -63,3 +63,35 @@ jobs:
       - name: Run additional numerical stability tests (fiber algebra)
         # This test focuses on numerical stability in high-dimension fiber algebra operations
         run: npm run test:extreme:fiber
+        
+  verification:
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: read
+      
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run verification tests with JSON report
+        run: node run-verification-tests.js --json
+        
+      - name: Run verification tests (verbose mode)
+        if: always()
+        run: node run-verification-tests.js --verbose
+        
+      - name: Upload verification test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: verification-test-report
+          path: test-results/verification-report.json

@@ -75,10 +75,11 @@ const Prime = require("../../core");
         spatialSensitivity: null, // Will be initialized separately
         sampleCount: 0,
       };
-      
+
       // Initialize spatialSensitivity properly
-      this.usagePatterns.spatialSensitivity = this._createSpatialSensitivityArray();
-      
+      this.usagePatterns.spatialSensitivity =
+        this._createSpatialSensitivityArray();
+
       // Initialize kernelUtilization properly
       this._initializeKernelUtilization();
 
@@ -94,12 +95,12 @@ const Prime = require("../../core");
      */
     _createTensor(shape) {
       if (shape.length === 0) return 0;
-      
+
       const dimension = shape[0];
       const restShape = shape.slice(1);
-      
+
       const result = new Array(dimension);
-      
+
       if (restShape.length === 0) {
         for (let i = 0; i < dimension; i++) {
           result[i] = 0;
@@ -109,7 +110,7 @@ const Prime = require("../../core");
           result[i] = this._createTensor(restShape);
         }
       }
-      
+
       return result;
     }
 
@@ -120,35 +121,40 @@ const Prime = require("../../core");
     _initializeKernelUtilization() {
       // Create a properly initialized array for kernel utilization
       const kernelUtilization = new Array(this.filters);
-      
+
       for (let f = 0; f < this.filters; f++) {
         kernelUtilization[f] = new Array(this.kernelSize[0]);
-        
+
         for (let ky = 0; ky < this.kernelSize[0]; ky++) {
           kernelUtilization[f][ky] = new Array(this.kernelSize[1]);
-          
+
           for (let kx = 0; kx < this.kernelSize[1]; kx++) {
-            kernelUtilization[f][ky][kx] = new Array(this.inputShape[2]).fill(0);
+            kernelUtilization[f][ky][kx] = new Array(this.inputShape[2]).fill(
+              0,
+            );
           }
         }
       }
-      
+
       this.usagePatterns.kernelUtilization = kernelUtilization;
     }
-    
+
     /**
      * Create a properly initialized spatial sensitivity array
      * @private
      * @returns {Array} Initialized spatial sensitivity array
      */
     _createSpatialSensitivityArray() {
-      const [outputHeight, outputWidth] = [this.outputShape[0], this.outputShape[1]];
+      const [outputHeight, outputWidth] = [
+        this.outputShape[0],
+        this.outputShape[1],
+      ];
       const spatialSensitivity = new Array(outputHeight);
-      
+
       for (let y = 0; y < outputHeight; y++) {
         spatialSensitivity[y] = new Array(outputWidth).fill(0);
       }
-      
+
       return spatialSensitivity;
     }
 
@@ -169,9 +175,7 @@ const Prime = require("../../core");
         outputWidth = Math.ceil(inputWidth / strideX);
       } else {
         // Valid padding - no padding added
-        outputHeight = Math.floor(
-          (inputHeight - kernelHeight) / strideY + 1,
-        );
+        outputHeight = Math.floor((inputHeight - kernelHeight) / strideY + 1);
         outputWidth = Math.floor((inputWidth - kernelWidth) / strideX + 1);
       }
 
@@ -238,9 +242,7 @@ const Prime = require("../../core");
             outputHeight = Math.floor(
               (inputHeight - kernelHeight) / strideY + 1,
             );
-            outputWidth = Math.floor(
-              (inputWidth - kernelWidth) / strideX + 1,
-            );
+            outputWidth = Math.floor((inputWidth - kernelWidth) / strideX + 1);
           }
 
           // Create output tensor
@@ -318,7 +320,8 @@ const Prime = require("../../core");
           this._traverseTensor(
             activated,
             (value, indices) => applyActivation(value),
-            (newValue, indices) => this._setTensorValue(activated, indices, newValue),
+            (newValue, indices) =>
+              this._setTensorValue(activated, indices, newValue),
           );
 
           return activated;
@@ -364,7 +367,8 @@ const Prime = require("../../core");
               const tensorValue = this._getTensorValue(tensor, indices);
               return applyGradient(tensorValue, gradValue);
             },
-            (newValue, indices) => this._setTensorValue(gradient, indices, newValue),
+            (newValue, indices) =>
+              this._setTensorValue(gradient, indices, newValue),
           );
 
           return gradient;
@@ -606,13 +610,13 @@ const Prime = require("../../core");
     _padArray(input, padding, channels) {
       const [padHeight, padWidth] = padding;
       const [inputHeight, inputWidth] = [input.length, input[0].length];
-      
+
       const paddedHeight = inputHeight + 2 * padHeight;
       const paddedWidth = inputWidth + 2 * padWidth;
-      
+
       // Create padded tensor
       const padded = this._createTensor([paddedHeight, paddedWidth, channels]);
-      
+
       // Copy input values to padded tensor
       for (let y = 0; y < inputHeight; y++) {
         for (let x = 0; x < inputWidth; x++) {
@@ -621,7 +625,7 @@ const Prime = require("../../core");
           }
         }
       }
-      
+
       return padded;
     }
 
@@ -649,13 +653,13 @@ const Prime = require("../../core");
           setValueFn(newValue, indices);
           return;
         }
-        
+
         for (let i = 0; i < t.length; i++) {
           const newIndices = [...indices, i];
           traverse(t[i], newIndices);
         }
       };
-      
+
       traverse(tensor);
     }
 
@@ -701,7 +705,7 @@ const Prime = require("../../core");
      */
     _validateTensorCoherence(tensor) {
       let valid = true;
-      
+
       this._traverseTensor(
         tensor,
         (value) => {
@@ -710,9 +714,9 @@ const Prime = require("../../core");
           }
           return value;
         },
-        () => {}
+        () => {},
       );
-      
+
       if (!valid) {
         throw new Prime.CoherenceError("Tensor contains non-finite values");
       }
@@ -846,22 +850,25 @@ const Prime = require("../../core");
      */
     _updateMemoryUsage(input, z, activation) {
       // Estimate memory usage based on tensor sizes
-      const inputSize = 
+      const inputSize =
         this.inputShape[0] * this.inputShape[1] * this.inputShape[2];
-      const outputSize = 
+      const outputSize =
         this.outputShape[0] * this.outputShape[1] * this.outputShape[2];
-      const weightSize = 
-        this.filters * this.kernelSize[0] * this.kernelSize[1] * this.inputShape[2];
-      
+      const weightSize =
+        this.filters *
+        this.kernelSize[0] *
+        this.kernelSize[1] *
+        this.inputShape[2];
+
       // Total parameters in floats
       const parameterCount = weightSize + this.filters;
-      
+
       // Total memory in floats (inputs, outputs, intermediate)
       const memoryUsage = inputSize + 2 * outputSize + parameterCount;
-      
+
       // Update metrics
       this.metrics.memoryUsage = memoryUsage;
-      
+
       // Calculate compute efficiency based on utilization
       this.metrics.computeEfficiency = this._calculateComputeEfficiency();
     }
@@ -875,14 +882,13 @@ const Prime = require("../../core");
       // Calculate how evenly the filters are used
       const activationDist = this.usagePatterns.activationDistribution;
       const mean = activationDist.reduce((a, b) => a + b, 0) / this.filters;
-      
+
       if (mean === 0) return 1.0; // No activations yet
-      
-      const variance = activationDist.reduce(
-        (sum, val) => sum + Math.pow(val - mean, 2),
-        0
-      ) / this.filters;
-      
+
+      const variance =
+        activationDist.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+        this.filters;
+
       // Normalize variance to get efficiency (lower variance = higher efficiency)
       const normalizedVariance = variance / (mean * mean);
       return Math.max(0, 1 - Math.min(1, normalizedVariance));
@@ -895,41 +901,46 @@ const Prime = require("../../core");
      */
     _updateInputDistribution(input) {
       this.usagePatterns.sampleCount++;
-      
+
       // For convolutional layers, track spatial sensitivity
       // (which input regions activate the filters most)
       const [height, width, channels] = this.inputShape;
-      
+
       // Adaptive sampling strategy: balance between full computation and random sampling
       const fullScanThreshold = 50; // Only do full scans occasionally
-      const isFullScan = this.usagePatterns.sampleCount % fullScanThreshold === 0;
-      
+      const isFullScan =
+        this.usagePatterns.sampleCount % fullScanThreshold === 0;
+
       if (isFullScan) {
         // Full scan of input volume (expensive but comprehensive)
         for (let y = 0; y < height; y++) {
           for (let x = 0; x < width; x++) {
             let total = 0;
             let maxActivation = 0;
-            
+
             for (let c = 0; c < channels; c++) {
               const value = Math.abs(input[y][x][c]);
               total += value;
               maxActivation = Math.max(maxActivation, value);
             }
-            
+
             // Update spatial sensitivity map - decay existing values slightly
-            if (this.usagePatterns.spatialSensitivity && 
-                y < this.usagePatterns.spatialSensitivity.length && 
-                this.usagePatterns.spatialSensitivity[y] && 
-                x < this.usagePatterns.spatialSensitivity[y].length) {
+            if (
+              this.usagePatterns.spatialSensitivity &&
+              y < this.usagePatterns.spatialSensitivity.length &&
+              this.usagePatterns.spatialSensitivity[y] &&
+              x < this.usagePatterns.spatialSensitivity[y].length
+            ) {
               // Use both total and max activation with a focus on high activations
-              const activationSignal = 0.8 * maxActivation + 0.2 * (total / channels);
-              this.usagePatterns.spatialSensitivity[y][x] = 
-                0.95 * this.usagePatterns.spatialSensitivity[y][x] + 0.05 * activationSignal;
+              const activationSignal =
+                0.8 * maxActivation + 0.2 * (total / channels);
+              this.usagePatterns.spatialSensitivity[y][x] =
+                0.95 * this.usagePatterns.spatialSensitivity[y][x] +
+                0.05 * activationSignal;
             }
           }
         }
-        
+
         // Also track channel importance
         const channelImportance = new Array(channels).fill(0);
         for (let c = 0; c < channels; c++) {
@@ -941,57 +952,60 @@ const Prime = require("../../core");
           }
           channelImportance[c] = channelSum / (height * width);
         }
-        
+
         // Store in kernelUtilization statistics - update per input channel
         if (!this.usagePatterns.channelImportance) {
           this.usagePatterns.channelImportance = channelImportance;
         } else {
           for (let c = 0; c < channels; c++) {
-            this.usagePatterns.channelImportance[c] = 
-              0.9 * this.usagePatterns.channelImportance[c] + 0.1 * channelImportance[c];
+            this.usagePatterns.channelImportance[c] =
+              0.9 * this.usagePatterns.channelImportance[c] +
+              0.1 * channelImportance[c];
           }
         }
-      } 
-      else {
+      } else {
         // Smarter random sampling: include both random points and high gradient areas
         // Calculate gradient magnitude to find important areas
         const gradientMap = this._calculateInputGradientMap(input);
         const topPoints = this._findTopGradientPoints(gradientMap, 5);
-        
+
         // Combine with random points for exploration
         const randomPoints = 5;
         const allPoints = [...topPoints];
-        
+
         for (let i = 0; i < randomPoints; i++) {
           allPoints.push({
             y: Math.floor(Math.random() * height),
-            x: Math.floor(Math.random() * width)
+            x: Math.floor(Math.random() * width),
           });
         }
-        
+
         // Process all points
         for (const point of allPoints) {
           const { x, y } = point;
-          
+
           if (y >= 0 && y < height && x >= 0 && x < width) {
             let total = 0;
             for (let c = 0; c < channels; c++) {
               total += Math.abs(input[y][x][c]);
             }
-            
+
             // Update spatial sensitivity map
-            if (this.usagePatterns.spatialSensitivity && 
-                y < this.usagePatterns.spatialSensitivity.length && 
-                this.usagePatterns.spatialSensitivity[y] && 
-                x < this.usagePatterns.spatialSensitivity[y].length) {
-              this.usagePatterns.spatialSensitivity[y][x] = 
-                0.99 * this.usagePatterns.spatialSensitivity[y][x] + 0.01 * total;
+            if (
+              this.usagePatterns.spatialSensitivity &&
+              y < this.usagePatterns.spatialSensitivity.length &&
+              this.usagePatterns.spatialSensitivity[y] &&
+              x < this.usagePatterns.spatialSensitivity[y].length
+            ) {
+              this.usagePatterns.spatialSensitivity[y][x] =
+                0.99 * this.usagePatterns.spatialSensitivity[y][x] +
+                0.01 * total;
             }
           }
         }
       }
     }
-    
+
     /**
      * Calculate gradient magnitude map for input
      * @private
@@ -1004,28 +1018,28 @@ const Prime = require("../../core");
       for (let y = 0; y < height; y++) {
         gradientMap[y] = new Array(width).fill(0);
       }
-      
+
       // Simple Sobel-like edge detection
       for (let y = 1; y < height - 1; y++) {
         for (let x = 1; x < width - 1; x++) {
           let gradientMagnitude = 0;
-          
+
           for (let c = 0; c < channels; c++) {
             // Horizontal and vertical gradients
-            const gx = input[y][x+1][c] - input[y][x-1][c];
-            const gy = input[y+1][x][c] - input[y-1][x][c];
-            
+            const gx = input[y][x + 1][c] - input[y][x - 1][c];
+            const gy = input[y + 1][x][c] - input[y - 1][x][c];
+
             // Gradient magnitude
-            gradientMagnitude += Math.sqrt(gx*gx + gy*gy);
+            gradientMagnitude += Math.sqrt(gx * gx + gy * gy);
           }
-          
+
           gradientMap[y][x] = gradientMagnitude / channels;
         }
       }
-      
+
       return gradientMap;
     }
-    
+
     /**
      * Find points with highest gradient magnitude
      * @private
@@ -1037,28 +1051,30 @@ const Prime = require("../../core");
       const points = [];
       const height = gradientMap.length;
       const width = gradientMap[0].length;
-      
+
       // Flatten gradient map into (x,y,value) tuples
       const flatGradients = [];
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
           flatGradients.push({
-            x, y, value: gradientMap[y][x]
+            x,
+            y,
+            value: gradientMap[y][x],
           });
         }
       }
-      
+
       // Sort by gradient magnitude (descending)
       flatGradients.sort((a, b) => b.value - a.value);
-      
+
       // Take top N points
       for (let i = 0; i < Math.min(count, flatGradients.length); i++) {
         points.push({
           x: flatGradients[i].x,
-          y: flatGradients[i].y
+          y: flatGradients[i].y,
         });
       }
-      
+
       return points;
     }
 
@@ -1072,24 +1088,24 @@ const Prime = require("../../core");
       for (let f = 0; f < this.filters; f++) {
         let total = 0;
         let count = 0;
-        
+
         // Sample the activation map
         const [height, width] = [activation.length, activation[0].length];
-        
+
         for (let y = 0; y < height; y++) {
           for (let x = 0; x < width; x++) {
             total += activation[y][x][f];
             count++;
           }
         }
-        
+
         const average = count > 0 ? total / count : 0;
-        
+
         // Update exponential moving average of activation
         this.usagePatterns.activationDistribution[f] =
           0.99 * this.usagePatterns.activationDistribution[f] + 0.01 * average;
       }
-      
+
       // Also track kernel utilization (which parts of the kernel are most important)
       // This is an expensive operation, so we'll only do it occasionally
       if (this.metrics.forwardCount % 100 === 0) {
@@ -1103,10 +1119,11 @@ const Prime = require("../../core");
      */
     _updateKernelUtilization() {
       // Ensure kernelUtilization array is properly initialized
-      if (!this.usagePatterns.kernelUtilization || 
-          !Array.isArray(this.usagePatterns.kernelUtilization) ||
-          this.usagePatterns.kernelUtilization.length !== this.filters) {
-        
+      if (
+        !this.usagePatterns.kernelUtilization ||
+        !Array.isArray(this.usagePatterns.kernelUtilization) ||
+        this.usagePatterns.kernelUtilization.length !== this.filters
+      ) {
         // Reinitialize the kernelUtilization array with proper dimensions
         this.usagePatterns.kernelUtilization = this._createTensor([
           this.filters,
@@ -1115,27 +1132,30 @@ const Prime = require("../../core");
           this.inputShape[2],
         ]).map(() => 0);
       }
-      
+
       // Calculate importance of each kernel weight based on magnitude
       for (let f = 0; f < this.filters; f++) {
         if (!this.usagePatterns.kernelUtilization[f]) continue;
-        
+
         for (let ky = 0; ky < this.kernelSize[0]; ky++) {
           if (!this.usagePatterns.kernelUtilization[f][ky]) continue;
-          
+
           for (let kx = 0; kx < this.kernelSize[1]; kx++) {
             if (!this.usagePatterns.kernelUtilization[f][ky][kx]) continue;
-            
+
             for (let c = 0; c < this.inputShape[2]; c++) {
-              if (this.usagePatterns.kernelUtilization[f][ky][kx][c] === undefined) {
+              if (
+                this.usagePatterns.kernelUtilization[f][ky][kx][c] === undefined
+              ) {
                 this.usagePatterns.kernelUtilization[f][ky][kx][c] = 0;
               }
-              
+
               const weight = Math.abs(this.weights[f][ky][kx][c]);
-              
+
               // Update exponential moving average of weight importance
               this.usagePatterns.kernelUtilization[f][ky][kx][c] =
-                0.99 * this.usagePatterns.kernelUtilization[f][ky][kx][c] + 0.01 * weight;
+                0.99 * this.usagePatterns.kernelUtilization[f][ky][kx][c] +
+                0.01 * weight;
             }
           }
         }
@@ -1175,7 +1195,7 @@ const Prime = require("../../core");
       // Calculate coherence metric based on filter utilization
       const activationBalance = this._calculateCoherenceScore();
       this.metrics.coherence = activationBalance;
-      
+
       return { ...this.metrics };
     }
 
@@ -1190,86 +1210,103 @@ const Prime = require("../../core");
       const activationDistribution = this.usagePatterns.activationDistribution;
       const meanActivation =
         activationDistribution.reduce((a, b) => a + b, 0) / this.filters;
-      
+
       if (meanActivation === 0) return 1.0; // No activations yet
-      
+
       const activationVariance =
         activationDistribution.reduce(
           (sum, act) => sum + Math.pow(act - meanActivation, 2),
-          0
+          0,
         ) / this.filters;
-      
+
       const maxVariance = Math.pow(meanActivation, 2); // Theoretical max variance
       const activationBalance = Math.max(
         0,
-        1 - Math.sqrt(activationVariance / (maxVariance + 1e-10))
+        1 - Math.sqrt(activationVariance / (maxVariance + 1e-10)),
       );
-      
+
       // Component 2: Spatial sensitivity distribution (0-1)
       // This measures how evenly the layer responds to different input regions
       let spatialVariance = 0;
       let spatialMean = 0;
       let spatialCount = 0;
-      
+
       // Ensure spatialSensitivity is properly initialized
-      if (!this.usagePatterns.spatialSensitivity || 
-          !Array.isArray(this.usagePatterns.spatialSensitivity)) {
-        this.usagePatterns.spatialSensitivity = this._createSpatialSensitivityArray();
+      if (
+        !this.usagePatterns.spatialSensitivity ||
+        !Array.isArray(this.usagePatterns.spatialSensitivity)
+      ) {
+        this.usagePatterns.spatialSensitivity =
+          this._createSpatialSensitivityArray();
       }
-      
-      if (this.usagePatterns.spatialSensitivity && 
-          this.usagePatterns.spatialSensitivity.length > 0 && 
-          this.usagePatterns.spatialSensitivity[0].length > 0) {
-          
+
+      if (
+        this.usagePatterns.spatialSensitivity &&
+        this.usagePatterns.spatialSensitivity.length > 0 &&
+        this.usagePatterns.spatialSensitivity[0].length > 0
+      ) {
         for (let y = 0; y < this.usagePatterns.spatialSensitivity.length; y++) {
           if (!this.usagePatterns.spatialSensitivity[y]) continue;
-          
-          for (let x = 0; x < this.usagePatterns.spatialSensitivity[0].length; x++) {
+
+          for (
+            let x = 0;
+            x < this.usagePatterns.spatialSensitivity[0].length;
+            x++
+          ) {
             if (this.usagePatterns.spatialSensitivity[y][x] !== undefined) {
               spatialMean += this.usagePatterns.spatialSensitivity[y][x];
               spatialCount++;
             }
           }
         }
-        
+
         if (spatialCount > 0) {
           spatialMean /= spatialCount;
-          
-          for (let y = 0; y < this.usagePatterns.spatialSensitivity.length; y++) {
+
+          for (
+            let y = 0;
+            y < this.usagePatterns.spatialSensitivity.length;
+            y++
+          ) {
             if (!this.usagePatterns.spatialSensitivity[y]) continue;
-            
-            for (let x = 0; x < this.usagePatterns.spatialSensitivity[0].length; x++) {
+
+            for (
+              let x = 0;
+              x < this.usagePatterns.spatialSensitivity[0].length;
+              x++
+            ) {
               if (this.usagePatterns.spatialSensitivity[y][x] !== undefined) {
                 spatialVariance += Math.pow(
                   this.usagePatterns.spatialSensitivity[y][x] - spatialMean,
-                  2
+                  2,
                 );
               }
             }
           }
-          
+
           spatialVariance /= spatialCount;
         }
       }
-      
-      const spatialBalance = spatialMean > 0
-        ? Math.max(0, 1 - Math.sqrt(spatialVariance) / spatialMean)
-        : 1.0;
-      
+
+      const spatialBalance =
+        spatialMean > 0
+          ? Math.max(0, 1 - Math.sqrt(spatialVariance) / spatialMean)
+          : 1.0;
+
       // Component 3: Compute efficiency (0-1)
       const computeEfficiency = this.metrics.computeEfficiency;
-      
+
       // Component 4: Kernel utilization (0-1)
       // Measures if kernels are utilizing their weights effectively
       let kernelUtilization = 1.0;
-      
+
       if (this.metrics.forwardCount > 10) {
         // Calculate kernel sparsity and magnitude distribution
         let totalElements = 0;
         let zeroElements = 0;
         let kernelMagnitudeVariance = 0;
         let kernelMagnitudeSum = 0;
-        
+
         // Analyze weights across all filters
         for (let f = 0; f < this.filters; f++) {
           for (let ky = 0; ky < this.kernelSize[0]; ky++) {
@@ -1277,20 +1314,20 @@ const Prime = require("../../core");
               for (let c = 0; c < this.inputShape[2]; c++) {
                 const magnitude = Math.abs(this.weights[f][ky][kx][c]);
                 totalElements++;
-                
+
                 if (magnitude < 1e-5) {
                   zeroElements++;
                 }
-                
+
                 kernelMagnitudeSum += magnitude;
               }
             }
           }
         }
-        
+
         // Calculate average magnitude
         const avgMagnitude = kernelMagnitudeSum / totalElements;
-        
+
         // Calculate magnitude variance
         if (avgMagnitude > 0) {
           for (let f = 0; f < this.filters; f++) {
@@ -1298,66 +1335,75 @@ const Prime = require("../../core");
               for (let kx = 0; kx < this.kernelSize[1]; kx++) {
                 for (let c = 0; c < this.inputShape[2]; c++) {
                   const magnitude = Math.abs(this.weights[f][ky][kx][c]);
-                  kernelMagnitudeVariance += Math.pow(magnitude - avgMagnitude, 2);
+                  kernelMagnitudeVariance += Math.pow(
+                    magnitude - avgMagnitude,
+                    2,
+                  );
                 }
               }
             }
           }
-          
+
           kernelMagnitudeVariance /= totalElements;
         }
-        
+
         // Calculate kernel sparsity score (0-1)
         // Some sparsity is good, but too much indicates dead filters
         const sparsity = zeroElements / totalElements;
         const optimalSparsity = 0.3; // Ideal sparsity level
-        const sparsityScore = 1 - Math.min(1, Math.abs(sparsity - optimalSparsity) * 2);
-        
+        const sparsityScore =
+          1 - Math.min(1, Math.abs(sparsity - optimalSparsity) * 2);
+
         // Calculate magnitude variance score (0-1)
         // Some variance is good, but too much indicates instability
-        const varianceScore = avgMagnitude > 0
-          ? Math.max(0, 1 - Math.sqrt(kernelMagnitudeVariance) / avgMagnitude)
-          : 0;
-          
+        const varianceScore =
+          avgMagnitude > 0
+            ? Math.max(0, 1 - Math.sqrt(kernelMagnitudeVariance) / avgMagnitude)
+            : 0;
+
         // Combine into kernel utilization score
         kernelUtilization = 0.6 * sparsityScore + 0.4 * varianceScore;
       }
-      
+
       // Component 5: Feature specialization (0-1)
       // Measures if filters are specializing in different features
       let featureSpecialization = 1.0;
-      
+
       if (this.metrics.forwardCount > 20) {
         // Calculate correlation between filter activations
         let totalPairs = 0;
         let correlationSum = 0;
-        
+
         // Check correlations between filter activations
         for (let i = 0; i < this.filters; i++) {
           for (let j = i + 1; j < this.filters; j++) {
             // High correlation means redundant filters
-            const correlation = Math.abs(
-              (activationDistribution[i] - meanActivation) * 
-              (activationDistribution[j] - meanActivation)
-            ) / (maxVariance + 1e-10);
-            
+            const correlation =
+              Math.abs(
+                (activationDistribution[i] - meanActivation) *
+                  (activationDistribution[j] - meanActivation),
+              ) /
+              (maxVariance + 1e-10);
+
             correlationSum += correlation;
             totalPairs++;
           }
         }
-        
+
         if (totalPairs > 0) {
           const avgCorrelation = correlationSum / totalPairs;
           featureSpecialization = 1 - avgCorrelation;
         }
       }
-      
+
       // Combine all components with weights
-      return 0.3 * activationBalance + 
-             0.2 * spatialBalance + 
-             0.2 * computeEfficiency +
-             0.15 * kernelUtilization + 
-             0.15 * featureSpecialization;
+      return (
+        0.3 * activationBalance +
+        0.2 * spatialBalance +
+        0.2 * computeEfficiency +
+        0.15 * kernelUtilization +
+        0.15 * featureSpecialization
+      );
     }
 
     /**
@@ -1367,9 +1413,13 @@ const Prime = require("../../core");
     getUsagePatterns() {
       return {
         activationDistribution: [...this.usagePatterns.activationDistribution],
-        spatialSensitivity: this._deepClone(this.usagePatterns.spatialSensitivity),
+        spatialSensitivity: this._deepClone(
+          this.usagePatterns.spatialSensitivity,
+        ),
         sampleCount: this.usagePatterns.sampleCount,
-        kernelUtilization: this._deepClone(this.usagePatterns.kernelUtilization),
+        kernelUtilization: this._deepClone(
+          this.usagePatterns.kernelUtilization,
+        ),
       };
     }
 
@@ -1387,9 +1437,12 @@ const Prime = require("../../core");
         strides: [...this.strides],
         padding: this.padding,
         activation: this.activation,
-        parameterCount: 
-          this.filters * this.kernelSize[0] * this.kernelSize[1] * 
-          this.inputShape[2] + this.filters,
+        parameterCount:
+          this.filters *
+            this.kernelSize[0] *
+            this.kernelSize[1] *
+            this.inputShape[2] +
+          this.filters,
       };
     }
   }

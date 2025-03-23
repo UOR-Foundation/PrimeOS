@@ -1,13 +1,13 @@
 /**
  * PrimeOS JavaScript Library - Distributed Training
  * Fault Tolerance Mechanisms
- * 
+ *
  * Provides recovery strategies for node failures during
  * distributed neural network training
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Ensure the namespaces exist
 Prime.distributed = Prime.distributed || {};
@@ -28,27 +28,27 @@ class FaultTolerance {
    */
   constructor(options = {}) {
     // Configuration
-    this.strategy = options.strategy || 'checkpoint';
+    this.strategy = options.strategy || "checkpoint";
     this.checkpointInterval = options.checkpointInterval || 100;
     this.replicationFactor = options.replicationFactor || 1;
     this.autoRecover = options.autoRecover !== false;
-    
+
     // State
     this.checkpoints = [];
     this.replicas = new Map();
     this.nodeStatus = new Map();
     this.recoveryQueue = [];
-    
+
     // Metrics
     this.metrics = {
       totalFailures: 0,
       successfulRecoveries: 0,
       averageRecoveryTime: 0,
       lastFailureTime: null,
-      lastRecoveryTime: null
+      lastRecoveryTime: null,
     };
   }
-  
+
   /**
    * Register a node with the fault tolerance system
    * @param {string} nodeId - Node identifier
@@ -57,9 +57,9 @@ class FaultTolerance {
    */
   registerNode(nodeId, profile) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Create a checkpoint of the current training state
    * @param {Object} trainingState - Current training state
@@ -68,9 +68,9 @@ class FaultTolerance {
    */
   createCheckpoint(trainingState, iteration) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Replicate parameters across nodes for redundancy
    * @param {Object} parameters - Parameters to replicate
@@ -79,9 +79,9 @@ class FaultTolerance {
    */
   replicateParameters(parameters, targetNodes) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Report a node failure
    * @param {string} nodeId - Failed node identifier
@@ -90,9 +90,9 @@ class FaultTolerance {
    */
   reportFailure(nodeId, failureDetails) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Recover from a node failure
    * @param {string} nodeId - Failed node identifier
@@ -101,9 +101,9 @@ class FaultTolerance {
    */
   recoverFromFailure(nodeId, replacementNodeId = null) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Restore training state from a checkpoint
    * @param {string} checkpointId - Checkpoint to restore from
@@ -111,9 +111,9 @@ class FaultTolerance {
    */
   restoreFromCheckpoint(checkpointId) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Find the most suitable checkpoint for recovery
    * @param {number} targetIteration - Iteration to recover to
@@ -122,9 +122,9 @@ class FaultTolerance {
    */
   _findBestCheckpoint(targetIteration) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Verify parameter consistency across replicas
    * @param {Object} parameters - Parameters to verify
@@ -133,9 +133,9 @@ class FaultTolerance {
    */
   _verifyConsistency(parameters) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Get fault tolerance metrics and status
    * @returns {Object} Fault tolerance metrics
@@ -144,10 +144,11 @@ class FaultTolerance {
     return {
       ...this.metrics,
       registeredNodes: this.nodeStatus.size,
-      activeNodes: Array.from(this.nodeStatus.values()).filter(s => s.active).length,
+      activeNodes: Array.from(this.nodeStatus.values()).filter((s) => s.active)
+        .length,
       checkpointCount: this.checkpoints.length,
       replicationFactor: this.replicationFactor,
-      recoveryQueueLength: this.recoveryQueue.length
+      recoveryQueueLength: this.recoveryQueue.length,
     };
   }
 }

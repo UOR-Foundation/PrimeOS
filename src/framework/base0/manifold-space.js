@@ -34,7 +34,11 @@ class ManifoldSpace {
     this._coherence = 1.0;
 
     // Connect to coherence system if available
-    if (Prime.coherence && Prime.coherence.systemCoherence && typeof Prime.coherence.systemCoherence.registerSpace === 'function') {
+    if (
+      Prime.coherence &&
+      Prime.coherence.systemCoherence &&
+      typeof Prime.coherence.systemCoherence.registerSpace === "function"
+    ) {
       Prime.coherence.systemCoherence.registerSpace(this);
     }
   }
@@ -157,7 +161,7 @@ class ManifoldSpace {
     // properties based on the mathematical structure
     this._coherence = averageCoherence;
   }
-  
+
   /**
    * Find manifolds with the highest coherence
    * @param {number} limit - Maximum number to return
@@ -165,16 +169,16 @@ class ManifoldSpace {
    */
   getMostCoherentManifolds(limit = 10) {
     const manifolds = this.getManifolds();
-    
+
     // Sort by coherence (highest first)
     const sorted = [...manifolds].sort(
-      (a, b) => b.getCoherenceScore() - a.getCoherenceScore()
+      (a, b) => b.getCoherenceScore() - a.getCoherenceScore(),
     );
-    
+
     // Return top N
     return sorted.slice(0, limit);
   }
-  
+
   /**
    * Get statistics about this manifold space
    * @returns {Object} Space statistics
@@ -182,52 +186,52 @@ class ManifoldSpace {
   getStatistics() {
     const manifolds = this.getManifolds();
     const manifoldCount = manifolds.length;
-    
+
     // Calculate coherence statistics
     let totalCoherence = 0;
     let minCoherence = 1.0;
     let maxCoherence = 0.0;
-    
+
     // Count manifold types
     const typeCount = {};
-    
+
     for (const manifold of manifolds) {
       const coherence = manifold.getCoherenceScore();
       totalCoherence += coherence;
       minCoherence = Math.min(minCoherence, coherence);
       maxCoherence = Math.max(maxCoherence, coherence);
-      
+
       // Count by type
       const type = manifold.getType();
       typeCount[type] = (typeCount[type] || 0) + 1;
     }
-    
+
     // Calculate relations
     const relationCount = manifolds.reduce((count, manifold) => {
       return count + manifold.getRelatedManifolds().length;
     }, 0);
-    
+
     return {
       id: this.id,
       name: this.name,
       dimension: this.dimension,
       manifolds: {
         count: manifoldCount,
-        byType: typeCount
+        byType: typeCount,
       },
       coherence: {
         overall: this._coherence,
         average: manifoldCount > 0 ? totalCoherence / manifoldCount : 1.0,
         min: manifoldCount > 0 ? minCoherence : 1.0,
-        max: manifoldCount > 0 ? maxCoherence : 1.0
+        max: manifoldCount > 0 ? maxCoherence : 1.0,
       },
       relations: {
         count: relationCount,
-        average: manifoldCount > 0 ? relationCount / manifoldCount : 0
-      }
+        average: manifoldCount > 0 ? relationCount / manifoldCount : 0,
+      },
     };
   }
-  
+
   /**
    * Create a composite manifold from all manifolds in this space
    * @param {Object} options - Options for composition
@@ -236,69 +240,79 @@ class ManifoldSpace {
   createCompositeManifold(options = {}) {
     const manifolds = this.getManifolds();
     if (manifolds.length === 0) {
-      throw new Prime.InvalidOperationError("Cannot create composite from empty space");
+      throw new Prime.InvalidOperationError(
+        "Cannot create composite from empty space",
+      );
     }
-    
+
     // Create meta information
     const meta = {
       id: options.id || `composite_${this.id}_${Date.now()}`,
       type: "composite",
       name: options.name || `Composite of ${this.name}`,
-      description: options.description || `Composite manifold created from ${manifolds.length} manifolds in ${this.name}`,
+      description:
+        options.description ||
+        `Composite manifold created from ${manifolds.length} manifolds in ${this.name}`,
       sourceSpace: this.id,
-      sourceManifolds: manifolds.map(m => m.getId())
+      sourceManifolds: manifolds.map((m) => m.getId()),
     };
-    
+
     // Merge invariant properties (only common properties across all manifolds)
     const invariantKeys = new Set();
     const invariantValuesMap = new Map();
-    
+
     // First, collect all keys from all manifolds
     for (const manifold of manifolds) {
-      Object.keys(manifold.getInvariant()).forEach(key => invariantKeys.add(key));
+      Object.keys(manifold.getInvariant()).forEach((key) =>
+        invariantKeys.add(key),
+      );
     }
-    
+
     // Then, for each key, check if all manifolds have the same value
     for (const key of invariantKeys) {
-      const values = manifolds.map(m => m.getInvariant()[key]);
-      const uniqueValues = new Set(values.filter(v => v !== undefined));
-      
+      const values = manifolds.map((m) => m.getInvariant()[key]);
+      const uniqueValues = new Set(values.filter((v) => v !== undefined));
+
       // If all manifolds have the same value, include it in the composite
       if (uniqueValues.size === 1) {
         invariantValuesMap.set(key, values[0]);
       }
     }
-    
+
     // Convert to object
     const invariant = Object.fromEntries(invariantValuesMap.entries());
-    
+
     // Create variant data from aggregating manifold values
     const variant = {
       compositeSource: "space",
       manifoldCount: manifolds.length,
       coherence: this._coherence,
-      relationCount: manifolds.reduce((count, m) => count + m.getRelatedManifolds().length, 0),
+      relationCount: manifolds.reduce(
+        (count, m) => count + m.getRelatedManifolds().length,
+        0,
+      ),
       // Include aggregate values from all manifolds' variants
-      aggregate: this._aggregateVariantValues(manifolds)
+      aggregate: this._aggregateVariantValues(manifolds),
     };
-    
+
     // Create the composite manifold
     const composite = new Manifold({
       meta,
       invariant,
       variant,
-      depth: options.depth || Math.max(...manifolds.map(m => m.getDepth())) + 1,
-      spaces: [this.id]
+      depth:
+        options.depth || Math.max(...manifolds.map((m) => m.getDepth())) + 1,
+      spaces: [this.id],
     });
-    
+
     // Establish relations to all component manifolds
     for (const manifold of manifolds) {
       composite.relateTo(manifold, "composed_of");
     }
-    
+
     return composite;
   }
-  
+
   /**
    * Aggregate variant values from manifolds
    * @private
@@ -309,17 +323,20 @@ class ManifoldSpace {
     // Track all numeric and array properties across all manifolds
     const numericValues = {};
     const arrayValues = {};
-    
+
     for (const manifold of manifolds) {
       const variant = manifold.getVariant();
-      
+
       for (const [key, value] of Object.entries(variant)) {
-        if (typeof value === 'number') {
+        if (typeof value === "number") {
           if (!numericValues[key]) {
             numericValues[key] = [];
           }
           numericValues[key].push(value);
-        } else if (Array.isArray(value) && value.every(v => typeof v === 'number')) {
+        } else if (
+          Array.isArray(value) &&
+          value.every((v) => typeof v === "number")
+        ) {
           if (!arrayValues[key]) {
             arrayValues[key] = [];
           }
@@ -327,7 +344,7 @@ class ManifoldSpace {
         }
       }
     }
-    
+
     // Calculate statistics for numeric values
     const numericStats = {};
     for (const [key, values] of Object.entries(numericValues)) {
@@ -336,67 +353,71 @@ class ManifoldSpace {
         const mean = sum / values.length;
         const sorted = [...values].sort((a, b) => a - b);
         const median = sorted[Math.floor(sorted.length / 2)];
-        
-        const squaredDiffs = values.map(x => Math.pow(x - mean, 2));
-        const variance = squaredDiffs.reduce((a, b) => a + b, 0) / values.length;
-        
+
+        const squaredDiffs = values.map((x) => Math.pow(x - mean, 2));
+        const variance =
+          squaredDiffs.reduce((a, b) => a + b, 0) / values.length;
+
         numericStats[key] = {
           count: values.length,
           min: Math.min(...values),
           max: Math.max(...values),
           mean,
           median,
-          stdDev: Math.sqrt(variance)
+          stdDev: Math.sqrt(variance),
         };
       }
     }
-    
+
     // Calculate statistics for array values
     const arrayStats = {};
     for (const [key, arrays] of Object.entries(arrayValues)) {
       if (arrays.length > 0) {
         // Only attempt to aggregate arrays of the same length
         const firstLength = arrays[0].length;
-        const sameLength = arrays.every(arr => arr.length === firstLength);
-        
+        const sameLength = arrays.every((arr) => arr.length === firstLength);
+
         if (sameLength) {
           // Calculate element-wise statistics
           const elemStats = [];
-          
+
           for (let i = 0; i < firstLength; i++) {
-            const elemValues = arrays.map(arr => arr[i]);
+            const elemValues = arrays.map((arr) => arr[i]);
             const elemSum = elemValues.reduce((a, b) => a + b, 0);
             const elemMean = elemSum / elemValues.length;
-            
-            const elemSquaredDiffs = elemValues.map(x => Math.pow(x - elemMean, 2));
-            const elemVariance = elemSquaredDiffs.reduce((a, b) => a + b, 0) / elemValues.length;
-            
+
+            const elemSquaredDiffs = elemValues.map((x) =>
+              Math.pow(x - elemMean, 2),
+            );
+            const elemVariance =
+              elemSquaredDiffs.reduce((a, b) => a + b, 0) / elemValues.length;
+
             elemStats.push({
               min: Math.min(...elemValues),
               max: Math.max(...elemValues),
               mean: elemMean,
-              stdDev: Math.sqrt(elemVariance)
+              stdDev: Math.sqrt(elemVariance),
             });
           }
-          
+
           arrayStats[key] = {
             count: arrays.length,
             length: firstLength,
-            elements: elemStats
+            elements: elemStats,
           };
         } else {
           // Just count arrays of different lengths
           arrayStats[key] = {
             count: arrays.length,
-            variableLength: true
+            variableLength: true,
           };
         }
       }
     }
-    
+
     return {
       numeric: numericStats,
-      arrays: arrayStats
+      arrays: arrayStats,
     };
   }
 }

@@ -1516,7 +1516,7 @@ describe("Extreme Conditions Handling", () => {
           // Second pass: add remaining vectors with reorthogonalization
           for (let i = 1; i < vectors.length; i++) {
             let v = [...vectors[i]];
-            
+
             // First orthogonalization pass
             for (let j = 0; j < result.length; j++) {
               const dot = vectorOps.dotProduct(v, result[j]);
@@ -1524,7 +1524,7 @@ describe("Extreme Conditions Handling", () => {
                 v[k] -= dot * result[j][k];
               }
             }
-            
+
             // Reorthogonalization pass for better numerical stability
             for (let j = 0; j < result.length; j++) {
               const dot2 = vectorOps.dotProduct(v, result[j]);
@@ -1601,12 +1601,12 @@ describe("Extreme Conditions Handling", () => {
           console.log(`- Dot product: ${dot}`);
           console.log(`- Norms: ${normI}, ${normJ}`);
           console.log(`- Orthogonal: ${isOrthogonal}`);
-          console.log(`- Ratio: ${Math.abs(dot)/(normI*normJ)}`);
-          
+          console.log(`- Ratio: ${Math.abs(dot) / (normI * normJ)}`);
+
           // Use a more lenient tolerance for this test
           assert.ok(
             Math.abs(dot) <= 1e-8 * (normI * normJ + Number.MIN_VALUE),
-            `Vectors ${i} and ${j} should be orthogonal after Gram-Schmidt, dot product: ${dot}, norms: ${normI}, ${normJ}`
+            `Vectors ${i} and ${j} should be orthogonal after Gram-Schmidt, dot product: ${dot}, norms: ${normI}, ${normJ}`,
           );
         }
       }

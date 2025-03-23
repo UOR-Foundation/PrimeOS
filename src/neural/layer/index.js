@@ -73,16 +73,16 @@ const Matrix = Prime.Math.Matrix;
       // Validate dimensions before creating the weight matrix
       if (!Number.isInteger(this.outputSize) || this.outputSize <= 0) {
         throw new Prime.ValidationError(
-          `Invalid output size ${this.outputSize} for weight initialization. Must be a positive integer.`
+          `Invalid output size ${this.outputSize} for weight initialization. Must be a positive integer.`,
         );
       }
-      
+
       if (!Number.isInteger(this.inputSize) || this.inputSize <= 0) {
         throw new Prime.ValidationError(
-          `Invalid input size ${this.inputSize} for weight initialization. Must be a positive integer.`
+          `Invalid input size ${this.inputSize} for weight initialization. Must be a positive integer.`,
         );
       }
-      
+
       const scale = params.scale || Math.sqrt(2 / this.inputSize);
       const distribution = params.distribution || "xavier";
 
@@ -109,10 +109,12 @@ const Matrix = Prime.Math.Matrix;
           weights[i][j] = value;
         }
       }
-      
+
       // Log dimensions for debugging if logger is available
       if (Prime.Logger && Prime.Logger.debug) {
-        Prime.Logger.debug(`Initialized weight matrix: [${this.outputSize}x${this.inputSize}]`);
+        Prime.Logger.debug(
+          `Initialized weight matrix: [${this.outputSize}x${this.inputSize}]`,
+        );
       }
 
       return weights;
@@ -128,12 +130,12 @@ const Matrix = Prime.Math.Matrix;
       // Validate dimensions before creating the bias vector
       if (!Number.isInteger(this.outputSize) || this.outputSize <= 0) {
         throw new Prime.ValidationError(
-          `Invalid output size ${this.outputSize} for bias initialization. Must be a positive integer.`
+          `Invalid output size ${this.outputSize} for bias initialization. Must be a positive integer.`,
         );
       }
-      
+
       const biasValue = params.bias || 0;
-      
+
       // Use Vector.create if available, otherwise fallback to regular array
       if (Vector && Vector.create) {
         return Vector.create(this.outputSize, biasValue);
@@ -646,57 +648,66 @@ const Matrix = Prime.Math.Matrix;
       // Get current activation distribution
       const activationDist = this.usagePatterns.activationDistribution;
       const mean = activationDist.reduce((a, b) => a + b, 0) / this.outputSize;
-      
+
       // Skip adjustment if not enough data
       if (this.metrics.forwardCount < 10) return;
-      
+
       // Calculate statistics about activation distribution
       let deadNeurons = 0;
       let saturatedNeurons = 0;
-      
+
       for (let i = 0; i < activationDist.length; i++) {
         if (activationDist[i] < 0.01) deadNeurons++;
         if (activationDist[i] > 0.9) saturatedNeurons++;
       }
-      
+
       const deadRatio = deadNeurons / this.outputSize;
       const saturatedRatio = saturatedNeurons / this.outputSize;
-      
+
       // Adjust activation parameters based on type
       switch (this.activation) {
-        case 'relu':
+        case "relu":
           // For ReLU, introduce leakiness if too many dead neurons
           if (deadRatio > 0.2) {
             this.activationParams = this.activationParams || {};
             this.activationParams.leakySlope = 0.01;
-            
+
             // Replace activation function implementation
-            this._activate = (x) => x > 0 ? x : x * this.activationParams.leakySlope;
-            this._activationDerivative = (x) => x > 0 ? 1 : this.activationParams.leakySlope;
+            this._activate = (x) =>
+              x > 0 ? x : x * this.activationParams.leakySlope;
+            this._activationDerivative = (x) =>
+              x > 0 ? 1 : this.activationParams.leakySlope;
           }
           break;
-          
-        case 'sigmoid':
+
+        case "sigmoid":
           // For sigmoid, adjust scaling factor if too many saturated neurons
           if (saturatedRatio > 0.3) {
             this.activationParams = this.activationParams || {};
-            this.activationParams.scale = Math.max(0.5, this.activationParams.scale || 1.0 - 0.1);
-            
+            this.activationParams.scale = Math.max(
+              0.5,
+              this.activationParams.scale || 1.0 - 0.1,
+            );
+
             // Replace activation function implementation with scaled version
-            this._activate = (x) => 1 / (1 + Math.exp(-x * this.activationParams.scale));
+            this._activate = (x) =>
+              1 / (1 + Math.exp(-x * this.activationParams.scale));
             this._activationDerivative = (x) => {
               const sigX = 1 / (1 + Math.exp(-x * this.activationParams.scale));
               return this.activationParams.scale * sigX * (1 - sigX);
             };
           }
           break;
-          
-        case 'tanh':
+
+        case "tanh":
           // For tanh, adjust scaling factor if too many saturated neurons
           if (saturatedRatio > 0.3) {
             this.activationParams = this.activationParams || {};
-            this.activationParams.scale = Math.max(0.5, this.activationParams.scale || 1.0 - 0.1);
-            
+            this.activationParams.scale = Math.max(
+              0.5,
+              this.activationParams.scale || 1.0 - 0.1,
+            );
+
             // Replace activation function implementation with scaled version
             this._activate = (x) => Math.tanh(x * this.activationParams.scale);
             this._activationDerivative = (x) => {
@@ -705,22 +716,22 @@ const Matrix = Prime.Math.Matrix;
             };
           }
           break;
-          
+
         default:
           // No adjustment for other activation functions
           break;
       }
-      
+
       // Log adaptation
       if (this.activationParams) {
         this.adaptationState.adaptationHistory.push({
           iteration: this.iteration,
-          type: 'activation_adjustment',
+          type: "activation_adjustment",
           activation: this.activation,
-          params: {...this.activationParams},
+          params: { ...this.activationParams },
           deadRatio,
           saturatedRatio,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     }
@@ -824,7 +835,7 @@ const Matrix = Prime.Math.Matrix;
   // Initialize the namespace if it doesn't exist
   Prime.Neural = Prime.Neural || {};
   Prime.Neural.Layer = Prime.Neural.Layer || {};
-  
+
   // Add classes to Prime.Neural namespace
   Object.assign(Prime.Neural.Layer, {
     NeuralLayer,

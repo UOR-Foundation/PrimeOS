@@ -24,7 +24,7 @@ try {
 }
 
 // Import the base validator
-const { CoherenceValidator } = require('./coherence-validation.js');
+const { CoherenceValidator } = require("./coherence-validation.js");
 
 /**
  * Class for validating the coherence of mathematical operations
@@ -50,7 +50,7 @@ class MathematicalCoherenceValidator {
       enableManifoldValidation: options.enableManifoldValidation !== false,
       manifoldCoherenceThreshold: options.manifoldCoherenceThreshold || 0.8,
     });
-    
+
     // Register manifold constraints if enabled
     if (options.enableManifoldValidation !== false) {
       this._registerManifoldConstraints();
@@ -59,7 +59,7 @@ class MathematicalCoherenceValidator {
 
   /**
    * Register built-in manifold constraints
-   * 
+   *
    * @private
    */
   _registerManifoldConstraints() {
@@ -77,7 +77,7 @@ class MathematicalCoherenceValidator {
       {
         priority: 10,
         type: "hard",
-      }
+      },
     );
 
     // Register manifold space constraint
@@ -90,7 +90,7 @@ class MathematicalCoherenceValidator {
       {
         priority: 8,
         type: "hard",
-      }
+      },
     );
 
     // Register invariant properties constraint
@@ -107,7 +107,7 @@ class MathematicalCoherenceValidator {
       {
         priority: 7,
         type: "soft",
-      }
+      },
     );
 
     // Register variant properties constraint
@@ -124,7 +124,7 @@ class MathematicalCoherenceValidator {
       {
         priority: 6,
         type: "soft",
-      }
+      },
     );
 
     // Register coherence threshold constraint
@@ -133,15 +133,13 @@ class MathematicalCoherenceValidator {
       (manifold) => {
         const threshold = manifold._coherenceThreshold;
         return (
-          typeof threshold === "number" &&
-          threshold >= 0 &&
-          threshold <= 1
+          typeof threshold === "number" && threshold >= 0 && threshold <= 1
         );
       },
       {
         priority: 5,
         type: "soft",
-      }
+      },
     );
 
     // Register cross-manifold metric for topological similarity
@@ -151,41 +149,42 @@ class MathematicalCoherenceValidator {
         // Check if manifolds have the same dimension based on variant properties
         const variant1 = manifold1.getVariant() || {};
         const variant2 = manifold2.getVariant() || {};
-        
+
         const numericKeys1 = Object.keys(variant1).filter(
-          key => typeof variant1[key] === "number"
+          (key) => typeof variant1[key] === "number",
         );
-        
+
         const numericKeys2 = Object.keys(variant2).filter(
-          key => typeof variant2[key] === "number"
+          (key) => typeof variant2[key] === "number",
         );
-        
+
         // Calculate dimension similarity
-        const dimSimilarity = 
-          Math.min(numericKeys1.length, numericKeys2.length) / 
+        const dimSimilarity =
+          Math.min(numericKeys1.length, numericKeys2.length) /
           Math.max(1, Math.max(numericKeys1.length, numericKeys2.length));
-        
+
         // Check space compatibility
         const spaces1 = manifold1.getSpaces() || [];
         const spaces2 = manifold2.getSpaces() || [];
-        const commonSpaces = spaces1.filter(space => spaces2.includes(space));
-        const spaceSimilarity = commonSpaces.length / 
+        const commonSpaces = spaces1.filter((space) => spaces2.includes(space));
+        const spaceSimilarity =
+          commonSpaces.length /
           Math.max(1, Math.max(spaces1.length, spaces2.length));
-        
+
         // Combined similarity with weight towards space compatibility
         return {
           value: dimSimilarity * 0.3 + spaceSimilarity * 0.7,
           details: {
             dimensionSimilarity: dimSimilarity,
             spaceSimilarity: spaceSimilarity,
-            commonSpaces: commonSpaces
-          }
+            commonSpaces: commonSpaces,
+          },
         };
       },
       {
         weight: 1.5,
-        description: "Measures topological similarity between manifolds"
-      }
+        description: "Measures topological similarity between manifolds",
+      },
     );
 
     // Register cross-manifold metric for invariant compatibility
@@ -194,20 +193,26 @@ class MathematicalCoherenceValidator {
       (manifold1, manifold2) => {
         const invariant1 = manifold1.getInvariant() || {};
         const invariant2 = manifold2.getInvariant() || {};
-        
+
         const keys1 = Object.keys(invariant1);
         const keys2 = Object.keys(invariant2);
-        
+
         if (keys1.length === 0 && keys2.length === 0) {
-          return { value: 1.0, details: { reason: "Both manifolds have no invariants" } };
+          return {
+            value: 1.0,
+            details: { reason: "Both manifolds have no invariants" },
+          };
         }
-        
-        const commonKeys = keys1.filter(key => keys2.includes(key));
-        
+
+        const commonKeys = keys1.filter((key) => keys2.includes(key));
+
         if (commonKeys.length === 0) {
-          return { value: 0.0, details: { reason: "No common invariant properties" } };
+          return {
+            value: 0.0,
+            details: { reason: "No common invariant properties" },
+          };
         }
-        
+
         // Count matching values
         let matchCount = 0;
         for (const key of commonKeys) {
@@ -215,23 +220,23 @@ class MathematicalCoherenceValidator {
             matchCount++;
           }
         }
-        
+
         const invariantSimilarity = matchCount / commonKeys.length;
-        
+
         return {
           value: invariantSimilarity,
           details: {
             commonKeys: commonKeys.length,
             totalKeys1: keys1.length,
             totalKeys2: keys2.length,
-            matchingValues: matchCount
-          }
+            matchingValues: matchCount,
+          },
         };
       },
       {
         weight: 2.0,
-        description: "Measures compatibility between manifold invariants"
-      }
+        description: "Measures compatibility between manifold invariants",
+      },
     );
   }
 
@@ -283,7 +288,7 @@ class MathematicalCoherenceValidator {
         message: "Not a valid manifold object",
       };
     }
-    
+
     return this.validator.validateManifold(manifold, context);
   }
 
@@ -296,14 +301,18 @@ class MathematicalCoherenceValidator {
    * @returns {Object} Cross-manifold coherence metrics
    */
   validateCrossManifold(manifold1, manifold2, options = {}) {
-    if (!Manifold || !(manifold1 instanceof Manifold) || !(manifold2 instanceof Manifold)) {
+    if (
+      !Manifold ||
+      !(manifold1 instanceof Manifold) ||
+      !(manifold2 instanceof Manifold)
+    ) {
       return {
         valid: false,
         coherence: 0,
         message: "Not valid manifold objects",
       };
     }
-    
+
     return this.validator.validateCrossManifold(manifold1, manifold2, options);
   }
 
@@ -327,5 +336,5 @@ class MathematicalCoherenceValidator {
 }
 
 module.exports = {
-  MathematicalCoherenceValidator
+  MathematicalCoherenceValidator,
 };

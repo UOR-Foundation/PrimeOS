@@ -5,12 +5,12 @@
  */
 
 // Import Prime using CommonJS to avoid circular dependency
-const Prime = require("../core.js");
+const Prime = require('../core.js');
 // Ensure all modules are loaded in correct order
-require("../mathematics.js");
-require("../coherence.js");
-require("../framework/index.js");
-require("./base.js");
+require('../mathematics.js');
+require('../coherence.js');
+require('../framework/index.js');
+require('./base.js');
 
 (function (Prime) {
   /**
@@ -30,7 +30,7 @@ require("./base.js");
     register: function (component) {
       if (!component || !component.meta || !component.meta.id) {
         throw new Prime.ValidationError(
-          "Component must have a meta.id property",
+          'Component must have a meta.id property',
         );
       }
 
@@ -45,7 +45,7 @@ require("./base.js");
       this.components.set(id, component);
 
       // Publish registration event
-      Prime.EventBus.publish("component:registered", { component });
+      Prime.EventBus.publish('component:registered', { component });
 
       return true;
     },
@@ -68,7 +68,7 @@ require("./base.js");
       this.components.delete(id);
 
       // Publish unregistration event
-      Prime.EventBus.publish("component:unregistered", {
+      Prime.EventBus.publish('component:unregistered', {
         component: removedComponent,
       });
 
@@ -136,15 +136,15 @@ require("./base.js");
   Prime.ComponentRegistry = ComponentRegistry;
 
   // Publish component module loaded event
-  Prime.EventBus.publish("module:loaded", { name: "component-registry" });
+  Prime.EventBus.publish('module:loaded', { name: 'component-registry' });
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.Prime = Prime;
 }

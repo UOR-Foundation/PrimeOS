@@ -34,6 +34,9 @@ jobs:
     
     - name: Run tests (excluding memory-intensive tests)
       run: npm run test:ci
+      
+    - name: Run verification tests
+      run: npm run test:verify
 
   publish:
     needs: test
@@ -60,6 +63,12 @@ jobs:
     
     - name: Test (excluding memory-intensive tests)
       run: npm run test:ci
+      
+    - name: Run verification tests
+      run: npm run test:verify
+      
+    - name: Run linter
+      run: npm run lint
     
     - name: Build
       run: npm run build:prod

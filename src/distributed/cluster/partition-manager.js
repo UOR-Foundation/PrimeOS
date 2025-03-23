@@ -19,7 +19,7 @@ const PartitionType = {
   /** Partition within individual layers */
   INTRA_LAYER: "intra-layer",
   /** Partition by computation type */
-  FUNCTIONAL: "functional"
+  FUNCTIONAL: "functional",
 };
 
 /**
@@ -36,7 +36,7 @@ const PartitionStrategy = {
   /** Based on communication cost */
   COMMUNICATION_OPTIMIZED: "communication-optimized",
   /** Dynamic adjustment based on performance */
-  ADAPTIVE: "adaptive"
+  ADAPTIVE: "adaptive",
 };
 
 /**
@@ -58,24 +58,24 @@ class PartitionScheme {
     this.type = config.type;
     this.strategy = config.strategy || PartitionStrategy.BALANCED;
     this.layerConfig = {};
-    
+
     // Tracking of assignments
     this.nodeAssignments = new Map(); // nodeId -> assigned partitions
     this.layerAssignments = new Map(); // layerId -> assigned nodes
-    
+
     // Synchronization state
     this.syncStatus = {};
-    
+
     // Event bus for partition events
     this.eventBus = new EventBus();
-    
+
     // Metrics
     this.metrics = {
       partitionsCreated: 0,
       reassignments: 0,
       communicationVolume: 0,
       lastPartitionTime: 0,
-      averageNodeUtilization: 1.0
+      averageNodeUtilization: 1.0,
     };
   }
 
@@ -89,12 +89,12 @@ class PartitionScheme {
     if (!layerId) {
       throw new Prime.ValidationError("Layer ID is required");
     }
-    
+
     this.layerConfig[layerId] = {
       id: layerId,
-      ...config
+      ...config,
     };
-    
+
     return this;
   }
 
@@ -106,16 +106,18 @@ class PartitionScheme {
    */
   assignLayerToNodes(layerId, nodeIds) {
     if (!this.layerConfig[layerId]) {
-      throw new Prime.ValidationError(`Layer ${layerId} not configured in partition scheme`);
+      throw new Prime.ValidationError(
+        `Layer ${layerId} not configured in partition scheme`,
+      );
     }
-    
+
     if (!Array.isArray(nodeIds) || nodeIds.length === 0) {
       throw new Prime.ValidationError("At least one node ID is required");
     }
-    
+
     // Update layer assignments
     this.layerAssignments.set(layerId, [...nodeIds]);
-    
+
     // Update node assignments
     for (const nodeId of nodeIds) {
       const nodeAssignments = this.nodeAssignments.get(nodeId) || [];
@@ -124,18 +126,18 @@ class PartitionScheme {
         this.nodeAssignments.set(nodeId, nodeAssignments);
       }
     }
-    
+
     // Emit assignment event
     this.eventBus.emit("partition:layer-assigned", {
       layerId,
       nodeIds,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     // Track metrics
     this.metrics.partitionsCreated++;
     this.metrics.lastPartitionTime = Date.now();
-    
+
     return true;
   }
 
@@ -165,22 +167,24 @@ class PartitionScheme {
    */
   updateSyncStatus(layerId, status) {
     if (!this.layerConfig[layerId]) {
-      throw new Prime.ValidationError(`Layer ${layerId} not configured in partition scheme`);
+      throw new Prime.ValidationError(
+        `Layer ${layerId} not configured in partition scheme`,
+      );
     }
-    
+
     this.syncStatus[layerId] = {
       ...this.syncStatus[layerId],
       ...status,
-      lastUpdateTimestamp: Date.now()
+      lastUpdateTimestamp: Date.now(),
     };
-    
+
     // Emit sync status update event
     this.eventBus.emit("partition:sync-updated", {
       layerId,
       status: this.syncStatus[layerId],
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return this;
   }
 
@@ -190,7 +194,7 @@ class PartitionScheme {
    */
   getCommunicationPaths() {
     const paths = [];
-    
+
     // Check each layer for connections between nodes
     for (const [layerId, nodeIds] of this.layerAssignments.entries()) {
       if (nodeIds.length > 1) {
@@ -201,24 +205,24 @@ class PartitionScheme {
               source: nodeIds[i],
               target: nodeIds[j],
               layerId,
-              type: "intra-layer"
+              type: "intra-layer",
             });
           }
         }
       }
     }
-    
+
     // Check for layer-to-layer connections
     // (simplified: in reality, this depends on the computational graph)
     const allLayers = Array.from(this.layerAssignments.keys());
-    
+
     for (let i = 0; i < allLayers.length - 1; i++) {
       const currentLayerId = allLayers[i];
       const nextLayerId = allLayers[i + 1];
-      
+
       const currentNodes = this.getLayerNodes(currentLayerId);
       const nextNodes = this.getLayerNodes(nextLayerId);
-      
+
       // Connect all nodes from current layer to all nodes in next layer
       for (const sourceNodeId of currentNodes) {
         for (const targetNodeId of nextNodes) {
@@ -228,13 +232,13 @@ class PartitionScheme {
               target: targetNodeId,
               sourceLayer: currentLayerId,
               targetLayer: nextLayerId,
-              type: "inter-layer"
+              type: "inter-layer",
             });
           }
         }
       }
     }
-    
+
     return paths;
   }
 
@@ -246,67 +250,75 @@ class PartitionScheme {
     // Count totals
     const totalLayers = Object.keys(this.layerConfig).length;
     const totalNodes = this.nodeAssignments.size;
-    
+
     // Calculate layer distribution stats
     let maxNodesPerLayer = 0;
     let minNodesPerLayer = Infinity;
     let totalNodeAssignments = 0;
-    
+
     for (const [layerId, nodeIds] of this.layerAssignments.entries()) {
       const nodeCount = nodeIds.length;
       maxNodesPerLayer = Math.max(maxNodesPerLayer, nodeCount);
       minNodesPerLayer = Math.min(minNodesPerLayer, nodeCount);
       totalNodeAssignments += nodeCount;
     }
-    
+
     // Calculate average assignments
-    const avgNodesPerLayer = this.layerAssignments.size > 0 ? 
-      totalNodeAssignments / this.layerAssignments.size : 0;
-    
+    const avgNodesPerLayer =
+      this.layerAssignments.size > 0
+        ? totalNodeAssignments / this.layerAssignments.size
+        : 0;
+
     // Calculate node utilization
     let maxLayersPerNode = 0;
     let minLayersPerNode = Infinity;
-    
+
     for (const [nodeId, layerIds] of this.nodeAssignments.entries()) {
       const layerCount = layerIds.length;
       maxLayersPerNode = Math.max(maxLayersPerNode, layerCount);
       minLayersPerNode = Math.min(minLayersPerNode, layerCount);
     }
-    
+
     // Calculate average assignments
-    const avgLayersPerNode = this.nodeAssignments.size > 0 ? 
-      totalNodeAssignments / this.nodeAssignments.size : 0;
-    
+    const avgLayersPerNode =
+      this.nodeAssignments.size > 0
+        ? totalNodeAssignments / this.nodeAssignments.size
+        : 0;
+
     // Calculate communication overhead
     const communicationPaths = this.getCommunicationPaths();
-    
+
     return {
       type: this.type,
       strategy: this.strategy,
       layers: {
         total: totalLayers,
         configured: Object.keys(this.layerConfig).length,
-        assigned: this.layerAssignments.size
+        assigned: this.layerAssignments.size,
       },
       nodes: {
         total: totalNodes,
         distribution: {
           min: minNodesPerLayer === Infinity ? 0 : minNodesPerLayer,
           max: maxNodesPerLayer,
-          avg: avgNodesPerLayer
-        }
+          avg: avgNodesPerLayer,
+        },
       },
       utilization: {
         min: minLayersPerNode === Infinity ? 0 : minLayersPerNode,
         max: maxLayersPerNode,
-        avg: avgLayersPerNode
+        avg: avgLayersPerNode,
       },
       communication: {
         paths: communicationPaths.length,
-        intraLayerPaths: communicationPaths.filter(p => p.type === "intra-layer").length,
-        interLayerPaths: communicationPaths.filter(p => p.type === "inter-layer").length
+        intraLayerPaths: communicationPaths.filter(
+          (p) => p.type === "intra-layer",
+        ).length,
+        interLayerPaths: communicationPaths.filter(
+          (p) => p.type === "inter-layer",
+        ).length,
       },
-      metrics: this.metrics
+      metrics: this.metrics,
     };
   }
 }
@@ -324,9 +336,9 @@ class DataParallelPartition extends PartitionScheme {
     super({
       type: PartitionType.DATA_PARALLEL,
       strategy: config.strategy || PartitionStrategy.BALANCED,
-      ...config
+      ...config,
     });
-    
+
     this.batchSizePerNode = config.batchSizePerNode || 32;
     this.gradientSyncFrequency = config.gradientSyncFrequency || 1;
     this.parameterServer = config.parameterServer || null;
@@ -342,22 +354,22 @@ class DataParallelPartition extends PartitionScheme {
     if (nodeCount <= 0) {
       throw new Prime.ValidationError("Node count must be positive");
     }
-    
+
     // Calculate batch size per node
     const baseBatchSize = Math.floor(totalBatchSize / nodeCount);
     const remainder = totalBatchSize % nodeCount;
-    
+
     // Distribute remainder across nodes
     const batchSizes = Array(nodeCount).fill(baseBatchSize);
     for (let i = 0; i < remainder; i++) {
       batchSizes[i]++;
     }
-    
+
     return {
       batchSizes,
       totalBatchSize,
       baseBatchSize,
-      remainder
+      remainder,
     };
   }
 
@@ -370,63 +382,86 @@ class DataParallelPartition extends PartitionScheme {
    * @returns {Object} Partition plan
    */
   createPartitionPlan(config) {
-    if (!config.totalBatchSize || !config.nodeIds || config.nodeIds.length === 0) {
-      throw new Prime.ValidationError("Total batch size and node IDs are required");
+    if (
+      !config.totalBatchSize ||
+      !config.nodeIds ||
+      config.nodeIds.length === 0
+    ) {
+      throw new Prime.ValidationError(
+        "Total batch size and node IDs are required",
+      );
     }
-    
+
     const nodeCount = config.nodeIds.length;
     let batchSizes;
-    
-    if (this.strategy === PartitionStrategy.CAPABILITY_BASED && config.nodeCapabilities) {
+
+    if (
+      this.strategy === PartitionStrategy.CAPABILITY_BASED &&
+      config.nodeCapabilities
+    ) {
       // Calculate weights based on node capabilities
-      const weights = config.nodeIds.map(nodeId => {
+      const weights = config.nodeIds.map((nodeId) => {
         const capabilities = config.nodeCapabilities[nodeId] || {};
         // Use compute capability as weight, default to 1.0
         return capabilities.compute || 1.0;
       });
-      
+
       // Normalize weights
       const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-      const normalizedWeights = weights.map(w => w / totalWeight);
-      
+      const normalizedWeights = weights.map((w) => w / totalWeight);
+
       // Calculate batch sizes based on weights
-      batchSizes = normalizedWeights.map(w => Math.max(1, Math.floor(w * config.totalBatchSize)));
-      
+      batchSizes = normalizedWeights.map((w) =>
+        Math.max(1, Math.floor(w * config.totalBatchSize)),
+      );
+
       // Adjust for rounding errors
       const currentTotal = batchSizes.reduce((sum, b) => sum + b, 0);
       const diff = config.totalBatchSize - currentTotal;
-      
+
       if (diff > 0) {
         // Distribute remaining batches to nodes with highest weights
-        const indexedWeights = normalizedWeights.map((w, i) => ({ weight: w, index: i }));
+        const indexedWeights = normalizedWeights.map((w, i) => ({
+          weight: w,
+          index: i,
+        }));
         indexedWeights.sort((a, b) => b.weight - a.weight);
-        
+
         for (let i = 0; i < diff; i++) {
           batchSizes[indexedWeights[i % nodeCount].index]++;
         }
       } else if (diff < 0) {
         // Remove excess batches from nodes with lowest weights
-        const indexedWeights = normalizedWeights.map((w, i) => ({ weight: w, index: i }));
+        const indexedWeights = normalizedWeights.map((w, i) => ({
+          weight: w,
+          index: i,
+        }));
         indexedWeights.sort((a, b) => a.weight - b.weight);
-        
+
         for (let i = 0; i < -diff && i < nodeCount; i++) {
-          batchSizes[indexedWeights[i].index] = Math.max(1, batchSizes[indexedWeights[i].index] - 1);
+          batchSizes[indexedWeights[i].index] = Math.max(
+            1,
+            batchSizes[indexedWeights[i].index] - 1,
+          );
         }
       }
     } else {
       // Use balanced distribution
-      const distribution = this.calculateBatchSizes(config.totalBatchSize, nodeCount);
+      const distribution = this.calculateBatchSizes(
+        config.totalBatchSize,
+        nodeCount,
+      );
       batchSizes = distribution.batchSizes;
     }
-    
+
     // Create partition assignments
     const partitions = config.nodeIds.map((nodeId, i) => ({
       nodeId,
       batchSize: batchSizes[i],
       startIndex: batchSizes.slice(0, i).reduce((sum, b) => sum + b, 0),
-      endIndex: batchSizes.slice(0, i + 1).reduce((sum, b) => sum + b, 0) - 1
+      endIndex: batchSizes.slice(0, i + 1).reduce((sum, b) => sum + b, 0) - 1,
     }));
-    
+
     return {
       type: this.type,
       strategy: this.strategy,
@@ -434,7 +469,7 @@ class DataParallelPartition extends PartitionScheme {
       partitions,
       nodeCount,
       parameterServer: this.parameterServer,
-      gradientSyncFrequency: this.gradientSyncFrequency
+      gradientSyncFrequency: this.gradientSyncFrequency,
     };
   }
 
@@ -446,42 +481,44 @@ class DataParallelPartition extends PartitionScheme {
    */
   applyPartitionPlan(plan, layerIds) {
     if (!plan || !plan.partitions || !Array.isArray(layerIds)) {
-      throw new Prime.ValidationError("Valid partition plan and layer IDs are required");
+      throw new Prime.ValidationError(
+        "Valid partition plan and layer IDs are required",
+      );
     }
-    
+
     // In data-parallel, all nodes process all layers with different data
     // So we assign all layers to all nodes
     for (const layerId of layerIds) {
-      const nodeIds = plan.partitions.map(p => p.nodeId);
+      const nodeIds = plan.partitions.map((p) => p.nodeId);
       this.assignLayerToNodes(layerId, nodeIds);
-      
+
       // Configure layer
       this.configureLayer(layerId, {
         totalBatchSize: plan.totalBatchSize,
         partitioned: true,
-        batchDistribution: plan.partitions
+        batchDistribution: plan.partitions,
       });
     }
-    
+
     // Set up sync status tracking
     for (const layerId of layerIds) {
       this.updateSyncStatus(layerId, {
         parameterServer: plan.parameterServer,
         lastSyncTimestamp: Date.now(),
         gradientSyncFrequency: plan.gradientSyncFrequency,
-        syncErrors: 0
+        syncErrors: 0,
       });
     }
-    
+
     // Emit partition applied event
     this.eventBus.emit("partition:plan-applied", {
       type: this.type,
       strategy: this.strategy,
       layerIds,
-      nodeIds: plan.partitions.map(p => p.nodeId),
-      timestamp: Date.now()
+      nodeIds: plan.partitions.map((p) => p.nodeId),
+      timestamp: Date.now(),
     });
-    
+
     return true;
   }
 }
@@ -499,9 +536,9 @@ class LayerWisePartition extends PartitionScheme {
     super({
       type: PartitionType.LAYER_WISE,
       strategy: config.strategy || PartitionStrategy.BALANCED,
-      ...config
+      ...config,
     });
-    
+
     this.pipelineDepth = config.pipelineDepth || 1;
     this.activationCaching = config.activationCaching !== false;
   }
@@ -518,78 +555,83 @@ class LayerWisePartition extends PartitionScheme {
     if (!config.layers || !config.nodeIds || config.nodeIds.length === 0) {
       throw new Prime.ValidationError("Layers and node IDs are required");
     }
-    
+
     const nodeCount = config.nodeIds.length;
     const layerCount = config.layers.length;
-    
+
     // Determine assignment strategy
     let assignments;
-    
-    if (this.strategy === PartitionStrategy.CAPABILITY_BASED && config.nodeCapabilities) {
+
+    if (
+      this.strategy === PartitionStrategy.CAPABILITY_BASED &&
+      config.nodeCapabilities
+    ) {
       // Calculate scores for each node-layer pair
       const scores = [];
-      
+
       for (let i = 0; i < nodeCount; i++) {
         const nodeId = config.nodeIds[i];
         const capabilities = config.nodeCapabilities[nodeId] || {};
-        
+
         for (let j = 0; j < layerCount; j++) {
           const layer = config.layers[j];
-          
+
           // Calculate score based on layer requirements and node capabilities
           let score = capabilities.compute || 1.0;
-          
+
           // Adjust score based on layer type
           if (layer.type === "conv" && capabilities.gpu) {
             score *= 1.5; // GPUs are better for convolutional layers
           } else if (layer.type === "recurrent" && capabilities.memory) {
             score *= 1.2; // High memory nodes are better for recurrent layers
           }
-          
+
           scores.push({
             nodeIndex: i,
             layerIndex: j,
-            score
+            score,
           });
         }
       }
-      
+
       // Sort scores in descending order
       scores.sort((a, b) => b.score - a.score);
-      
+
       // Initialize assignments
       assignments = Array(layerCount).fill(-1);
       const nodeLayerCounts = Array(nodeCount).fill(0);
-      
+
       // Assign layers to nodes based on scores
       for (const { nodeIndex, layerIndex, score } of scores) {
         // Skip if this layer is already assigned
         if (assignments[layerIndex] !== -1) {
           continue;
         }
-        
+
         // Check if adding this layer would overload the node
         // (simple heuristic: try to balance layer count)
         const avgLayersPerNode = layerCount / nodeCount;
         if (nodeLayerCounts[nodeIndex] >= Math.ceil(avgLayersPerNode * 1.5)) {
           continue;
         }
-        
+
         // Assign layer to node
         assignments[layerIndex] = nodeIndex;
         nodeLayerCounts[nodeIndex]++;
-        
+
         // If all layers are assigned, break
         if (!assignments.includes(-1)) {
           break;
         }
       }
-      
+
       // Handle any unassigned layers (fallback to round-robin)
       for (let j = 0; j < layerCount; j++) {
         if (assignments[j] === -1) {
           // Find node with fewest layers
-          const minNodeIndex = nodeLayerCounts.indexOf(Math.min(...nodeLayerCounts));
+          const minNodeIndex = nodeLayerCounts.indexOf(
+            Math.min(...nodeLayerCounts),
+          );
           assignments[j] = minNodeIndex;
           nodeLayerCounts[minNodeIndex]++;
         }
@@ -597,22 +639,25 @@ class LayerWisePartition extends PartitionScheme {
     } else if (this.strategy === PartitionStrategy.COMMUNICATION_OPTIMIZED) {
       // Group layers to minimize communication
       assignments = this._createCommunicationOptimizedAssignments(
-        config.layers, nodeCount
+        config.layers,
+        nodeCount,
       );
     } else {
       // Use balanced distribution (round-robin)
-      assignments = Array(layerCount).fill(0).map((_, i) => i % nodeCount);
+      assignments = Array(layerCount)
+        .fill(0)
+        .map((_, i) => i % nodeCount);
     }
-    
+
     // Create layer-node assignments
     const partitions = config.layers.map((layer, i) => ({
       layerId: layer.id,
       nodeId: config.nodeIds[assignments[i]],
       layerType: layer.type,
       inputSize: layer.inputSize,
-      outputSize: layer.outputSize
+      outputSize: layer.outputSize,
     }));
-    
+
     // Group by node for convenience
     const nodePartitions = {};
     for (const partition of partitions) {
@@ -621,7 +666,7 @@ class LayerWisePartition extends PartitionScheme {
       }
       nodePartitions[partition.nodeId].push(partition);
     }
-    
+
     return {
       type: this.type,
       strategy: this.strategy,
@@ -630,7 +675,7 @@ class LayerWisePartition extends PartitionScheme {
       nodeCount,
       layerCount,
       pipelineDepth: this.pipelineDepth,
-      activationCaching: this.activationCaching
+      activationCaching: this.activationCaching,
     };
   }
 
@@ -643,11 +688,11 @@ class LayerWisePartition extends PartitionScheme {
     if (!plan || !plan.partitions) {
       throw new Prime.ValidationError("Valid partition plan is required");
     }
-    
+
     // Clear existing assignments
     this.layerAssignments.clear();
     this.nodeAssignments.clear();
-    
+
     // Apply new assignments
     for (const partition of plan.partitions) {
       // Configure layer
@@ -655,32 +700,32 @@ class LayerWisePartition extends PartitionScheme {
         type: partition.layerType,
         inputSize: partition.inputSize,
         outputSize: partition.outputSize,
-        partitioned: true
+        partitioned: true,
       });
-      
+
       // Assign layer to node
       this.assignLayerToNodes(partition.layerId, [partition.nodeId]);
     }
-    
+
     // Set up sync status tracking
     for (const partition of plan.partitions) {
       this.updateSyncStatus(partition.layerId, {
         lastSyncTimestamp: Date.now(),
         pipelineDepth: plan.pipelineDepth,
         activationCaching: plan.activationCaching,
-        syncErrors: 0
+        syncErrors: 0,
       });
     }
-    
+
     // Emit partition applied event
     this.eventBus.emit("partition:plan-applied", {
       type: this.type,
       strategy: this.strategy,
-      layerIds: plan.partitions.map(p => p.layerId),
-      nodeIds: [...new Set(plan.partitions.map(p => p.nodeId))],
-      timestamp: Date.now()
+      layerIds: plan.partitions.map((p) => p.layerId),
+      nodeIds: [...new Set(plan.partitions.map((p) => p.nodeId))],
+      timestamp: Date.now(),
     });
-    
+
     return true;
   }
 
@@ -694,17 +739,17 @@ class LayerWisePartition extends PartitionScheme {
   _createCommunicationOptimizedAssignments(layers, nodeCount) {
     const layerCount = layers.length;
     const assignments = Array(layerCount).fill(-1);
-    
+
     // Simplified implementation: group sequential layers together
     // In a real implementation, this would analyze the computational graph
     // and group layers to minimize cross-node communication
-    
+
     const layersPerNode = Math.ceil(layerCount / nodeCount);
-    
+
     for (let i = 0; i < layerCount; i++) {
       assignments[i] = Math.floor(i / layersPerNode) % nodeCount;
     }
-    
+
     return assignments;
   }
 }
@@ -722,9 +767,9 @@ class IntraLayerPartition extends PartitionScheme {
     super({
       type: PartitionType.INTRA_LAYER,
       strategy: config.strategy || PartitionStrategy.BALANCED,
-      ...config
+      ...config,
     });
-    
+
     this.splitDimension = config.splitDimension || "output";
     this.replicationFactor = config.replicationFactor || 1;
   }
@@ -741,15 +786,15 @@ class IntraLayerPartition extends PartitionScheme {
     if (!config.layers || !config.nodeIds || config.nodeIds.length === 0) {
       throw new Prime.ValidationError("Layers and node IDs are required");
     }
-    
+
     const nodeCount = config.nodeIds.length;
     const partitions = [];
-    
+
     // Process each layer
     for (const layer of config.layers) {
       // Determine how to partition this layer
       const splitPoints = this._calculateSplitPoints(layer, nodeCount);
-      
+
       // Create partitions for this layer
       const layerPartitions = splitPoints.map((split, i) => ({
         layerId: layer.id,
@@ -760,12 +805,12 @@ class IntraLayerPartition extends PartitionScheme {
         outputSize: layer.outputSize,
         start: split.start,
         end: split.end,
-        size: split.end - split.start + 1
+        size: split.end - split.start + 1,
       }));
-      
+
       partitions.push(...layerPartitions);
     }
-    
+
     // Group by layer for convenience
     const layerPartitions = {};
     for (const partition of partitions) {
@@ -774,7 +819,7 @@ class IntraLayerPartition extends PartitionScheme {
       }
       layerPartitions[partition.layerId].push(partition);
     }
-    
+
     return {
       type: this.type,
       strategy: this.strategy,
@@ -783,7 +828,7 @@ class IntraLayerPartition extends PartitionScheme {
       layerPartitions,
       nodeCount,
       layerCount: config.layers.length,
-      replicationFactor: this.replicationFactor
+      replicationFactor: this.replicationFactor,
     };
   }
 
@@ -796,16 +841,16 @@ class IntraLayerPartition extends PartitionScheme {
     if (!plan || !plan.partitions || !plan.layerPartitions) {
       throw new Prime.ValidationError("Valid partition plan is required");
     }
-    
+
     // Clear existing assignments
     this.layerAssignments.clear();
     this.nodeAssignments.clear();
-    
+
     // Apply new assignments for each layer
     for (const [layerId, partitions] of Object.entries(plan.layerPartitions)) {
       // Get node IDs for this layer
-      const nodeIds = partitions.map(p => p.nodeId);
-      
+      const nodeIds = partitions.map((p) => p.nodeId);
+
       // Configure layer
       this.configureLayer(layerId, {
         type: partitions[0].layerType,
@@ -813,36 +858,36 @@ class IntraLayerPartition extends PartitionScheme {
         outputSize: partitions[0].outputSize,
         partitioned: true,
         splitDimension: plan.splitDimension,
-        partitions: partitions.map(p => ({
+        partitions: partitions.map((p) => ({
           nodeId: p.nodeId,
           start: p.start,
           end: p.end,
-          size: p.size
-        }))
+          size: p.size,
+        })),
       });
-      
+
       // Assign layer to nodes
       this.assignLayerToNodes(layerId, nodeIds);
     }
-    
+
     // Set up sync status tracking
     for (const [layerId, partitions] of Object.entries(plan.layerPartitions)) {
       this.updateSyncStatus(layerId, {
         lastSyncTimestamp: Date.now(),
         replicationFactor: plan.replicationFactor,
-        syncErrors: 0
+        syncErrors: 0,
       });
     }
-    
+
     // Emit partition applied event
     this.eventBus.emit("partition:plan-applied", {
       type: this.type,
       strategy: this.strategy,
       layerIds: Object.keys(plan.layerPartitions),
-      nodeIds: [...new Set(plan.partitions.map(p => p.nodeId))],
-      timestamp: Date.now()
+      nodeIds: [...new Set(plan.partitions.map((p) => p.nodeId))],
+      timestamp: Date.now(),
     });
-    
+
     return true;
   }
 
@@ -855,27 +900,27 @@ class IntraLayerPartition extends PartitionScheme {
    */
   _calculateSplitPoints(layer, nodeCount) {
     // Determine dimension to split on
-    const dimensionSize = this.splitDimension === "output" ? 
-      layer.outputSize : layer.inputSize;
-    
+    const dimensionSize =
+      this.splitDimension === "output" ? layer.outputSize : layer.inputSize;
+
     const splits = [];
     const baseSize = Math.floor(dimensionSize / nodeCount);
     const remainder = dimensionSize % nodeCount;
-    
+
     let start = 0;
     for (let i = 0; i < nodeCount; i++) {
       // Calculate size for this partition (distribute remainder)
       const size = baseSize + (i < remainder ? 1 : 0);
       const end = start + size - 1;
-      
+
       // Only create a partition if there's something to compute
       if (size > 0) {
         splits.push({ start, end });
       }
-      
+
       start = end + 1;
     }
-    
+
     return splits;
   }
 }
@@ -902,14 +947,14 @@ class PartitionManager {
     if (!schemeId) {
       throw new Prime.ValidationError("Scheme ID is required");
     }
-    
+
     if (this.schemes.has(schemeId)) {
       throw new Prime.ValidationError(`Scheme ${schemeId} already exists`);
     }
-    
+
     // Determine scheme type and create appropriate instance
     let scheme;
-    
+
     if (config.type === PartitionType.DATA_PARALLEL) {
       scheme = new DataParallelPartition(config);
     } else if (config.type === PartitionType.LAYER_WISE) {
@@ -917,20 +962,22 @@ class PartitionManager {
     } else if (config.type === PartitionType.INTRA_LAYER) {
       scheme = new IntraLayerPartition(config);
     } else {
-      throw new Prime.ValidationError(`Unsupported partition type: ${config.type}`);
+      throw new Prime.ValidationError(
+        `Unsupported partition type: ${config.type}`,
+      );
     }
-    
+
     // Register scheme
     this.schemes.set(schemeId, scheme);
-    
+
     // Emit event
     this.eventBus.emit("partition:scheme-created", {
       schemeId,
       type: scheme.type,
       strategy: scheme.strategy,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return scheme;
   }
 
@@ -952,16 +999,16 @@ class PartitionManager {
     if (!this.schemes.has(schemeId)) {
       return false;
     }
-    
+
     // Delete scheme
     this.schemes.delete(schemeId);
-    
+
     // Emit event
     this.eventBus.emit("partition:scheme-deleted", {
       schemeId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return true;
   }
 
@@ -984,7 +1031,7 @@ Prime.Distributed.Cluster.Partition = {
   DataParallelPartition,
   LayerWisePartition,
   IntraLayerPartition,
-  PartitionManager
+  PartitionManager,
 };
 
 module.exports = Prime;

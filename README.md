@@ -109,6 +109,7 @@ PrimeOS has a comprehensive testing suite with tiered strategies for various env
    - Extreme condition tests (numerical stability)
    - UOR verification tests (universal object references)
    - Integration tests (cross-module functionality)
+   - End-to-End verification tests (unique PrimeOS capabilities)
 
 3. **Browser Tests**: Testing in browser environments
    - Uses Puppeteer to launch a headless browser
@@ -126,6 +127,7 @@ npm run test:extreme    # Extreme condition tests (high memory usage)
 npm run test:uor        # UOR verification tests (high memory usage)
 npm run test:integration # Integration tests
 npm run test:browser    # Browser environment tests
+npm run test:verify     # End-to-End verification (unique PrimeOS capabilities)
 
 # Run distributed coherence tests
 npm run test:coherence         # Run distributed coherence tests

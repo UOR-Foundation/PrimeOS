@@ -55,6 +55,9 @@ Due to memory constraints in CI environments, we've implemented a tiered testing
    
    # Run integration tests
    npm run test:integration
+   
+   # Run end-to-end verification tests (unique PrimeOS capabilities)
+   npm run test:verify
    ```
 
 3. **Complete test suite** - Run all tests when preparing for major releases:

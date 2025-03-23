@@ -21,9 +21,9 @@ const Prime = require("../../core");
      */
     static get(name) {
       const lowerName = name.toLowerCase();
-      
+
       switch (lowerName) {
-        case 'sigmoid':
+        case "sigmoid":
           return {
             forward: ActivationFunctions.sigmoid,
             backward: ActivationFunctions.sigmoidGradient,
@@ -31,9 +31,9 @@ const Prime = require("../../core");
             gradientInPlace: ActivationFunctions.sigmoidGradientInPlace,
             isStable: true,
             rangeMin: 0,
-            rangeMax: 1
+            rangeMax: 1,
           };
-        case 'tanh':
+        case "tanh":
           return {
             forward: ActivationFunctions.tanh,
             backward: ActivationFunctions.tanhGradient,
@@ -41,9 +41,9 @@ const Prime = require("../../core");
             gradientInPlace: ActivationFunctions.tanhGradientInPlace,
             isStable: true,
             rangeMin: -1,
-            rangeMax: 1
+            rangeMax: 1,
           };
-        case 'relu':
+        case "relu":
           return {
             forward: ActivationFunctions.relu,
             backward: ActivationFunctions.reluGradient,
@@ -51,9 +51,9 @@ const Prime = require("../../core");
             gradientInPlace: ActivationFunctions.reluGradientInPlace,
             isStable: false, // May suffer from dying ReLU problem
             rangeMin: 0,
-            rangeMax: Infinity
+            rangeMax: Infinity,
           };
-        case 'leaky_relu':
+        case "leaky_relu":
           return {
             forward: ActivationFunctions.leakyRelu,
             backward: ActivationFunctions.leakyReluGradient,
@@ -61,9 +61,9 @@ const Prime = require("../../core");
             gradientInPlace: ActivationFunctions.leakyReluGradientInPlace,
             isStable: true,
             rangeMin: -Infinity,
-            rangeMax: Infinity
+            rangeMax: Infinity,
           };
-        case 'elu':
+        case "elu":
           return {
             forward: ActivationFunctions.elu,
             backward: ActivationFunctions.eluGradient,
@@ -71,9 +71,9 @@ const Prime = require("../../core");
             gradientInPlace: ActivationFunctions.eluGradientInPlace,
             isStable: true,
             rangeMin: -1,
-            rangeMax: Infinity
+            rangeMax: Infinity,
           };
-        case 'selu':
+        case "selu":
           return {
             forward: ActivationFunctions.selu,
             backward: ActivationFunctions.seluGradient,
@@ -81,9 +81,9 @@ const Prime = require("../../core");
             gradientInPlace: ActivationFunctions.seluGradientInPlace,
             isStable: true,
             rangeMin: -1.7581,
-            rangeMax: Infinity
+            rangeMax: Infinity,
           };
-        case 'softmax':
+        case "softmax":
           return {
             forward: ActivationFunctions.softmax,
             backward: ActivationFunctions.softmaxGradient,
@@ -91,10 +91,10 @@ const Prime = require("../../core");
             gradientInPlace: null,
             isStable: true,
             rangeMin: 0,
-            rangeMax: 1
+            rangeMax: 1,
           };
-        case 'linear':
-        case 'identity':
+        case "linear":
+        case "identity":
           return {
             forward: ActivationFunctions.linear,
             backward: ActivationFunctions.linearGradient,
@@ -102,9 +102,9 @@ const Prime = require("../../core");
             gradientInPlace: ActivationFunctions.linearGradientInPlace,
             isStable: true,
             rangeMin: -Infinity,
-            rangeMax: Infinity
+            rangeMax: Infinity,
           };
-        case 'swish':
+        case "swish":
           return {
             forward: ActivationFunctions.swish,
             backward: ActivationFunctions.swishGradient,
@@ -112,7 +112,7 @@ const Prime = require("../../core");
             gradientInPlace: ActivationFunctions.swishGradientInPlace,
             isStable: true,
             rangeMin: -0.278,
-            rangeMax: Infinity
+            rangeMax: Infinity,
           };
         default:
           throw new Error(`Unknown activation function: ${name}`);
@@ -251,7 +251,7 @@ const Prime = require("../../core");
      */
     static tanhGradientInPlace(grad, y) {
       for (let i = 0; i < grad.length; i++) {
-        grad[i] *= (1 - y[i] * y[i]);
+        grad[i] *= 1 - y[i] * y[i];
       }
     }
 
@@ -427,7 +427,7 @@ const Prime = require("../../core");
     static eluGradientInPlace(grad, x, y, alpha = 1.0) {
       for (let i = 0; i < grad.length; i++) {
         if (x[i] <= 0) {
-          grad[i] *= (y[i] + alpha);
+          grad[i] *= y[i] + alpha;
         }
       }
     }
@@ -442,7 +442,7 @@ const Prime = require("../../core");
       // SELU parameters (fixed values from the paper)
       const alpha = 1.6732632423543772848170429916717;
       const scale = 1.0507009873554804934193349852946;
-      
+
       const result = ActivationFunctions._createMatchingArray(x);
 
       for (let i = 0; i < x.length; i++) {
@@ -480,7 +480,7 @@ const Prime = require("../../core");
       // SELU parameters (fixed values)
       const alpha = 1.6732632423543772848170429916717;
       const scale = 1.0507009873554804934193349852946;
-      
+
       const result = ActivationFunctions._createMatchingArray(x);
 
       for (let i = 0; i < x.length; i++) {
@@ -526,7 +526,7 @@ const Prime = require("../../core");
      */
     static softmax(x) {
       const result = ActivationFunctions._createMatchingArray(x);
-      
+
       // Find max for numerical stability
       let maxVal = x[0];
       for (let i = 1; i < x.length; i++) {
@@ -534,21 +534,21 @@ const Prime = require("../../core");
           maxVal = x[i];
         }
       }
-      
+
       // Calculate exp(x - max) and sum
       let sum = 0;
       for (let i = 0; i < x.length; i++) {
         result[i] = Math.exp(x[i] - maxVal);
         sum += result[i];
       }
-      
+
       // Normalize
       if (sum !== 0) {
         for (let i = 0; i < x.length; i++) {
           result[i] /= sum;
         }
       }
-      
+
       return result;
     }
 
@@ -563,10 +563,10 @@ const Prime = require("../../core");
      */
     static softmaxGradient(x, y, dy) {
       const result = ActivationFunctions._createMatchingArray(x);
-      
+
       // For cross-entropy loss with softmax, gradient is (y - targets)
       // which is usually passed directly in dy, so we just return dy
-      
+
       // In the more general case, the Jacobian for softmax is complex
       // This is a simplified implementation for common use cases
       if (dy) {
@@ -579,7 +579,7 @@ const Prime = require("../../core");
           result[i] = 1;
         }
       }
-      
+
       return result;
     }
 
@@ -607,11 +607,11 @@ const Prime = require("../../core");
      */
     static linearGradient(x) {
       const result = ActivationFunctions._createMatchingArray(x);
-      
+
       for (let i = 0; i < x.length; i++) {
         result[i] = 1;
       }
-      
+
       return result;
     }
 
@@ -641,7 +641,7 @@ const Prime = require("../../core");
         } else {
           sigX = 1 / (1 + Math.exp(-x[i]));
         }
-        
+
         result[i] = x[i] * sigX;
       }
 
@@ -663,7 +663,7 @@ const Prime = require("../../core");
         } else {
           sigX = 1 / (1 + Math.exp(-x[i]));
         }
-        
+
         x[i] = x[i] * sigX;
       }
     }
@@ -687,7 +687,7 @@ const Prime = require("../../core");
         } else {
           sigX = 1 / (1 + Math.exp(-x[i]));
         }
-        
+
         // Gradient of swish: sigmoid(x) + x * sigmoid(x) * (1 - sigmoid(x))
         result[i] = sigX + x[i] * sigX * (1 - sigX);
       }
@@ -712,9 +712,9 @@ const Prime = require("../../core");
         } else {
           sigX = 1 / (1 + Math.exp(-x[i]));
         }
-        
+
         // Gradient of swish: sigmoid(x) + x * sigmoid(x) * (1 - sigmoid(x))
-        grad[i] *= (sigX + x[i] * sigX * (1 - sigX));
+        grad[i] *= sigX + x[i] * sigX * (1 - sigX);
       }
     }
 
@@ -724,7 +724,7 @@ const Prime = require("../../core");
      * - Dead neurons (activations always near 0)
      * - Saturated neurons (activations always near max/min)
      * - Unstable activations (high variance)
-     * 
+     *
      * @param {Array|TypedArray} values - Activation values
      * @param {string} activationType - Type of activation function
      * @returns {Object} Coherence statistics
@@ -736,75 +736,81 @@ const Prime = require("../../core");
 
       const activation = ActivationFunctions.get(activationType);
       const { rangeMin, rangeMax } = activation;
-      
+
       // Calculate statistics
       let sum = 0;
       let sumSq = 0;
       let dead = 0;
       let saturated = 0;
       const n = values.length;
-      
+
       // Define thresholds for dead/saturated
-      const deadThreshold = typeof rangeMin === 'number' && isFinite(rangeMin) 
-        ? rangeMin + 0.01 * (rangeMax - rangeMin) 
-        : 0.01;
-        
-      const saturatedThreshold = typeof rangeMax === 'number' && isFinite(rangeMax) 
-        ? rangeMax - 0.01 * (rangeMax - rangeMin) 
-        : 0.99;
-      
+      const deadThreshold =
+        typeof rangeMin === "number" && isFinite(rangeMin)
+          ? rangeMin + 0.01 * (rangeMax - rangeMin)
+          : 0.01;
+
+      const saturatedThreshold =
+        typeof rangeMax === "number" && isFinite(rangeMax)
+          ? rangeMax - 0.01 * (rangeMax - rangeMin)
+          : 0.99;
+
       // Count dead and saturated neurons, calculate mean
       for (let i = 0; i < n; i++) {
         const value = values[i];
         sum += value;
         sumSq += value * value;
-        
+
         if (Math.abs(value - rangeMin) < deadThreshold) {
           dead++;
         }
-        
-        if (typeof rangeMax === 'number' && isFinite(rangeMax) && 
-            Math.abs(value - rangeMax) < (rangeMax - saturatedThreshold)) {
+
+        if (
+          typeof rangeMax === "number" &&
+          isFinite(rangeMax) &&
+          Math.abs(value - rangeMax) < rangeMax - saturatedThreshold
+        ) {
           saturated++;
         }
       }
-      
+
       const mean = sum / n;
-      const variance = (sumSq / n) - (mean * mean);
+      const variance = sumSq / n - mean * mean;
       const deadRatio = dead / n;
       const saturatedRatio = saturated / n;
-      
+
       // Calculate coherence score (higher is better)
       // Penalize dead and saturated neurons, and high variance
       let score = 1.0;
-      
+
       // Penalty for dead neurons
       if (deadRatio > 0.05) {
         score -= 0.5 * Math.min(1, deadRatio / 0.5);
       }
-      
+
       // Penalty for saturated neurons
       if (saturatedRatio > 0.05) {
         score -= 0.3 * Math.min(1, saturatedRatio / 0.5);
       }
-      
+
       // Penalty for high variance (specific to activation type)
       const idealVariance = activation.isStable ? 0.1 : 0.3;
-      const variancePenalty = Math.abs(variance - idealVariance) / idealVariance;
+      const variancePenalty =
+        Math.abs(variance - idealVariance) / idealVariance;
       score -= 0.2 * Math.min(1, variancePenalty);
-      
+
       // Ensure score is between 0 and 1
       score = Math.max(0, Math.min(1, score));
-      
+
       return {
         score,
         mean,
         variance,
         deadRatio,
-        saturatedRatio
+        saturatedRatio,
       };
     }
-    
+
     /**
      * Applies activation function to a batch of inputs (2D array)
      * @param {Array<Array>|TypedArray} inputs - 2D array of input values
@@ -814,16 +820,16 @@ const Prime = require("../../core");
      */
     static batchActivate(inputs, activationType, inPlace = false) {
       const activation = ActivationFunctions.get(activationType);
-      
+
       // Special case for softmax (operates on whole vector)
-      if (activationType.toLowerCase() === 'softmax') {
+      if (activationType.toLowerCase() === "softmax") {
         const result = [];
         for (let i = 0; i < inputs.length; i++) {
           result.push(activation.forward(inputs[i]));
         }
         return result;
       }
-      
+
       // For element-wise activations
       if (inPlace && activation.inPlace) {
         for (let i = 0; i < inputs.length; i++) {

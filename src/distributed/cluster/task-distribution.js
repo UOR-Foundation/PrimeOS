@@ -23,7 +23,7 @@ const TaskState = {
   /** Task has failed */
   FAILED: "failed",
   /** Task was canceled */
-  CANCELED: "canceled"
+  CANCELED: "canceled",
 };
 
 /**
@@ -38,7 +38,7 @@ const TaskPriority = {
   /** High priority tasks */
   HIGH: 10,
   /** Critical priority tasks */
-  CRITICAL: 15
+  CRITICAL: 15,
 };
 
 /**
@@ -73,7 +73,8 @@ class DistributedTask {
     this.type = config.type;
     this.data = config.data || {};
     this.requiredCapabilities = config.requiredCapabilities || {};
-    this.priority = config.priority !== undefined ? config.priority : TaskPriority.NORMAL;
+    this.priority =
+      config.priority !== undefined ? config.priority : TaskPriority.NORMAL;
     this.timeout = config.timeout || 30000;
 
     // Task state tracking
@@ -85,7 +86,7 @@ class DistributedTask {
     this.assignedNodeId = null;
     this.result = null;
     this.error = null;
-    
+
     // Retry tracking
     this.retryCount = 0;
     this.maxRetries = config.maxRetries || 3;
@@ -101,11 +102,11 @@ class DistributedTask {
     if (this.state !== TaskState.PENDING && this.state !== TaskState.FAILED) {
       return false;
     }
-    
+
     this.state = TaskState.ASSIGNED;
     this.assignedAt = Date.now();
     this.assignedNodeId = nodeId;
-    
+
     return true;
   }
 
@@ -117,10 +118,10 @@ class DistributedTask {
     if (this.state !== TaskState.ASSIGNED) {
       return false;
     }
-    
+
     this.state = TaskState.EXECUTING;
     this.executionStartedAt = Date.now();
-    
+
     return true;
   }
 
@@ -130,14 +131,17 @@ class DistributedTask {
    * @returns {boolean} Whether the update was successful
    */
   complete(result) {
-    if (this.state !== TaskState.EXECUTING && this.state !== TaskState.ASSIGNED) {
+    if (
+      this.state !== TaskState.EXECUTING &&
+      this.state !== TaskState.ASSIGNED
+    ) {
       return false;
     }
-    
+
     this.state = TaskState.COMPLETED;
     this.completedAt = Date.now();
     this.result = result;
-    
+
     return true;
   }
 
@@ -147,20 +151,23 @@ class DistributedTask {
    * @returns {boolean} Whether the update was successful
    */
   fail(error) {
-    if (this.state !== TaskState.EXECUTING && this.state !== TaskState.ASSIGNED) {
+    if (
+      this.state !== TaskState.EXECUTING &&
+      this.state !== TaskState.ASSIGNED
+    ) {
       return false;
     }
-    
+
     // Track error
     this.lastError = {
       message: error.message,
       stack: error.stack,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     // Increment retry count
     this.retryCount++;
-    
+
     // If we haven't exceeded max retries, reset to pending
     if (this.retryCount <= this.maxRetries) {
       this.state = TaskState.PENDING;
@@ -169,12 +176,12 @@ class DistributedTask {
       this.executionStartedAt = null;
       return true;
     }
-    
+
     // Otherwise, mark as failed
     this.state = TaskState.FAILED;
     this.completedAt = Date.now();
     this.error = this.lastError;
-    
+
     return true;
   }
 
@@ -183,13 +190,17 @@ class DistributedTask {
    * @returns {boolean} Whether the cancellation was successful
    */
   cancel() {
-    if (this.state === TaskState.COMPLETED || this.state === TaskState.FAILED || this.state === TaskState.CANCELED) {
+    if (
+      this.state === TaskState.COMPLETED ||
+      this.state === TaskState.FAILED ||
+      this.state === TaskState.CANCELED
+    ) {
       return false;
     }
-    
+
     this.state = TaskState.CANCELED;
     this.completedAt = Date.now();
-    
+
     return true;
   }
 
@@ -198,11 +209,15 @@ class DistributedTask {
    * @returns {boolean} Whether the task has timed out
    */
   hasTimedOut() {
-    if (this.state !== TaskState.EXECUTING && this.state !== TaskState.ASSIGNED) {
+    if (
+      this.state !== TaskState.EXECUTING &&
+      this.state !== TaskState.ASSIGNED
+    ) {
       return false;
     }
-    
-    const executionTime = Date.now() - (this.executionStartedAt || this.assignedAt);
+
+    const executionTime =
+      Date.now() - (this.executionStartedAt || this.assignedAt);
     return executionTime > this.timeout;
   }
 
@@ -214,7 +229,7 @@ class DistributedTask {
     if (!this.assignedAt) {
       return 0;
     }
-    
+
     const end = this.completedAt || Date.now();
     return end - this.assignedAt;
   }
@@ -238,7 +253,7 @@ class DistributedTask {
       retryCount: this.retryCount,
       maxRetries: this.maxRetries,
       timeout: this.timeout,
-      hasTimedOut: this.hasTimedOut()
+      hasTimedOut: this.hasTimedOut(),
     };
   }
 }
@@ -254,9 +269,9 @@ class TaskQueue {
   constructor(config = {}) {
     this.config = {
       maxQueueSize: config.maxQueueSize || 1000,
-      ...config
+      ...config,
     };
-    
+
     this.tasks = new Map(); // taskId -> task
     this.pendingTasks = []; // Tasks waiting for assignment
     this.eventBus = new EventBus();
@@ -272,30 +287,31 @@ class TaskQueue {
     if (this.tasks.size >= this.config.maxQueueSize) {
       throw new Prime.InvalidOperationError("Task queue is full");
     }
-    
+
     // Convert configuration object to task if needed
-    const distributedTask = task instanceof DistributedTask 
-      ? task 
-      : new DistributedTask(task);
-    
+    const distributedTask =
+      task instanceof DistributedTask ? task : new DistributedTask(task);
+
     // Check if task already exists
     if (this.tasks.has(distributedTask.id)) {
-      throw new Prime.ValidationError(`Task with ID ${distributedTask.id} already exists`);
+      throw new Prime.ValidationError(
+        `Task with ID ${distributedTask.id} already exists`,
+      );
     }
-    
+
     // Add task to maps
     this.tasks.set(distributedTask.id, distributedTask);
     this.pendingTasks.push(distributedTask);
-    
+
     // Sort pending tasks by priority
     this._sortPendingTasks();
-    
+
     // Emit event
     this.eventBus.emit("task:added", {
       taskId: distributedTask.id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return distributedTask;
   }
 
@@ -306,14 +322,16 @@ class TaskQueue {
    */
   getNextPendingTask(criteria = {}) {
     // Filter pending tasks by criteria
-    const eligible = this.pendingTasks.filter(task => {
+    const eligible = this.pendingTasks.filter((task) => {
       // Match criteria
       for (const [key, value] of Object.entries(criteria)) {
-        if (key === 'requiredCapabilities') {
+        if (key === "requiredCapabilities") {
           // Check capabilities
           for (const [capability, minValue] of Object.entries(value)) {
-            if (!task.requiredCapabilities[capability] || 
-                task.requiredCapabilities[capability] < minValue) {
+            if (
+              !task.requiredCapabilities[capability] ||
+              task.requiredCapabilities[capability] < minValue
+            ) {
               return false;
             }
           }
@@ -323,7 +341,7 @@ class TaskQueue {
       }
       return true;
     });
-    
+
     // Return highest priority eligible task
     return eligible.length > 0 ? eligible[0] : null;
   }
@@ -348,22 +366,22 @@ class TaskQueue {
     if (!task) {
       return false;
     }
-    
+
     // Assign task
     const success = task.assign(nodeId);
-    
+
     if (success) {
       // Remove from pending tasks
-      this.pendingTasks = this.pendingTasks.filter(t => t.id !== taskId);
-      
+      this.pendingTasks = this.pendingTasks.filter((t) => t.id !== taskId);
+
       // Emit event
       this.eventBus.emit("task:assigned", {
         taskId,
         nodeId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
-    
+
     return success;
   }
 
@@ -377,19 +395,19 @@ class TaskQueue {
     if (!task) {
       return false;
     }
-    
+
     // Mark task as executing
     const success = task.markExecuting();
-    
+
     if (success) {
       // Emit event
       this.eventBus.emit("task:executing", {
         taskId,
         nodeId: task.assignedNodeId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
-    
+
     return success;
   }
 
@@ -404,20 +422,20 @@ class TaskQueue {
     if (!task) {
       return false;
     }
-    
+
     // Complete task
     const success = task.complete(result);
-    
+
     if (success) {
       // Emit event
       this.eventBus.emit("task:completed", {
         taskId,
         nodeId: task.assignedNodeId,
         result,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
-    
+
     return success;
   }
 
@@ -432,22 +450,22 @@ class TaskQueue {
     if (!task) {
       return false;
     }
-    
+
     // Fail task
     const success = task.fail(error);
-    
+
     if (success) {
       // If task went back to pending, add it back to pending tasks
       if (task.state === TaskState.PENDING) {
         this.pendingTasks.push(task);
         this._sortPendingTasks();
-        
+
         // Emit retry event
         this.eventBus.emit("task:retry", {
           taskId,
           retryCount: task.retryCount,
           error: error.message,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       } else {
         // Emit failure event
@@ -456,11 +474,11 @@ class TaskQueue {
           nodeId: task.assignedNodeId,
           error: error.message,
           retries: task.retryCount,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
     }
-    
+
     return success;
   }
 
@@ -474,22 +492,22 @@ class TaskQueue {
     if (!task) {
       return false;
     }
-    
+
     // Cancel task
     const success = task.cancel();
-    
+
     if (success) {
       // Remove from pending tasks if present
-      this.pendingTasks = this.pendingTasks.filter(t => t.id !== taskId);
-      
+      this.pendingTasks = this.pendingTasks.filter((t) => t.id !== taskId);
+
       // Emit event
       this.eventBus.emit("task:canceled", {
         taskId,
         nodeId: task.assignedNodeId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
-    
+
     return success;
   }
 
@@ -503,17 +521,17 @@ class TaskQueue {
     if (!task) {
       return false;
     }
-    
+
     // Remove task
     this.tasks.delete(taskId);
-    this.pendingTasks = this.pendingTasks.filter(t => t.id !== taskId);
-    
+    this.pendingTasks = this.pendingTasks.filter((t) => t.id !== taskId);
+
     // Emit event
     this.eventBus.emit("task:removed", {
       taskId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return true;
   }
 
@@ -523,11 +541,11 @@ class TaskQueue {
    */
   checkTimeouts() {
     const timedOutTasks = [];
-    
+
     for (const [taskId, task] of this.tasks.entries()) {
       if (task.hasTimedOut()) {
         timedOutTasks.push(taskId);
-        
+
         // Emit timeout event
         this.eventBus.emit("task:timeout", {
           taskId,
@@ -535,11 +553,11 @@ class TaskQueue {
           assignedAt: task.assignedAt,
           executionStartedAt: task.executionStartedAt,
           timeout: task.timeout,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
     }
-    
+
     return timedOutTasks;
   }
 
@@ -549,7 +567,7 @@ class TaskQueue {
    * @returns {Array<DistributedTask>} Tasks
    */
   getAllTasks(filter = {}) {
-    return Array.from(this.tasks.values()).filter(task => {
+    return Array.from(this.tasks.values()).filter((task) => {
       // Match filter criteria
       for (const [key, value] of Object.entries(filter)) {
         if (task[key] !== value) {
@@ -566,30 +584,35 @@ class TaskQueue {
    */
   getSummary() {
     const allTasks = Array.from(this.tasks.values());
-    
+
     // Count tasks by state
     const tasksByState = {};
     for (const state of Object.values(TaskState)) {
-      tasksByState[state] = allTasks.filter(task => task.state === state).length;
+      tasksByState[state] = allTasks.filter(
+        (task) => task.state === state,
+      ).length;
     }
-    
+
     // Count tasks by type
     const tasksByType = {};
     for (const task of allTasks) {
       tasksByType[task.type] = (tasksByType[task.type] || 0) + 1;
     }
-    
+
     // Calculate average execution time for completed tasks
-    const completedTasks = allTasks.filter(task => task.state === TaskState.COMPLETED);
+    const completedTasks = allTasks.filter(
+      (task) => task.state === TaskState.COMPLETED,
+    );
     let avgExecutionTime = 0;
-    
+
     if (completedTasks.length > 0) {
       const totalExecutionTime = completedTasks.reduce(
-        (sum, task) => sum + task.getExecutionTime(), 0
+        (sum, task) => sum + task.getExecutionTime(),
+        0,
       );
       avgExecutionTime = totalExecutionTime / completedTasks.length;
     }
-    
+
     return {
       totalTasks: allTasks.length,
       pendingTasks: this.pendingTasks.length,
@@ -598,9 +621,12 @@ class TaskQueue {
       executionStats: {
         completedTasks: completedTasks.length,
         avgExecutionTime,
-        failedTasks: allTasks.filter(task => task.state === TaskState.FAILED).length,
-        canceledTasks: allTasks.filter(task => task.state === TaskState.CANCELED).length
-      }
+        failedTasks: allTasks.filter((task) => task.state === TaskState.FAILED)
+          .length,
+        canceledTasks: allTasks.filter(
+          (task) => task.state === TaskState.CANCELED,
+        ).length,
+      },
     };
   }
 
@@ -615,7 +641,7 @@ class TaskQueue {
       if (priorityDiff !== 0) {
         return priorityDiff;
       }
-      
+
       // Then by creation time (older first)
       return a.createdAt - b.createdAt;
     });
@@ -634,20 +660,22 @@ class TaskScheduler {
    */
   constructor(config) {
     if (!config || !config.taskQueue || !config.nodeRegistry) {
-      throw new Prime.ValidationError("Task scheduler requires taskQueue and nodeRegistry");
+      throw new Prime.ValidationError(
+        "Task scheduler requires taskQueue and nodeRegistry",
+      );
     }
-    
+
     this.taskQueue = config.taskQueue;
     this.nodeRegistry = config.nodeRegistry;
     this.eventBus = new EventBus();
-    
+
     this.config = {
       schedulingInterval: config.schedulingInterval || 1000, // ms
       maxTasksPerNode: config.maxTasksPerNode || 10,
       maxConcurrentAssignments: config.maxConcurrentAssignments || 10,
-      ...config
+      ...config,
     };
-    
+
     // Scheduling state
     this.isScheduling = false;
     this.schedulingInterval = null;
@@ -655,7 +683,7 @@ class TaskScheduler {
       schedulingRuns: 0,
       tasksAssigned: 0,
       assignmentFailures: 0,
-      lastSchedulingRun: null
+      lastSchedulingRun: null,
     };
   }
 
@@ -667,23 +695,23 @@ class TaskScheduler {
     if (this.isScheduling) {
       return false;
     }
-    
+
     this.isScheduling = true;
-    
+
     // Schedule immediate run
     this._scheduleRun();
-    
+
     // Start interval
     this.schedulingInterval = setInterval(() => {
       this._scheduleRun();
     }, this.config.schedulingInterval);
-    
+
     // Log start
     Prime.Logger.info("Task scheduler started", {
       interval: this.config.schedulingInterval,
-      maxTasksPerNode: this.config.maxTasksPerNode
+      maxTasksPerNode: this.config.maxTasksPerNode,
     });
-    
+
     return true;
   }
 
@@ -695,20 +723,20 @@ class TaskScheduler {
     if (!this.isScheduling) {
       return false;
     }
-    
+
     this.isScheduling = false;
-    
+
     // Clear interval
     if (this.schedulingInterval) {
       clearInterval(this.schedulingInterval);
       this.schedulingInterval = null;
     }
-    
+
     // Log stop
     Prime.Logger.info("Task scheduler stopped", {
-      metrics: this.metrics
+      metrics: this.metrics,
     });
-    
+
     return true;
   }
 
@@ -720,7 +748,7 @@ class TaskScheduler {
     if (!this.isScheduling) {
       return 0;
     }
-    
+
     return this._runScheduling();
   }
 
@@ -734,15 +762,15 @@ class TaskScheduler {
     if (!taskConfig.id) {
       taskConfig.id = `task_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
     }
-    
+
     // Add task to queue
     const task = this.taskQueue.addTask(taskConfig);
-    
+
     // Trigger scheduling if running
     if (this.isScheduling) {
       this._scheduleRun();
     }
-    
+
     return task;
   }
 
@@ -764,7 +792,7 @@ class TaskScheduler {
     // Update metrics
     this.metrics.schedulingRuns++;
     this.metrics.lastSchedulingRun = Date.now();
-    
+
     // Check timeouts
     const timedOutTasks = this.taskQueue.checkTimeouts();
     for (const taskId of timedOutTasks) {
@@ -773,71 +801,84 @@ class TaskScheduler {
         this.taskQueue.failTask(taskId, new Error("Task timed out"));
       }
     }
-    
+
     // Get available nodes
-    const availableNodes = this.nodeRegistry.findNodes({
-      state: "ready"
-    }).concat(this.nodeRegistry.findNodes({
-      state: "working"
-    }));
-    
+    const availableNodes = this.nodeRegistry
+      .findNodes({
+        state: "ready",
+      })
+      .concat(
+        this.nodeRegistry.findNodes({
+          state: "working",
+        }),
+      );
+
     // If no available nodes, nothing to do
     if (availableNodes.length === 0) {
       return 0;
     }
-    
+
     let assignedCount = 0;
     let pendingTask = this.taskQueue.getNextPendingTask();
-    
+
     // Assign tasks until we run out of tasks or hit concurrency limit
-    while (pendingTask && assignedCount < this.config.maxConcurrentAssignments) {
+    while (
+      pendingTask &&
+      assignedCount < this.config.maxConcurrentAssignments
+    ) {
       // Find best node for task
       const bestNode = this.nodeRegistry.findBestNodeForTask(pendingTask);
-      
+
       if (bestNode) {
         // Assign task to node
-        const taskAssigned = this.taskQueue.assignTask(pendingTask.id, bestNode.id);
+        const taskAssigned = this.taskQueue.assignTask(
+          pendingTask.id,
+          bestNode.id,
+        );
         const nodeAccepted = bestNode.assignTask(pendingTask);
-        
+
         if (taskAssigned && nodeAccepted) {
           assignedCount++;
           this.metrics.tasksAssigned++;
-          
+
           // Mark as executing
           this.taskQueue.markTaskExecuting(pendingTask.id);
-          
+
           // Emit event
           this.eventBus.emit("task:scheduled", {
             taskId: pendingTask.id,
             nodeId: bestNode.id,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
         } else {
           // Assignment failed
           this.metrics.assignmentFailures++;
-          
+
           // If task was assigned but node didn't accept, fail task
           if (taskAssigned && !nodeAccepted) {
-            this.taskQueue.failTask(pendingTask.id, new Error("Node rejected task assignment"));
+            this.taskQueue.failTask(
+              pendingTask.id,
+              new Error("Node rejected task assignment"),
+            );
           }
         }
       } else {
         // No suitable node found, leave task in queue
         this.metrics.assignmentFailures++;
-        
+
         // Log warning
         Prime.Logger.warn(`No suitable node found for task ${pendingTask.id}`, {
           taskType: pendingTask.type,
-          requiredCapabilities: pendingTask.requiredCapabilities
+          requiredCapabilities: pendingTask.requiredCapabilities,
         });
-        
+
         break; // No point checking more tasks if no nodes are available
       }
-      
+
       // Get next pending task
       pendingTask = this.taskQueue.getNextPendingTask();
     }
-    
+
     return assignedCount;
   }
 
@@ -850,11 +891,12 @@ class TaskScheduler {
       isScheduling: this.isScheduling,
       metrics: {
         ...this.metrics,
-        timeSinceLastRun: this.metrics.lastSchedulingRun ? 
-          Date.now() - this.metrics.lastSchedulingRun : null
+        timeSinceLastRun: this.metrics.lastSchedulingRun
+          ? Date.now() - this.metrics.lastSchedulingRun
+          : null,
       },
       taskQueueSummary: this.taskQueue.getSummary(),
-      nodeRegistrySummary: this.nodeRegistry.getSummary()
+      nodeRegistrySummary: this.nodeRegistry.getSummary(),
     };
   }
 }
@@ -867,7 +909,7 @@ Prime.Distributed.Cluster.Tasks = {
   TaskPriority,
   DistributedTask,
   TaskQueue,
-  TaskScheduler
+  TaskScheduler,
 };
 
 module.exports = Prime;

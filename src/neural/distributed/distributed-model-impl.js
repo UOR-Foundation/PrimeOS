@@ -28,16 +28,16 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
   constructor(config = {}) {
     // Store original input size before calling parent constructor
     const originalInputSize = config.inputSize;
-    
+
     // Call parent constructor
     super(config);
-    
+
     // Store original input size as a separate property
     this.originalInputSize = originalInputSize;
-    
+
     // Restore input size to original value
     this.inputSize = originalInputSize;
-    
+
     // Set up distributed configuration
     this.distributedConfig = {
       enabled: config.distributed?.enabled ?? false,
@@ -45,10 +45,13 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
       partitionScheme: config.distributed?.partitionScheme || "data_parallel",
       nodeCount: config.distributed?.nodeCount || 1,
       syncFrequency: config.distributed?.syncFrequency || 10,
-      coherenceCheckFrequency: config.distributed?.coherenceCheckFrequency || 50,
+      coherenceCheckFrequency:
+        config.distributed?.coherenceCheckFrequency || 50,
       fallbackToLocal: config.distributed?.fallbackToLocal ?? true,
-      synchronizationStrategy: config.distributed?.synchronizationStrategy || "average",
-      syncRecoveryStrategy: config.distributed?.syncRecoveryStrategy || "local_fallback"
+      synchronizationStrategy:
+        config.distributed?.synchronizationStrategy || "average",
+      syncRecoveryStrategy:
+        config.distributed?.syncRecoveryStrategy || "local_fallback",
     };
 
     // Distributed operation state
@@ -64,23 +67,29 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
       networkPartitions: 0,
       lastParameterUpdate: 0,
       synchronizedIterations: 0,
-      failedSynchronizations: 0
+      failedSynchronizations: 0,
     };
 
     // Validate dimensions if validation is available
     if (Prime.Neural.Distributed.DimensionValidator) {
       // Log the layer dimensions for debugging
-      Prime.Neural.Distributed.DimensionValidator.logLayerDimensions(this.layers);
-      
+      Prime.Neural.Distributed.DimensionValidator.logLayerDimensions(
+        this.layers,
+      );
+
       // Verify model dimensions
-      const dimensionsValid = Prime.Neural.Distributed.DimensionValidator.verifyModelDimensions(this);
+      const dimensionsValid =
+        Prime.Neural.Distributed.DimensionValidator.verifyModelDimensions(this);
       if (!dimensionsValid && Prime.Logger && Prime.Logger.error) {
         Prime.Logger.error("Model dimensions are inconsistent");
       }
     }
 
     // Initialize if distributed mode is enabled and cluster manager is provided
-    if (this.distributedConfig.enabled && this.distributedConfig.clusterManager) {
+    if (
+      this.distributedConfig.enabled &&
+      this.distributedConfig.clusterManager
+    ) {
       this._initializeDistributedMode();
     }
   }
@@ -94,14 +103,14 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
     // First, validate the layer config if validator is available
     if (Prime.Neural.Distributed.DimensionValidator) {
       Prime.Neural.Distributed.DimensionValidator.validateLayerConfig(
-        layerConfig, 
-        this.layers.length
+        layerConfig,
+        this.layers.length,
       );
     }
-    
+
     // Call parent addLayer
     super.addLayer(layerConfig);
-    
+
     return this;
   }
 
@@ -131,15 +140,18 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
       if (Prime.Logger && Prime.Logger.info) {
         Prime.Logger.info("Distributed neural model initialized", {
           nodeCount: this.distributedState.activeNodes.length,
-          partitionScheme: this.distributedConfig.partitionScheme
+          partitionScheme: this.distributedConfig.partitionScheme,
         });
       }
     } catch (error) {
       // Log error but continue in local mode if fallback is enabled
       if (Prime.Logger && Prime.Logger.error) {
-        Prime.Logger.error("Failed to initialize distributed mode, falling back to local", {
-          error: error.message
-        });
+        Prime.Logger.error(
+          "Failed to initialize distributed mode, falling back to local",
+          {
+            error: error.message,
+          },
+        );
       }
 
       if (!this.distributedConfig.fallbackToLocal) {
@@ -157,25 +169,29 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
    */
   _createNodeAssignments() {
     const clusterManager = this.distributedConfig.clusterManager;
-    
+
     // Get available nodes from cluster manager
-    const availableNodes = [...clusterManager.nodes.values()].filter(node => 
-      node.state === Prime.Distributed.Cluster.NodeState.READY ||
-      node.state === Prime.Distributed.Cluster.NodeState.WORKING
+    const availableNodes = [...clusterManager.nodes.values()].filter(
+      (node) =>
+        node.state === Prime.Distributed.Cluster.NodeState.READY ||
+        node.state === Prime.Distributed.Cluster.NodeState.WORKING,
     );
-    
+
     if (availableNodes.length === 0) {
       throw new Error("No available nodes for distributed computation");
     }
-    
+
     // Store active nodes
-    this.distributedState.activeNodes = availableNodes.map(node => node.id);
-    
+    this.distributedState.activeNodes = availableNodes.map((node) => node.id);
+
     // Create initial task assignments (will be updated based on partition scheme)
     this.layers.forEach((layer, index) => {
       // Simple round-robin assignment for now
       const nodeIndex = index % availableNodes.length;
-      this.distributedState.taskAssignments.set(`layer_${index}`, availableNodes[nodeIndex].id);
+      this.distributedState.taskAssignments.set(
+        `layer_${index}`,
+        availableNodes[nodeIndex].id,
+      );
     });
   }
 
@@ -199,30 +215,37 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
       default:
         partitionType = Prime.Distributed.Partition.PartitionType.DATA_PARALLEL;
     }
-    
+
     // Create partition configuration
     const partitionConfig = {
       type: partitionType,
       nodeIds: this.distributedState.activeNodes,
-      layerConfig: {}
+      layerConfig: {},
     };
-    
+
     // Configure layer assignments based on scheme
     this.layers.forEach((layer, index) => {
       partitionConfig.layerConfig[`layer_${index}`] = {
         inputSize: layer.inputSize,
         outputSize: layer.outputSize,
-        activation: layer.activation
+        activation: layer.activation,
       };
-      
+
       // Add layer-specific config if available
-      if (layer.filters) partitionConfig.layerConfig[`layer_${index}`].filters = layer.filters;
-      if (layer.kernelSize) partitionConfig.layerConfig[`layer_${index}`].kernelSize = layer.kernelSize;
-      if (layer.hiddenSize) partitionConfig.layerConfig[`layer_${index}`].hiddenSize = layer.hiddenSize;
+      if (layer.filters)
+        partitionConfig.layerConfig[`layer_${index}`].filters = layer.filters;
+      if (layer.kernelSize)
+        partitionConfig.layerConfig[`layer_${index}`].kernelSize =
+          layer.kernelSize;
+      if (layer.hiddenSize)
+        partitionConfig.layerConfig[`layer_${index}`].hiddenSize =
+          layer.hiddenSize;
     });
-    
+
     // Create and store the partition scheme
-    this.partitionScheme = new Prime.Distributed.Partition.PartitionScheme(partitionConfig);
+    this.partitionScheme = new Prime.Distributed.Partition.PartitionScheme(
+      partitionConfig,
+    );
   }
 
   /**
@@ -232,14 +255,14 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
    */
   _extractModelParameters() {
     return {
-      weights: this.layers.map(layer => layer.weights),
-      biases: this.layers.map(layer => layer.biases),
-      layerConfig: this.layers.map(layer => ({
+      weights: this.layers.map((layer) => layer.weights),
+      biases: this.layers.map((layer) => layer.biases),
+      layerConfig: this.layers.map((layer) => ({
         inputSize: layer.inputSize,
         outputSize: layer.outputSize,
         activation: layer.activation,
-        type: layer.type || 'dense'
-      }))
+        type: layer.type || "dense",
+      })),
     };
   }
 
@@ -253,30 +276,39 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
     if (!parameters || !parameters.weights || !parameters.biases) {
       return false;
     }
-    
+
     // Verify parameter coherence before applying
     if (Prime.Neural.Distributed.DimensionValidator) {
-      const isCoherent = Prime.Neural.Distributed.DimensionValidator.validateParameterCoherence(parameters);
+      const isCoherent =
+        Prime.Neural.Distributed.DimensionValidator.validateParameterCoherence(
+          parameters,
+        );
       if (!isCoherent) {
         if (Prime.Logger && Prime.Logger.warn) {
-          Prime.Logger.warn("Parameters failed coherence validation, skipping application");
+          Prime.Logger.warn(
+            "Parameters failed coherence validation, skipping application",
+          );
         }
         return false;
       }
     }
-    
+
     try {
       // Apply weights and biases to each layer
-      for (let i = 0; i < this.layers.length && i < parameters.weights.length; i++) {
+      for (
+        let i = 0;
+        i < this.layers.length && i < parameters.weights.length;
+        i++
+      ) {
         if (parameters.weights[i]) {
           this.layers[i].weights = parameters.weights[i];
         }
-        
+
         if (parameters.biases[i]) {
           this.layers[i].biases = parameters.biases[i];
         }
       }
-      
+
       return true;
     } catch (error) {
       if (Prime.Logger && Prime.Logger.error) {
@@ -292,58 +324,65 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
    */
   async _synchronizeParameters() {
     // Skip if distributed mode is disabled
-    if (!this.distributedConfig.enabled || !this.distributedState.isInitialized) {
+    if (
+      !this.distributedConfig.enabled ||
+      !this.distributedState.isInitialized
+    ) {
       return true;
     }
-    
+
     // Check if synchronization is needed based on frequency
     if (this.metrics.iteration % this.distributedConfig.syncFrequency !== 0) {
       return true;
     }
-    
+
     try {
       // Get local parameters
       const localParams = this._extractModelParameters();
-      
+
       // Get remote parameters from other nodes
       const clusterManager = this.distributedConfig.clusterManager;
       const remoteResults = await clusterManager.getParametersFromNodes(
-        this.distributedState.activeNodes, 
-        this.distributedConfig.synchronizationStrategy
+        this.distributedState.activeNodes,
+        this.distributedConfig.synchronizationStrategy,
       );
-      
+
       if (!remoteResults || remoteResults.length === 0) {
         if (Prime.Logger && Prime.Logger.warn) {
-          Prime.Logger.warn("No remote parameters received for synchronization");
+          Prime.Logger.warn(
+            "No remote parameters received for synchronization",
+          );
         }
         return false;
       }
-      
+
       // Average parameters based on synchronization strategy
       let finalParams;
-      if (this.distributedConfig.synchronizationStrategy === 'average') {
+      if (this.distributedConfig.synchronizationStrategy === "average") {
         finalParams = this._averageParameters(localParams, remoteResults);
       } else {
         // Use default averaging as fallback
         finalParams = this._averageParameters(localParams, remoteResults);
       }
-      
+
       // Apply averaged parameters
       const success = this._applyParameters(finalParams);
-      
+
       // Update state
       this.distributedState.synchronizedIterations++;
       this.distributedState.lastSyncIteration = this.metrics.iteration;
       this.distributedState.lastParameterUpdate = Date.now();
-      
+
       return success;
     } catch (error) {
       this.distributedState.failedSynchronizations++;
-      
+
       if (Prime.Logger && Prime.Logger.error) {
-        Prime.Logger.error(`Parameter synchronization failed: ${error.message}`);
+        Prime.Logger.error(
+          `Parameter synchronization failed: ${error.message}`,
+        );
       }
-      
+
       // Apply recovery strategy
       return this._handleSynchronizationFailure(error);
     }
@@ -359,62 +398,70 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
   _averageParameters(localParams, remoteParams) {
     const avgParams = {
       weights: [],
-      biases: []
+      biases: [],
     };
-    
+
     // Process each layer
-    for (let layerIndex = 0; layerIndex < localParams.weights.length; layerIndex++) {
+    for (
+      let layerIndex = 0;
+      layerIndex < localParams.weights.length;
+      layerIndex++
+    ) {
       // Skip if local layer doesn't exist
       if (!localParams.weights[layerIndex]) continue;
-      
+
       // Average weights for this layer
       const localWeights = localParams.weights[layerIndex];
       avgParams.weights[layerIndex] = [];
-      
+
       for (let i = 0; i < localWeights.length; i++) {
         avgParams.weights[layerIndex][i] = [];
-        
+
         for (let j = 0; j < localWeights[i].length; j++) {
           let sum = localWeights[i][j];
           let count = 1;
-          
+
           // Add weights from remote parameters
           for (const remote of remoteParams) {
-            if (remote.weights && 
-                remote.weights[layerIndex] && 
-                remote.weights[layerIndex][i] && 
-                remote.weights[layerIndex][i][j] !== undefined) {
+            if (
+              remote.weights &&
+              remote.weights[layerIndex] &&
+              remote.weights[layerIndex][i] &&
+              remote.weights[layerIndex][i][j] !== undefined
+            ) {
               sum += remote.weights[layerIndex][i][j];
               count++;
             }
           }
-          
+
           avgParams.weights[layerIndex][i][j] = sum / count;
         }
       }
-      
+
       // Average biases for this layer
       const localBiases = localParams.biases[layerIndex];
       avgParams.biases[layerIndex] = [];
-      
+
       for (let i = 0; i < localBiases.length; i++) {
         let sum = localBiases[i];
         let count = 1;
-        
+
         // Add biases from remote parameters
         for (const remote of remoteParams) {
-          if (remote.biases && 
-              remote.biases[layerIndex] && 
-              remote.biases[layerIndex][i] !== undefined) {
+          if (
+            remote.biases &&
+            remote.biases[layerIndex] &&
+            remote.biases[layerIndex][i] !== undefined
+          ) {
             sum += remote.biases[layerIndex][i];
             count++;
           }
         }
-        
+
         avgParams.biases[layerIndex][i] = sum / count;
       }
     }
-    
+
     return avgParams;
   }
 
@@ -426,29 +473,35 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
    */
   _handleSynchronizationFailure(error) {
     const strategy = this.distributedConfig.syncRecoveryStrategy;
-    
+
     switch (strategy) {
-      case 'local_fallback':
+      case "local_fallback":
         // Continue with local parameters
         if (Prime.Logger && Prime.Logger.warn) {
-          Prime.Logger.warn('Using local fallback after synchronization failure');
+          Prime.Logger.warn(
+            "Using local fallback after synchronization failure",
+          );
         }
         return true;
-        
-      case 'retry':
+
+      case "retry":
         // Implementation of parameter synchronization retry
         if (Prime.Logger && Prime.Logger.info) {
-          Prime.Logger.info('Using retry strategy for parameter synchronization');
+          Prime.Logger.info(
+            "Using retry strategy for parameter synchronization",
+          );
         }
         return true;
-        
-      case 'conservative_merge':
+
+      case "conservative_merge":
         // Implementation of partial parameter merging
         if (Prime.Logger && Prime.Logger.info) {
-          Prime.Logger.info('Using conservative merge strategy for parameter recovery');
+          Prime.Logger.info(
+            "Using conservative merge strategy for parameter recovery",
+          );
         }
         return true;
-        
+
       default:
         return true; // Always fallback to local by default
     }
@@ -459,30 +512,36 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
    * @returns {Promise<Boolean>} True if coherent
    */
   async _distributedCoherenceCheck() {
-    if (!this.distributedConfig.enabled || !this.distributedState.isInitialized) {
+    if (
+      !this.distributedConfig.enabled ||
+      !this.distributedState.isInitialized
+    ) {
       return true;
     }
-    
+
     try {
       // Extract current parameters
       const params = this._extractModelParameters();
-      
+
       // Verify local coherence with dimension validator
       let isCoherent = true;
       if (Prime.Neural.Distributed.DimensionValidator) {
-        isCoherent = Prime.Neural.Distributed.DimensionValidator.validateParameterCoherence(params);
+        isCoherent =
+          Prime.Neural.Distributed.DimensionValidator.validateParameterCoherence(
+            params,
+          );
       }
-      
+
       if (!isCoherent) {
         if (Prime.Logger && Prime.Logger.warn) {
-          Prime.Logger.warn('Local parameters failed coherence check');
+          Prime.Logger.warn("Local parameters failed coherence check");
         }
         return false;
       }
-      
+
       // Update state
       this.distributedState.lastCoherenceCheck = this.metrics.iteration;
-      
+
       return true;
     } catch (error) {
       if (Prime.Logger && Prime.Logger.error) {
@@ -508,7 +567,7 @@ class DistributedNeuralModel extends Prime.Neural.Model.NeuralModel {
       recoveryStrategy: this.distributedConfig.syncRecoveryStrategy,
       activeNodes: this.distributedState.activeNodes.length,
       originalInputSize: this.originalInputSize,
-      currentInputSize: this.inputSize
+      currentInputSize: this.inputSize,
     };
   }
 }

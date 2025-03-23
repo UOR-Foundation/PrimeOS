@@ -14,7 +14,10 @@ try {
 }
 
 // Import constraints
-const { CoherenceConstraints, CoherenceNorms } = require('./coherence-constraints.js');
+const {
+  CoherenceConstraints,
+  CoherenceNorms,
+} = require("./coherence-constraints.js");
 
 /**
  * CoherenceValidator implements formal coherence checking for mathematical operations
@@ -60,34 +63,44 @@ class CoherenceValidator {
 
   /**
    * Register default constraints from the CoherenceConstraints object
-   * 
+   *
    * @private
    */
   _registerDefaultConstraints() {
     if (CoherenceConstraints) {
       // Register numeric constraints
-      for (const [name, constraint] of Object.entries(CoherenceConstraints.numeric)) {
-        this.registerConstraint('numeric', constraint);
+      for (const [name, constraint] of Object.entries(
+        CoherenceConstraints.numeric,
+      )) {
+        this.registerConstraint("numeric", constraint);
       }
-      
+
       // Register vector space constraints
-      for (const [name, constraint] of Object.entries(CoherenceConstraints.vectorSpace)) {
-        this.registerConstraint('vectorSpace', constraint);
+      for (const [name, constraint] of Object.entries(
+        CoherenceConstraints.vectorSpace,
+      )) {
+        this.registerConstraint("vectorSpace", constraint);
       }
-      
+
       // Register matrix algebra constraints
-      for (const [name, constraint] of Object.entries(CoherenceConstraints.matrixAlgebra)) {
-        this.registerConstraint('matrixAlgebra', constraint);
+      for (const [name, constraint] of Object.entries(
+        CoherenceConstraints.matrixAlgebra,
+      )) {
+        this.registerConstraint("matrixAlgebra", constraint);
       }
-      
+
       // Register functional constraints
-      for (const [name, constraint] of Object.entries(CoherenceConstraints.functional)) {
-        this.registerConstraint('functional', constraint);
+      for (const [name, constraint] of Object.entries(
+        CoherenceConstraints.functional,
+      )) {
+        this.registerConstraint("functional", constraint);
       }
-      
+
       // Register tensor algebra constraints
-      for (const [name, constraint] of Object.entries(CoherenceConstraints.tensorAlgebra)) {
-        this.registerConstraint('tensorAlgebra', constraint);
+      for (const [name, constraint] of Object.entries(
+        CoherenceConstraints.tensorAlgebra,
+      )) {
+        this.registerConstraint("tensorAlgebra", constraint);
       }
     }
 
@@ -471,7 +484,9 @@ class CoherenceValidator {
           : 0,
       manifoldSuccessRate:
         this._validationStats.manifoldChecks > 0
-          ? (this._validationStats.passedChecks - this._validationStats.failedChecks) / this._validationStats.manifoldChecks
+          ? (this._validationStats.passedChecks -
+              this._validationStats.failedChecks) /
+            this._validationStats.manifoldChecks
           : 0,
     };
   }
@@ -489,7 +504,7 @@ class CoherenceValidator {
       crossManifoldChecks: 0,
     };
   }
-  
+
   /**
    * Validate a manifold against registered constraints
    *
@@ -509,9 +524,13 @@ class CoherenceValidator {
       // Handle case where Manifold isn't available
       Manifold = null;
     }
-    
+
     if (!this.enableManifoldValidation) {
-      return { valid: true, coherence: 1.0, message: "Manifold validation is not enabled" };
+      return {
+        valid: true,
+        coherence: 1.0,
+        message: "Manifold validation is not enabled",
+      };
     }
 
     const startTime = Date.now();
@@ -550,7 +569,7 @@ class CoherenceValidator {
 
     // Sort constraints by priority (descending)
     const sortedConstraints = allConstraints.sort(
-      (a, b) => b.priority - a.priority
+      (a, b) => b.priority - a.priority,
     );
 
     // Track constraint satisfaction
@@ -573,7 +592,7 @@ class CoherenceValidator {
         if (!satisfied) {
           if (constraint.type === "hard") {
             allHardConstraintsSatisfied = false;
-            
+
             // In strict mode, fail on first violated hard constraint
             if (this.strictMode) {
               break;
@@ -628,16 +647,14 @@ class CoherenceValidator {
     }
 
     // Calculate coherence scores for hard and soft constraints
-    const hardCoherence = hardPrioritySum > 0
-      ? hardSatisfiedPrioritySum / hardPrioritySum
-      : 1.0;
+    const hardCoherence =
+      hardPrioritySum > 0 ? hardSatisfiedPrioritySum / hardPrioritySum : 1.0;
 
-    const softCoherence = softPrioritySum > 0
-      ? softSatisfiedPrioritySum / softPrioritySum
-      : 1.0;
+    const softCoherence =
+      softPrioritySum > 0 ? softSatisfiedPrioritySum / softPrioritySum : 1.0;
 
     // Final coherence is weighted average, with hard constraints having more weight
-    coherence = (hardCoherence * 0.7) + (softCoherence * 0.3);
+    coherence = hardCoherence * 0.7 + softCoherence * 0.3;
 
     // Update statistics
     if (valid) {
@@ -657,8 +674,8 @@ class CoherenceValidator {
       softCoherence,
       constraintResults: results,
       message: valid
-        ? allSoftConstraintsSatisfied 
-          ? "All constraints satisfied" 
+        ? allSoftConstraintsSatisfied
+          ? "All constraints satisfied"
           : "All hard constraints satisfied, some soft constraints violated"
         : "Some hard constraints violated",
     };
@@ -684,9 +701,13 @@ class CoherenceValidator {
       // Handle case where Manifold isn't available
       Manifold = null;
     }
-    
+
     if (!this.enableManifoldValidation) {
-      return { valid: true, coherence: 1.0, message: "Manifold validation is not enabled" };
+      return {
+        valid: true,
+        coherence: 1.0,
+        message: "Manifold validation is not enabled",
+      };
     }
 
     const startTime = Date.now();
@@ -694,7 +715,11 @@ class CoherenceValidator {
     this._validationStats.crossManifoldChecks++;
 
     // Check if we have valid manifolds
-    if (!Manifold || !(manifold1 instanceof Manifold) || !(manifold2 instanceof Manifold)) {
+    if (
+      !Manifold ||
+      !(manifold1 instanceof Manifold) ||
+      !(manifold2 instanceof Manifold)
+    ) {
       this._validationStats.failedChecks++;
       return {
         valid: false,
@@ -704,14 +729,17 @@ class CoherenceValidator {
     }
 
     // Check if manifolds have compatible types
-    if (manifold1.getType() !== manifold2.getType() && !options.allowDifferentTypes) {
+    if (
+      manifold1.getType() !== manifold2.getType() &&
+      !options.allowDifferentTypes
+    ) {
       // For different types, coherence is lower but may still be valid
       const baseCoherence = 0.4; // Lower base coherence for different types
       this._validationStats.passedChecks++;
-      
+
       const endTime = Date.now();
       this._validationStats.totalTime += endTime - startTime;
-      
+
       return {
         valid: true,
         coherence: baseCoherence,
@@ -729,21 +757,21 @@ class CoherenceValidator {
         const coherenceCheck = manifold1.checkCoherenceWith(manifold2, options);
         const coherence = coherenceCheck.score;
         const valid = coherence >= this.manifoldCoherenceThreshold;
-        
+
         if (valid) {
           this._validationStats.passedChecks++;
         } else {
           this._validationStats.failedChecks++;
         }
-        
+
         const endTime = Date.now();
         this._validationStats.totalTime += endTime - startTime;
-        
+
         return {
           valid,
           coherence,
-          message: valid 
-            ? "Manifolds are coherent" 
+          message: valid
+            ? "Manifolds are coherent"
             : "Manifolds are not sufficiently coherent",
           metrics: coherenceCheck.metrics || {},
         };
@@ -752,12 +780,12 @@ class CoherenceValidator {
         // Compare invariant properties
         const invariant1 = manifold1.getInvariant() || {};
         const invariant2 = manifold2.getInvariant() || {};
-        
+
         // Calculate similarity between invariants
         const keys1 = Object.keys(invariant1);
         const keys2 = Object.keys(invariant2);
-        const commonKeys = keys1.filter(key => keys2.includes(key));
-        
+        const commonKeys = keys1.filter((key) => keys2.includes(key));
+
         let invariantSimilarity = 0;
         if (commonKeys.length > 0) {
           let matchingValues = 0;
@@ -768,33 +796,35 @@ class CoherenceValidator {
           }
           invariantSimilarity = matchingValues / commonKeys.length;
         }
-        
+
         // Calculate space overlap
         const spaces1 = manifold1.getSpaces() || [];
         const spaces2 = manifold2.getSpaces() || [];
-        const commonSpaces = spaces1.filter(space => spaces2.includes(space));
-        const spaceOverlap = (spaces1.length + spaces2.length > 0)
-          ? commonSpaces.length / Math.max(1, (spaces1.length + spaces2.length) / 2)
-          : 0;
-        
+        const commonSpaces = spaces1.filter((space) => spaces2.includes(space));
+        const spaceOverlap =
+          spaces1.length + spaces2.length > 0
+            ? commonSpaces.length /
+              Math.max(1, (spaces1.length + spaces2.length) / 2)
+            : 0;
+
         // Overall coherence
-        const coherence = (invariantSimilarity * 0.7) + (spaceOverlap * 0.3);
+        const coherence = invariantSimilarity * 0.7 + spaceOverlap * 0.3;
         const valid = coherence >= this.manifoldCoherenceThreshold;
-        
+
         if (valid) {
           this._validationStats.passedChecks++;
         } else {
           this._validationStats.failedChecks++;
         }
-        
+
         const endTime = Date.now();
         this._validationStats.totalTime += endTime - startTime;
-        
+
         return {
           valid,
           coherence,
-          message: valid 
-            ? "Manifolds are coherent" 
+          message: valid
+            ? "Manifolds are coherent"
             : "Manifolds are not sufficiently coherent",
           metrics: {
             invariantSimilarity,
@@ -807,21 +837,22 @@ class CoherenceValidator {
       const metricResults = [];
       let weightedSum = 0;
       let totalWeight = 0;
-      
+
       // Apply each metric
       for (const [id, metric] of this.crossManifoldMetrics.entries()) {
         try {
           const result = metric.fn(manifold1, manifold2, options);
-          const metricValue = typeof result === 'number' ? result : result.value || 0;
-          
+          const metricValue =
+            typeof result === "number" ? result : result.value || 0;
+
           metricResults.push({
             id,
             name: metric.name,
             value: metricValue,
             weight: metric.weight,
-            details: typeof result === 'object' ? result : null,
+            details: typeof result === "object" ? result : null,
           });
-          
+
           weightedSum += metricValue * metric.weight;
           totalWeight += metric.weight;
         } catch (e) {
@@ -831,30 +862,30 @@ class CoherenceValidator {
             error: e.message,
             weight: metric.weight,
           });
-          
+
           // Use zero for failed metrics
           totalWeight += metric.weight;
         }
       }
-      
+
       // Calculate overall coherence
       const coherence = totalWeight > 0 ? weightedSum / totalWeight : 0;
       const valid = coherence >= this.manifoldCoherenceThreshold;
-      
+
       if (valid) {
         this._validationStats.passedChecks++;
       } else {
         this._validationStats.failedChecks++;
       }
-      
+
       const endTime = Date.now();
       this._validationStats.totalTime += endTime - startTime;
-      
+
       return {
         valid,
         coherence,
-        message: valid 
-          ? "Manifolds are coherent according to registered metrics" 
+        message: valid
+          ? "Manifolds are coherent according to registered metrics"
           : "Manifolds are not sufficiently coherent",
         metrics: metricResults,
       };
@@ -916,5 +947,5 @@ class CoherenceValidator {
 }
 
 module.exports = {
-  CoherenceValidator
+  CoherenceValidator,
 };

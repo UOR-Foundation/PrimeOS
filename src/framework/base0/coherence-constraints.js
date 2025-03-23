@@ -32,7 +32,8 @@ const CoherenceConstraints = {
       name: "finiteness",
       validator: (value) => Number.isFinite(value),
       priority: 10,
-      description: "Checks if a numeric value is finite (not Infinity or -Infinity)"
+      description:
+        "Checks if a numeric value is finite (not Infinity or -Infinity)",
     },
 
     /**
@@ -44,7 +45,7 @@ const CoherenceConstraints = {
       name: "non_nan",
       validator: (value) => !Number.isNaN(value),
       priority: 10,
-      description: "Checks if a numeric value is not NaN (Not a Number)"
+      description: "Checks if a numeric value is not NaN (Not a Number)",
     },
 
     /**
@@ -60,8 +61,8 @@ const CoherenceConstraints = {
         return value >= min && value <= max;
       },
       priority: 5,
-      description: "Checks if a numeric value is within reasonable bounds"
-    }
+      description: "Checks if a numeric value is within reasonable bounds",
+    },
   },
 
   /**
@@ -79,7 +80,7 @@ const CoherenceConstraints = {
       validator: (value) =>
         Array.isArray(value) && value.every((item) => typeof item === "number"),
       priority: 8,
-      description: "Checks if all elements in an array are numbers"
+      description: "Checks if all elements in an array are numbers",
     },
 
     /**
@@ -92,7 +93,7 @@ const CoherenceConstraints = {
       validator: (value) =>
         Array.isArray(value) && value.every((item) => Number.isFinite(item)),
       priority: 7,
-      description: "Checks if all elements in an array are finite numbers"
+      description: "Checks if all elements in an array are finite numbers",
     },
 
     /**
@@ -104,11 +105,11 @@ const CoherenceConstraints = {
       name: "non_zero_magnitude",
       validator: (value) => {
         if (!Array.isArray(value)) return false;
-        return value.some(v => v !== 0);
+        return value.some((v) => v !== 0);
       },
       priority: 4,
-      description: "Checks if a vector has at least one non-zero element"
-    }
+      description: "Checks if a vector has at least one non-zero element",
+    },
   },
 
   /**
@@ -132,7 +133,8 @@ const CoherenceConstraints = {
         return value.every((row) => row.length === rowLength);
       },
       priority: 9,
-      description: "Checks if a matrix has proper structure with consistent row lengths"
+      description:
+        "Checks if a matrix has proper structure with consistent row lengths",
     },
 
     /**
@@ -153,7 +155,7 @@ const CoherenceConstraints = {
         );
       },
       priority: 8,
-      description: "Checks if all elements in a matrix are finite numbers"
+      description: "Checks if all elements in a matrix are finite numbers",
     },
 
     /**
@@ -166,12 +168,13 @@ const CoherenceConstraints = {
       validator: (value) => {
         if (!Array.isArray(value) || value.length === 0) return false;
         if (!value.every((row) => Array.isArray(row))) return false;
-        
+
         return value.length === value[0].length;
       },
       priority: 6,
-      description: "Checks if a matrix is square (same number of rows and columns)"
-    }
+      description:
+        "Checks if a matrix is square (same number of rows and columns)",
+    },
   },
 
   /**
@@ -188,7 +191,7 @@ const CoherenceConstraints = {
       name: "is_function",
       validator: (value) => typeof value === "function",
       priority: 10,
-      description: "Checks if a value is a function"
+      description: "Checks if a value is a function",
     },
 
     /**
@@ -201,11 +204,14 @@ const CoherenceConstraints = {
       name: "function_arity",
       validator: (value, context = {}) => {
         if (typeof value !== "function") return false;
-        return context.expectedArity === undefined || value.length === context.expectedArity;
+        return (
+          context.expectedArity === undefined ||
+          value.length === context.expectedArity
+        );
       },
       priority: 7,
-      description: "Checks if a function has the expected number of parameters"
-    }
+      description: "Checks if a function has the expected number of parameters",
+    },
   },
 
   /**
@@ -226,9 +232,9 @@ const CoherenceConstraints = {
           if (!Array.isArray(arr)) {
             return depth > 0; // Allow scalar values at the deepest level
           }
-          
+
           if (arr.length === 0) return true;
-          
+
           if (depth === 0) {
             // First level must be an array
             dims = Array(arr[0].length).fill(0);
@@ -243,15 +249,17 @@ const CoherenceConstraints = {
             // We expected a scalar here
             return depth === dims.length;
           }
-          
+
           // Check all elements at this level
-          return arr.every(subArr => checkTensorStructure(subArr, dims, depth + 1));
+          return arr.every((subArr) =>
+            checkTensorStructure(subArr, dims, depth + 1),
+          );
         };
-        
+
         return checkTensorStructure(value);
       },
       priority: 9,
-      description: "Checks if a tensor has valid and consistent structure"
+      description: "Checks if a tensor has valid and consistent structure",
     },
 
     /**
@@ -267,15 +275,15 @@ const CoherenceConstraints = {
           if (!Array.isArray(arr)) {
             return typeof arr === "number" && Number.isFinite(arr);
           }
-          return arr.every(subArr => checkAllValues(subArr));
+          return arr.every((subArr) => checkAllValues(subArr));
         };
-        
+
         return checkAllValues(value);
       },
       priority: 8,
-      description: "Checks if all elements in a tensor are finite numbers"
-    }
-  }
+      description: "Checks if all elements in a tensor are finite numbers",
+    },
+  },
 };
 
 /**
@@ -351,18 +359,18 @@ const CoherenceNorms = {
     if (!results.find((r) => r.name === "is_function")?.satisfied) {
       return 0.0;
     }
-    
+
     // Consider other constraints with weighted importance
     let totalWeight = 0;
     let satisfiedWeight = 0;
-    
+
     for (const result of results) {
       totalWeight += result.priority;
       if (result.satisfied) {
         satisfiedWeight += result.priority;
       }
     }
-    
+
     return totalWeight > 0 ? satisfiedWeight / totalWeight : 1.0;
   },
 
@@ -377,29 +385,29 @@ const CoherenceNorms = {
     if (!results.find((r) => r.name === "tensor_structure")?.satisfied) {
       return 0.0;
     }
-    
+
     // Count tensor elements (recursively)
     const countElements = (arr) => {
       if (!Array.isArray(arr)) return 1;
       return arr.reduce((sum, subArr) => sum + countElements(subArr), 0);
     };
-    
+
     // Count valid elements (recursively)
     const countValidElements = (arr) => {
       if (!Array.isArray(arr)) {
-        return (typeof arr === "number" && Number.isFinite(arr)) ? 1 : 0;
+        return typeof arr === "number" && Number.isFinite(arr) ? 1 : 0;
       }
       return arr.reduce((sum, subArr) => sum + countValidElements(subArr), 0);
     };
-    
+
     const totalElements = countElements(value);
     const validElements = countValidElements(value);
-    
+
     return totalElements > 0 ? validElements / totalElements : 0.0;
-  }
+  },
 };
 
 module.exports = {
   CoherenceConstraints,
-  CoherenceNorms
+  CoherenceNorms,
 };

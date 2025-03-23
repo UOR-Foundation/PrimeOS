@@ -348,7 +348,7 @@ class FiberAlgebraPatternRecognition {
         ? coherenceValues.reduce((sum, val) => sum + val, 0) /
           coherenceValues.length
         : 0;
-    
+
     // Normalize coherence to [0,1] range
     // If the coherence is greater than 1, we scale it down
     if (avgCoherence > 1.0) {
@@ -428,7 +428,7 @@ class FiberAlgebraPatternRecognition {
 
     // Compute initial coherence
     let baseCoherence = this.computeCoherence(encodedStates);
-    
+
     // Ensure coherence is in [0,1] range
     baseCoherence = Math.max(0, Math.min(1, baseCoherence));
 
@@ -440,10 +440,10 @@ class FiberAlgebraPatternRecognition {
     for (let i = 0; i < transformedStatesList.length; i++) {
       const transformedStates = transformedStatesList[i];
       let coherence = this.computeCoherence(transformedStates);
-      
+
       // Ensure coherence is in [0,1] range
       coherence = Math.max(0, Math.min(1, coherence));
-      
+
       coherenceScores.push([i, coherence]);
     }
 
@@ -823,10 +823,10 @@ class SequencePatternRecognition {
 
     // Normalize by number of windows and ensure it's in the [0,1] range
     let coherence = windows.length > 0 ? totalCoherence / windows.length : 0;
-    
+
     // Clamp to [0,1] range
     coherence = Math.max(0, Math.min(1, coherence));
-    
+
     return coherence;
   }
 

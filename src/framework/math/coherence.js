@@ -1001,8 +1001,9 @@ class CoherenceGradientDescent {
 
       if (restart === 0) {
         // First attempt uses the initial state from the problem
-        currentState = problem.initialState ? problem.initialState.slice() : 
-          Array(problem.dimension || problem.n_vars || 6).fill(0);
+        currentState = problem.initialState
+          ? problem.initialState.slice()
+          : Array(problem.dimension || problem.n_vars || 6).fill(0);
       } else {
         // Subsequent attempts use random initialization with spectral hints
         if (this.useSpectral && problem.spectralData) {
@@ -1015,7 +1016,7 @@ class CoherenceGradientDescent {
 
           for (let i = 0; i < currentState.length; i++) {
             if (
-              importanceScores && 
+              importanceScores &&
               i < importanceScores.length &&
               Math.random() < importanceScores[i]
             ) {
@@ -1041,15 +1042,20 @@ class CoherenceGradientDescent {
         currentSatisfaction = result.satisfaction;
       } catch (e) {
         // If coherence calculation fails, use a default value
-        currentCoherence = problem.constraints ? problem.constraints.length : 10;
-        currentSatisfaction = problem.constraints ? 
-          Array(problem.constraints.length).fill(0) : [];
+        currentCoherence = problem.constraints
+          ? problem.constraints.length
+          : 10;
+        currentSatisfaction = problem.constraints
+          ? Array(problem.constraints.length).fill(0)
+          : [];
       }
 
       // Initialize tracking for this attempt
       let restartBestState = currentState.slice();
       let restartBestCoherence = currentCoherence;
-      let restartBestSatisfaction = currentSatisfaction ? currentSatisfaction.slice() : [];
+      let restartBestSatisfaction = currentSatisfaction
+        ? currentSatisfaction.slice()
+        : [];
 
       // Initialize tabu list
       const tabuList = [];
@@ -1084,9 +1090,10 @@ class CoherenceGradientDescent {
         }
 
         // Filter out tabu moves
-        const filteredGradient = useTabu && tabuList.length > 0
-          ? gradient.filter(([genIdx]) => !tabuList.includes(genIdx))
-          : gradient;
+        const filteredGradient =
+          useTabu && tabuList.length > 0
+            ? gradient.filter(([genIdx]) => !tabuList.includes(genIdx))
+            : gradient;
 
         if (!filteredGradient || filteredGradient.length === 0) {
           // No valid moves, add diversification
@@ -1183,7 +1190,10 @@ class CoherenceGradientDescent {
           // Only accept if it maintains or improves coherence
           let divCoherence;
           try {
-            const result = this.computeStateCoherence(problem, diversifiedState);
+            const result = this.computeStateCoherence(
+              problem,
+              diversifiedState,
+            );
             divCoherence = result.coherence;
           } catch (e) {
             divCoherence = coherence + 1; // Assume worse
@@ -1200,7 +1210,7 @@ class CoherenceGradientDescent {
         history.iterations.push(restart * restartIterations + iter);
         if (satisfaction) {
           history.satisfiedConstraints.push(
-            satisfaction.reduce((sum, val) => sum + (val > 0.5 ? 1 : 0), 0)
+            satisfaction.reduce((sum, val) => sum + (val > 0.5 ? 1 : 0), 0),
           );
         } else {
           history.satisfiedConstraints.push(0);
@@ -1216,7 +1226,9 @@ class CoherenceGradientDescent {
       if (restartBestCoherence < bestCoherence) {
         bestState = restartBestState.slice();
         bestCoherence = restartBestCoherence;
-        bestSatisfaction = restartBestSatisfaction ? restartBestSatisfaction.slice() : [];
+        bestSatisfaction = restartBestSatisfaction
+          ? restartBestSatisfaction.slice()
+          : [];
       }
     }
 

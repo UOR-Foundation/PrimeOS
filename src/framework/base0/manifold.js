@@ -702,36 +702,42 @@ class Manifold {
     }
 
     const strategy = options.strategy || "projection";
-    
+
     // Different alignment strategies
     if (strategy === "projection") {
       // Use common spaces for alignment
-      const commonSpaces = this.getSpaces().filter(space => 
-        target.getSpaces().includes(space));
-      
+      const commonSpaces = this.getSpaces().filter((space) =>
+        target.getSpaces().includes(space),
+      );
+
       if (commonSpaces.length === 0) {
-        throw new Prime.InvalidOperationError("Manifolds must share at least one space for projection alignment");
+        throw new Prime.InvalidOperationError(
+          "Manifolds must share at least one space for projection alignment",
+        );
       }
-      
+
       const space = commonSpaces[0];
-      
+
       // Project to the common space, aligning with target
       return this.project(space, (manifold) => {
         // Create a new variant that aligns with target's structure
         const sourceVariant = this.getVariant();
         const targetVariant = target.getVariant();
-        
+
         // Initialize with source's variant
         const alignedVariant = { ...sourceVariant };
-        
+
         // Align with target's structure
         for (const key in targetVariant) {
           if (sourceVariant.hasOwnProperty(key)) {
             const sourceVal = sourceVariant[key];
             const targetVal = targetVariant[key];
-            
+
             // Align numeric values with target
-            if (typeof sourceVal === 'number' && typeof targetVal === 'number') {
+            if (
+              typeof sourceVal === "number" &&
+              typeof targetVal === "number"
+            ) {
               if (targetVal !== 0) {
                 // Scale while preserving relative magnitude
                 const scaleFactor = Math.abs(sourceVal) / Math.abs(targetVal);
@@ -743,12 +749,18 @@ class Manifold {
                 // Use vector operations if available
                 if (MathUtils && MathUtils.vector) {
                   try {
-                    const dotProduct = MathUtils.vector.cosineSimilarity(sourceVal, targetVal);
+                    const dotProduct = MathUtils.vector.cosineSimilarity(
+                      sourceVal,
+                      targetVal,
+                    );
                     if (Math.abs(dotProduct.similarity) > 0.1) {
                       // Align in direction while preserving magnitude
                       const sourceNorm = MathUtils.vector.norm(sourceVal);
-                      const targetNormalized = MathUtils.vector.normalize(targetVal);
-                      alignedVariant[key] = targetNormalized.map(v => v * sourceNorm);
+                      const targetNormalized =
+                        MathUtils.vector.normalize(targetVal);
+                      alignedVariant[key] = targetNormalized.map(
+                        (v) => v * sourceNorm,
+                      );
                     }
                   } catch (e) {
                     // Fall back to simple alignment if vector operations fail
@@ -759,10 +771,10 @@ class Manifold {
             }
           }
         }
-        
+
         return {
           invariant: this.getInvariant(),
-          variant: alignedVariant
+          variant: alignedVariant,
         };
       });
     } else if (strategy === "transformation") {
@@ -771,32 +783,32 @@ class Manifold {
         ...this.getMeta(),
         id: `aligned_${this.getId()}_to_${target.getId()}`,
         alignedTo: target.getId(),
-        alignmentStrategy: strategy
+        alignmentStrategy: strategy,
       };
-      
+
       // Keep the original invariant properties
       const invariant = this.getInvariant();
-      
+
       // Create transformed variant properties based on target
       const sourceVariant = this.getVariant();
       const targetVariant = target.getVariant();
       const variant = { ...sourceVariant };
-      
+
       // Calculate transformation parameters
       const sourceNumeric = Object.entries(sourceVariant)
-        .filter(([_, val]) => typeof val === 'number')
+        .filter(([_, val]) => typeof val === "number")
         .map(([key, val]) => ({ key, val }));
-      
+
       const targetNumeric = Object.entries(targetVariant)
-        .filter(([_, val]) => typeof val === 'number')
+        .filter(([_, val]) => typeof val === "number")
         .map(([key, val]) => ({ key, val }));
-      
+
       // Apply transformation
       if (sourceNumeric.length > 0 && targetNumeric.length > 0) {
         // Simple scale transformation
         let scaleSum = 0;
         let scaleCount = 0;
-        
+
         for (const { key: sourceKey, val: sourceVal } of sourceNumeric) {
           for (const { key: targetKey, val: targetVal } of targetNumeric) {
             if (sourceKey === targetKey && sourceVal !== 0 && targetVal !== 0) {
@@ -805,38 +817,42 @@ class Manifold {
             }
           }
         }
-        
+
         if (scaleCount > 0) {
           const averageScale = scaleSum / scaleCount;
-          
+
           // Apply scaling to all numeric properties
           for (const key in variant) {
-            if (typeof variant[key] === 'number') {
+            if (typeof variant[key] === "number") {
               variant[key] *= averageScale;
-            } else if (Array.isArray(variant[key]) && 
-                      variant[key].every(v => typeof v === 'number')) {
-              variant[key] = variant[key].map(v => v * averageScale);
+            } else if (
+              Array.isArray(variant[key]) &&
+              variant[key].every((v) => typeof v === "number")
+            ) {
+              variant[key] = variant[key].map((v) => v * averageScale);
             }
           }
         }
       }
-      
+
       // Create the aligned manifold
       const aligned = new Manifold({
         meta,
         invariant,
         variant,
         depth: this.depth,
-        spaces: this.getSpaces()
+        spaces: this.getSpaces(),
       });
-      
+
       // Establish relation to the target
       aligned.relateTo(target, "aligned_to");
-      
+
       return aligned;
     }
-    
-    throw new Prime.InvalidOperationError(`Alignment strategy ${strategy} not supported`);
+
+    throw new Prime.InvalidOperationError(
+      `Alignment strategy ${strategy} not supported`,
+    );
   }
 
   /**
@@ -851,9 +867,10 @@ class Manifold {
       point = Object.values(this.getVariant());
     }
 
-    const dimension = Array.isArray(point) ? point.length : 
-      Object.keys(this.getVariant()).length;
-    
+    const dimension = Array.isArray(point)
+      ? point.length
+      : Object.keys(this.getVariant()).length;
+
     const basisVectors = [];
 
     // Generate basis vectors (simplified implementation)
@@ -867,7 +884,7 @@ class Manifold {
       point,
       basis: basisVectors,
       dimension,
-      manifold: this
+      manifold: this,
     };
   }
 
@@ -879,36 +896,40 @@ class Manifold {
   calculateCurvature(options = {}) {
     // This is a simplified implementation for basic manifolds
     // A complete implementation would calculate the Riemann curvature tensor
-    
+
     // Get the tangent space
     const point = Object.values(this.getVariant());
     const tangentSpace = this.calculateTangentSpace(point);
-    
+
     // Compute a simplified curvature measure using manifold properties
     const invariants = Object.values(this.getInvariant());
-    const meanInvariant = invariants.length > 0 
-      ? invariants.reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0) / invariants.length 
-      : 0;
-    
+    const meanInvariant =
+      invariants.length > 0
+        ? invariants.reduce(
+            (sum, val) => sum + (typeof val === "number" ? val : 0),
+            0,
+          ) / invariants.length
+        : 0;
+
     // Calculate a simplified curvature scalar
     const curvatureScalar = Math.exp(-Math.abs(meanInvariant) / 10);
-    
+
     // Generate sectional curvatures for key planes
     const sectionalCurvatures = [];
     for (let i = 0; i < tangentSpace.basis.length - 1; i++) {
       for (let j = i + 1; j < tangentSpace.basis.length; j++) {
         sectionalCurvatures.push({
           plane: [i, j],
-          value: curvatureScalar * (1 + 0.1 * (i - j))
+          value: curvatureScalar * (1 + 0.1 * (i - j)),
         });
       }
     }
-    
+
     return {
       point,
       scalarCurvature: curvatureScalar,
       sectionalCurvatures,
-      manifold: this
+      manifold: this,
     };
   }
 
@@ -924,11 +945,14 @@ class Manifold {
     }
 
     // Check if manifolds exist in compatible spaces
-    const commonSpaces = this.getSpaces().filter(space => 
-      target.getSpaces().includes(space));
-    
+    const commonSpaces = this.getSpaces().filter((space) =>
+      target.getSpaces().includes(space),
+    );
+
     if (commonSpaces.length === 0) {
-      throw new Prime.InvalidOperationError("Manifolds must share at least one space for geodesic calculation");
+      throw new Prime.InvalidOperationError(
+        "Manifolds must share at least one space for geodesic calculation",
+      );
     }
 
     const space = commonSpaces[0];
@@ -943,10 +967,16 @@ class Manifold {
     // Normalize to ensure same length
     const maxLength = Math.max(sourcePoint.length, targetPoint.length);
     if (sourcePoint.length < maxLength) {
-      sourcePoint = [...sourcePoint, ...Array(maxLength - sourcePoint.length).fill(0)];
+      sourcePoint = [
+        ...sourcePoint,
+        ...Array(maxLength - sourcePoint.length).fill(0),
+      ];
     }
     if (targetPoint.length < maxLength) {
-      targetPoint = [...targetPoint, ...Array(maxLength - targetPoint.length).fill(0)];
+      targetPoint = [
+        ...targetPoint,
+        ...Array(maxLength - targetPoint.length).fill(0),
+      ];
     }
 
     // Calculate geodesic based on the method
@@ -956,15 +986,15 @@ class Manifold {
       for (let i = 0; i <= steps; i++) {
         const t = i / steps;
         const point = [];
-        
+
         // Linear interpolation for each component
         for (let j = 0; j < maxLength; j++) {
           point.push(sourcePoint[j] * (1 - t) + targetPoint[j] * t);
         }
-        
+
         path.push({
           t,
-          point
+          point,
         });
       }
 
@@ -974,66 +1004,7 @@ class Manifold {
         // Euclidean distance between points
         let segmentLength = 0;
         for (let j = 0; j < maxLength; j++) {
-          segmentLength += Math.pow(path[i].point[j] - path[i-1].point[j], 2);
-        }
-        length += Math.sqrt(segmentLength);
-      }
-
-      return {
-        source: sourcePoint,
-        target: targetPoint,
-        path,
-        length,
-        space,
-        method
-      };
-    } else if (method === "riemannian") {
-      // More complex geodesic calculation on curved manifolds
-      // This is a simplified implementation that approximates the geodesic
-      // A complete implementation would solve the geodesic equation
-      
-      // Calculate tangent vector from source to target
-      const tangentVector = [];
-      for (let j = 0; j < maxLength; j++) {
-        tangentVector.push(targetPoint[j] - sourcePoint[j]);
-      }
-      
-      // Normalize tangent vector
-      let tangentNorm = 0;
-      for (let j = 0; j < maxLength; j++) {
-        tangentNorm += tangentVector[j] * tangentVector[j];
-      }
-      tangentNorm = Math.sqrt(tangentNorm);
-      
-      if (tangentNorm > 1e-10) {
-        for (let j = 0; j < maxLength; j++) {
-          tangentVector[j] /= tangentNorm;
-        }
-      }
-      
-      // Calculate geodesic path
-      const path = [];
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const point = [];
-        
-        // Exponential map approximation - project along tangent
-        for (let j = 0; j < maxLength; j++) {
-          point.push(sourcePoint[j] + tangentVector[j] * tangentNorm * t);
-        }
-        
-        path.push({
-          t,
-          point
-        });
-      }
-      
-      // Calculate geodesic length (same as linear in this simplified case)
-      let length = 0;
-      for (let i = 1; i < path.length; i++) {
-        let segmentLength = 0;
-        for (let j = 0; j < maxLength; j++) {
-          segmentLength += Math.pow(path[i].point[j] - path[i-1].point[j], 2);
+          segmentLength += Math.pow(path[i].point[j] - path[i - 1].point[j], 2);
         }
         length += Math.sqrt(segmentLength);
       }
@@ -1045,11 +1016,72 @@ class Manifold {
         length,
         space,
         method,
-        tangentVector
+      };
+    } else if (method === "riemannian") {
+      // More complex geodesic calculation on curved manifolds
+      // This is a simplified implementation that approximates the geodesic
+      // A complete implementation would solve the geodesic equation
+
+      // Calculate tangent vector from source to target
+      const tangentVector = [];
+      for (let j = 0; j < maxLength; j++) {
+        tangentVector.push(targetPoint[j] - sourcePoint[j]);
+      }
+
+      // Normalize tangent vector
+      let tangentNorm = 0;
+      for (let j = 0; j < maxLength; j++) {
+        tangentNorm += tangentVector[j] * tangentVector[j];
+      }
+      tangentNorm = Math.sqrt(tangentNorm);
+
+      if (tangentNorm > 1e-10) {
+        for (let j = 0; j < maxLength; j++) {
+          tangentVector[j] /= tangentNorm;
+        }
+      }
+
+      // Calculate geodesic path
+      const path = [];
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const point = [];
+
+        // Exponential map approximation - project along tangent
+        for (let j = 0; j < maxLength; j++) {
+          point.push(sourcePoint[j] + tangentVector[j] * tangentNorm * t);
+        }
+
+        path.push({
+          t,
+          point,
+        });
+      }
+
+      // Calculate geodesic length (same as linear in this simplified case)
+      let length = 0;
+      for (let i = 1; i < path.length; i++) {
+        let segmentLength = 0;
+        for (let j = 0; j < maxLength; j++) {
+          segmentLength += Math.pow(path[i].point[j] - path[i - 1].point[j], 2);
+        }
+        length += Math.sqrt(segmentLength);
+      }
+
+      return {
+        source: sourcePoint,
+        target: targetPoint,
+        path,
+        length,
+        space,
+        method,
+        tangentVector,
       };
     }
 
-    throw new Prime.InvalidOperationError(`Geodesic method ${method} not available for this manifold type`);
+    throw new Prime.InvalidOperationError(
+      `Geodesic method ${method} not available for this manifold type`,
+    );
   }
 
   /**
@@ -1060,56 +1092,62 @@ class Manifold {
   createVisualization(options = {}) {
     const format = options.format || "json";
     const dimensions = options.dimensions || 3;
-    
+
     // Extract manifold information
     const meta = this.getMeta();
     const variant = this.getVariant();
-    
+
     // Convert variant properties to numeric format for visualization
     const numericProperties = Object.entries(variant)
-      .filter(([_, val]) => typeof val === 'number')
+      .filter(([_, val]) => typeof val === "number")
       .map(([key, val]) => ({ key, value: val }));
-    
+
     const arrayProperties = Object.entries(variant)
-      .filter(([_, val]) => Array.isArray(val) && val.some(item => typeof item === 'number'))
+      .filter(
+        ([_, val]) =>
+          Array.isArray(val) && val.some((item) => typeof item === "number"),
+      )
       .map(([key, val]) => ({ key, values: val }));
-    
+
     // Generate visual coordinates from the manifold data
     let visualCoordinates;
-    
+
     // Use numeric properties first, then arrays if needed
     if (numericProperties.length >= dimensions) {
       // Use the first 'dimensions' numeric properties
       visualCoordinates = numericProperties
         .slice(0, dimensions)
-        .map(prop => prop.value);
+        .map((prop) => prop.value);
     } else {
       // Combine numeric properties with values from arrays
-      visualCoordinates = [...numericProperties.map(prop => prop.value)];
-      
+      visualCoordinates = [...numericProperties.map((prop) => prop.value)];
+
       // Add values from arrays until we reach the desired dimensions
       for (const arrayProp of arrayProperties) {
         for (const val of arrayProp.values) {
-          if (typeof val === 'number' && visualCoordinates.length < dimensions) {
+          if (
+            typeof val === "number" &&
+            visualCoordinates.length < dimensions
+          ) {
             visualCoordinates.push(val);
           }
-          
+
           if (visualCoordinates.length >= dimensions) {
             break;
           }
         }
-        
+
         if (visualCoordinates.length >= dimensions) {
           break;
         }
       }
-      
+
       // Pad with zeros if needed
       while (visualCoordinates.length < dimensions) {
         visualCoordinates.push(0);
       }
     }
-    
+
     // Generate visualization based on format
     if (format === "json") {
       return {
@@ -1121,36 +1159,43 @@ class Manifold {
           numeric: numericProperties,
           arrays: arrayProperties,
           metadata: Object.entries(meta)
-            .filter(([key, _]) => !['id', 'type', 'name', 'description'].includes(key))
+            .filter(
+              ([key, _]) =>
+                !["id", "type", "name", "description"].includes(key),
+            )
             .reduce((obj, [key, val]) => {
               obj[key] = val;
               return obj;
-            }, {})
+            }, {}),
         },
         spaces: this.getSpaces(),
         coherence: this.getCoherenceScore(),
         visualCoordinates: visualCoordinates,
-        relations: Array.from(this._relations.entries()).map(([id, relation]) => ({
-          id,
-          type: relation.type,
-          metadata: relation.metadata || {}
-        }))
+        relations: Array.from(this._relations.entries()).map(
+          ([id, relation]) => ({
+            id,
+            type: relation.type,
+            metadata: relation.metadata || {},
+          }),
+        ),
       };
     } else if (format === "graph") {
       // Create a graph representation of the manifold and its relations
-      const nodes = [{
-        id: this.getId(),
-        type: "manifold",
-        label: meta.name || "Unnamed Manifold",
-        properties: {
-          coherence: this.getCoherenceScore(),
-          type: this.getType(),
-          depth: this.getDepth()
-        }
-      }];
-      
+      const nodes = [
+        {
+          id: this.getId(),
+          type: "manifold",
+          label: meta.name || "Unnamed Manifold",
+          properties: {
+            coherence: this.getCoherenceScore(),
+            type: this.getType(),
+            depth: this.getDepth(),
+          },
+        },
+      ];
+
       const edges = [];
-      
+
       // Add related manifolds
       const relations = this.getRelatedManifolds();
       for (const relation of relations) {
@@ -1162,47 +1207,49 @@ class Manifold {
           properties: {
             coherence: relation.manifold.getCoherenceScore(),
             type: relation.manifold.getType(),
-            depth: relation.manifold.getDepth()
-          }
+            depth: relation.manifold.getDepth(),
+          },
         });
-        
+
         // Add relation as an edge
         edges.push({
           source: this.getId(),
           target: relation.manifold.getId(),
           type: relation.type,
-          metadata: relation.metadata || {}
+          metadata: relation.metadata || {},
         });
       }
-      
+
       // Add space nodes
       for (const space of this.getSpaces()) {
         // Add space as a node
         nodes.push({
           id: `space_${space}`,
           type: "space",
-          label: space
+          label: space,
         });
-        
+
         // Add relation to space as an edge
         edges.push({
           source: this.getId(),
           target: `space_${space}`,
-          type: "exists_in"
+          type: "exists_in",
         });
       }
-      
+
       return {
         nodes,
         edges,
         metadata: {
           focusNodeId: this.getId(),
-          visualization: "graph"
-        }
+          visualization: "graph",
+        },
       };
     }
-    
-    throw new Prime.InvalidOperationError(`Visualization format ${format} not supported by this manifold`);
+
+    throw new Prime.InvalidOperationError(
+      `Visualization format ${format} not supported by this manifold`,
+    );
   }
 }
 
@@ -1211,14 +1258,19 @@ Prime.Framework = Prime.Framework || {};
 Prime.Framework.Base0 = Prime.Framework.Base0 || {};
 
 // Check if Manifold already has a getter defined, if so, use it
-if (Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'Manifold') && 
-    Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'Manifold').get) {
+if (
+  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, "Manifold") &&
+  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, "Manifold").get
+) {
   // Use a more careful approach to update the property
-  const descriptor = Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'Manifold');
+  const descriptor = Object.getOwnPropertyDescriptor(
+    Prime.Framework.Base0,
+    "Manifold",
+  );
   const originalGetter = descriptor.get;
-  
-  Object.defineProperty(Prime.Framework.Base0, 'Manifold', {
-    get: function() {
+
+  Object.defineProperty(Prime.Framework.Base0, "Manifold", {
+    get: function () {
       const result = originalGetter.call(this);
       // If result is an empty object (placeholder), return our implementation
       if (!result || Object.keys(result).length === 0) {
@@ -1227,7 +1279,7 @@ if (Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'Manifold') &&
       // Otherwise, preserve what's already there
       return result;
     },
-    configurable: true
+    configurable: true,
   });
 } else {
   // Direct assignment if no getter exists
@@ -1237,5 +1289,5 @@ if (Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'Manifold') &&
 // Export the module (for direct imports) and the enhanced Prime object (for global usage)
 module.exports = {
   Manifold,
-  Prime
+  Prime,
 };

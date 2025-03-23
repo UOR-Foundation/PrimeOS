@@ -25,6 +25,11 @@ require("./coherence.js");
 require("./framework/index.js");
 require("./components/index.js");
 
+// Import verification modules
+require("./coherence/verification.js");
+require("./mathematics/advanced.js");
+require("./neural/advanced-models.js");
+
 // Initialize framework as a top-level property
 Prime.framework = Prime.createPrimeFramework();
 

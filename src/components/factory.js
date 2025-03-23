@@ -5,12 +5,12 @@
  */
 
 // Import Prime using CommonJS to avoid circular dependency
-const Prime = require("../core.js");
+const Prime = require('../core.js');
 // Ensure all modules are loaded in correct order
-require("../mathematics.js");
-require("../coherence.js");
-require("../framework/index.js");
-require("./base.js");
+require('../mathematics.js');
+require('../coherence.js');
+require('../framework/index.js');
+require('./base.js');
 
 (function (Prime) {
   /**
@@ -30,11 +30,11 @@ require("./base.js");
      */
     register: function (type, factory) {
       if (!Prime.Utils.isString(type)) {
-        throw new Prime.ValidationError("Type must be a string");
+        throw new Prime.ValidationError('Type must be a string');
       }
 
       if (!Prime.Utils.isFunction(factory)) {
-        throw new Prime.ValidationError("Factory must be a function");
+        throw new Prime.ValidationError('Factory must be a function');
       }
 
       this.types.set(type, factory);
@@ -87,11 +87,11 @@ require("./base.js");
   };
 
   // Register common component types
-  ComponentFactory.register("container", (config) => {
+  ComponentFactory.register('container', (config) => {
     const defaults = {
       meta: {
-        name: "Container",
-        type: "container",
+        name: 'Container',
+        type: 'container',
       },
       invariant: {
         // Container-specific methods
@@ -106,7 +106,7 @@ require("./base.js");
         },
       },
       variant: {
-        layout: "default",
+        layout: 'default',
       },
     };
 
@@ -115,11 +115,11 @@ require("./base.js");
     );
   });
 
-  ComponentFactory.register("data", (config) => {
+  ComponentFactory.register('data', (config) => {
     const defaults = {
       meta: {
-        name: "DataComponent",
-        type: "data",
+        name: 'DataComponent',
+        type: 'data',
       },
       invariant: {
         // Data component specific methods
@@ -132,7 +132,7 @@ require("./base.js");
         },
         transform: function (transformFn) {
           if (!Prime.Utils.isFunction(transformFn)) {
-            throw new Prime.ValidationError("Transform must be a function");
+            throw new Prime.ValidationError('Transform must be a function');
           }
 
           const currentData = this.variant.data;
@@ -152,11 +152,11 @@ require("./base.js");
     );
   });
 
-  ComponentFactory.register("stateful", (config) => {
+  ComponentFactory.register('stateful', (config) => {
     const defaults = {
       meta: {
-        name: "StatefulComponent",
-        type: "stateful",
+        name: 'StatefulComponent',
+        type: 'stateful',
       },
       invariant: {
         // Stateful component specific methods
@@ -195,15 +195,15 @@ require("./base.js");
   Prime.ComponentFactory = ComponentFactory;
 
   // Publish component module loaded event
-  Prime.EventBus.publish("module:loaded", { name: "component-factory" });
+  Prime.EventBus.publish('module:loaded', { name: 'component-factory' });
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.Prime = Prime;
 }

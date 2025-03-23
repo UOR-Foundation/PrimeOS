@@ -5,11 +5,11 @@
  */
 
 // Import the Prime object with VectorCore
-const Prime = require("./vector-core");
+const Prime = require('./vector-core');
 
 // Ensure VectorCore exists
 if (!Prime.Math.VectorCore) {
-  throw new Error("VectorCore must be loaded before VectorValidation");
+  throw new Error('VectorCore must be loaded before VectorValidation');
 }
 
 // Get reference to VectorCore
@@ -31,7 +31,7 @@ const VectorValidation = {
 
     // Check if all elements are numbers
     for (let i = 0; i < v.length; i++) {
-      if (typeof v[i] !== "number" || Number.isNaN(v[i])) {
+      if (typeof v[i] !== 'number' || Number.isNaN(v[i])) {
         return false;
       }
     }
@@ -151,23 +151,23 @@ const VectorValidation = {
    */
   getDiagnostics: function (v) {
     const isVector = VectorCore.isVector(v);
-    
+
     if (!isVector) {
       return {
         isVector: false,
-        diagnostics: "Not a vector (array or TypedArray required)",
+        diagnostics: 'Not a vector (array or TypedArray required)',
       };
     }
-    
+
     // Check if all elements are numbers
     let allNumbers = true;
     let allFinite = true;
     let anyNaN = false;
     let anyInfinity = false;
     let anyZero = false;
-    
+
     for (let i = 0; i < v.length; i++) {
-      if (typeof v[i] !== "number") {
+      if (typeof v[i] !== 'number') {
         allNumbers = false;
       } else {
         if (Number.isNaN(v[i])) {
@@ -181,17 +181,17 @@ const VectorValidation = {
         }
       }
     }
-    
+
     // Calculate additional metrics
     let magnitude = 0;
     let minValue = Infinity;
     let maxValue = -Infinity;
     let meanValue = 0;
-    
+
     if (allNumbers) {
       try {
         magnitude = VectorCore.magnitude(v);
-        
+
         // Calculate statistics
         let sum = 0;
         for (let i = 0; i < v.length; i++) {
@@ -199,18 +199,18 @@ const VectorValidation = {
           minValue = Math.min(minValue, v[i]);
           maxValue = Math.max(maxValue, v[i]);
         }
-        
+
         meanValue = sum / v.length;
       } catch (e) {
         // If magnitude calculation fails, set appropriate flags
         allFinite = false;
       }
     }
-    
+
     return {
       isVector: true,
       isTypedArray: ArrayBuffer.isView(v),
-      type: ArrayBuffer.isView(v) ? v.constructor.name : "Array",
+      type: ArrayBuffer.isView(v) ? v.constructor.name : 'Array',
       dimension: v.length,
       allNumbers,
       allFinite,
@@ -219,11 +219,11 @@ const VectorValidation = {
       anyZero,
       isZero: this.isZeroVector(v, { tolerance: 1e-10 }),
       isUnit: this.isUnitVector(v),
-      magnitude: allFinite ? magnitude : "N/A",
-      min: allFinite ? minValue : "N/A",
-      max: allFinite ? maxValue : "N/A",
-      mean: allFinite ? meanValue : "N/A",
-      valueRange: allFinite ? maxValue - minValue : "N/A",
+      magnitude: allFinite ? magnitude : 'N/A',
+      min: allFinite ? minValue : 'N/A',
+      max: allFinite ? maxValue : 'N/A',
+      mean: allFinite ? meanValue : 'N/A',
+      valueRange: allFinite ? maxValue - minValue : 'N/A',
     };
   },
 
@@ -238,31 +238,37 @@ const VectorValidation = {
   validateVector: function (v, options = {}) {
     const requireFinite = options.requireFinite !== false;
     const allowZero = options.allowZero !== false;
-    
+
     if (!VectorCore.isVector(v)) {
-      throw new Prime.ValidationError("Value is not a vector (array or TypedArray required)");
+      throw new Prime.ValidationError(
+        'Value is not a vector (array or TypedArray required)',
+      );
     }
-    
+
     // Check if all elements are numbers and finite if required
     for (let i = 0; i < v.length; i++) {
-      if (typeof v[i] !== "number") {
-        throw new Prime.ValidationError(`Element at index ${i} is not a number`);
+      if (typeof v[i] !== 'number') {
+        throw new Prime.ValidationError(
+          `Element at index ${i} is not a number`,
+        );
       }
-      
+
       if (Number.isNaN(v[i])) {
         throw new Prime.ValidationError(`Element at index ${i} is NaN`);
       }
-      
+
       if (requireFinite && !Number.isFinite(v[i])) {
         throw new Prime.ValidationError(`Element at index ${i} is not finite`);
       }
     }
-    
+
     // Check for zero vector if not allowed
     if (!allowZero && this.isZeroVector(v)) {
-      throw new Prime.ValidationError("Zero vector is not allowed for this operation");
+      throw new Prime.ValidationError(
+        'Zero vector is not allowed for this operation',
+      );
     }
-    
+
     return true;
   },
 
@@ -276,18 +282,18 @@ const VectorValidation = {
    */
   validateVectorPair: function (a, b, options = {}) {
     const requireSameDimension = options.requireSameDimension !== false;
-    
+
     // Validate each vector individually
     this.validateVector(a, options);
     this.validateVector(b, options);
-    
+
     // Check dimensions if required
     if (requireSameDimension && a.length !== b.length) {
       throw new Prime.ValidationError(
-        `Vectors must have the same dimension: ${a.length} vs ${b.length}`
+        `Vectors must have the same dimension: ${a.length} vs ${b.length}`,
       );
     }
-    
+
     return true;
   },
 
@@ -301,19 +307,21 @@ const VectorValidation = {
    */
   sanitizeVector: function (v, options = {}) {
     if (!VectorCore.isVector(v)) {
-      throw new Prime.ValidationError("Value is not a vector (array or TypedArray required)");
+      throw new Prime.ValidationError(
+        'Value is not a vector (array or TypedArray required)',
+      );
     }
-    
+
     const replaceNaN = options.replaceNaN !== false;
     const replaceInfinity = options.replaceInfinity !== false;
     const safeInfValue = 1e16; // Large but finite value
-    
+
     // Create a copy of the vector
     const result = VectorCore.clone(v);
-    
+
     // Replace problematic values
     for (let i = 0; i < result.length; i++) {
-      if (typeof result[i] !== "number") {
+      if (typeof result[i] !== 'number') {
         // Convert non-numbers to 0
         result[i] = 0;
       } else if (replaceNaN && Number.isNaN(result[i])) {
@@ -324,23 +332,28 @@ const VectorValidation = {
         result[i] = result[i] > 0 ? safeInfValue : -safeInfValue;
       }
     }
-    
+
     return result;
-  }
+  },
 };
 
 // Add vector-validation to the Prime.Math namespace
 Prime.Math = Prime.Math || {};
 
 // Check if VectorValidation already has a getter defined, if so, use it
-if (Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation') && 
-    Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation').get) {
+if (
+  Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation') &&
+  Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation').get
+) {
   // Use a more careful approach to update the property
-  const descriptor = Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation');
+  const descriptor = Object.getOwnPropertyDescriptor(
+    Prime.Math,
+    'VectorValidation',
+  );
   const originalGetter = descriptor.get;
-  
+
   Object.defineProperty(Prime.Math, 'VectorValidation', {
-    get: function() {
+    get: function () {
       const result = originalGetter.call(this);
       // If result is an empty object (placeholder), return our implementation
       if (Object.keys(result).length === 0) {
@@ -349,7 +362,7 @@ if (Object.getOwnPropertyDescriptor(Prime.Math, 'VectorValidation') &&
       // Otherwise, preserve what's already there
       return result;
     },
-    configurable: true
+    configurable: true,
   });
 } else {
   // Direct assignment if no getter exists

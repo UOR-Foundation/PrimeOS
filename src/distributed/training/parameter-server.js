@@ -1,12 +1,12 @@
 /**
  * PrimeOS JavaScript Library - Distributed Training
  * Parameter Server Implementation
- * 
+ *
  * Manages centralized parameter storage and synchronization for distributed training
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Ensure the namespaces exist
 Prime.distributed = Prime.distributed || {};
@@ -29,39 +29,39 @@ class ParameterServer {
     this.asynchronousUpdates = options.asynchronousUpdates || false;
     this.staleness = options.staleness || 0;
     this.coherenceThreshold = options.coherenceThreshold || 0.8;
-    
+
     // State
     this.parameters = new Map();
     this.versions = new Map();
     this.clientVersions = new Map();
     this.updateQueue = [];
     this.isProcessing = false;
-    
+
     // Metrics
     this.metrics = {
       totalUpdates: 0,
       rejectedUpdates: 0,
       clientSyncCount: new Map(),
-      lastUpdateTime: null
+      lastUpdateTime: null,
     };
-    
+
     // Initialize coherence monitoring if available
     if (Prime.coherence && Prime.coherence.systemCoherence) {
       this.coherenceMonitor = Prime.coherence.systemCoherence;
     }
   }
-  
+
   /**
    * Initialize the parameter server with model parameters
    * @param {Object} parameters - Initial model parameters
    * @param {string} [source='master'] - Source of initial parameters
    * @returns {boolean} Success status
    */
-  initialize(parameters, source = 'master') {
+  initialize(parameters, source = "master") {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Get current parameter values
    * @param {string} clientId - Client requesting parameters
@@ -70,9 +70,9 @@ class ParameterServer {
    */
   getParameters(clientId, keys = null) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Update parameters with client values
    * @param {string} clientId - Client submitting update
@@ -82,9 +82,9 @@ class ParameterServer {
    */
   updateParameters(clientId, updates, metadata = {}) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Check coherence of parameter updates
    * @param {Object} updates - Parameter updates to check
@@ -93,18 +93,18 @@ class ParameterServer {
    */
   _checkCoherence(updates) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Process the update queue (for asynchronous updates)
    * @private
    */
   _processUpdateQueue() {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Get server metrics and status
    * @returns {Object} Server metrics
@@ -115,7 +115,7 @@ class ParameterServer {
       clientCount: this.clientVersions.size,
       parameterCount: this.parameters.size,
       queueLength: this.updateQueue.length,
-      isProcessing: this.isProcessing
+      isProcessing: this.isProcessing,
     };
   }
 }

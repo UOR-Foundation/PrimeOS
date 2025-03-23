@@ -31,8 +31,11 @@
     "test:coherence:bench": "node tests/distributed-coherence-benchmarks.js",
     "test:coherence:mock": "node tests/distributed-coherence-mock-network.js",
     "test:consciousness": "node run-consciousness-tests.js",
+    "test:verify": "node run-verification-tests.js",
+    "test:verify:verbose": "node run-verification-tests.js --verbose",
+    "test:verify:json": "node run-verification-tests.js --json",
     "test:ci": "jest --config jest.config.js \"tests/core-tests.js|tests/mathematics-tests.js|tests/framework-tests.js|tests/coherence-tests.js\"",
-    "test:all": "npm test && npm run test:integration && npm run test:neural && npm run test:distributed && npm run test:coherence && npm run test:consciousness && npm run test:browser",
+    "test:all": "npm test && npm run test:integration && npm run test:neural && npm run test:distributed && npm run test:coherence && npm run test:consciousness && npm run test:verify && npm run test:browser",
     "build": "rollup -c",
     "build:dev": "rollup -c --environment BUILD:development",
     "build:prod": "rollup -c --environment BUILD:production",
@@ -98,6 +101,5 @@
     "access": "public"
   },
   "dependencies": {
-    "@uor-foundation/primeos": "github:UOR-Foundation/PrimeOS"
   }
 }

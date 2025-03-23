@@ -1,13 +1,13 @@
 /**
  * PrimeOS JavaScript Library - Distributed Training
  * Gradient Aggregation System
- * 
+ *
  * Provides mechanisms for combining gradients from multiple nodes
  * during distributed training with various aggregation strategies
  */
 
 // Import the Prime object from core
-const Prime = require('../../core');
+const Prime = require("../../core");
 
 // Ensure the namespaces exist
 Prime.distributed = Prime.distributed || {};
@@ -28,25 +28,25 @@ class GradientAggregator {
    */
   constructor(options = {}) {
     // Configuration
-    this.strategy = options.strategy || 'average';
+    this.strategy = options.strategy || "average";
     this.useCompression = options.useCompression || false;
     this.compressionThreshold = options.compressionThreshold || 0.01;
     this.clipOutliers = options.clipOutliers || false;
-    
+
     // State
     this.pendingGradients = new Map();
     this.clientWeights = new Map();
     this.lastAggregation = null;
-    
+
     // Metrics
     this.metrics = {
       totalAggregations: 0,
       averageClientCount: 0,
       compressionRatio: 1.0,
-      lastAggregationTime: null
+      lastAggregationTime: null,
     };
   }
-  
+
   /**
    * Register a client with the aggregator
    * @param {string} clientId - Client identifier
@@ -55,9 +55,9 @@ class GradientAggregator {
    */
   registerClient(clientId, weight = 1.0) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Submit gradients from a client
    * @param {string} clientId - Client submitting gradients
@@ -67,9 +67,9 @@ class GradientAggregator {
    */
   submitGradients(clientId, gradients, metadata = {}) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Aggregate submitted gradients according to the selected strategy
    * @param {Array<string>} [clientIds=null] - Specific clients to include (null for all)
@@ -77,9 +77,9 @@ class GradientAggregator {
    */
   aggregate(clientIds = null) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Compress gradients to reduce communication overhead
    * @param {Object} gradients - Gradients to compress
@@ -88,9 +88,9 @@ class GradientAggregator {
    */
   _compressGradients(gradients) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Decompress gradients received from clients
    * @param {Object} compressedGradients - Compressed gradient data
@@ -99,9 +99,9 @@ class GradientAggregator {
    */
   _decompressGradients(compressedGradients) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Remove statistical outliers from gradients
    * @param {Array<Object>} gradientsList - List of gradients to filter
@@ -110,9 +110,9 @@ class GradientAggregator {
    */
   _removeOutliers(gradientsList) {
     // Implementation will be completed in Phase 6
-    throw new Error('Not implemented yet');
+    throw new Error("Not implemented yet");
   }
-  
+
   /**
    * Get aggregator metrics and status
    * @returns {Object} Aggregator metrics
@@ -124,7 +124,7 @@ class GradientAggregator {
       pendingCount: this.pendingGradients.size,
       strategy: this.strategy,
       compressionEnabled: this.useCompression,
-      outlierRemovalEnabled: this.clipOutliers
+      outlierRemovalEnabled: this.clipOutliers,
     };
   }
 }

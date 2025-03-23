@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from prime.js
-const Prime = require("./prime");
+const Prime = require('./prime');
 
 // Create the Logger module using IIFE
 (function () {
@@ -38,7 +38,7 @@ const Prime = require("./prime");
         this.currentLevel = level;
       } else {
         throw new Prime.ValidationError(
-          "Log level must be a valid string or number",
+          'Log level must be a valid string or number',
         );
       }
     },
@@ -75,8 +75,8 @@ const Prime = require("./prime");
      * @param {Object} [context] - Additional context information
      */
     debug: function (message, context) {
-      if (this.shouldLog("DEBUG")) {
-        console.debug(this.format("DEBUG", message, context));
+      if (this.shouldLog('DEBUG')) {
+        console.debug(this.format('DEBUG', message, context));
       }
     },
 
@@ -86,8 +86,8 @@ const Prime = require("./prime");
      * @param {Object} [context] - Additional context information
      */
     info: function (message, context) {
-      if (this.shouldLog("INFO")) {
-        console.info(this.format("INFO", message, context));
+      if (this.shouldLog('INFO')) {
+        console.info(this.format('INFO', message, context));
       }
     },
 
@@ -97,8 +97,8 @@ const Prime = require("./prime");
      * @param {Object} [context] - Additional context information
      */
     warn: function (message, context) {
-      if (this.shouldLog("WARN")) {
-        console.warn(this.format("WARN", message, context));
+      if (this.shouldLog('WARN')) {
+        console.warn(this.format('WARN', message, context));
       }
     },
 
@@ -108,8 +108,8 @@ const Prime = require("./prime");
      * @param {Object} [context] - Additional context information
      */
     error: function (message, context) {
-      if (this.shouldLog("ERROR")) {
-        console.error(this.format("ERROR", message, context));
+      if (this.shouldLog('ERROR')) {
+        console.error(this.format('ERROR', message, context));
       }
     },
   };

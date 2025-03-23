@@ -5,12 +5,12 @@
  */
 
 // Import the Prime object
-const Prime = require("../core");
+const Prime = require('../core');
 
 // Ensure required modules are loaded
-require("./matrix-core");
-require("./matrix-advanced");
-require("./matrix-validation");
+require('./matrix-core');
+require('./matrix-advanced');
+require('./matrix-validation');
 
 // Create the Matrix module using IIFE
 (function () {
@@ -279,7 +279,7 @@ require("./matrix-validation");
     isInvertible: function (matrix, tolerance = 1e-10) {
       return Prime.Math.MatrixValidation.isInvertible(matrix, tolerance);
     },
-    
+
     /**
      * Check if a matrix is orthogonal (its transpose equals its inverse)
      * @param {Array|TypedArray} matrix - Matrix to check
@@ -298,21 +298,23 @@ require("./matrix-validation");
      */
     fill: function (matrix, value) {
       return Prime.Math.MatrixCore.fill(matrix, value);
-    }
+    },
   };
 
   // Add Matrix to the Prime.Math namespace
   Prime.Math = Prime.Math || {};
-  
+
   // Check if Matrix already has a getter defined, if so, use it
-  if (Object.getOwnPropertyDescriptor(Prime.Math, 'Matrix') && 
-      Object.getOwnPropertyDescriptor(Prime.Math, 'Matrix').get) {
+  if (
+    Object.getOwnPropertyDescriptor(Prime.Math, 'Matrix') &&
+    Object.getOwnPropertyDescriptor(Prime.Math, 'Matrix').get
+  ) {
     // Use a more careful approach to update the property
     const descriptor = Object.getOwnPropertyDescriptor(Prime.Math, 'Matrix');
     const originalGetter = descriptor.get;
-    
+
     Object.defineProperty(Prime.Math, 'Matrix', {
-      get: function() {
+      get: function () {
         const result = originalGetter.call(this);
         // If result is an empty object (placeholder), return our implementation
         if (Object.keys(result).length === 0) {
@@ -321,7 +323,7 @@ require("./matrix-validation");
         // Otherwise, preserve what's already there
         return result;
       },
-      configurable: true
+      configurable: true,
     });
   } else {
     // Direct assignment if no getter exists

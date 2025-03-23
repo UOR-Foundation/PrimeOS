@@ -5,13 +5,13 @@
  */
 
 // Import Prime using CommonJS to avoid circular dependency
-const Prime = require("../core.js");
+const Prime = require('../core.js');
 // Ensure all modules are loaded in correct order
-require("../mathematics.js");
-require("../coherence.js");
-require("../framework/index.js");
-require("./base.js");
-require("./factory.js");
+require('../mathematics.js');
+require('../coherence.js');
+require('../framework/index.js');
+require('./base.js');
+require('./factory.js');
 
 (function (Prime) {
   /**
@@ -30,7 +30,7 @@ require("./factory.js");
       this.addValidator((config) => {
         if (!config.meta || !config.meta.name) {
           throw new Prime.ValidationError(
-            "Component must have a meta.name property",
+            'Component must have a meta.name property',
           );
         }
         return true;
@@ -44,7 +44,7 @@ require("./factory.js");
      */
     addValidator(validator) {
       if (!Prime.Utils.isFunction(validator)) {
-        throw new Prime.ValidationError("Validator must be a function");
+        throw new Prime.ValidationError('Validator must be a function');
       }
 
       this.validators.push(validator);
@@ -103,7 +103,7 @@ require("./factory.js");
      */
     registerType(typeName) {
       if (!Prime.Utils.isString(typeName)) {
-        throw new Prime.ValidationError("Type name must be a string");
+        throw new Prime.ValidationError('Type name must be a string');
       }
 
       // Register with component factory
@@ -125,7 +125,7 @@ require("./factory.js");
       const result = Prime.Utils.deepClone(base);
 
       // Special handling for different sections
-      for (const section of ["meta", "invariant", "variant"]) {
+      for (const section of ['meta', 'invariant', 'variant']) {
         if (override[section]) {
           result[section] = result[section] || {};
           result[section] = { ...result[section], ...override[section] };
@@ -134,7 +134,7 @@ require("./factory.js");
 
       // Handle other properties
       for (const key in override) {
-        if (!["meta", "invariant", "variant"].includes(key)) {
+        if (!['meta', 'invariant', 'variant'].includes(key)) {
           result[key] = override[key];
         }
       }
@@ -147,15 +147,15 @@ require("./factory.js");
   Prime.ComponentTemplate = ComponentTemplate;
 
   // Publish component module loaded event
-  Prime.EventBus.publish("module:loaded", { name: "component-template" });
+  Prime.EventBus.publish('module:loaded', { name: 'component-template' });
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.Prime = Prime;
 }

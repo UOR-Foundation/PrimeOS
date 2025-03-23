@@ -133,22 +133,22 @@ const vector = {
 
     // Ensure t is clamped to [0,1]
     const tClamped = Math.max(0, Math.min(1, t));
-    
+
     const maxLength = Math.max(a.length, b.length);
     const result = new Array(maxLength);
-    
+
     // Perform interpolation with enhanced precision
     for (let i = 0; i < maxLength; i++) {
       const aVal = i < a.length ? a[i] : 0;
       const bVal = i < b.length ? b[i] : 0;
-      
+
       // Use mathematically stable lerp: (1-t)*a + t*b
       result[i] = (1 - tClamped) * aVal + tClamped * bVal;
     }
-    
+
     return result;
   },
-  
+
   /**
    * Calculate vector norm (magnitude) with enhanced precision
    *
@@ -159,15 +159,15 @@ const vector = {
     if (!Array.isArray(v)) {
       throw new TypeError("Vector must be an array");
     }
-    
+
     // Calculate vector norm using Kahan summation for better precision
     const squareTerms = v.map((val) => val * val);
     const sumResult = kahanSum(squareTerms);
-    
+
     // Protect against negative values due to floating point errors
     return Math.sqrt(Math.max(0, sumResult.sum));
   },
-  
+
   /**
    * Calculate Euclidean distance between vectors with enhanced precision
    *
@@ -446,23 +446,23 @@ const vector = {
       conditionNumber: sumResult.conditionNumber,
     };
   },
-  
+
   // Simple-format normalize function for backward compatibility
   // This version returns just the normalized vector array (not the object with metadata)
   normalizeSimple: function (v) {
     if (!Array.isArray(v)) {
       throw new TypeError("Vector must be an array");
     }
-    
+
     const normVal = this.norm(v);
-    
+
     // Handle zero vectors
     if (normVal === 0) {
       return Array(v.length).fill(0);
     }
-    
+
     // Return normalized vector as a simple array
-    return v.map(val => val / normVal);
+    return v.map((val) => val / normVal);
   },
 
   /**
@@ -1533,17 +1533,17 @@ try {
  * @param {number} dimensions - Target embedding dimension
  * @returns {Array} Embedding vector with specified dimension
  */
-vector.embedData = function(data, dimensions) {
+vector.embedData = function (data, dimensions) {
   // Ensure dimensions is valid
   if (!Number.isInteger(dimensions) || dimensions <= 0) {
-    throw new Error('Embedding dimensions must be a positive integer');
+    throw new Error("Embedding dimensions must be a positive integer");
   }
 
   // Handle different data types
-  if (typeof data === 'number') {
+  if (typeof data === "number") {
     // For numbers, use spectral encoding
     return this._embedNumber(data, dimensions);
-  } else if (typeof data === 'string') {
+  } else if (typeof data === "string") {
     // For strings, use pattern-based encoding
     return this._embedString(data, dimensions);
   } else if (Array.isArray(data)) {
@@ -1552,10 +1552,10 @@ vector.embedData = function(data, dimensions) {
   } else if (data === null || data === undefined) {
     // For null/undefined, return zero vector
     return Array(dimensions).fill(0);
-  } else if (typeof data === 'object') {
+  } else if (typeof data === "object") {
     // For objects, create feature-based embedding
     return this._embedObject(data, dimensions);
-  } else if (typeof data === 'boolean') {
+  } else if (typeof data === "boolean") {
     // For booleans, use bipolar representation
     return this._embedBoolean(data, dimensions);
   } else {
@@ -1568,12 +1568,12 @@ vector.embedData = function(data, dimensions) {
  * Embed a number into a vector space
  * @private
  */
-vector._embedNumber = function(num, dimensions) {
+vector._embedNumber = function (num, dimensions) {
   const result = Array(dimensions).fill(0);
-  
+
   // First position is the normalized value
   result[0] = Math.tanh(num / 100); // Normalized to (-1,1)
-  
+
   // Fill in other dimensions with mathematical transformations
   if (dimensions > 1) {
     result[1] = Math.sin(num);
@@ -1581,12 +1581,13 @@ vector._embedNumber = function(num, dimensions) {
   if (dimensions > 2) {
     result[2] = Math.cos(num);
   }
-  
+
   // Fill remaining positions with scaled values
   for (let i = 3; i < dimensions; i++) {
-    result[i] = Math.sin(num * (i+1) / dimensions) * Math.exp(-i/dimensions);
+    result[i] =
+      Math.sin((num * (i + 1)) / dimensions) * Math.exp(-i / dimensions);
   }
-  
+
   return result;
 };
 
@@ -1594,7 +1595,7 @@ vector._embedNumber = function(num, dimensions) {
  * Embed a string into a vector space
  * @private
  */
-vector._embedString = function(str, dimensions) {
+vector._embedString = function (str, dimensions) {
   return this._createHashBasedEmbedding(str, dimensions);
 };
 
@@ -1602,16 +1603,19 @@ vector._embedString = function(str, dimensions) {
  * Embed an array into a vector space
  * @private
  */
-vector._embedArray = function(arr, dimensions) {
+vector._embedArray = function (arr, dimensions) {
   // If array already has the right size, normalize it
-  if (arr.length === dimensions && arr.every(item => typeof item === 'number')) {
+  if (
+    arr.length === dimensions &&
+    arr.every((item) => typeof item === "number")
+  ) {
     return this.normalizeSimple(arr);
   }
-  
+
   const result = Array(dimensions).fill(0);
-  
+
   // Handle numeric arrays of different sizes
-  if (arr.every(item => typeof item === 'number')) {
+  if (arr.every((item) => typeof item === "number")) {
     // If array is smaller than target, use values directly
     if (arr.length <= dimensions) {
       for (let i = 0; i < arr.length; i++) {
@@ -1636,10 +1640,10 @@ vector._embedArray = function(arr, dimensions) {
     for (let i = 0; i < arr.length; i++) {
       const element = arr[i];
       const elementHash = this._simpleHash(String(element));
-      result[i % dimensions] += Math.sin(elementHash * (i+1));
+      result[i % dimensions] += Math.sin(elementHash * (i + 1));
     }
   }
-  
+
   return this.normalizeSimple(result);
 };
 
@@ -1647,22 +1651,22 @@ vector._embedArray = function(arr, dimensions) {
  * Embed an object into a vector space
  * @private
  */
-vector._embedObject = function(obj, dimensions) {
+vector._embedObject = function (obj, dimensions) {
   const result = Array(dimensions).fill(0);
-  
+
   // Extract features from object
   const keys = Object.keys(obj);
-  
+
   // For each key, add a contribution to the embedding
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     const value = obj[key];
-    
+
     // Hash the key
     const keyHash = this._simpleHash(key);
-    
+
     // Add contribution based on value type
-    if (typeof value === 'number') {
+    if (typeof value === "number") {
       const dimIndex = i % dimensions;
       result[dimIndex] += Math.tanh(value / 100) * Math.sin(keyHash);
     } else {
@@ -1671,7 +1675,7 @@ vector._embedObject = function(obj, dimensions) {
       result[dimIndex] += Math.sin(valueHash * keyHash);
     }
   }
-  
+
   return this.normalizeSimple(result);
 };
 
@@ -1679,17 +1683,17 @@ vector._embedObject = function(obj, dimensions) {
  * Embed a boolean into a vector space
  * @private
  */
-vector._embedBoolean = function(bool, dimensions) {
+vector._embedBoolean = function (bool, dimensions) {
   const result = Array(dimensions).fill(0);
-  
+
   // Set first dimension to indicate the boolean value
   result[0] = bool ? 1 : -1;
-  
+
   // Create a pattern in remaining dimensions
   for (let i = 1; i < dimensions; i++) {
     result[i] = bool ? Math.sin(i) : Math.cos(i);
   }
-  
+
   return this.normalizeSimple(result);
 };
 
@@ -1697,17 +1701,17 @@ vector._embedBoolean = function(bool, dimensions) {
  * Create a hash-based embedding for any string data
  * @private
  */
-vector._createHashBasedEmbedding = function(str, dimensions) {
+vector._createHashBasedEmbedding = function (str, dimensions) {
   const result = Array(dimensions).fill(0);
-  
+
   // Use string data to populate embedding vector
   for (let i = 0; i < str.length; i++) {
     const charCode = str.charCodeAt(i);
     const position = i % dimensions;
     // Use trigonometric functions to distribute values
-    result[position] += Math.sin(charCode * (i+1) / dimensions);
+    result[position] += Math.sin((charCode * (i + 1)) / dimensions);
   }
-  
+
   return this.normalizeSimple(result);
 };
 
@@ -1715,10 +1719,10 @@ vector._createHashBasedEmbedding = function(str, dimensions) {
  * Simple string hash function for embedding
  * @private
  */
-vector._simpleHash = function(str) {
+vector._simpleHash = function (str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = (hash << 5) - hash + str.charCodeAt(i);
     hash = hash & hash; // Convert to 32bit integer
   }
   return Math.abs(hash) / 2147483647; // Normalize to [0,1]
@@ -1728,11 +1732,11 @@ vector._simpleHash = function(str) {
 let vectorCore, vectorAdvanced, vectorValidation;
 try {
   // First try to import from new modular structure - import Prime object
-  const Prime = require('../../core');
-  
+  const Prime = require("../../core");
+
   // Ensure math modules are loaded - this will trigger lazy loading
-  require('../../math/index');
-  
+  require("../../math/index");
+
   // Access through the Prime.Math namespace which should now have the modules
   vectorCore = Prime.Math.VectorCore || null;
   vectorAdvanced = Prime.Math.VectorAdvanced || null;
@@ -1742,28 +1746,28 @@ try {
   vectorCore = null;
   vectorAdvanced = null;
   vectorValidation = null;
-  console.error('Error loading vector modules:', e.message);
+  console.error("Error loading vector modules:", e.message);
 }
 
 // Enhance vector module with refactored functionality if available
 if (vectorCore && vectorAdvanced && vectorValidation) {
   // Add optimized implementations from refactored modules
   vector.createTyped = vectorCore.create;
-  vector.applyInPlace = function(operation, ...args) {
+  vector.applyInPlace = function (operation, ...args) {
     const result = args[args.length - 1];
-    
+
     switch (operation) {
-      case 'add':
+      case "add":
         return vectorCore.add(args[0], args[1], result);
-      case 'subtract':
+      case "subtract":
         return vectorCore.subtract(args[0], args[1], result);
-      case 'scale':
+      case "scale":
         return vectorCore.scale(args[0], args[1], result);
       default:
         throw new Error(`Unknown operation: ${operation}`);
     }
   };
-  
+
   // Add validation utilities
   vector.validate = vectorValidation.validateVector;
   vector.getDiagnostics = vectorValidation.getDiagnostics;
@@ -1783,9 +1787,9 @@ module.exports = {
   coherence,
   linalg,
   primeMath,
-  
+
   // Export refactored modules if available
   vectorCore,
   vectorAdvanced,
-  vectorValidation
+  vectorValidation,
 };

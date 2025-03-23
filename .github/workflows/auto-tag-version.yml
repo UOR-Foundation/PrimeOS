@@ -98,8 +98,11 @@ jobs:
             Minor version release automatically generated after successful CI build.
             
             ### Changes since last release:
-            - Improved component lifecycle handling
-            - Enhanced mathematical operations
+            - Added comprehensive end-to-end verification tests
+            - Implemented coherence-preserved distributed computation
+            - Added self-referential computation capabilities
+            - Enhanced mathematical operations with pattern recognition
+            - Implemented coherence-based learning from minimal examples
             - Bug fixes and performance improvements
             
             Full changelog: https://github.com/${{ github.repository }}/compare/v${{ steps.current_version.outputs.current_version }}...v${{ steps.new_version.outputs.new_version }}

@@ -5,7 +5,7 @@
  */
 
 // Import Prime object from prime.js
-const Prime = require("./prime.js");
+const Prime = require('./prime.js');
 
 (function (Prime) {
   /**
@@ -19,7 +19,7 @@ const Prime = require("./prime.js");
      * @param {string|number} [code] - Error code
      * @param {Error} [cause] - Cause of the error
      */
-    constructor(message, context = {}, code = "PRIME_ERROR", cause = null) {
+    constructor(message, context = {}, code = 'PRIME_ERROR', cause = null) {
       super(message);
       this.name = this.constructor.name;
       this.context = context;
@@ -55,7 +55,7 @@ const Prime = require("./prime.js");
     constructor(
       message,
       context = {},
-      code = "VALIDATION_ERROR",
+      code = 'VALIDATION_ERROR',
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -66,7 +66,7 @@ const Prime = require("./prime.js");
    * Error for configuration issues
    */
   class ConfigurationError extends PrimeError {
-    constructor(message, context = {}, code = "CONFIG_ERROR", cause = null) {
+    constructor(message, context = {}, code = 'CONFIG_ERROR', cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -78,7 +78,7 @@ const Prime = require("./prime.js");
     constructor(
       message,
       context = {},
-      code = "INVALID_OPERATION",
+      code = 'INVALID_OPERATION',
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -92,7 +92,7 @@ const Prime = require("./prime.js");
     constructor(
       message,
       context = {},
-      code = "UNSUPPORTED_OPERATION",
+      code = 'UNSUPPORTED_OPERATION',
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -103,7 +103,7 @@ const Prime = require("./prime.js");
    * Error for timeout issues
    */
   class TimeoutError extends PrimeError {
-    constructor(message, context = {}, code = "TIMEOUT", cause = null) {
+    constructor(message, context = {}, code = 'TIMEOUT', cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -115,7 +115,7 @@ const Prime = require("./prime.js");
     constructor(
       message,
       context = {},
-      code = "RESOURCE_EXHAUSTED",
+      code = 'RESOURCE_EXHAUSTED',
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -129,7 +129,7 @@ const Prime = require("./prime.js");
     constructor(
       message,
       context = {},
-      code = "SECURITY_VIOLATION",
+      code = 'SECURITY_VIOLATION',
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -140,7 +140,7 @@ const Prime = require("./prime.js");
    * Error for network issues
    */
   class NetworkError extends PrimeError {
-    constructor(message, context = {}, code = "NETWORK_ERROR", cause = null) {
+    constructor(message, context = {}, code = 'NETWORK_ERROR', cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -152,7 +152,7 @@ const Prime = require("./prime.js");
     constructor(
       message,
       context = {},
-      code = "DEPENDENCY_ERROR",
+      code = 'DEPENDENCY_ERROR',
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -166,7 +166,7 @@ const Prime = require("./prime.js");
     constructor(
       message,
       context = {},
-      code = "SERIALIZATION_ERROR",
+      code = 'SERIALIZATION_ERROR',
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -177,7 +177,7 @@ const Prime = require("./prime.js");
    * Error for state management issues
    */
   class StateError extends PrimeError {
-    constructor(message, context = {}, code = "STATE_ERROR", cause = null) {
+    constructor(message, context = {}, code = 'STATE_ERROR', cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -189,7 +189,7 @@ const Prime = require("./prime.js");
     constructor(
       message,
       context = {},
-      code = "COHERENCE_VIOLATION",
+      code = 'COHERENCE_VIOLATION',
       cause = null,
     ) {
       super(message, context, code, cause);
@@ -200,7 +200,7 @@ const Prime = require("./prime.js");
    * Error for component lifecycle issues
    */
   class ComponentError extends PrimeError {
-    constructor(message, context = {}, code = "COMPONENT_ERROR", cause = null) {
+    constructor(message, context = {}, code = 'COMPONENT_ERROR', cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -209,7 +209,7 @@ const Prime = require("./prime.js");
    * Error for mathematical calculation issues
    */
   class MathError extends PrimeError {
-    constructor(message, context = {}, code = "MATH_ERROR", cause = null) {
+    constructor(message, context = {}, code = 'MATH_ERROR', cause = null) {
       super(message, context, code, cause);
     }
   }
@@ -233,6 +233,6 @@ const Prime = require("./prime.js");
 })(Prime);
 
 // CommonJS export
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = Prime;
 }

@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require("../core");
+const Prime = require('../core');
 
 // Create the Neural Model module using IIFE
 (function () {
@@ -30,44 +30,44 @@ const Prime = require("../core");
       this.lossFunction = null;
       this.metric = null;
       this.useTypedArrays = config.useTypedArrays !== false;
-      
+
       // Set coherence configuration
       this.coherenceConfig = {
         enabled: true,
         minThreshold: 0.7,
         checkFrequency: 10,
         autoCorrect: true,
-        ...(config.coherence || {})
+        ...(config.coherence || {}),
       };
-      
+
       // Initialize metadata
       this.metadata = {
         createdAt: new Date().toISOString(),
-        ...(config.metadata || {})
+        ...(config.metadata || {}),
       };
-      
+
       // Track performance and training history
       this.history = [];
       this.performance = {
         forwardTime: 0,
         backwardTime: 0,
         iterationCount: 0,
-        lastCoherence: 1.0
+        lastCoherence: 1.0,
       };
-      
+
       // Add layers if provided
       if (Array.isArray(config.layers)) {
-        config.layers.forEach(layerConfig => {
+        config.layers.forEach((layerConfig) => {
           this.addLayer(layerConfig);
         });
       }
-      
+
       // Set optimizer if provided
       if (config.optimizer) {
         this.setOptimizer(config.optimizer);
       }
     }
-    
+
     /**
      * Add a layer to the model
      * @param {Object|Prime.Neural.Layer.NeuralLayer} layerConfig - Layer configuration or instance
@@ -75,73 +75,78 @@ const Prime = require("../core");
      */
     addLayer(layerConfig) {
       let layer;
-      
+
       // If layerConfig is already a layer instance, use it directly
-      if (Prime.Neural.Layer && (
-          (Prime.Neural.Layer.NeuralLayer && layerConfig instanceof Prime.Neural.Layer.NeuralLayer) ||
-          (Prime.Neural.Layer.SelfOptimizingLayer && layerConfig instanceof Prime.Neural.Layer.SelfOptimizingLayer) ||
-          (Prime.Neural.Layer.ConvolutionalLayer && layerConfig instanceof Prime.Neural.Layer.ConvolutionalLayer) ||
-          (Prime.Neural.Layer.RecurrentLayer && layerConfig instanceof Prime.Neural.Layer.RecurrentLayer))
+      if (
+        Prime.Neural.Layer &&
+        ((Prime.Neural.Layer.NeuralLayer &&
+          layerConfig instanceof Prime.Neural.Layer.NeuralLayer) ||
+          (Prime.Neural.Layer.SelfOptimizingLayer &&
+            layerConfig instanceof Prime.Neural.Layer.SelfOptimizingLayer) ||
+          (Prime.Neural.Layer.ConvolutionalLayer &&
+            layerConfig instanceof Prime.Neural.Layer.ConvolutionalLayer) ||
+          (Prime.Neural.Layer.RecurrentLayer &&
+            layerConfig instanceof Prime.Neural.Layer.RecurrentLayer))
       ) {
         layer = layerConfig;
       } else {
         // Otherwise, create a layer from the configuration
         const type = (layerConfig.type || 'dense').toLowerCase();
-        
+
         // Create layer based on type
         switch (type) {
           case 'dense':
             layer = Prime.Neural.Neural.createLayer('dense', {
               ...layerConfig,
-              useTypedArrays: this.useTypedArrays
+              useTypedArrays: this.useTypedArrays,
             });
             break;
           case 'conv':
           case 'convolutional':
             layer = Prime.Neural.Neural.createLayer('conv', {
               ...layerConfig,
-              useTypedArrays: this.useTypedArrays
+              useTypedArrays: this.useTypedArrays,
             });
             break;
           case 'rnn':
           case 'recurrent':
             layer = Prime.Neural.Neural.createLayer('recurrent', {
               ...layerConfig,
-              useTypedArrays: this.useTypedArrays
+              useTypedArrays: this.useTypedArrays,
             });
             break;
           case 'self_optimizing':
           case 'selfoptimizing':
             layer = new Prime.Neural.Layer.SelfOptimizingLayer({
               ...layerConfig,
-              useTypedArrays: this.useTypedArrays
+              useTypedArrays: this.useTypedArrays,
             });
             break;
           default:
             throw new Error(`Unknown layer type: ${type}`);
         }
       }
-      
+
       // Validate layer compatibility with the previous layer
       if (this.layers.length > 0) {
         const prevLayer = this.layers[this.layers.length - 1];
         if (prevLayer.outputSize !== layer.inputSize) {
           throw new Error(
             `Layer input size mismatch: previous layer output size is ${prevLayer.outputSize}, ` +
-            `but new layer input size is ${layer.inputSize}`
+              `but new layer input size is ${layer.inputSize}`,
           );
         }
       }
-      
+
       // Add layer to the model
       this.layers.push(layer);
-      
+
       // Reset compiled state as model structure has changed
       this.compiled = false;
-      
+
       return this;
     }
-    
+
     /**
      * Set the optimizer for the model
      * @param {Object|Prime.Neural.Optimization.Optimizer} optimizer - Optimizer configuration or instance
@@ -154,21 +159,26 @@ const Prime = require("../core");
       }
       // If optimizer is configuration object, create from factory
       else if (typeof optimizer === 'object' && optimizer.type) {
-        this.optimizer = Prime.Neural.Neural.createOptimizer(optimizer.type, optimizer);
+        this.optimizer = Prime.Neural.Neural.createOptimizer(
+          optimizer.type,
+          optimizer,
+        );
       }
       // If optimizer is already an optimizer instance, use directly
-      else if (typeof optimizer === 'object' && 
-               typeof optimizer.update === 'function') {
+      else if (
+        typeof optimizer === 'object' &&
+        typeof optimizer.update === 'function'
+      ) {
         this.optimizer = optimizer;
       }
       // Otherwise, throw error
       else {
         throw new Error('Invalid optimizer configuration');
       }
-      
+
       return this;
     }
-    
+
     /**
      * Compile the model with loss function and metrics
      * @param {Object} config - Compilation configuration
@@ -181,13 +191,13 @@ const Prime = require("../core");
       if (this.layers.length === 0) {
         throw new Error('Model must have at least one layer');
       }
-      
+
       // Validate optimizer is set
       if (!this.optimizer) {
         // Default to Adam optimizer if none is set
         this.setOptimizer('adam');
       }
-      
+
       // Set loss function
       if (typeof config.loss === 'string') {
         this.lossFunction = this._getLossFunction(config.loss);
@@ -196,7 +206,7 @@ const Prime = require("../core");
       } else {
         throw new Error('Loss function must be a string or function');
       }
-      
+
       // Set metric (optional)
       if (config.metric) {
         if (typeof config.metric === 'string') {
@@ -205,9 +215,9 @@ const Prime = require("../core");
           this.metric = config.metric;
         }
       }
-      
+
       this.compiled = true;
-      
+
       // Update metadata
       this.metadata.compiledAt = new Date().toISOString();
       if (typeof config.loss === 'string') {
@@ -216,10 +226,10 @@ const Prime = require("../core");
       if (typeof config.metric === 'string') {
         this.metadata.metric = config.metric;
       }
-      
+
       return this;
     }
-    
+
     /**
      * Forward pass through the model
      * @param {Array|TypedArray} input - Input data
@@ -232,51 +242,53 @@ const Prime = require("../core");
       if (!this.layers.length) {
         throw new Error('Model has no layers');
       }
-      
+
       const startTime = performance.now();
       const training = options.training !== false;
       const returnIntermediates = options.returnIntermediates === true;
-      
+
       // Convert input to appropriate type if necessary
-      let currentInput = this.useTypedArrays && !(input instanceof Float32Array || input instanceof Float64Array) 
-        ? Prime.Neural.Neural.toTypedArray(input)
-        : input;
-      
+      let currentInput =
+        this.useTypedArrays &&
+        !(input instanceof Float32Array || input instanceof Float64Array)
+          ? Prime.Neural.Neural.toTypedArray(input)
+          : input;
+
       // Intermediate activations and cache for backprop
       const intermediates = returnIntermediates ? [] : null;
       const layerCache = training ? [] : null;
-      
+
       // Forward pass through each layer
       for (let i = 0; i < this.layers.length; i++) {
         const layer = this.layers[i];
         const { activation, cache } = layer.forward(currentInput);
-        
+
         // Store intermediates if requested
         if (returnIntermediates) {
           intermediates.push(activation);
         }
-        
+
         // Store cache if in training mode
         if (training) {
           layerCache.push(cache);
         }
-        
+
         // Update input for next layer
         currentInput = activation;
       }
-      
+
       // Update performance metrics
       const endTime = performance.now();
       this._updateForwardTime(endTime - startTime);
-      
+
       // Return output and cache
       return {
         output: currentInput,
         cache: layerCache,
-        intermediates: intermediates
+        intermediates: intermediates,
       };
     }
-    
+
     /**
      * Perform backward pass to compute gradients
      * @param {Array|TypedArray} expected - Expected output values
@@ -288,37 +300,37 @@ const Prime = require("../core");
       if (!this.compiled) {
         throw new Error('Model must be compiled before training');
       }
-      
+
       const startTime = performance.now();
-      
+
       // Calculate initial gradient from loss function
       const { loss, gradient } = this.lossFunction(expected, predicted, true);
-      
+
       // Backward pass through each layer, starting from the last
       let currentGradient = gradient;
       const gradients = [];
-      
+
       for (let i = this.layers.length - 1; i >= 0; i--) {
         const layer = this.layers[i];
         const layerCache = cache[i];
-        
+
         // Compute gradients for this layer
         const { dW, dB, dX } = layer.backward(currentGradient, layerCache);
-        
+
         // Store gradients for parameter updates
         gradients.unshift({ dW, dB });
-        
+
         // Update gradient for previous layer
         currentGradient = dX;
       }
-      
+
       // Update performance metrics
       const endTime = performance.now();
       this._updateBackwardTime(endTime - startTime);
-      
+
       return { loss, gradients };
     }
-    
+
     /**
      * Update model parameters based on gradients
      * @param {Array} gradients - Gradients for each layer
@@ -328,37 +340,42 @@ const Prime = require("../core");
       if (!this.optimizer) {
         throw new Error('Model must have an optimizer');
       }
-      
+
       // Calculate model coherence before update if needed
       let preUpdateCoherence = null;
-      if (this.coherenceConfig.enabled && 
-          this.performance.iterationCount % this.coherenceConfig.checkFrequency === 0) {
+      if (
+        this.coherenceConfig.enabled &&
+        this.performance.iterationCount %
+          this.coherenceConfig.checkFrequency ===
+          0
+      ) {
         preUpdateCoherence = this.calculateCoherence();
       }
-      
+
       // Update each layer's parameters
       for (let i = 0; i < this.layers.length; i++) {
         const layer = this.layers[i];
         const layerGradients = gradients[i];
-        
+
         // Use coherence-aware optimizer if available
-        if (this.coherenceConfig.enabled && 
-            typeof this.optimizer.update === 'function' && 
-            typeof this.optimizer.calculateCoherence === 'function') {
-          
+        if (
+          this.coherenceConfig.enabled &&
+          typeof this.optimizer.update === 'function' &&
+          typeof this.optimizer.calculateCoherence === 'function'
+        ) {
           // Get current parameters
           const params = {
             weights: layer.weights,
-            biases: layer.biases
+            biases: layer.biases,
           };
-          
+
           // Update parameters with coherence constraints
           const updatedParams = this.optimizer.update(
-            params, 
-            layerGradients, 
-            this.calculateCoherence.bind(this)
+            params,
+            layerGradients,
+            this.calculateCoherence.bind(this),
           );
-          
+
           // Apply updated parameters
           layer.weights = updatedParams.weights;
           layer.biases = updatedParams.biases;
@@ -367,33 +384,35 @@ const Prime = require("../core");
           layer.update(layerGradients, this.optimizer.learningRate);
         }
       }
-      
+
       // Calculate post-update coherence if needed
       let coherenceInfo = null;
       if (preUpdateCoherence !== null) {
         const postUpdateCoherence = this.calculateCoherence();
         this.performance.lastCoherence = postUpdateCoherence;
-        
+
         coherenceInfo = {
           before: preUpdateCoherence,
           after: postUpdateCoherence,
           delta: postUpdateCoherence - preUpdateCoherence,
-          stable: postUpdateCoherence >= this.coherenceConfig.minThreshold
+          stable: postUpdateCoherence >= this.coherenceConfig.minThreshold,
         };
-        
+
         // If coherence dropped below threshold and auto-correct is enabled,
         // attempt to restore coherence
-        if (this.coherenceConfig.autoCorrect && 
-            coherenceInfo.after < this.coherenceConfig.minThreshold) {
+        if (
+          this.coherenceConfig.autoCorrect &&
+          coherenceInfo.after < this.coherenceConfig.minThreshold
+        ) {
           await this._attemptCoherenceCorrection(coherenceInfo);
           coherenceInfo.corrected = true;
           coherenceInfo.afterCorrection = this.calculateCoherence();
         }
       }
-      
+
       return coherenceInfo;
     }
-    
+
     /**
      * Train the model on a batch of data
      * @param {Array|TypedArray} inputs - Input data
@@ -405,29 +424,29 @@ const Prime = require("../core");
       if (!this.compiled) {
         throw new Error('Model must be compiled before training');
       }
-      
+
       // Forward pass
       const { output, cache } = this.forward(inputs, { training: true });
-      
+
       // Backward pass
       const { loss, gradients } = this.backward(targets, output, cache);
-      
+
       // Update parameters
       this.update(gradients);
-      
+
       // Calculate metric if available
       let metricValue = null;
       if (this.metric) {
         metricValue = this.metric(targets, output);
       }
-      
+
       // Return training results
       return {
         loss,
-        metric: metricValue
+        metric: metricValue,
       };
     }
-    
+
     /**
      * Make predictions with the model
      * @param {Array|TypedArray} inputs - Input data
@@ -437,7 +456,7 @@ const Prime = require("../core");
       const { output } = this.forward(inputs, { training: false });
       return output;
     }
-    
+
     /**
      * Calculate the coherence score of the model
      * @returns {number} Coherence score (0-1)
@@ -446,18 +465,18 @@ const Prime = require("../core");
       if (this.layers.length === 0) {
         return 1.0; // Perfect coherence for empty model
       }
-      
+
       // Calculate coherence for each layer
-      const layerCoherences = this.layers.map(layer => {
+      const layerCoherences = this.layers.map((layer) => {
         // Use layer's calculateCoherence method if available
         if (typeof layer.calculateCoherence === 'function') {
           return layer.calculateCoherence();
         }
-        
+
         // Otherwise use a heuristic based on weight distribution
         let sumWeightsMagnitude = 0;
         let maxWeight = 0;
-        
+
         for (let i = 0; i < layer.weights.length; i++) {
           for (let j = 0; j < layer.weights[i].length; j++) {
             const magnitude = Math.abs(layer.weights[i][j]);
@@ -465,26 +484,28 @@ const Prime = require("../core");
             maxWeight = Math.max(maxWeight, magnitude);
           }
         }
-        
+
         // Calculate coefficient of variation as a coherence indicator
-        const avgMagnitude = sumWeightsMagnitude / (layer.weights.length * layer.weights[0].length);
-        return Math.min(1.0, 3.0 * avgMagnitude / (maxWeight + 1e-8));
+        const avgMagnitude =
+          sumWeightsMagnitude /
+          (layer.weights.length * layer.weights[0].length);
+        return Math.min(1.0, (3.0 * avgMagnitude) / (maxWeight + 1e-8));
       });
-      
+
       // Overall coherence is a weighted average of layer coherences,
       // with more weight given to deeper layers
       let weightedSum = 0;
       let weightSum = 0;
-      
+
       for (let i = 0; i < layerCoherences.length; i++) {
         const layerWeight = 1 + i / layerCoherences.length; // Deeper layers get more weight
         weightedSum += layerCoherences[i] * layerWeight;
         weightSum += layerWeight;
       }
-      
+
       return weightedSum / weightSum;
     }
-    
+
     /**
      * Save the model to a serializable object
      * @returns {Object} Serialized model
@@ -499,16 +520,16 @@ const Prime = require("../core");
         layers: [],
         history: this.history.slice(-100), // Keep only recent history
       };
-      
+
       // Add optimizer configuration if available
       if (this.optimizer) {
         modelData.optimizer = {
           type: this.optimizer.constructor.name,
           config: {
-            learningRate: this.optimizer.learningRate
-          }
+            learningRate: this.optimizer.learningRate,
+          },
         };
-        
+
         // Add optimizer-specific parameters
         if (this.optimizer.momentum !== undefined) {
           modelData.optimizer.config.momentum = this.optimizer.momentum;
@@ -523,7 +544,7 @@ const Prime = require("../core");
           modelData.optimizer.config.epsilon = this.optimizer.epsilon;
         }
       }
-      
+
       // Add layer data
       this.layers.forEach((layer, index) => {
         // Common layer properties
@@ -534,9 +555,9 @@ const Prime = require("../core");
           outputSize: layer.outputSize,
           activation: layer.activation,
           weights: this._serializeMatrix(layer.weights),
-          biases: this._serializeArray(layer.biases)
+          biases: this._serializeArray(layer.biases),
         };
-        
+
         // Add layer-specific properties
         if (layer.filters !== undefined) {
           layerData.filters = layer.filters;
@@ -559,14 +580,14 @@ const Prime = require("../core");
         if (layer.returnSequences !== undefined) {
           layerData.returnSequences = layer.returnSequences;
         }
-        
+
         // Add to model layers
         modelData.layers.push(layerData);
       });
-      
+
       return modelData;
     }
-    
+
     /**
      * Load a model from a serialized object
      * @param {Object} modelData - Serialized model data
@@ -576,23 +597,23 @@ const Prime = require("../core");
       // Create empty model
       const model = new NeuralModel({
         coherence: modelData.coherenceConfig,
-        metadata: modelData.metadata
+        metadata: modelData.metadata,
       });
-      
+
       // Add layers
-      modelData.layers.forEach(layerData => {
+      modelData.layers.forEach((layerData) => {
         // Reconstruct weights and biases
         const weights = this._deserializeMatrix(layerData.weights);
         const biases = this._deserializeArray(layerData.biases);
-        
+
         // Create layer configuration
         const layerConfig = {
           type: layerData.type,
           inputSize: layerData.inputSize,
           outputSize: layerData.outputSize,
-          activation: layerData.activation
+          activation: layerData.activation,
         };
-        
+
         // Add layer-specific properties
         if (layerData.filters !== undefined) {
           layerConfig.filters = layerData.filters;
@@ -615,39 +636,42 @@ const Prime = require("../core");
         if (layerData.returnSequences !== undefined) {
           layerConfig.returnSequences = layerData.returnSequences;
         }
-        
+
         // Create and add layer
-        const layer = Prime.Neural.Neural.createLayer(layerConfig.type, layerConfig);
-        
+        const layer = Prime.Neural.Neural.createLayer(
+          layerConfig.type,
+          layerConfig,
+        );
+
         // Set weights and biases
         layer.weights = weights;
         layer.biases = biases;
-        
+
         // Add to model
         model.layers.push(layer);
       });
-      
+
       // Set optimizer if available
       if (modelData.optimizer) {
         model.setOptimizer({
           type: modelData.optimizer.type,
-          ...modelData.optimizer.config
+          ...modelData.optimizer.config,
         });
       }
-      
+
       // Set history if available
       if (Array.isArray(modelData.history)) {
         model.history = [...modelData.history];
       }
-      
+
       // Mark as compiled if it has an optimizer
       if (model.optimizer) {
         model.compiled = true;
       }
-      
+
       return model;
     }
-    
+
     /**
      * Attempt to correct coherence issues
      * @private
@@ -657,7 +681,7 @@ const Prime = require("../core");
     async _attemptCoherenceCorrection(coherenceInfo) {
       // Simple strategy: apply weight decay to reduce extreme values
       const decayFactor = 0.95;
-      
+
       for (const layer of this.layers) {
         for (let i = 0; i < layer.weights.length; i++) {
           for (let j = 0; j < layer.weights[i].length; j++) {
@@ -668,17 +692,17 @@ const Prime = require("../core");
           }
         }
       }
-      
+
       // Log correction attempt
       this.history.push({
         type: 'coherence_correction',
         timestamp: new Date().toISOString(),
         iteration: this.performance.iterationCount,
         coherenceBefore: coherenceInfo.after,
-        coherenceAfter: this.calculateCoherence()
+        coherenceAfter: this.calculateCoherence(),
       });
     }
-    
+
     /**
      * Get loss function by name
      * @private
@@ -687,7 +711,7 @@ const Prime = require("../core");
      */
     _getLossFunction(name) {
       const lowerName = name.toLowerCase();
-      
+
       switch (lowerName) {
         case 'mse':
         case 'meansquarederror':
@@ -705,7 +729,7 @@ const Prime = require("../core");
           throw new Error(`Unknown loss function: ${name}`);
       }
     }
-    
+
     /**
      * Get metric function by name
      * @private
@@ -714,7 +738,7 @@ const Prime = require("../core");
      */
     _getMetricFunction(name) {
       const lowerName = name.toLowerCase();
-      
+
       switch (lowerName) {
         case 'accuracy':
           return this._accuracyMetric.bind(this);
@@ -734,7 +758,7 @@ const Prime = require("../core");
           throw new Error(`Unknown metric: ${name}`);
       }
     }
-    
+
     /**
      * Mean Squared Error loss function
      * @private
@@ -745,22 +769,24 @@ const Prime = require("../core");
      */
     _meanSquaredError(y_true, y_pred, computeGradient = true) {
       let loss = 0;
-      const gradient = computeGradient ? new Array(y_pred.length).fill(0) : null;
+      const gradient = computeGradient
+        ? new Array(y_pred.length).fill(0)
+        : null;
       const n = y_pred.length;
-      
+
       for (let i = 0; i < n; i++) {
         const diff = y_pred[i] - y_true[i];
         loss += diff * diff;
-        
+
         if (computeGradient) {
-          gradient[i] = 2 * diff / n;
+          gradient[i] = (2 * diff) / n;
         }
       }
-      
+
       loss /= n;
       return { loss, gradient };
     }
-    
+
     /**
      * Mean Absolute Error loss function
      * @private
@@ -771,22 +797,24 @@ const Prime = require("../core");
      */
     _meanAbsoluteError(y_true, y_pred, computeGradient = true) {
       let loss = 0;
-      const gradient = computeGradient ? new Array(y_pred.length).fill(0) : null;
+      const gradient = computeGradient
+        ? new Array(y_pred.length).fill(0)
+        : null;
       const n = y_pred.length;
-      
+
       for (let i = 0; i < n; i++) {
         const diff = y_pred[i] - y_true[i];
         loss += Math.abs(diff);
-        
+
         if (computeGradient) {
           gradient[i] = (diff > 0 ? 1 : -1) / n;
         }
       }
-      
+
       loss /= n;
       return { loss, gradient };
     }
-    
+
     /**
      * Binary Cross Entropy loss function
      * @private
@@ -797,29 +825,31 @@ const Prime = require("../core");
      */
     _binaryCrossEntropy(y_true, y_pred, computeGradient = true) {
       let loss = 0;
-      const gradient = computeGradient ? new Array(y_pred.length).fill(0) : null;
+      const gradient = computeGradient
+        ? new Array(y_pred.length).fill(0)
+        : null;
       const n = y_pred.length;
       const epsilon = 1e-7;
-      
+
       for (let i = 0; i < n; i++) {
         // Clip prediction to avoid log(0)
         const pred = Math.max(Math.min(y_pred[i], 1 - epsilon), epsilon);
         const target = y_true[i];
-        
+
         // Binary cross entropy formula: -t*log(p) - (1-t)*log(1-p)
         loss += -target * Math.log(pred) - (1 - target) * Math.log(1 - pred);
-        
+
         if (computeGradient) {
           // Gradient: -t/p + (1-t)/(1-p)
           gradient[i] = -target / pred + (1 - target) / (1 - pred);
           gradient[i] /= n;
         }
       }
-      
+
       loss /= n;
       return { loss, gradient };
     }
-    
+
     /**
      * Categorical Cross Entropy loss function
      * @private
@@ -830,31 +860,33 @@ const Prime = require("../core");
      */
     _categoricalCrossEntropy(y_true, y_pred, computeGradient = true) {
       let loss = 0;
-      const gradient = computeGradient ? new Array(y_pred.length).fill(0) : null;
+      const gradient = computeGradient
+        ? new Array(y_pred.length).fill(0)
+        : null;
       const n = y_pred.length;
       const epsilon = 1e-7;
-      
+
       for (let i = 0; i < n; i++) {
         // Clip prediction to avoid log(0)
         const pred = Math.max(Math.min(y_pred[i], 1 - epsilon), epsilon);
         const target = y_true[i];
-        
+
         // Only add loss for positive targets (in one-hot encoding)
         if (target > 0) {
           loss += -target * Math.log(pred);
         }
-        
+
         if (computeGradient) {
           // Gradient: -t/p
           gradient[i] = -target / pred;
           gradient[i] /= n;
         }
       }
-      
+
       loss /= n;
       return { loss, gradient };
     }
-    
+
     /**
      * Accuracy metric
      * @private
@@ -865,7 +897,7 @@ const Prime = require("../core");
     _accuracyMetric(y_true, y_pred) {
       let correct = 0;
       let total = 0;
-      
+
       // Handle 1D arrays (binary classification)
       if (!Array.isArray(y_true[0])) {
         for (let i = 0; i < y_true.length; i++) {
@@ -884,7 +916,7 @@ const Prime = require("../core");
           let predClass = 0;
           let maxTrue = y_true[i][0];
           let maxPred = y_pred[i][0];
-          
+
           // Find class with highest value
           for (let j = 1; j < y_true[i].length; j++) {
             if (y_true[i][j] > maxTrue) {
@@ -896,17 +928,17 @@ const Prime = require("../core");
               predClass = j;
             }
           }
-          
+
           if (trueClass === predClass) {
             correct++;
           }
           total++;
         }
       }
-      
+
       return total > 0 ? correct / total : 0;
     }
-    
+
     /**
      * Serialize a matrix for storage
      * @private
@@ -918,21 +950,24 @@ const Prime = require("../core");
       if (!matrix) {
         return [[]];
       }
-      
+
       // Handle 2D arrays or typed arrays
       const result = [];
-      
+
       // Add safety check for matrix.length
       const len = matrix.length || 0;
-      
+
       for (let i = 0; i < len; i++) {
         // Skip if the row is undefined or null
         if (!matrix[i]) {
           result.push([]);
           continue;
         }
-        
-        if (matrix[i] instanceof Float32Array || matrix[i] instanceof Float64Array) {
+
+        if (
+          matrix[i] instanceof Float32Array ||
+          matrix[i] instanceof Float64Array
+        ) {
           result.push(Array.from(matrix[i]));
         } else if (Array.isArray(matrix[i])) {
           result.push([...matrix[i]]);
@@ -941,10 +976,10 @@ const Prime = require("../core");
           result.push([matrix[i]]);
         }
       }
-      
+
       return result;
     }
-    
+
     /**
      * Serialize an array for storage
      * @private
@@ -956,19 +991,19 @@ const Prime = require("../core");
       if (!array) {
         return [];
       }
-      
+
       if (array instanceof Float32Array || array instanceof Float64Array) {
         return Array.from(array);
       }
-      
+
       if (Array.isArray(array)) {
         return [...array];
       }
-      
+
       // Handle scalar values
       return [array];
     }
-    
+
     /**
      * Deserialize a matrix from storage
      * @private
@@ -976,9 +1011,9 @@ const Prime = require("../core");
      * @returns {Array<Array>} Deserialized matrix
      */
     static _deserializeMatrix(serialized) {
-      return serialized.map(row => [...row]);
+      return serialized.map((row) => [...row]);
     }
-    
+
     /**
      * Deserialize an array from storage
      * @private
@@ -988,26 +1023,28 @@ const Prime = require("../core");
     static _deserializeArray(serialized) {
       return [...serialized];
     }
-    
+
     /**
      * Update forward pass performance metrics
      * @private
      * @param {number} time - Time in ms for this forward pass
      */
     _updateForwardTime(time) {
-      this.performance.forwardTime = 0.9 * this.performance.forwardTime + 0.1 * time;
+      this.performance.forwardTime =
+        0.9 * this.performance.forwardTime + 0.1 * time;
       this.performance.iterationCount++;
     }
-    
+
     /**
      * Update backward pass performance metrics
      * @private
      * @param {number} time - Time in ms for this backward pass
      */
     _updateBackwardTime(time) {
-      this.performance.backwardTime = 0.9 * this.performance.backwardTime + 0.1 * time;
+      this.performance.backwardTime =
+        0.9 * this.performance.backwardTime + 0.1 * time;
     }
-    
+
     /**
      * Get model summary
      * @returns {Object} Model summary
@@ -1018,19 +1055,24 @@ const Prime = require("../core");
         if (layerType.includes('Layer')) {
           layerType = layerType.replace('Layer', '');
         }
-        
+
         return {
           index,
           type: layerType,
           input: layer.inputSize,
           output: layer.outputSize,
           activation: layer.activation,
-          parameters: layer.weights.length * layer.weights[0].length + layer.biases.length
+          parameters:
+            layer.weights.length * layer.weights[0].length +
+            layer.biases.length,
         };
       });
-      
-      const totalParams = layerSummaries.reduce((sum, layer) => sum + layer.parameters, 0);
-      
+
+      const totalParams = layerSummaries.reduce(
+        (sum, layer) => sum + layer.parameters,
+        0,
+      );
+
       return {
         layers: layerSummaries,
         totalLayers: this.layers.length,
@@ -1038,11 +1080,11 @@ const Prime = require("../core");
         compiled: this.compiled,
         optimizer: this.optimizer ? this.optimizer.constructor.name : 'None',
         useTypedArrays: this.useTypedArrays,
-        performance: { ...this.performance }
+        performance: { ...this.performance },
       };
     }
   }
-  
+
   // Add to Prime.Neural namespace
   Prime.Neural = Prime.Neural || {};
   Prime.Neural.Model = Prime.Neural.Model || {};

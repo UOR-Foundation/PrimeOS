@@ -5,7 +5,7 @@
  */
 
 // Import Prime object from prime.js
-const Prime = require("./prime.js");
+const Prime = require('./prime.js');
 
 (function (Prime) {
   /**
@@ -66,7 +66,7 @@ const Prime = require("./prime.js");
        * @returns {string} Subscription token
        */
       subscribe: function (topic, callback) {
-        if (!topic || typeof callback !== "function") {
+        if (!topic || typeof callback !== 'function') {
           return null;
         }
 
@@ -177,8 +177,8 @@ const Prime = require("./prime.js");
      * @returns {Function} Function to remove this listener
      */
     on(event, callback) {
-      if (typeof callback !== "function") {
-        throw new Error("Callback must be a function");
+      if (typeof callback !== 'function') {
+        throw new Error('Callback must be a function');
       }
 
       if (!this.events.has(event)) {
@@ -303,6 +303,6 @@ const Prime = require("./prime.js");
 })(Prime);
 
 // CommonJS export
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = Prime;
 }

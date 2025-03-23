@@ -99,21 +99,21 @@ class ClusterNode {
       // Set up event listeners
       this.eventBus.on("task:completed", this._handleTaskCompleted.bind(this));
       this.eventBus.on("task:error", this._handleTaskError.bind(this));
-      
+
       // Update state to ready
       this.state = NodeState.READY;
-      
+
       // Log successful initialization
       Prime.Logger.info(`Node ${this.id} initialized successfully`, {
         type: this.type,
         address: this.address,
-        port: this.port
+        port: this.port,
       });
     } catch (error) {
       this.state = NodeState.ERROR;
       Prime.Logger.error(`Failed to initialize node ${this.id}`, {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
     }
   }
@@ -128,21 +128,26 @@ class ClusterNode {
     if (this.state !== NodeState.READY && this.state !== NodeState.WORKING) {
       return false;
     }
-    
+
     // Check if node has capacity for another task
     if (this.currentTasks.size >= this.maxConcurrency) {
       return false;
     }
-    
+
     // Check if node has the required capabilities for the task
     if (task.requiredCapabilities) {
-      for (const [capability, minValue] of Object.entries(task.requiredCapabilities)) {
-        if (!this.capabilities[capability] || this.capabilities[capability] < minValue) {
+      for (const [capability, minValue] of Object.entries(
+        task.requiredCapabilities,
+      )) {
+        if (
+          !this.capabilities[capability] ||
+          this.capabilities[capability] < minValue
+        ) {
           return false;
         }
       }
     }
-    
+
     return true;
   }
 
@@ -155,27 +160,27 @@ class ClusterNode {
     if (!this.canAcceptTask(task)) {
       return false;
     }
-    
+
     // Add task to current tasks
     this.currentTasks.set(task.id, {
       ...task,
-      assignedAt: Date.now()
+      assignedAt: Date.now(),
     });
-    
+
     // Update node state
     if (this.state === NodeState.READY) {
       this.state = NodeState.WORKING;
     }
-    
+
     // Log task assignment
     Prime.Logger.info(`Task ${task.id} assigned to node ${this.id}`, {
       taskType: task.type,
-      nodeType: this.type
+      nodeType: this.type,
     });
-    
+
     // Emit event
     this.eventBus.emit("task:assigned", { taskId: task.id, nodeId: this.id });
-    
+
     return true;
   }
 
@@ -187,33 +192,35 @@ class ClusterNode {
   completeTask(taskId, result) {
     const task = this.currentTasks.get(taskId);
     if (!task) {
-      Prime.Logger.warn(`Attempting to complete unknown task ${taskId} on node ${this.id}`);
+      Prime.Logger.warn(
+        `Attempting to complete unknown task ${taskId} on node ${this.id}`,
+      );
       return false;
     }
-    
+
     // Calculate processing time
     const processingTime = Date.now() - task.assignedAt;
-    
+
     // Update metrics
     this.metrics.tasksProcessed++;
     this.metrics.totalProcessingTime += processingTime;
-    
+
     // Remove task from current tasks
     this.currentTasks.delete(taskId);
-    
+
     // Update node state if no more tasks
     if (this.currentTasks.size === 0) {
       this.state = NodeState.READY;
     }
-    
+
     // Emit completion event
     this.eventBus.emit("task:completed", {
       taskId,
       nodeId: this.id,
       result,
-      processingTime
+      processingTime,
     });
-    
+
     return true;
   }
 
@@ -225,29 +232,31 @@ class ClusterNode {
   reportTaskError(taskId, error) {
     const task = this.currentTasks.get(taskId);
     if (!task) {
-      Prime.Logger.warn(`Reporting error for unknown task ${taskId} on node ${this.id}`);
+      Prime.Logger.warn(
+        `Reporting error for unknown task ${taskId} on node ${this.id}`,
+      );
       return false;
     }
-    
+
     // Update metrics
     this.metrics.errors++;
-    
+
     // Remove task from current tasks
     this.currentTasks.delete(taskId);
-    
+
     // Update node state if no more tasks
     if (this.currentTasks.size === 0) {
       this.state = NodeState.READY;
     }
-    
+
     // Emit error event
     this.eventBus.emit("task:error", {
       taskId,
       nodeId: this.id,
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
-    
+
     return true;
   }
 
@@ -258,33 +267,34 @@ class ClusterNode {
   reportCoherenceViolation(violation) {
     // Update metrics
     this.metrics.coherenceViolations++;
-    
+
     // Emit violation event
     this.eventBus.emit("coherence:violation", {
       nodeId: this.id,
       violation,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     // Log violation
     Prime.Logger.warn(`Coherence violation on node ${this.id}`, {
       type: violation.type,
       severity: violation.severity,
-      details: violation.details || {}
+      details: violation.details || {},
     });
-    
+
     // For numerical stability violations, attempt automatic recovery
-    if (violation.type === 'numerical' && 
-        Prime.Distributed && 
-        Prime.Distributed.Coherence && 
-        Prime.Distributed.Coherence.DistributedCoherenceManager) {
-      
+    if (
+      violation.type === "numerical" &&
+      Prime.Distributed &&
+      Prime.Distributed.Coherence &&
+      Prime.Distributed.Coherence.DistributedCoherenceManager
+    ) {
       this._attemptAutomaticRecovery(violation);
     }
-    
+
     return true;
   }
-  
+
   /**
    * Attempt automatic recovery from coherence violations
    * @private
@@ -299,56 +309,65 @@ class ClusterNode {
       } else if (violation.context && violation.context.taskId) {
         affectedTaskId = violation.context.taskId;
       }
-      
+
       if (!affectedTaskId) {
         // Can't determine which task was affected
         return;
       }
-      
+
       const task = this.currentTasks.get(affectedTaskId);
       if (!task) {
         // Task not found or already completed
         return;
       }
-      
+
       // Create a coherence manager for recovery
-      const coherenceManager = new Prime.Distributed.Coherence.DistributedCoherenceManager({
-        strictChecking: true,
-        thresholds: {
-          numerical: 1e-8,
-          gradient: 1.0,
-          synchronization: 0.01
-        }
-      });
-      
+      const coherenceManager =
+        new Prime.Distributed.Coherence.DistributedCoherenceManager({
+          strictChecking: true,
+          thresholds: {
+            numerical: 1e-8,
+            gradient: 1.0,
+            synchronization: 0.01,
+          },
+        });
+
       // Apply corrections based on violation type
-      if (violation.type === 'numerical') {
+      if (violation.type === "numerical") {
         // For numerical stability issues, apply corrections to task data
         if (task.data && task.data.parameters) {
           // Apply numerical stability fixes to parameters
           const corrections = coherenceManager.applyCoherenceCorrection(
-            task.data.parameters, 
-            [violation]
+            task.data.parameters,
+            [violation],
           );
-          
+
           if (corrections.applied) {
-            Prime.Logger.info(`Applied automatic numerical stability corrections to task ${affectedTaskId}`, {
-              corrections: corrections.corrections,
-              taskType: task.type,
-              nodeId: this.id
-            });
+            Prime.Logger.info(
+              `Applied automatic numerical stability corrections to task ${affectedTaskId}`,
+              {
+                corrections: corrections.corrections,
+                taskType: task.type,
+                nodeId: this.id,
+              },
+            );
           }
         }
-        
+
         if (task.data && task.data.gradients) {
           // Apply gradient clipping for extreme values
-          const clippedGradients = this._applyGradientClipping(task.data.gradients);
+          const clippedGradients = this._applyGradientClipping(
+            task.data.gradients,
+          );
           task.data.gradients = clippedGradients;
-          
-          Prime.Logger.info(`Applied gradient clipping to task ${affectedTaskId}`, {
-            taskType: task.type,
-            nodeId: this.id
-          });
+
+          Prime.Logger.info(
+            `Applied gradient clipping to task ${affectedTaskId}`,
+            {
+              taskType: task.type,
+              nodeId: this.id,
+            },
+          );
         }
       }
     } catch (error) {
@@ -356,11 +375,11 @@ class ClusterNode {
         error: error.message,
         stack: error.stack,
         nodeId: this.id,
-        violationType: violation.type
+        violationType: violation.type,
       });
     }
   }
-  
+
   /**
    * Apply gradient clipping to prevent numerical instability
    * @private
@@ -369,12 +388,12 @@ class ClusterNode {
    * @returns {Object} Clipped gradients
    */
   _applyGradientClipping(gradients, maxValue = 1000.0) {
-    if (!gradients || typeof gradients !== 'object') {
+    if (!gradients || typeof gradients !== "object") {
       return gradients;
     }
-    
+
     const clipped = JSON.parse(JSON.stringify(gradients));
-    
+
     // Helper function to clip a single value
     const clipValue = (value) => {
       if (!Number.isFinite(value)) {
@@ -382,19 +401,19 @@ class ClusterNode {
       }
       return Math.max(-maxValue, Math.min(maxValue, value));
     };
-    
+
     // Process all gradient values recursively
     const processObject = (obj) => {
-      if (!obj || typeof obj !== 'object') {
+      if (!obj || typeof obj !== "object") {
         return;
       }
-      
+
       // Handle arrays (including matrices)
       if (Array.isArray(obj)) {
         for (let i = 0; i < obj.length; i++) {
           if (Array.isArray(obj[i])) {
             processObject(obj[i]); // Process nested arrays
-          } else if (typeof obj[i] === 'number') {
+          } else if (typeof obj[i] === "number") {
             obj[i] = clipValue(obj[i]); // Clip numeric values
           }
         }
@@ -403,19 +422,19 @@ class ClusterNode {
       else {
         for (const key in obj) {
           if (obj.hasOwnProperty(key)) {
-            if (obj[key] && typeof obj[key] === 'object') {
+            if (obj[key] && typeof obj[key] === "object") {
               processObject(obj[key]); // Process nested objects
-            } else if (typeof obj[key] === 'number') {
+            } else if (typeof obj[key] === "number") {
               obj[key] = clipValue(obj[key]); // Clip numeric values
             }
           }
         }
       }
     };
-    
+
     // Process the gradients
     processObject(clipped);
-    
+
     return clipped;
   }
 
@@ -441,12 +460,13 @@ class ClusterNode {
       activeTasks: this.currentTasks.size,
       metrics: {
         ...this.metrics,
-        averageProcessingTime: this.metrics.tasksProcessed > 0 
-          ? this.metrics.totalProcessingTime / this.metrics.tasksProcessed 
-          : 0,
-        lastHeartbeatAge: Date.now() - this.metrics.lastHeartbeat
+        averageProcessingTime:
+          this.metrics.tasksProcessed > 0
+            ? this.metrics.totalProcessingTime / this.metrics.tasksProcessed
+            : 0,
+        lastHeartbeatAge: Date.now() - this.metrics.lastHeartbeat,
       },
-      capabilities: this.capabilities
+      capabilities: this.capabilities,
     };
   }
 
@@ -456,21 +476,21 @@ class ClusterNode {
   terminate() {
     // Set state to terminating
     this.state = NodeState.TERMINATING;
-    
+
     // Log termination
     Prime.Logger.info(`Node ${this.id} terminating`, {
-      activeTasks: this.currentTasks.size
+      activeTasks: this.currentTasks.size,
     });
-    
+
     // Clean up resources
     this.eventBus.removeAllListeners();
-    
+
     // Emit termination event
     this.eventBus.emit("node:terminated", {
       nodeId: this.id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return true;
   }
 
@@ -491,7 +511,7 @@ class ClusterNode {
   _handleTaskError(eventData) {
     // Additional handling can be added here
   }
-  
+
   /**
    * Get node metrics
    * @returns {Object} Node metrics
@@ -520,24 +540,25 @@ class NodeRegistry {
    */
   registerNode(node) {
     // Convert configuration object to node if needed
-    const clusterNode = node instanceof ClusterNode 
-      ? node 
-      : new ClusterNode(node);
-    
+    const clusterNode =
+      node instanceof ClusterNode ? node : new ClusterNode(node);
+
     // Check if node already exists
     if (this.nodes.has(clusterNode.id)) {
-      throw new Prime.ValidationError(`Node with ID ${clusterNode.id} already exists`);
+      throw new Prime.ValidationError(
+        `Node with ID ${clusterNode.id} already exists`,
+      );
     }
-    
+
     // Add node to registry
     this.nodes.set(clusterNode.id, clusterNode);
-    
+
     // Emit event
     this.eventBus.emit("node:registered", {
       nodeId: clusterNode.id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return clusterNode;
   }
 
@@ -551,19 +572,19 @@ class NodeRegistry {
     if (!node) {
       return false;
     }
-    
+
     // Terminate node
     node.terminate();
-    
+
     // Remove from registry
     this.nodes.delete(nodeId);
-    
+
     // Emit event
     this.eventBus.emit("node:unregistered", {
       nodeId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     return true;
   }
 
@@ -583,13 +604,16 @@ class NodeRegistry {
    */
   findNodes(criteria = {}) {
     // Convert to array and filter
-    return Array.from(this.nodes.values()).filter(node => {
+    return Array.from(this.nodes.values()).filter((node) => {
       // Match criteria
       for (const [key, value] of Object.entries(criteria)) {
-        if (key === 'capabilities') {
+        if (key === "capabilities") {
           // Check capabilities
           for (const [capability, minValue] of Object.entries(value)) {
-            if (!node.capabilities[capability] || node.capabilities[capability] < minValue) {
+            if (
+              !node.capabilities[capability] ||
+              node.capabilities[capability] < minValue
+            ) {
               return false;
             }
           }
@@ -608,53 +632,60 @@ class NodeRegistry {
    */
   findBestNodeForTask(task) {
     // Get all nodes that can accept the task
-    const eligibleNodes = Array.from(this.nodes.values())
-      .filter(node => node.canAcceptTask(task));
-    
+    const eligibleNodes = Array.from(this.nodes.values()).filter((node) =>
+      node.canAcceptTask(task),
+    );
+
     if (eligibleNodes.length === 0) {
       return null;
     }
-    
+
     // Sort by load (number of current tasks) and processing capacity
     eligibleNodes.sort((a, b) => {
       // First priority: current load ratio
       const aLoadRatio = a.currentTasks.size / a.maxConcurrency;
       const bLoadRatio = b.currentTasks.size / b.maxConcurrency;
-      
+
       if (aLoadRatio !== bLoadRatio) {
         return aLoadRatio - bLoadRatio; // Lower load ratio is better
       }
-      
+
       // Second priority: maximizing capabilities match
       let aCapabilityScore = 0;
       let bCapabilityScore = 0;
-      
+
       if (task.requiredCapabilities) {
-        for (const [capability, minValue] of Object.entries(task.requiredCapabilities)) {
+        for (const [capability, minValue] of Object.entries(
+          task.requiredCapabilities,
+        )) {
           if (a.capabilities[capability]) {
-            aCapabilityScore += (a.capabilities[capability] - minValue) / minValue;
+            aCapabilityScore +=
+              (a.capabilities[capability] - minValue) / minValue;
           }
           if (b.capabilities[capability]) {
-            bCapabilityScore += (b.capabilities[capability] - minValue) / minValue;
+            bCapabilityScore +=
+              (b.capabilities[capability] - minValue) / minValue;
           }
         }
       }
-      
+
       if (aCapabilityScore !== bCapabilityScore) {
         return bCapabilityScore - aCapabilityScore; // Higher capability score is better
       }
-      
+
       // Third priority: historical processing performance
-      const aAvgTime = a.metrics.tasksProcessed > 0 
-        ? a.metrics.totalProcessingTime / a.metrics.tasksProcessed 
-        : Infinity;
-      const bAvgTime = b.metrics.tasksProcessed > 0 
-        ? b.metrics.totalProcessingTime / b.metrics.tasksProcessed 
-        : Infinity;
-      
+      const aAvgTime =
+        a.metrics.tasksProcessed > 0
+          ? a.metrics.totalProcessingTime / a.metrics.tasksProcessed
+          : Infinity;
+      const bAvgTime =
+        b.metrics.tasksProcessed > 0
+          ? b.metrics.totalProcessingTime / b.metrics.tasksProcessed
+          : Infinity;
+
       return aAvgTime - bAvgTime; // Lower average processing time is better
     });
-    
+
     // Return the best node
     return eligibleNodes[0];
   }
@@ -673,30 +704,32 @@ class NodeRegistry {
    */
   getSummary() {
     const allNodes = this.getAllNodes();
-    
+
     // Count nodes by type
     const nodesByType = {};
     for (const type of Object.values(NodeType)) {
-      nodesByType[type] = allNodes.filter(node => node.type === type).length;
+      nodesByType[type] = allNodes.filter((node) => node.type === type).length;
     }
-    
+
     // Count nodes by state
     const nodesByState = {};
     for (const state of Object.values(NodeState)) {
-      nodesByState[state] = allNodes.filter(node => node.state === state).length;
+      nodesByState[state] = allNodes.filter(
+        (node) => node.state === state,
+      ).length;
     }
-    
+
     // Calculate task statistics
     let totalTasks = 0;
     let totalProcessedTasks = 0;
     let totalErrors = 0;
-    
+
     for (const node of allNodes) {
       totalTasks += node.currentTasks.size;
       totalProcessedTasks += node.metrics.tasksProcessed;
       totalErrors += node.metrics.errors;
     }
-    
+
     return {
       totalNodes: allNodes.length,
       nodesByType,
@@ -705,9 +738,11 @@ class NodeRegistry {
         currentTasks: totalTasks,
         processedTasks: totalProcessedTasks,
         errors: totalErrors,
-        successRate: totalProcessedTasks > 0 ? 
-          (totalProcessedTasks - totalErrors) / totalProcessedTasks : 0
-      }
+        successRate:
+          totalProcessedTasks > 0
+            ? (totalProcessedTasks - totalErrors) / totalProcessedTasks
+            : 0,
+      },
     };
   }
 }
@@ -719,7 +754,7 @@ Prime.Distributed.Cluster.Nodes = {
   NodeType,
   NodeState,
   ClusterNode,
-  NodeRegistry
+  NodeRegistry,
 };
 
 module.exports = Prime;

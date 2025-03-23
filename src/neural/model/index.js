@@ -27,7 +27,7 @@ require("../model-io.js");
     static createModel(config) {
       return new Prime.Neural.Model.NeuralModel(config);
     }
-    
+
     /**
      * Create a model builder
      * @param {Object} config - Global model configuration
@@ -36,7 +36,7 @@ require("../model-io.js");
     static createBuilder(config) {
       return new Prime.Neural.Model.ModelBuilder(config);
     }
-    
+
     /**
      * Create a sequential model with simplified configuration
      * @param {Array} layers - Array of layer configurations
@@ -46,7 +46,7 @@ require("../model-io.js");
     static createSequential(layers, config) {
       return Prime.Neural.Model.ModelBuilder.sequential(layers, config);
     }
-    
+
     /**
      * Create a model from a predefined architecture
      * @param {string} architecture - Predefined architecture name
@@ -54,9 +54,12 @@ require("../model-io.js");
      * @returns {Prime.Neural.Model.NeuralModel} Model with predefined architecture
      */
     static createFromArchitecture(architecture, config) {
-      return Prime.Neural.Model.ModelBuilder.fromArchitecture(architecture, config);
+      return Prime.Neural.Model.ModelBuilder.fromArchitecture(
+        architecture,
+        config,
+      );
     }
-    
+
     /**
      * Create a training loop for a model
      * @param {Prime.Neural.Model.NeuralModel} model - Model to train
@@ -66,7 +69,7 @@ require("../model-io.js");
     static createTraining(model, config) {
       return new Prime.Neural.Model.TrainingLoop(model, config);
     }
-    
+
     /**
      * Save model to JSON string
      * @param {Prime.Neural.Model.NeuralModel} model - Model to save
@@ -76,7 +79,7 @@ require("../model-io.js");
     static saveModel(model, options) {
       return Prime.Neural.Model.ModelIO.serialize(model, options);
     }
-    
+
     /**
      * Load model from JSON string
      * @param {string} json - Serialized model JSON
@@ -86,7 +89,7 @@ require("../model-io.js");
     static loadModel(json, options) {
       return Prime.Neural.Model.ModelIO.deserialize(json, options);
     }
-    
+
     /**
      * Extract weights from a model
      * @param {Prime.Neural.Model.NeuralModel} model - Source model
@@ -95,7 +98,7 @@ require("../model-io.js");
     static extractWeights(model) {
       return Prime.Neural.Model.ModelIO.extractWeights(model);
     }
-    
+
     /**
      * Apply weights to a model
      * @param {Prime.Neural.Model.NeuralModel} model - Target model
@@ -104,9 +107,13 @@ require("../model-io.js");
      * @returns {Prime.Neural.Model.NeuralModel} Updated model
      */
     static applyWeights(model, weights, validateStructure) {
-      return Prime.Neural.Model.ModelIO.applyWeights(model, weights, validateStructure);
+      return Prime.Neural.Model.ModelIO.applyWeights(
+        model,
+        weights,
+        validateStructure,
+      );
     }
-    
+
     /**
      * Save model to a file (Node.js environment)
      * @param {Prime.Neural.Model.NeuralModel} model - Model to save
@@ -117,7 +124,7 @@ require("../model-io.js");
     static async saveToFile(model, filePath, options) {
       return Prime.Neural.Model.ModelIO.saveToFile(model, filePath, options);
     }
-    
+
     /**
      * Load model from a file (Node.js environment)
      * @param {string} filePath - Path to model file
@@ -128,7 +135,7 @@ require("../model-io.js");
       return Prime.Neural.Model.ModelIO.loadFromFile(filePath, options);
     }
   }
-  
+
   // Add to Prime.Neural namespace
   Prime.Neural.ModelManagement = ModelManagement;
 })();

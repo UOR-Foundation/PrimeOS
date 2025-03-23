@@ -294,7 +294,7 @@ const Prime = require("../../core");
     findCoherentRegions() {
       const regions = [];
       const visited = new Set();
-      
+
       // Start with high coherence points
       for (let i = 0; i < this.points.length; i++) {
         if (visited.has(i)) continue;
@@ -311,15 +311,16 @@ const Prime = require("../../core");
           visited.add(i);
         }
       }
-      
+
       // If no regions found with high coherence, look for strongly connected points
       if (regions.length === 0) {
         for (let i = 0; i < this.points.length; i++) {
           if (visited.has(i)) continue;
-          
-          const hasStrongConnections = Array.from(this.connections.get(i).entries())
-            .some(([_, conn]) => conn.strength >= 0.8);
-            
+
+          const hasStrongConnections = Array.from(
+            this.connections.get(i).entries(),
+          ).some(([_, conn]) => conn.strength >= 0.8);
+
           if (hasStrongConnections) {
             const region = this._expandRegion(i, visited);
             if (region) {
@@ -330,12 +331,12 @@ const Prime = require("../../core");
           }
         }
       }
-      
+
       // If still no regions, check for any connected points
       if (regions.length === 0) {
         for (let i = 0; i < this.points.length; i++) {
           if (visited.has(i)) continue;
-          
+
           if (this.connections.get(i).size > 0) {
             const region = this._expandRegion(i, visited);
             if (region) {
@@ -346,7 +347,7 @@ const Prime = require("../../core");
           }
         }
       }
-      
+
       return regions;
     }
 
@@ -361,7 +362,7 @@ const Prime = require("../../core");
       const regionPoints = [];
       const queue = [startIndex];
       const regionCoherence = [];
-      
+
       while (queue.length > 0) {
         const currentIndex = queue.shift();
 
@@ -369,11 +370,12 @@ const Prime = require("../../core");
         visited.add(currentIndex);
 
         const coherence = this.coherenceValues.get(currentIndex) || 0;
-        
+
         // Consider points with high coherence or strong connections
-        const hasStrongConnection = Array.from(this.connections.get(currentIndex).values())
-          .some(conn => conn.strength >= 0.7);
-        
+        const hasStrongConnection = Array.from(
+          this.connections.get(currentIndex).values(),
+        ).some((conn) => conn.strength >= 0.7);
+
         if (coherence >= this.coherenceThreshold || hasStrongConnection) {
           regionPoints.push(currentIndex);
           regionCoherence.push(coherence);

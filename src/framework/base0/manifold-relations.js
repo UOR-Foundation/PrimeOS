@@ -20,7 +20,7 @@ const ManifoldRelations = {
    * @param {Object} [metadata={}] - Additional relation metadata
    * @returns {Object} Relation information
    */
-  connect: function(source, target, relationType, metadata = {}) {
+  connect: function (source, target, relationType, metadata = {}) {
     if (!(source instanceof Manifold) || !(target instanceof Manifold)) {
       throw new Prime.ValidationError("Source and target must be manifolds");
     }
@@ -31,7 +31,7 @@ const ManifoldRelations = {
       sourceId: source.getId(),
       targetId: target.getId(),
       metadata: metadata || {},
-      established: new Date().toISOString()
+      established: new Date().toISOString(),
     };
 
     // Add relation to source manifold
@@ -48,14 +48,29 @@ const ManifoldRelations = {
    * @param {Object} [metadata={}] - Additional relation metadata
    * @returns {Array} Array of relation information (both directions)
    */
-  createBidirectionalRelation: function(manifoldA, manifoldB, relationType, metadata = {}) {
+  createBidirectionalRelation: function (
+    manifoldA,
+    manifoldB,
+    relationType,
+    metadata = {},
+  ) {
     if (!(manifoldA instanceof Manifold) || !(manifoldB instanceof Manifold)) {
       throw new Prime.ValidationError("Both arguments must be manifolds");
     }
 
     // Create relations in both directions
-    const relationAtoB = this.connect(manifoldA, manifoldB, relationType, metadata);
-    const relationBtoA = this.connect(manifoldB, manifoldA, relationType, metadata);
+    const relationAtoB = this.connect(
+      manifoldA,
+      manifoldB,
+      relationType,
+      metadata,
+    );
+    const relationBtoA = this.connect(
+      manifoldB,
+      manifoldA,
+      relationType,
+      metadata,
+    );
 
     return [relationAtoB, relationBtoA];
   },
@@ -66,7 +81,7 @@ const ManifoldRelations = {
    * @param {string} relationType - Type of relation to find
    * @returns {Array} Related manifolds
    */
-  findRelatedManifolds: function(source, relationType) {
+  findRelatedManifolds: function (source, relationType) {
     if (!(source instanceof Manifold)) {
       throw new Prime.ValidationError("Source must be a manifold");
     }
@@ -81,15 +96,15 @@ const ManifoldRelations = {
    * @param {Object} options - Options for graph creation
    * @returns {Object} Relation graph
    */
-  createRelationGraph: function(manifolds, options = {}) {
+  createRelationGraph: function (manifolds, options = {}) {
     const graph = {
       nodes: [],
       edges: [],
       metadata: {
         createdAt: new Date().toISOString(),
         nodeCount: 0,
-        edgeCount: 0
-      }
+        edgeCount: 0,
+      },
     };
 
     // Create a map for quick manifold lookup by ID
@@ -113,8 +128,8 @@ const ManifoldRelations = {
           type: manifold.getType(),
           depth: manifold.getDepth(),
           coherence: manifold.getCoherenceScore(),
-          spaces: manifold.getSpaces()
-        }
+          spaces: manifold.getSpaces(),
+        },
       });
 
       // Collect relations as edges
@@ -126,7 +141,7 @@ const ManifoldRelations = {
             source: manifold.getId(),
             target: relation.manifold.getId(),
             type: relation.type,
-            metadata: relation.metadata || {}
+            metadata: relation.metadata || {},
           });
         }
       }
@@ -146,7 +161,7 @@ const ManifoldRelations = {
    * @param {Object} options - Options for path finding
    * @returns {Array} Paths between manifolds
    */
-  findPaths: function(source, target, options = {}) {
+  findPaths: function (source, target, options = {}) {
     if (!(source instanceof Manifold) || !(target instanceof Manifold)) {
       throw new Prime.ValidationError("Source and target must be manifolds");
     }
@@ -156,12 +171,14 @@ const ManifoldRelations = {
 
     // Use breadth-first search to find paths
     const visited = new Set();
-    const queue = [{
-      manifold: source,
-      path: [],
-      relationPath: []
-    }];
-    
+    const queue = [
+      {
+        manifold: source,
+        path: [],
+        relationPath: [],
+      },
+    ];
+
     const result = [];
 
     while (queue.length > 0) {
@@ -173,7 +190,7 @@ const ManifoldRelations = {
         result.push({
           path: [...path, manifoldId],
           relationPath,
-          length: path.length
+          length: path.length,
         });
         continue;
       }
@@ -187,7 +204,7 @@ const ManifoldRelations = {
 
       // Get related manifolds
       const relations = manifold.getRelatedManifolds();
-      
+
       for (const relation of relations) {
         // Skip if not requested relation type
         if (relationTypes && !relationTypes.includes(relation.type)) {
@@ -198,7 +215,7 @@ const ManifoldRelations = {
         queue.push({
           manifold: relation.manifold,
           path: [...path, manifoldId],
-          relationPath: [...relationPath, relation.type]
+          relationPath: [...relationPath, relation.type],
         });
       }
     }
@@ -211,7 +228,7 @@ const ManifoldRelations = {
    * @param {Array<Manifold>} manifolds - Array of manifolds to analyze
    * @returns {Object} Relation density statistics
    */
-  calculateRelationDensity: function(manifolds) {
+  calculateRelationDensity: function (manifolds) {
     if (!Array.isArray(manifolds) || manifolds.length === 0) {
       throw new Prime.ValidationError("Manifolds must be a non-empty array");
     }
@@ -219,16 +236,15 @@ const ManifoldRelations = {
     const n = manifolds.length;
     const maxPossibleRelations = n * (n - 1); // Directed relations
     let actualRelations = 0;
-    
+
     // Count actual relations
     for (const manifold of manifolds) {
       actualRelations += manifold.getRelatedManifolds().length;
     }
 
     // Calculate density
-    const density = maxPossibleRelations > 0 
-      ? actualRelations / maxPossibleRelations 
-      : 0;
+    const density =
+      maxPossibleRelations > 0 ? actualRelations / maxPossibleRelations : 0;
 
     // Categorize relation types
     const relationTypes = {};
@@ -243,9 +259,9 @@ const ManifoldRelations = {
       possibleRelations: maxPossibleRelations,
       actualRelations,
       density,
-      relationTypes
+      relationTypes,
     };
-  }
+  },
 };
 
 module.exports = ManifoldRelations;

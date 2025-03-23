@@ -24,32 +24,27 @@ require("./adam-optimizer");
      */
     static create(type, config = {}) {
       const lowerType = type.toLowerCase();
-      
+
       switch (lowerType) {
-        case 'sgd':
+        case "sgd":
           return new Prime.Neural.Optimization.SGDOptimizer(config);
-        case 'adam':
+        case "adam":
           return new Prime.Neural.Optimization.AdamOptimizer(config);
-        case 'coherence_sgd':
+        case "coherence_sgd":
           return new Prime.Neural.Optimization.CoherenceSGD(config);
-        case 'coherence_adam':
+        case "coherence_adam":
           return new Prime.Neural.Optimization.CoherenceAdam(config);
         default:
           throw new Error(`Unknown optimizer type: ${type}`);
       }
     }
-    
+
     /**
      * Get available optimizer types
      * @returns {Array<string>} List of available optimizer types
      */
     static getAvailableTypes() {
-      return [
-        'sgd',
-        'adam',
-        'coherence_sgd',
-        'coherence_adam'
-      ];
+      return ["sgd", "adam", "coherence_sgd", "coherence_adam"];
     }
   }
 

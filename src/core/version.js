@@ -5,7 +5,7 @@
  */
 
 // Import Prime object from prime.js
-const Prime = require("./prime.js");
+const Prime = require('./prime.js');
 
 (function (Prime) {
   // Version management utilities
@@ -16,7 +16,7 @@ const Prime = require("./prime.js");
      * @returns {Object|null} Parsed version object or null if invalid
      */
     parseVersion: (version) => {
-      if (typeof version !== "string") return null;
+      if (typeof version !== 'string') return null;
 
       // Regular expression for SemVer 2.0.0 (major.minor.patch-prerelease+build)
       const semverRegex =
@@ -33,10 +33,10 @@ const Prime = require("./prime.js");
       const patch = patchStr !== undefined ? parseInt(patchStr, 10) : 0;
 
       // Parse prerelease identifiers
-      const prerelease = prereleaseStr ? prereleaseStr.split(".") : [];
+      const prerelease = prereleaseStr ? prereleaseStr.split('.') : [];
 
       // Parse build metadata
-      const build = buildStr ? buildStr.split(".") : [];
+      const build = buildStr ? buildStr.split('.') : [];
 
       return {
         major,
@@ -163,24 +163,24 @@ const Prime = require("./prime.js");
         );
 
         switch (operator) {
-          case "=":
-          case "":
+          case '=':
+          case '':
             return result === 0;
-          case ">":
+          case '>':
             return result === 1;
-          case ">=":
+          case '>=':
             return result === 1 || result === 0;
-          case "<":
+          case '<':
             return result === -1;
-          case "<=":
+          case '<=':
             return result === -1 || result === 0;
-          case "~":
+          case '~':
             return (
               parsedVersion.major === parsedCompareVersion.major &&
               parsedVersion.minor === parsedCompareVersion.minor &&
               parsedVersion.patch >= parsedCompareVersion.patch
             );
-          case "^":
+          case '^':
             return (
               parsedVersion.major === parsedCompareVersion.major &&
               (parsedVersion.minor > parsedCompareVersion.minor ||
@@ -199,6 +199,6 @@ const Prime = require("./prime.js");
 })(Prime);
 
 // CommonJS export
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = Prime;
 }

@@ -793,7 +793,7 @@ describe("Prime.math", () => {
         [0, 2],
       ]);
       const wellCond = wellConditioned.conditionNumber();
-      
+
       // For extreme precision implementations, we can't guarantee comparison between condition numbers
       // Just check that it's close to the theoretical condition number of 1 for this matrix
       // Due to our enhanced numerical implementation, we need to use a larger tolerance
@@ -802,7 +802,7 @@ describe("Prime.math", () => {
         "Scalar matrix should have a reasonable condition number",
       );
 
-      // Ill-conditioned matrix example - we only need to check that 
+      // Ill-conditioned matrix example - we only need to check that
       // the condition number exists and is positive due to numerical stability differences
       const illConditioned = Prime.math.createMatrix([
         [1, 0.999],

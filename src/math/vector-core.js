@@ -5,7 +5,7 @@
  */
 
 // Import the Prime object
-const Prime = require("../core");
+const Prime = require('../core');
 
 /**
  * Core vector operations with optimized implementations
@@ -26,15 +26,13 @@ const VectorCore = {
       dimensions <= 0 ||
       !Number.isInteger(dimensions)
     ) {
-      throw new Prime.ValidationError(
-        "Dimensions must be a positive integer",
-      );
+      throw new Prime.ValidationError('Dimensions must be a positive integer');
     }
 
     // Use TypedArray if specified in options
     if (options.useTypedArray) {
       let typedArray;
-      
+
       switch (options.arrayType) {
         case 'float32':
           typedArray = new Float32Array(dimensions);
@@ -52,11 +50,11 @@ const VectorCore = {
         default:
           typedArray = new Float64Array(dimensions);
       }
-      
+
       if (initialValue !== 0) {
         typedArray.fill(initialValue);
       }
-      
+
       return typedArray;
     }
 
@@ -73,13 +71,11 @@ const VectorCore = {
    */
   add: function (a, b, result) {
     if (!this.isVector(a) || !this.isVector(b)) {
-      throw new Prime.ValidationError("Vectors must be arrays or TypedArrays");
+      throw new Prime.ValidationError('Vectors must be arrays or TypedArrays');
     }
 
     if (a.length !== b.length) {
-      throw new Prime.ValidationError(
-        "Vectors must have the same dimensions",
-      );
+      throw new Prime.ValidationError('Vectors must have the same dimensions');
     }
 
     // If result vector is provided, use it for in-place operation
@@ -99,7 +95,7 @@ const VectorCore = {
       }
       return resultVector;
     }
-    
+
     // Regular array implementation
     return a.map((val, i) => val + b[i]);
   },
@@ -113,13 +109,11 @@ const VectorCore = {
    */
   subtract: function (a, b, result) {
     if (!this.isVector(a) || !this.isVector(b)) {
-      throw new Prime.ValidationError("Vectors must be arrays or TypedArrays");
+      throw new Prime.ValidationError('Vectors must be arrays or TypedArrays');
     }
 
     if (a.length !== b.length) {
-      throw new Prime.ValidationError(
-        "Vectors must have the same dimensions",
-      );
+      throw new Prime.ValidationError('Vectors must have the same dimensions');
     }
 
     // If result vector is provided, use it for in-place operation
@@ -139,7 +133,7 @@ const VectorCore = {
       }
       return resultVector;
     }
-    
+
     // Regular array implementation
     return a.map((val, i) => val - b[i]);
   },
@@ -152,27 +146,25 @@ const VectorCore = {
    */
   dot: function (a, b) {
     if (!this.isVector(a) || !this.isVector(b)) {
-      throw new Prime.ValidationError("Vectors must be arrays or TypedArrays");
+      throw new Prime.ValidationError('Vectors must be arrays or TypedArrays');
     }
 
     if (a.length !== b.length) {
-      throw new Prime.ValidationError(
-        "Vectors must have the same dimensions",
-      );
+      throw new Prime.ValidationError('Vectors must have the same dimensions');
     }
 
     // Use Kahan summation for numerical stability
     let sum = 0;
     let compensation = 0;
-    
+
     for (let i = 0; i < a.length; i++) {
       // Compute the product
       const product = a[i] * b[i];
-      
+
       // Kahan summation step
       const y = product - compensation;
       const t = sum + y;
-      compensation = (t - sum) - y;
+      compensation = t - sum - y;
       sum = t;
     }
 
@@ -188,11 +180,11 @@ const VectorCore = {
    */
   scale: function (vector, scalar, result) {
     if (!this.isVector(vector)) {
-      throw new Prime.ValidationError("Vector must be an array or TypedArray");
+      throw new Prime.ValidationError('Vector must be an array or TypedArray');
     }
 
     if (!Prime.Utils.isNumber(scalar)) {
-      throw new Prime.ValidationError("Scalar must be a number");
+      throw new Prime.ValidationError('Scalar must be a number');
     }
 
     // If result vector is provided, use it for in-place operation
@@ -212,7 +204,7 @@ const VectorCore = {
       }
       return resultVector;
     }
-    
+
     // Regular array implementation
     return vector.map((val) => val * scalar);
   },
@@ -224,20 +216,20 @@ const VectorCore = {
    */
   magnitude: function (vector) {
     if (!this.isVector(vector)) {
-      throw new Prime.ValidationError("Vector must be an array or TypedArray");
+      throw new Prime.ValidationError('Vector must be an array or TypedArray');
     }
 
     // Use Kahan summation for numerical stability
     let sum = 0;
     let compensation = 0;
-    
+
     for (let i = 0; i < vector.length; i++) {
       const squared = vector[i] * vector[i];
-      
+
       // Kahan summation step
       const y = squared - compensation;
       const t = sum + y;
-      compensation = (t - sum) - y;
+      compensation = t - sum - y;
       sum = t;
     }
 
@@ -252,20 +244,20 @@ const VectorCore = {
    */
   magnitudeSquared: function (vector) {
     if (!this.isVector(vector)) {
-      throw new Prime.ValidationError("Vector must be an array or TypedArray");
+      throw new Prime.ValidationError('Vector must be an array or TypedArray');
     }
 
     // Use Kahan summation for numerical stability
     let sum = 0;
     let compensation = 0;
-    
+
     for (let i = 0; i < vector.length; i++) {
       const squared = vector[i] * vector[i];
-      
+
       // Kahan summation step
       const y = squared - compensation;
       const t = sum + y;
-      compensation = (t - sum) - y;
+      compensation = t - sum - y;
       sum = t;
     }
 
@@ -282,16 +274,16 @@ const VectorCore = {
    */
   normalize: function (vector, result, options = {}) {
     if (!this.isVector(vector)) {
-      throw new Prime.ValidationError("Vector must be an array or TypedArray");
+      throw new Prime.ValidationError('Vector must be an array or TypedArray');
     }
 
     const epsilon = options.epsilon || 1e-10;
     const mag = this.magnitude(vector);
 
     if (mag < epsilon) {
-      throw new Prime.MathematicalError("Cannot normalize a zero vector");
+      throw new Prime.MathematicalError('Cannot normalize a zero vector');
     }
-    
+
     // If result vector is provided, use it for in-place operation
     if (result && this.isVector(result) && result.length === vector.length) {
       for (let i = 0; i < vector.length; i++) {
@@ -309,7 +301,7 @@ const VectorCore = {
       }
       return resultVector;
     }
-    
+
     // Regular array implementation
     return vector.map((val) => val / mag);
   },
@@ -322,27 +314,25 @@ const VectorCore = {
    */
   distance: function (a, b) {
     if (!this.isVector(a) || !this.isVector(b)) {
-      throw new Prime.ValidationError("Vectors must be arrays or TypedArrays");
+      throw new Prime.ValidationError('Vectors must be arrays or TypedArrays');
     }
 
     if (a.length !== b.length) {
-      throw new Prime.ValidationError(
-        "Vectors must have the same dimensions",
-      );
+      throw new Prime.ValidationError('Vectors must have the same dimensions');
     }
 
     // Use Kahan summation for numerical stability
     let sum = 0;
     let compensation = 0;
-    
+
     for (let i = 0; i < a.length; i++) {
       const diff = a[i] - b[i];
       const squared = diff * diff;
-      
+
       // Kahan summation step
       const y = squared - compensation;
       const t = sum + y;
-      compensation = (t - sum) - y;
+      compensation = t - sum - y;
       sum = t;
     }
 
@@ -358,11 +348,11 @@ const VectorCore = {
    */
   fill: function (vector, value) {
     if (!this.isVector(vector)) {
-      throw new Prime.ValidationError("Vector must be an array or TypedArray");
+      throw new Prime.ValidationError('Vector must be an array or TypedArray');
     }
 
     if (!Prime.Utils.isNumber(value)) {
-      throw new Prime.ValidationError("Fill value must be a number");
+      throw new Prime.ValidationError('Fill value must be a number');
     }
 
     // Use built-in fill method
@@ -378,7 +368,7 @@ const VectorCore = {
   isVector: function (v) {
     return Array.isArray(v) || ArrayBuffer.isView(v);
   },
-  
+
   /**
    * Copy values from source vector to destination vector
    * @param {Array|TypedArray} source - Source vector
@@ -387,17 +377,17 @@ const VectorCore = {
    */
   copy: function (source, destination) {
     if (!this.isVector(source) || !this.isVector(destination)) {
-      throw new Prime.ValidationError("Vectors must be arrays or TypedArrays");
+      throw new Prime.ValidationError('Vectors must be arrays or TypedArrays');
     }
-    
+
     if (destination.length < source.length) {
-      throw new Prime.ValidationError("Destination vector is too small");
+      throw new Prime.ValidationError('Destination vector is too small');
     }
-    
+
     for (let i = 0; i < source.length; i++) {
       destination[i] = source[i];
     }
-    
+
     return destination;
   },
 
@@ -408,18 +398,18 @@ const VectorCore = {
    */
   clone: function (vector) {
     if (!this.isVector(vector)) {
-      throw new Prime.ValidationError("Vector must be an array or TypedArray");
+      throw new Prime.ValidationError('Vector must be an array or TypedArray');
     }
-    
+
     // For TypedArrays
     if (ArrayBuffer.isView(vector)) {
       return new vector.constructor(vector);
     }
-    
+
     // For regular arrays
     return [...vector];
   },
-  
+
   /**
    * Calculate element-wise product of two vectors
    * @param {Array|TypedArray} a - First vector
@@ -429,15 +419,13 @@ const VectorCore = {
    */
   elementWiseProduct: function (a, b, result) {
     if (!this.isVector(a) || !this.isVector(b)) {
-      throw new Prime.ValidationError("Vectors must be arrays or TypedArrays");
+      throw new Prime.ValidationError('Vectors must be arrays or TypedArrays');
     }
 
     if (a.length !== b.length) {
-      throw new Prime.ValidationError(
-        "Vectors must have the same dimensions",
-      );
+      throw new Prime.ValidationError('Vectors must have the same dimensions');
     }
-    
+
     // If result vector is provided, use it for in-place operation
     if (result && this.isVector(result) && result.length === a.length) {
       for (let i = 0; i < a.length; i++) {
@@ -445,7 +433,7 @@ const VectorCore = {
       }
       return result;
     }
-    
+
     // Otherwise, create a new result vector
     // Use TypedArray if inputs are TypedArrays
     if (ArrayBuffer.isView(a)) {
@@ -455,10 +443,10 @@ const VectorCore = {
       }
       return resultVector;
     }
-    
+
     // Regular array implementation
     return a.map((val, i) => val * b[i]);
-  }
+  },
 };
 
 // Add vector-core to the Prime.Math namespace
