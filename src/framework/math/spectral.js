@@ -6,7 +6,7 @@
 // Import core if available
 let Prime;
 try {
-  Prime = require("../../core.js");
+  Prime = require('../../core.js');
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
@@ -206,7 +206,7 @@ class SpectralPrimeDecomposition {
     // Import numerical methods if they exist
     let numerical;
     try {
-      numerical = require("./numerical.js");
+      numerical = require('./numerical.js');
     } catch (e) {
       // Fallback to a very simple approach
       return this._simpleEigendecomposition(matrix);
@@ -508,11 +508,11 @@ class UniversalNumberEmbedding {
    */
   setBases(bases) {
     if (!Array.isArray(bases) || bases.length === 0) {
-      throw new Error("Bases must be a non-empty array");
+      throw new Error('Bases must be a non-empty array');
     }
 
     if (bases.some((b) => b < 2)) {
-      throw new Error("All bases must be >= 2");
+      throw new Error('All bases must be >= 2');
     }
 
     this.bases = bases.slice();

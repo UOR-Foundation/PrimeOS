@@ -288,14 +288,15 @@ describe("Neural Module Advanced Tests", () => {
       });
 
       expect(model.compiled).toBe(true);
-      expect(model.lossFunction).toBe("mse");
-      expect(model.metric).toBe("accuracy");
+      expect(model.lossName).toBe("mse");
+      expect(model.metricName).toBe("accuracy");
 
       // Test prediction
       const input = new Array(10).fill(0).map(() => Math.random());
       const prediction = model.predict(input);
 
-      expect(Array.isArray(prediction)).toBe(true);
+      // Check if the prediction is array-like (either a regular array or a TypedArray)
+      expect(prediction && typeof prediction.length === 'number').toBe(true);
       expect(prediction.length).toBe(5);
 
       // Test model summary

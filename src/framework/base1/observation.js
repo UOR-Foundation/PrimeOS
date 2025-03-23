@@ -4,8 +4,8 @@
  */
 
 // Import core
-const Prime = require("../../core.js");
-const MathUtils = require("../math");
+const Prime = require('../../core.js');
+const MathUtils = require('../math');
 
 /**
  * Observation Model - Handles data retrieval and monitoring
@@ -18,10 +18,10 @@ const ObservationModel = {
    */
   create: function (config = {}) {
     return {
-      type: "observation",
+      type: 'observation',
       sources: config.sources || [],
       filters: config.filters || [],
-      name: config.name || "ObservationModel",
+      name: config.name || 'ObservationModel',
 
       /**
        * Resolve a reference to an object
@@ -36,7 +36,7 @@ const ObservationModel = {
         }
 
         // Handle string identifiers
-        if (typeof reference === "string") {
+        if (typeof reference === 'string') {
           // Look for a source with this identifier
           const source = this.sources.find((s) => s.id === reference);
 
@@ -89,13 +89,13 @@ const ObservationModel = {
         // Create a type-safe query function
         const createQueryMatcher = (query) => {
           // If query is already a function, return it
-          if (typeof query === "function") {
+          if (typeof query === 'function') {
             return query;
           }
 
           // Create a matcher function for object queries
           return (item) => {
-            if (!item || typeof item !== "object") {
+            if (!item || typeof item !== 'object') {
               return false;
             }
 
@@ -117,7 +117,7 @@ const ObservationModel = {
               // Handle regular expressions
               if (query[key] instanceof RegExp) {
                 if (
-                  typeof item[key] !== "string" ||
+                  typeof item[key] !== 'string' ||
                   !query[key].test(item[key])
                 ) {
                   return false;
@@ -127,9 +127,9 @@ const ObservationModel = {
 
               // Handle nested objects recursively
               if (
-                typeof query[key] === "object" &&
+                typeof query[key] === 'object' &&
                 query[key] !== null &&
-                typeof item[key] === "object" &&
+                typeof item[key] === 'object' &&
                 item[key] !== null
               ) {
                 const nestedMatcher = createQueryMatcher(query[key]);
@@ -163,7 +163,7 @@ const ObservationModel = {
 
             try {
               // Use native query if available
-              if (typeof source.query === "function") {
+              if (typeof source.query === 'function') {
                 const sourceResults = source.query(query);
 
                 if (Array.isArray(sourceResults)) {
@@ -225,8 +225,8 @@ const ObservationModel = {
             }
           }
         } catch (error) {
-          Prime.Logger.error("Unexpected error in fetch:", error);
-          throw new Prime.InvalidOperationError("Error fetching data", {
+          Prime.Logger.error('Unexpected error in fetch:', error);
+          throw new Prime.InvalidOperationError('Error fetching data', {
             context: { error: error.message },
           });
         }
@@ -263,19 +263,19 @@ const ObservationModel = {
               }
 
               // Handle NaN values similarly to null/undefined
-              if (typeof valueA === "number" && isNaN(valueA)) {
+              if (typeof valueA === 'number' && isNaN(valueA)) {
                 return options.descending ? -1 : 1;
               }
-              if (typeof valueB === "number" && isNaN(valueB)) {
+              if (typeof valueB === 'number' && isNaN(valueB)) {
                 return options.descending ? 1 : -1;
               }
 
               // Type-specific stable comparisons
-              if (typeof valueA === "string" && typeof valueB === "string") {
+              if (typeof valueA === 'string' && typeof valueB === 'string') {
                 return sortMultiplier * valueA.localeCompare(valueB);
               } else if (
-                typeof valueA === "number" &&
-                typeof valueB === "number"
+                typeof valueA === 'number' &&
+                typeof valueB === 'number'
               ) {
                 // Handle special cases in floating point comparisons
                 if (
@@ -288,8 +288,8 @@ const ObservationModel = {
               } else if (valueA instanceof Date && valueB instanceof Date) {
                 return sortMultiplier * (valueA.getTime() - valueB.getTime());
               } else if (
-                typeof valueA === "boolean" &&
-                typeof valueB === "boolean"
+                typeof valueA === 'boolean' &&
+                typeof valueB === 'boolean'
               ) {
                 return (
                   sortMultiplier * (valueA === valueB ? 0 : valueA ? 1 : -1)
@@ -314,9 +314,9 @@ const ObservationModel = {
 
         for (const filter of this.filters) {
           try {
-            if (typeof filter === "function") {
+            if (typeof filter === 'function') {
               results = filter(results, query);
-            } else if (filter && typeof filter.apply === "function") {
+            } else if (filter && typeof filter.apply === 'function') {
               results = filter.apply(results, query);
             }
 
@@ -393,7 +393,7 @@ const ObservationModel = {
           );
         }
 
-        if (typeof source.subscribe !== "function") {
+        if (typeof source.subscribe !== 'function') {
           throw new Prime.InvalidOperationError(
             `Source ${sourceId} does not support subscription`,
           );
@@ -409,7 +409,7 @@ const ObservationModel = {
        */
       addSource: function (source) {
         if (!source.id) {
-          throw new Prime.ValidationError("Source must have an id property");
+          throw new Prime.ValidationError('Source must have an id property');
         }
 
         this.sources.push(source);

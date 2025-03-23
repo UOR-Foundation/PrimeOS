@@ -4,8 +4,8 @@
  */
 
 // Import core
-const Prime = require("../../core.js");
-const MathUtils = require("../math");
+const Prime = require('../../core.js');
+const MathUtils = require('../math');
 
 /**
  * Interaction Model - Manages state changes and data persistence
@@ -18,10 +18,10 @@ const InteractionModel = {
    */
   create: function (config = {}) {
     return {
-      type: "interaction",
+      type: 'interaction',
       mutations: config.mutations || [],
       validators: config.validators || [],
-      name: config.name || "InteractionModel",
+      name: config.name || 'InteractionModel',
 
       /**
        * Apply a mutation to an object
@@ -46,9 +46,9 @@ const InteractionModel = {
 
         let result;
 
-        if (typeof mutator.apply === "function") {
+        if (typeof mutator.apply === 'function') {
           result = mutator.apply(object, payload);
-        } else if (typeof mutator === "function") {
+        } else if (typeof mutator === 'function') {
           result = mutator(object, payload);
         } else {
           throw new Prime.InvalidOperationError(`Invalid mutation ${mutation}`);
@@ -58,7 +58,7 @@ const InteractionModel = {
         this.validate(result);
 
         // Publish event
-        Prime.EventBus.publish("object:mutated", {
+        Prime.EventBus.publish('object:mutated', {
           original: object,
           mutation,
           payload,
@@ -80,7 +80,7 @@ const InteractionModel = {
 
         // If validation fails and strict option is enabled (default), throw error
         if (!validationResult.valid && options.strict !== false) {
-          throw new Prime.ValidationError("Object validation failed", {
+          throw new Prime.ValidationError('Object validation failed', {
             context: {
               failures: validationResult.failures,
               details: validationResult.details,
@@ -90,7 +90,7 @@ const InteractionModel = {
 
         // In a real implementation, this would persist the object
         // For now, just publish an event with validation information
-        Prime.EventBus.publish("object:saved", {
+        Prime.EventBus.publish('object:saved', {
           object,
           validationResult,
           timestamp: Date.now(),
@@ -109,7 +109,7 @@ const InteractionModel = {
         const validationResult = this._validateWithDetails(object);
 
         if (!validationResult.valid) {
-          throw new Prime.ValidationError("Object validation failed", {
+          throw new Prime.ValidationError('Object validation failed', {
             context: {
               failures: validationResult.failures,
               details: validationResult.details,
@@ -133,14 +133,14 @@ const InteractionModel = {
         for (const validator of this.validators) {
           try {
             let valid = false;
-            let validatorName = validator.name || "anonymous validator";
+            const validatorName = validator.name || 'anonymous validator';
 
-            if (typeof validator === "function") {
+            if (typeof validator === 'function') {
               valid = validator(object);
-            } else if (validator && typeof validator.validate === "function") {
+            } else if (validator && typeof validator.validate === 'function') {
               valid = validator.validate(object);
             } else {
-              throw new Prime.InvalidOperationError("Invalid validator");
+              throw new Prime.InvalidOperationError('Invalid validator');
             }
 
             if (!valid) {
@@ -149,13 +149,13 @@ const InteractionModel = {
               // Capture additional context if available
               if (
                 validator.getDetails &&
-                typeof validator.getDetails === "function"
+                typeof validator.getDetails === 'function'
               ) {
                 details[validatorName] = validator.getDetails(object);
               }
             }
           } catch (error) {
-            const validatorName = validator.name || "anonymous validator";
+            const validatorName = validator.name || 'anonymous validator';
             failures.push(`Error in ${validatorName}: ${error.message}`);
             details[validatorName] = {
               error: error.message,
@@ -177,9 +177,9 @@ const InteractionModel = {
        * @returns {Object} Updated interaction model
        */
       addMutation: function (mutation) {
-        if (!mutation.name && typeof mutation !== "function") {
+        if (!mutation.name && typeof mutation !== 'function') {
           throw new Prime.ValidationError(
-            "Mutation must have a name property or be a function",
+            'Mutation must have a name property or be a function',
           );
         }
 
@@ -213,8 +213,8 @@ const InteractionModel = {
         const isPlainObject = (value) => {
           return (
             value !== null &&
-            typeof value === "object" &&
-            Object.prototype.toString.call(value) === "[object Object]"
+            typeof value === 'object' &&
+            Object.prototype.toString.call(value) === '[object Object]'
           );
         };
 
@@ -272,7 +272,7 @@ const InteractionModel = {
               const sourceValue = source[key];
 
               // Handle special numerical values with extra precision
-              if (typeof sourceValue === "number") {
+              if (typeof sourceValue === 'number') {
                 if (!Number.isFinite(sourceValue)) {
                   Prime.Logger.warn(
                     `Non-finite number detected during merge: ${key}=${sourceValue}`,
@@ -301,8 +301,8 @@ const InteractionModel = {
                   // Create a deep copy of the array to avoid reference issues
                   result[key] = Array.isArray(sourceValue)
                     ? sourceValue.map((item) =>
-                        isPlainObject(item) ? merge({}, item, depth + 1) : item,
-                      )
+                      isPlainObject(item) ? merge({}, item, depth + 1) : item,
+                    )
                     : sourceValue;
                 }
               }

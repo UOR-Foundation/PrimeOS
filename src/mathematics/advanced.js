@@ -138,7 +138,7 @@ function predictSequenceValues(sequence, options = {}) {
   // Store predictions for possible ensemble method in the future
   const predictions = {
     linear: linearPrediction,
-    pattern: patternPrediction
+    pattern: patternPrediction,
   };
 
   // We'll use these predictions in future enhancements
@@ -472,7 +472,9 @@ function findRoots(coefficients) {
 
   // Use different starting points to find different roots
   // Scale starting points based on polynomial degree for better convergence
-  const startingPoints = [-10, -5, -1, 0, 1, 5, 10].map(p => p * (polyDegree > 3 ? 2 : 1));
+  const startingPoints = [-10, -5, -1, 0, 1, 5, 10].map(
+    (p) => p * (polyDegree > 3 ? 2 : 1),
+  );
 
   for (const startPoint of startingPoints) {
     let x = startPoint;

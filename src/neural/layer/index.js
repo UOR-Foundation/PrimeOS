@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require("../../core");
+const Prime = require('../../core');
 const Vector = Prime.Math.Vector;
 const Matrix = Prime.Math.Matrix;
 
@@ -29,13 +29,13 @@ const Matrix = Prime.Math.Matrix;
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          "Layer configuration must be an object",
+          'Layer configuration must be an object',
         );
       }
 
       this.inputSize = config.inputSize;
       this.outputSize = config.outputSize;
-      this.activation = config.activation || "sigmoid";
+      this.activation = config.activation || 'sigmoid';
 
       // Initialize weights and biases
       this.weights = this._initializeWeights(config.initParams || {});
@@ -84,7 +84,7 @@ const Matrix = Prime.Math.Matrix;
       }
 
       const scale = params.scale || Math.sqrt(2 / this.inputSize);
-      const distribution = params.distribution || "xavier";
+      const distribution = params.distribution || 'xavier';
 
       // Use Matrix.create which has dimension validation
       const weights = Matrix.create(this.outputSize, this.inputSize);
@@ -93,13 +93,13 @@ const Matrix = Prime.Math.Matrix;
         for (let j = 0; j < this.inputSize; j++) {
           let value;
 
-          if (distribution === "xavier") {
+          if (distribution === 'xavier') {
             // Xavier/Glorot initialization
             value = (Math.random() * 2 - 1) * scale;
-          } else if (distribution === "he") {
+          } else if (distribution === 'he') {
             // He initialization
             value = Math.random() * Math.sqrt(2 / this.inputSize);
-          } else if (distribution === "zeros") {
+          } else if (distribution === 'zeros') {
             value = 0;
           } else {
             // Default to small random values
@@ -151,13 +151,13 @@ const Matrix = Prime.Math.Matrix;
      */
     _activate(x) {
       switch (this.activation) {
-        case "sigmoid":
+        case 'sigmoid':
           return 1 / (1 + Math.exp(-x));
-        case "relu":
+        case 'relu':
           return Math.max(0, x);
-        case "tanh":
+        case 'tanh':
           return Math.tanh(x);
-        case "linear":
+        case 'linear':
           return x;
         default:
           return 1 / (1 + Math.exp(-x)); // Default to sigmoid
@@ -171,17 +171,17 @@ const Matrix = Prime.Math.Matrix;
      */
     _activationDerivative(x) {
       switch (this.activation) {
-        case "sigmoid": {
+        case 'sigmoid': {
           const sigX = 1 / (1 + Math.exp(-x));
           return sigX * (1 - sigX);
         }
-        case "relu":
+        case 'relu':
           return x > 0 ? 1 : 0;
-        case "tanh": {
+        case 'tanh': {
           const tanhX = Math.tanh(x);
           return 1 - tanhX * tanhX;
         }
-        case "linear":
+        case 'linear':
           return 1;
         default: {
           const sigX = 1 / (1 + Math.exp(-x));
@@ -467,7 +467,7 @@ const Matrix = Prime.Math.Matrix;
      * @private
      */
     _adaptLayer() {
-      Prime.Logger.info("Adapting self-optimizing neural layer", {
+      Prime.Logger.info('Adapting self-optimizing neural layer', {
         inputSize: this.inputSize,
         outputSize: this.outputSize,
         iteration: this.iteration,
@@ -666,7 +666,7 @@ const Matrix = Prime.Math.Matrix;
 
       // Adjust activation parameters based on type
       switch (this.activation) {
-        case "relu":
+        case 'relu':
           // For ReLU, introduce leakiness if too many dead neurons
           if (deadRatio > 0.2) {
             this.activationParams = this.activationParams || {};
@@ -680,7 +680,7 @@ const Matrix = Prime.Math.Matrix;
           }
           break;
 
-        case "sigmoid":
+        case 'sigmoid':
           // For sigmoid, adjust scaling factor if too many saturated neurons
           if (saturatedRatio > 0.3) {
             this.activationParams = this.activationParams || {};
@@ -699,7 +699,7 @@ const Matrix = Prime.Math.Matrix;
           }
           break;
 
-        case "tanh":
+        case 'tanh':
           // For tanh, adjust scaling factor if too many saturated neurons
           if (saturatedRatio > 0.3) {
             this.activationParams = this.activationParams || {};
@@ -726,7 +726,7 @@ const Matrix = Prime.Math.Matrix;
       if (this.activationParams) {
         this.adaptationState.adaptationHistory.push({
           iteration: this.iteration,
-          type: "activation_adjustment",
+          type: 'activation_adjustment',
           activation: this.activation,
           params: { ...this.activationParams },
           deadRatio,
@@ -798,7 +798,7 @@ const Matrix = Prime.Math.Matrix;
 
       // Calculate sparsity
       let nonZeroWeights = 0;
-      let totalWeights = this.inputSize * this.outputSize;
+      const totalWeights = this.inputSize * this.outputSize;
 
       for (let i = 0; i < this.outputSize; i++) {
         for (let j = 0; j < this.inputSize; j++) {
@@ -819,13 +819,13 @@ const Matrix = Prime.Math.Matrix;
         weightSparsity,
         recommendations: [
           unusedNeurons > this.outputSize * 0.3
-            ? "Consider reducing layer size"
+            ? 'Consider reducing layer size'
             : null,
           weightSparsity < 0.2
-            ? "Increase L1 regularization to promote sparsity"
+            ? 'Increase L1 regularization to promote sparsity'
             : null,
           metrics.coherence < 0.5
-            ? "Layer may benefit from more frequent adaptation"
+            ? 'Layer may benefit from more frequent adaptation'
             : null,
         ].filter(Boolean),
       };

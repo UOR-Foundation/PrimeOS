@@ -8,7 +8,7 @@
  * - Formatting utilities for different output targets
  */
 
-const Prime = require("../../core");
+const Prime = require('../../core');
 const { Utils } = Prime;
 
 /**
@@ -25,7 +25,7 @@ function createFramework(options = {}) {
     // Convert between units with Kahan summation for accuracy
     convert: function (value, fromUnit, toUnit) {
       if (!Prime.Utils.isNumber(value)) {
-        throw new Prime.ValidationError("Value must be a number", {
+        throw new Prime.ValidationError('Value must be a number', {
           context: { value, fromUnit, toUnit },
         });
       }
@@ -42,7 +42,7 @@ function createFramework(options = {}) {
       };
 
       if (!unitFactors[fromUnit] || !unitFactors[toUnit]) {
-        throw new Prime.ValidationError("Invalid units specified", {
+        throw new Prime.ValidationError('Invalid units specified', {
           context: {
             value,
             fromUnit,
@@ -68,7 +68,7 @@ function createFramework(options = {}) {
      */
     compute: function (baseStyle, transformations = {}) {
       if (!Prime.Utils.isObject(baseStyle)) {
-        throw new Prime.ValidationError("Base style must be an object", {
+        throw new Prime.ValidationError('Base style must be an object', {
           context: { baseStyle },
         });
       }
@@ -83,16 +83,16 @@ function createFramework(options = {}) {
       ) {
         // Scale numerical dimensions
         for (const prop of [
-          "width",
-          "height",
-          "top",
-          "left",
-          "right",
-          "bottom",
-          "margin",
-          "padding",
+          'width',
+          'height',
+          'top',
+          'left',
+          'right',
+          'bottom',
+          'margin',
+          'padding',
         ]) {
-          if (typeof computedStyle[prop] === "number") {
+          if (typeof computedStyle[prop] === 'number') {
             computedStyle[prop] = Prime.KahanProduct(
               computedStyle[prop],
               transformations.scale,
@@ -149,13 +149,13 @@ function createFramework(options = {}) {
      */
     interpolate: function (styleA, styleB, progress) {
       if (!Prime.Utils.isObject(styleA) || !Prime.Utils.isObject(styleB)) {
-        throw new Prime.ValidationError("Styles must be objects", {
+        throw new Prime.ValidationError('Styles must be objects', {
           context: { styleA, styleB },
         });
       }
 
       if (!Prime.Utils.isNumber(progress)) {
-        throw new Prime.ValidationError("Progress must be a number", {
+        throw new Prime.ValidationError('Progress must be a number', {
           context: { progress },
         });
       }
@@ -175,8 +175,8 @@ function createFramework(options = {}) {
         if (
           prop in styleA &&
           prop in styleB &&
-          typeof styleA[prop] === "number" &&
-          typeof styleB[prop] === "number"
+          typeof styleA[prop] === 'number' &&
+          typeof styleB[prop] === 'number'
         ) {
           // Use cubic bezier interpolation for smoother transitions
           const diff = styleB[prop] - styleA[prop];
@@ -303,7 +303,7 @@ function createFramework(options = {}) {
         !Prime.Utils.isNumber(container.height)
       ) {
         throw new Prime.ValidationError(
-          "Container must have width and height",
+          'Container must have width and height',
           {
             context: { container },
           },
@@ -312,7 +312,7 @@ function createFramework(options = {}) {
 
       if (!Prime.Utils.isNumber(itemCount) || itemCount <= 0) {
         throw new Prime.ValidationError(
-          "Item count must be a positive number",
+          'Item count must be a positive number',
           {
             context: { itemCount },
           },
@@ -367,9 +367,9 @@ function createFramework(options = {}) {
       const itemHeight = options.maintainAspectRatio
         ? Prime.KahanQuotient(itemWidth, aspectRatio)
         : Prime.KahanQuotient(
-            Prime.KahanDifference(container.height, totalGapHeight),
-            rows,
-          );
+          Prime.KahanDifference(container.height, totalGapHeight),
+          rows,
+        );
 
       // Generate item positions
       const items = [];
@@ -414,7 +414,7 @@ function createFramework(options = {}) {
         !Prime.Utils.isNumber(container.height)
       ) {
         throw new Prime.ValidationError(
-          "Container must have width and height",
+          'Container must have width and height',
           {
             context: { container },
           },
@@ -422,18 +422,18 @@ function createFramework(options = {}) {
       }
 
       if (!Array.isArray(items)) {
-        throw new Prime.ValidationError("Items must be an array", {
+        throw new Prime.ValidationError('Items must be an array', {
           context: { items },
         });
       }
 
       // Apply defaults with type checking
-      const direction = options.direction || "row";
+      const direction = options.direction || 'row';
       const gap = Prime.Utils.isNumber(options.gap) ? options.gap : 8;
-      const align = options.align || "start";
-      const justify = options.justify || "start";
+      const align = options.align || 'start';
+      const justify = options.justify || 'start';
 
-      const isHorizontal = direction === "row";
+      const isHorizontal = direction === 'row';
       const mainSize = isHorizontal ? container.width : container.height;
       const crossSize = isHorizontal ? container.height : container.width;
 
@@ -464,16 +464,16 @@ function createFramework(options = {}) {
         let crossPosition;
 
         switch (align) {
-          case "center":
+          case 'center':
             crossPosition = Prime.KahanQuotient(
               Prime.KahanDifference(crossSize, itemCrossSize),
               2,
             );
             break;
-          case "end":
+          case 'end':
             crossPosition = Prime.KahanDifference(crossSize, itemCrossSize);
             break;
-          case "stretch":
+          case 'stretch':
             crossPosition = 0;
             // Adjust item cross size if stretch is specified
             if (isHorizontal) {
@@ -482,7 +482,7 @@ function createFramework(options = {}) {
               item.width = crossSize;
             }
             break;
-          case "start":
+          case 'start':
           default:
             crossPosition = 0;
             break;
@@ -505,10 +505,10 @@ function createFramework(options = {}) {
       }
 
       // Apply justification if needed
-      if (justify !== "start" && mainPosition < mainSize) {
+      if (justify !== 'start' && mainPosition < mainSize) {
         const totalSpace = Prime.KahanDifference(mainSize, mainPosition) + gap; // Add gap back from last item
 
-        if (justify === "center") {
+        if (justify === 'center') {
           const offset = Prime.KahanQuotient(totalSpace, 2);
 
           for (const item of arrangedItems) {
@@ -518,7 +518,7 @@ function createFramework(options = {}) {
               item.y = Prime.KahanSum(item.y, offset);
             }
           }
-        } else if (justify === "end") {
+        } else if (justify === 'end') {
           for (const item of arrangedItems) {
             if (isHorizontal) {
               item.x = Prime.KahanSum(item.x, totalSpace);
@@ -526,7 +526,7 @@ function createFramework(options = {}) {
               item.y = Prime.KahanSum(item.y, totalSpace);
             }
           }
-        } else if (justify === "space-between" && arrangedItems.length > 1) {
+        } else if (justify === 'space-between' && arrangedItems.length > 1) {
           const spacePerGap = Prime.KahanQuotient(
             totalSpace,
             arrangedItems.length - 1,
@@ -541,7 +541,7 @@ function createFramework(options = {}) {
               arrangedItems[i].y = Prime.KahanSum(arrangedItems[i].y, offset);
             }
           }
-        } else if (justify === "space-around" && arrangedItems.length > 0) {
+        } else if (justify === 'space-around' && arrangedItems.length > 0) {
           const spacePerItem = Prime.KahanQuotient(
             totalSpace,
             arrangedItems.length,
@@ -599,7 +599,7 @@ function createFramework(options = {}) {
         animate: function (from, to, callback) {
           if (!Prime.Utils.isNumber(from) || !Prime.Utils.isNumber(to)) {
             throw new Prime.ValidationError(
-              "From and to values must be numbers",
+              'From and to values must be numbers',
               {
                 context: { from, to },
               },
@@ -607,7 +607,7 @@ function createFramework(options = {}) {
           }
 
           if (!Prime.Utils.isFunction(callback)) {
-            throw new Prime.ValidationError("Callback must be a function", {
+            throw new Prime.ValidationError('Callback must be a function', {
               context: { callback },
             });
           }
@@ -709,7 +709,7 @@ function createFramework(options = {}) {
             !Prime.Utils.isNumber(origin.y)
           ) {
             throw new Prime.ValidationError(
-              "Origin must have x and y coordinates",
+              'Origin must have x and y coordinates',
               {
                 context: { origin },
               },
@@ -717,7 +717,7 @@ function createFramework(options = {}) {
           }
 
           if (!Prime.Utils.isFunction(renderer)) {
-            throw new Prime.ValidationError("Renderer must be a function", {
+            throw new Prime.ValidationError('Renderer must be a function', {
               context: { renderer },
             });
           }
@@ -845,43 +845,43 @@ function createFramework(options = {}) {
      * @param {string} format - Output format (html, xml, plain, csv)
      * @returns {string} Formatted text
      */
-    formatText: function (text, format = "plain") {
-      if (typeof text !== "string") {
-        throw new Prime.ValidationError("Text must be a string", {
+    formatText: function (text, format = 'plain') {
+      if (typeof text !== 'string') {
+        throw new Prime.ValidationError('Text must be a string', {
           context: { text, format },
         });
       }
 
       switch (format.toLowerCase()) {
-        case "html":
+        case 'html':
           return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
 
-        case "xml":
+        case 'xml':
           return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&apos;");
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
 
-        case "csv":
+        case 'csv':
           // RFC 4180 compliant CSV escaping
           if (
             text.includes('"') ||
-            text.includes(",") ||
-            text.includes("\n") ||
-            text.includes("\r")
+            text.includes(',') ||
+            text.includes('\n') ||
+            text.includes('\r')
           ) {
             return '"' + text.replace(/"/g, '""') + '"';
           }
           return text;
 
-        case "plain":
+        case 'plain':
         default:
           return text;
       }

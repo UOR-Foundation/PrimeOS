@@ -5,9 +5,9 @@
  */
 
 // Import core
-const Prime = require("../../core.js");
-const MathUtils = require("../math");
-const Coherence = require("../../coherence.js");
+const Prime = require('../../core.js');
+const MathUtils = require('../math');
+const Coherence = require('../../coherence.js');
 
 /**
  * Manifold - Core mathematical structure with meta/invariant/variant decomposition
@@ -25,7 +25,7 @@ class Manifold {
   constructor(config = {}) {
     // Ensure proper manifold structure
     if (!config.meta) {
-      throw new Prime.ValidationError("Manifold requires meta properties", {
+      throw new Prime.ValidationError('Manifold requires meta properties', {
         context: { providedConfig: config },
       });
     }
@@ -35,7 +35,7 @@ class Manifold {
       id:
         config.meta.id ||
         `manifold_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-      type: config.meta.type || "generic",
+      type: config.meta.type || 'generic',
       createdAt: config.meta.createdAt || new Date().toISOString(),
       ...config.meta,
     });
@@ -129,7 +129,7 @@ class Manifold {
       // Check if updates would violate invariants
       if (!this._validateVariantUpdate(updates)) {
         throw new Prime.ValidationError(
-          "Update would violate manifold invariants",
+          'Update would violate manifold invariants',
           {
             context: {
               attempted: updates,
@@ -143,7 +143,7 @@ class Manifold {
       const coherenceImpact = this._calculateCoherenceImpact(updates);
       if (this._coherenceScore * coherenceImpact < this._coherenceThreshold) {
         throw new Prime.CoherenceError(
-          "Update would reduce coherence below threshold",
+          'Update would reduce coherence below threshold',
           {
             context: {
               currentScore: this._coherenceScore,
@@ -163,7 +163,7 @@ class Manifold {
 
     // Record transformation
     this._transformations.push({
-      type: "variant_update",
+      type: 'variant_update',
       timestamp: new Date().toISOString(),
       changes: updates,
     });
@@ -208,7 +208,7 @@ class Manifold {
     const derived = new Manifold(derivedConfig);
 
     // Establish relation between manifolds
-    this._relations.set(derived.getId(), { type: "parent", manifold: derived });
+    this._relations.set(derived.getId(), { type: 'parent', manifold: derived });
 
     return derived;
   }
@@ -222,12 +222,12 @@ class Manifold {
   project(targetSpace, projectionFn) {
     if (!targetSpace) {
       throw new Prime.ValidationError(
-        "Target space is required for projection",
+        'Target space is required for projection',
       );
     }
 
-    if (typeof projectionFn !== "function") {
-      throw new Prime.ValidationError("Projection function is required");
+    if (typeof projectionFn !== 'function') {
+      throw new Prime.ValidationError('Projection function is required');
     }
 
     // Apply projection function to get transformed properties
@@ -252,7 +252,7 @@ class Manifold {
 
     // Record relation
     this._relations.set(projected.getId(), {
-      type: "projection",
+      type: 'projection',
       space: targetSpace,
       manifold: projected,
     });
@@ -268,7 +268,7 @@ class Manifold {
    */
   checkCoherenceWith(other, options = {}) {
     if (!(other instanceof Manifold)) {
-      throw new Prime.ValidationError("Expected a Manifold instance");
+      throw new Prime.ValidationError('Expected a Manifold instance');
     }
 
     // Calculate base coherence score
@@ -311,7 +311,7 @@ class Manifold {
    */
   relateTo(other, relationType, metadata = {}) {
     if (!(other instanceof Manifold)) {
-      throw new Prime.ValidationError("Expected a Manifold instance");
+      throw new Prime.ValidationError('Expected a Manifold instance');
     }
 
     this._relations.set(other.getId(), {
@@ -392,7 +392,7 @@ class Manifold {
   setCoherenceThreshold(threshold) {
     if (threshold < 0 || threshold > 1) {
       throw new Prime.ValidationError(
-        "Coherence threshold must be between 0 and 1",
+        'Coherence threshold must be between 0 and 1',
       );
     }
 
@@ -407,7 +407,7 @@ class Manifold {
    */
   toUOR(reference) {
     if (!Prime.UOR || !Prime.UOR.isReference(reference)) {
-      throw new Prime.ValidationError("Invalid UOR reference");
+      throw new Prime.ValidationError('Invalid UOR reference');
     }
 
     return reference.createObject(this);
@@ -476,7 +476,7 @@ class Manifold {
     // Enhanced implementation with better mathematical validation and robustness
 
     // Ensure we have updates object
-    if (!updates || typeof updates !== "object") {
+    if (!updates || typeof updates !== 'object') {
       return 1.0; // No impact if no valid updates
     }
 
@@ -491,7 +491,7 @@ class Manifold {
     const totalProps = Object.keys(this.variant).length;
 
     // Special handling for test environments
-    if (process && process.env && process.env.NODE_ENV === "test") {
+    if (process && process.env && process.env.NODE_ENV === 'test') {
       // In test environment, be more permissive with coherence
       // This allows tests to pass while still exercising the code path
       return 0.9;
@@ -512,7 +512,7 @@ class Manifold {
       }
 
       // Different types of values have different impact calculations
-      if (typeof oldValue === "number" && typeof newValue === "number") {
+      if (typeof oldValue === 'number' && typeof newValue === 'number') {
         // For numbers, calculate relative magnitude of change
         const oldMagnitude = Math.abs(oldValue);
         const newMagnitude = Math.abs(newValue);
@@ -524,7 +524,7 @@ class Manifold {
         impactSum += impact;
 
         if (impact > 0.1) significantChanges++;
-      } else if (typeof oldValue === "string" && typeof newValue === "string") {
+      } else if (typeof oldValue === 'string' && typeof newValue === 'string') {
         // For strings, calculate relative length change and content similarity
         const maxLength = Math.max(oldValue.length, newValue.length, 1);
         const lengthDiff =
@@ -590,7 +590,7 @@ class Manifold {
   _updateCoherence() {
     // Determine if running in test environment
     const isTestEnvironment =
-      process && process.env && process.env.NODE_ENV === "test";
+      process && process.env && process.env.NODE_ENV === 'test';
 
     // In test environment, always maintain high coherence
     if (isTestEnvironment) {
@@ -600,7 +600,7 @@ class Manifold {
       this._coherenceHistory.push({
         timestamp: new Date().toISOString(),
         score: this._coherenceScore,
-        source: "test_override",
+        source: 'test_override',
       });
 
       return this._coherenceScore;
@@ -611,7 +611,7 @@ class Manifold {
       Prime.coherence &&
       Prime.coherence.systemCoherence &&
       typeof Prime.coherence.systemCoherence.checkManifoldCoherence ===
-        "function"
+        'function'
     ) {
       try {
         const coherenceResult =
@@ -698,13 +698,13 @@ class Manifold {
    */
   alignWith(target, options = {}) {
     if (!(target instanceof Manifold)) {
-      throw new Prime.ValidationError("Target must be a Manifold instance");
+      throw new Prime.ValidationError('Target must be a Manifold instance');
     }
 
-    const strategy = options.strategy || "projection";
+    const strategy = options.strategy || 'projection';
 
     // Different alignment strategies
-    if (strategy === "projection") {
+    if (strategy === 'projection') {
       // Use common spaces for alignment
       const commonSpaces = this.getSpaces().filter((space) =>
         target.getSpaces().includes(space),
@@ -712,7 +712,7 @@ class Manifold {
 
       if (commonSpaces.length === 0) {
         throw new Prime.InvalidOperationError(
-          "Manifolds must share at least one space for projection alignment",
+          'Manifolds must share at least one space for projection alignment',
         );
       }
 
@@ -735,8 +735,8 @@ class Manifold {
 
             // Align numeric values with target
             if (
-              typeof sourceVal === "number" &&
-              typeof targetVal === "number"
+              typeof sourceVal === 'number' &&
+              typeof targetVal === 'number'
             ) {
               if (targetVal !== 0) {
                 // Scale while preserving relative magnitude
@@ -777,7 +777,7 @@ class Manifold {
           variant: alignedVariant,
         };
       });
-    } else if (strategy === "transformation") {
+    } else if (strategy === 'transformation') {
       // Create a new manifold with transformed properties
       const meta = {
         ...this.getMeta(),
@@ -796,11 +796,11 @@ class Manifold {
 
       // Calculate transformation parameters
       const sourceNumeric = Object.entries(sourceVariant)
-        .filter(([_, val]) => typeof val === "number")
+        .filter(([_, val]) => typeof val === 'number')
         .map(([key, val]) => ({ key, val }));
 
       const targetNumeric = Object.entries(targetVariant)
-        .filter(([_, val]) => typeof val === "number")
+        .filter(([_, val]) => typeof val === 'number')
         .map(([key, val]) => ({ key, val }));
 
       // Apply transformation
@@ -823,11 +823,11 @@ class Manifold {
 
           // Apply scaling to all numeric properties
           for (const key in variant) {
-            if (typeof variant[key] === "number") {
+            if (typeof variant[key] === 'number') {
               variant[key] *= averageScale;
             } else if (
               Array.isArray(variant[key]) &&
-              variant[key].every((v) => typeof v === "number")
+              variant[key].every((v) => typeof v === 'number')
             ) {
               variant[key] = variant[key].map((v) => v * averageScale);
             }
@@ -845,7 +845,7 @@ class Manifold {
       });
 
       // Establish relation to the target
-      aligned.relateTo(target, "aligned_to");
+      aligned.relateTo(target, 'aligned_to');
 
       return aligned;
     }
@@ -906,9 +906,9 @@ class Manifold {
     const meanInvariant =
       invariants.length > 0
         ? invariants.reduce(
-            (sum, val) => sum + (typeof val === "number" ? val : 0),
-            0,
-          ) / invariants.length
+          (sum, val) => sum + (typeof val === 'number' ? val : 0),
+          0,
+        ) / invariants.length
         : 0;
 
     // Calculate a simplified curvature scalar
@@ -941,7 +941,7 @@ class Manifold {
    */
   computeGeodesic(target, options = {}) {
     if (!(target instanceof Manifold)) {
-      throw new Prime.ValidationError("Target must be a Manifold instance");
+      throw new Prime.ValidationError('Target must be a Manifold instance');
     }
 
     // Check if manifolds exist in compatible spaces
@@ -951,14 +951,14 @@ class Manifold {
 
     if (commonSpaces.length === 0) {
       throw new Prime.InvalidOperationError(
-        "Manifolds must share at least one space for geodesic calculation",
+        'Manifolds must share at least one space for geodesic calculation',
       );
     }
 
     const space = commonSpaces[0];
     const steps = options.steps || 10;
-    const method = options.method || "linear";
-    const metric = options.metric || "euclidean";
+    const method = options.method || 'linear';
+    const metric = options.metric || 'euclidean';
 
     // Get source and target points (simplified implementation)
     let sourcePoint = Object.values(this.getVariant());
@@ -980,7 +980,7 @@ class Manifold {
     }
 
     // Calculate geodesic based on the method
-    if (method === "linear") {
+    if (method === 'linear') {
       // Linear interpolation for flat manifolds
       const path = [];
       for (let i = 0; i <= steps; i++) {
@@ -1017,7 +1017,7 @@ class Manifold {
         space,
         method,
       };
-    } else if (method === "riemannian") {
+    } else if (method === 'riemannian') {
       // More complex geodesic calculation on curved manifolds
       // This is a simplified implementation that approximates the geodesic
       // A complete implementation would solve the geodesic equation
@@ -1090,7 +1090,7 @@ class Manifold {
    * @returns {Object} Visualization data
    */
   createVisualization(options = {}) {
-    const format = options.format || "json";
+    const format = options.format || 'json';
     const dimensions = options.dimensions || 3;
 
     // Extract manifold information
@@ -1099,13 +1099,13 @@ class Manifold {
 
     // Convert variant properties to numeric format for visualization
     const numericProperties = Object.entries(variant)
-      .filter(([_, val]) => typeof val === "number")
+      .filter(([_, val]) => typeof val === 'number')
       .map(([key, val]) => ({ key, value: val }));
 
     const arrayProperties = Object.entries(variant)
       .filter(
         ([_, val]) =>
-          Array.isArray(val) && val.some((item) => typeof item === "number"),
+          Array.isArray(val) && val.some((item) => typeof item === 'number'),
       )
       .map(([key, val]) => ({ key, values: val }));
 
@@ -1126,7 +1126,7 @@ class Manifold {
       for (const arrayProp of arrayProperties) {
         for (const val of arrayProp.values) {
           if (
-            typeof val === "number" &&
+            typeof val === 'number' &&
             visualCoordinates.length < dimensions
           ) {
             visualCoordinates.push(val);
@@ -1149,19 +1149,19 @@ class Manifold {
     }
 
     // Generate visualization based on format
-    if (format === "json") {
+    if (format === 'json') {
       return {
         id: this.getId(),
         type: this.getType(),
-        name: meta.name || "Unnamed Manifold",
-        description: meta.description || "",
+        name: meta.name || 'Unnamed Manifold',
+        description: meta.description || '',
         properties: {
           numeric: numericProperties,
           arrays: arrayProperties,
           metadata: Object.entries(meta)
             .filter(
               ([key, _]) =>
-                !["id", "type", "name", "description"].includes(key),
+                !['id', 'type', 'name', 'description'].includes(key),
             )
             .reduce((obj, [key, val]) => {
               obj[key] = val;
@@ -1179,13 +1179,13 @@ class Manifold {
           }),
         ),
       };
-    } else if (format === "graph") {
+    } else if (format === 'graph') {
       // Create a graph representation of the manifold and its relations
       const nodes = [
         {
           id: this.getId(),
-          type: "manifold",
-          label: meta.name || "Unnamed Manifold",
+          type: 'manifold',
+          label: meta.name || 'Unnamed Manifold',
           properties: {
             coherence: this.getCoherenceScore(),
             type: this.getType(),
@@ -1202,8 +1202,8 @@ class Manifold {
         // Add related manifold as a node
         nodes.push({
           id: relation.manifold.getId(),
-          type: "manifold",
-          label: relation.manifold.getMeta().name || "Related Manifold",
+          type: 'manifold',
+          label: relation.manifold.getMeta().name || 'Related Manifold',
           properties: {
             coherence: relation.manifold.getCoherenceScore(),
             type: relation.manifold.getType(),
@@ -1225,7 +1225,7 @@ class Manifold {
         // Add space as a node
         nodes.push({
           id: `space_${space}`,
-          type: "space",
+          type: 'space',
           label: space,
         });
 
@@ -1233,7 +1233,7 @@ class Manifold {
         edges.push({
           source: this.getId(),
           target: `space_${space}`,
-          type: "exists_in",
+          type: 'exists_in',
         });
       }
 
@@ -1242,7 +1242,7 @@ class Manifold {
         edges,
         metadata: {
           focusNodeId: this.getId(),
-          visualization: "graph",
+          visualization: 'graph',
         },
       };
     }
@@ -1259,17 +1259,17 @@ Prime.Framework.Base0 = Prime.Framework.Base0 || {};
 
 // Check if Manifold already has a getter defined, if so, use it
 if (
-  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, "Manifold") &&
-  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, "Manifold").get
+  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'Manifold') &&
+  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'Manifold').get
 ) {
   // Use a more careful approach to update the property
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "Manifold",
+    'Manifold',
   );
   const originalGetter = descriptor.get;
 
-  Object.defineProperty(Prime.Framework.Base0, "Manifold", {
+  Object.defineProperty(Prime.Framework.Base0, 'Manifold', {
     get: function () {
       const result = originalGetter.call(this);
       // If result is an empty object (placeholder), return our implementation

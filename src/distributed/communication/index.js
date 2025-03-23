@@ -4,8 +4,8 @@
  */
 
 // Import the Prime object from core
-const Prime = require("../../core");
-const EventBus = require("../event-bus");
+const Prime = require('../../core');
+const EventBus = require('../event-bus');
 
 // Create the Communication module using IIFE
 (function () {
@@ -15,25 +15,25 @@ const EventBus = require("../event-bus");
    */
   const MessageType = {
     /** Task assignment message */
-    TASK_ASSIGNMENT: "task_assignment",
+    TASK_ASSIGNMENT: 'task_assignment',
     /** Task completion message */
-    TASK_COMPLETION: "task_completion",
+    TASK_COMPLETION: 'task_completion',
     /** Task failure message */
-    TASK_FAILURE: "task_failure",
+    TASK_FAILURE: 'task_failure',
     /** Node discovery message */
-    NODE_DISCOVERY: "node_discovery",
+    NODE_DISCOVERY: 'node_discovery',
     /** Node status update message */
-    NODE_STATUS: "node_status",
+    NODE_STATUS: 'node_status',
     /** Coherence check message */
-    COHERENCE_CHECK: "coherence_check",
+    COHERENCE_CHECK: 'coherence_check',
     /** Coherence violation message */
-    COHERENCE_VIOLATION: "coherence_violation",
+    COHERENCE_VIOLATION: 'coherence_violation',
     /** Neural gradient synchronization message */
-    GRADIENT_SYNC: "gradient_sync",
+    GRADIENT_SYNC: 'gradient_sync',
     /** Neural layer state synchronization message */
-    LAYER_SYNC: "layer_sync",
+    LAYER_SYNC: 'layer_sync',
     /** Heartbeat message */
-    HEARTBEAT: "heartbeat",
+    HEARTBEAT: 'heartbeat',
   };
 
   /**
@@ -52,16 +52,16 @@ const EventBus = require("../event-bus");
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          "Channel configuration must be an object",
+          'Channel configuration must be an object',
         );
       }
 
       if (!config.nodeId) {
-        throw new Prime.ValidationError("Node ID is required");
+        throw new Prime.ValidationError('Node ID is required');
       }
 
       this.nodeId = config.nodeId;
-      this.protocol = config.protocol || "primeos";
+      this.protocol = config.protocol || 'primeos';
       this.encrypted = config.encrypted !== false;
       this.timeout = config.timeout || 5000;
       this.retryCount = config.retryCount || 3;
@@ -109,7 +109,7 @@ const EventBus = require("../event-bus");
       }, 5000);
 
       // Set up message handler
-      this.eventBus.on("message:received", this._handleMessage.bind(this));
+      this.eventBus.on('message:received', this._handleMessage.bind(this));
     }
 
     /**
@@ -120,7 +120,7 @@ const EventBus = require("../event-bus");
       // Simulate receiving a heartbeat message
       const heartbeatMessage = {
         type: MessageType.HEARTBEAT,
-        source: "cluster_manager",
+        source: 'cluster_manager',
         timestamp: Date.now(),
         data: {
           nodeCount: Math.floor(Math.random() * 5) + 1,
@@ -177,12 +177,12 @@ const EventBus = require("../event-bus");
     async send(destination, type, data, options = {}) {
       if (!this.connected) {
         throw new Prime.CommunicationError(
-          "Communication channel not connected",
+          'Communication channel not connected',
         );
       }
 
       if (!destination) {
-        throw new Prime.ValidationError("Destination node ID is required");
+        throw new Prime.ValidationError('Destination node ID is required');
       }
 
       if (!Object.values(MessageType).includes(type)) {
@@ -220,7 +220,7 @@ const EventBus = require("../event-bus");
       }
 
       // For mock mode with test destinations
-      if (destination === "test_node" || destination === "cluster_manager") {
+      if (destination === 'test_node' || destination === 'cluster_manager') {
         // Simulate successful send
 
         // If acknowledgment required, wait for response
@@ -264,7 +264,7 @@ const EventBus = require("../event-bus");
                 this.pendingMessages.delete(messageId);
                 reject(
                   new Prime.CommunicationError(
-                    "Message acknowledgment timeout",
+                    'Message acknowledgment timeout',
                   ),
                 );
               }
@@ -291,7 +291,7 @@ const EventBus = require("../event-bus");
     async broadcast(type, data) {
       if (!this.connected) {
         throw new Prime.CommunicationError(
-          "Communication channel not connected",
+          'Communication channel not connected',
         );
       }
 
@@ -307,7 +307,7 @@ const EventBus = require("../event-bus");
         id: messageId,
         type,
         source: this.nodeId,
-        destination: "broadcast",
+        destination: 'broadcast',
         timestamp: Date.now(),
         data: data || {},
       };
@@ -345,7 +345,7 @@ const EventBus = require("../event-bus");
 
       // Add encryption metadata
       encryptedMessage.encrypted = true;
-      encryptedMessage.encryptionAlgorithm = "mock_aes256";
+      encryptedMessage.encryptionAlgorithm = 'mock_aes256';
 
       return encryptedMessage;
     }
@@ -361,8 +361,8 @@ const EventBus = require("../event-bus");
         throw new Prime.ValidationError(`Invalid message type: ${type}`);
       }
 
-      if (typeof callback !== "function") {
-        throw new Prime.ValidationError("Callback must be a function");
+      if (typeof callback !== 'function') {
+        throw new Prime.ValidationError('Callback must be a function');
       }
 
       // Subscribe to message events of specified type
@@ -531,12 +531,12 @@ const EventBus = require("../event-bus");
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          "Router configuration must be an object",
+          'Router configuration must be an object',
         );
       }
 
       if (!config.nodeId) {
-        throw new Prime.ValidationError("Node ID is required");
+        throw new Prime.ValidationError('Node ID is required');
       }
 
       this.nodeId = config.nodeId;
@@ -624,8 +624,8 @@ const EventBus = require("../event-bus");
      * @throws {Error} If handler is not a function
      */
     registerHandler(type, handler) {
-      if (typeof handler !== "function") {
-        throw new Prime.ValidationError("Handler must be a function");
+      if (typeof handler !== 'function') {
+        throw new Prime.ValidationError('Handler must be a function');
       }
 
       this.messageHandlers.set(type, handler);
@@ -755,7 +755,7 @@ const EventBus = require("../event-bus");
      */
     async route(destination, type, data, options = {}) {
       if (!destination) {
-        throw new Prime.ValidationError("Destination node ID is required");
+        throw new Prime.ValidationError('Destination node ID is required');
       }
 
       if (!Object.values(MessageType).includes(type)) {
@@ -778,7 +778,7 @@ const EventBus = require("../event-bus");
       }
 
       // Check if destination is known
-      if (!this.routeTable.has(destination) && destination !== "broadcast") {
+      if (!this.routeTable.has(destination) && destination !== 'broadcast') {
         // Unknown destination, try discovery first
         await this._discoverNode(destination).catch((error) => {
           // If discovery fails, continue with direct send anyway
@@ -790,7 +790,7 @@ const EventBus = require("../event-bus");
       this.metrics.messagesRouted++;
 
       // Use communication channel to send message
-      if (destination === "broadcast") {
+      if (destination === 'broadcast') {
         return this.channel.broadcast(type, data);
       } else {
         return this.channel.send(destination, type, data, options);
@@ -859,7 +859,7 @@ const EventBus = require("../event-bus");
      * @returns {Promise<Object>} Broadcast result
      */
     async broadcastStatus(status) {
-      return this.route("broadcast", MessageType.NODE_STATUS, {
+      return this.route('broadcast', MessageType.NODE_STATUS, {
         nodeId: this.nodeId,
         status,
         capabilities: status.capabilities || {},
@@ -935,7 +935,7 @@ const EventBus = require("../event-bus");
      * @returns {Promise<void>} Promise that resolves when shutdown is complete
      */
     async shutdown() {
-      Prime.Logger.info("Shutting down message router");
+      Prime.Logger.info('Shutting down message router');
 
       // Disconnect channel
       await this.channel.disconnect();
@@ -945,7 +945,7 @@ const EventBus = require("../event-bus");
       this.messageCache.clear();
       this.routeTable.clear();
 
-      Prime.Logger.info("Message router shutdown complete");
+      Prime.Logger.info('Message router shutdown complete');
     }
   }
 

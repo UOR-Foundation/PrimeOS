@@ -17,22 +17,25 @@ async function startServer() {
         res.end(data);
       });
     } else if (req.url === '/dist/primeos.js') {
-      fs.readFile(path.join(__dirname, '../../dist/primeos.js'), (err, data) => {
-        if (err) {
-          res.writeHead(500);
-          res.end('Error loading primeos.js');
-          return;
-        }
-        res.writeHead(200, { 'Content-Type': 'application/javascript' });
-        res.end(data);
-      });
+      fs.readFile(
+        path.join(__dirname, '../../dist/primeos.js'),
+        (err, data) => {
+          if (err) {
+            res.writeHead(500);
+            res.end('Error loading primeos.js');
+            return;
+          }
+          res.writeHead(200, { 'Content-Type': 'application/javascript' });
+          res.end(data);
+        },
+      );
     } else {
       res.writeHead(404);
       res.end('Not found');
     }
   });
 
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     server.listen(8081, () => {
       console.log('Server running at http://localhost:8081/');
       resolve(server);
@@ -47,14 +50,14 @@ async function runTests() {
 
   const browser = await puppeteer.launch({
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
-  
+
   try {
     const page = await browser.newPage();
-    
+
     // Capture console output
-    page.on('console', msg => {
+    page.on('console', (msg) => {
       const text = msg.text();
       console.log(`[Browser] ${text}`);
     });
@@ -65,12 +68,15 @@ async function runTests() {
 
     // Click run-all button
     await page.click('#run-all');
-    
+
     // Wait for tests to complete (look for a summary in the output)
-    await page.waitForFunction(() => {
-      const output = document.getElementById('test-output');
-      return output && output.textContent.includes('Test Summary');
-    }, { timeout: 10000 });
+    await page.waitForFunction(
+      () => {
+        const output = document.getElementById('test-output');
+        return output && output.textContent.includes('Test Summary');
+      },
+      { timeout: 10000 },
+    );
 
     // Extract test results
     const testResults = await page.evaluate(() => {
@@ -82,10 +88,10 @@ async function runTests() {
     console.log('\nTest Results:');
     console.log('-----------------');
     console.log(testResults);
-    
+
     // Check if all tests passed
     const success = testResults.includes('Failed:  0');
-    
+
     if (success) {
       console.log('\n✅ All browser tests passed!');
       process.exit(0);

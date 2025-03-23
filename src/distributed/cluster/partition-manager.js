@@ -4,8 +4,8 @@
  */
 
 // Import the Prime object from core
-const Prime = require("../../core");
-const EventBus = require("../event-bus");
+const Prime = require('../../core');
+const EventBus = require('../event-bus');
 
 /**
  * Partitioning types for distributed computation
@@ -13,13 +13,13 @@ const EventBus = require("../event-bus");
  */
 const PartitionType = {
   /** Partition data across nodes */
-  DATA_PARALLEL: "data-parallel",
+  DATA_PARALLEL: 'data-parallel',
   /** Partition model layers across nodes */
-  LAYER_WISE: "layer-wise",
+  LAYER_WISE: 'layer-wise',
   /** Partition within individual layers */
-  INTRA_LAYER: "intra-layer",
+  INTRA_LAYER: 'intra-layer',
   /** Partition by computation type */
-  FUNCTIONAL: "functional",
+  FUNCTIONAL: 'functional',
 };
 
 /**
@@ -28,15 +28,15 @@ const PartitionType = {
  */
 const PartitionStrategy = {
   /** Equal distribution of work */
-  BALANCED: "balanced",
+  BALANCED: 'balanced',
   /** Based on node capabilities */
-  CAPABILITY_BASED: "capability-based",
+  CAPABILITY_BASED: 'capability-based',
   /** Based on data locality */
-  LOCALITY_BASED: "locality-based",
+  LOCALITY_BASED: 'locality-based',
   /** Based on communication cost */
-  COMMUNICATION_OPTIMIZED: "communication-optimized",
+  COMMUNICATION_OPTIMIZED: 'communication-optimized',
   /** Dynamic adjustment based on performance */
-  ADAPTIVE: "adaptive",
+  ADAPTIVE: 'adaptive',
 };
 
 /**
@@ -52,7 +52,7 @@ class PartitionScheme {
    */
   constructor(config = {}) {
     if (!config.type || !Object.values(PartitionType).includes(config.type)) {
-      throw new Prime.ValidationError("Valid partition type is required");
+      throw new Prime.ValidationError('Valid partition type is required');
     }
 
     this.type = config.type;
@@ -87,7 +87,7 @@ class PartitionScheme {
    */
   configureLayer(layerId, config) {
     if (!layerId) {
-      throw new Prime.ValidationError("Layer ID is required");
+      throw new Prime.ValidationError('Layer ID is required');
     }
 
     this.layerConfig[layerId] = {
@@ -112,7 +112,7 @@ class PartitionScheme {
     }
 
     if (!Array.isArray(nodeIds) || nodeIds.length === 0) {
-      throw new Prime.ValidationError("At least one node ID is required");
+      throw new Prime.ValidationError('At least one node ID is required');
     }
 
     // Update layer assignments
@@ -128,7 +128,7 @@ class PartitionScheme {
     }
 
     // Emit assignment event
-    this.eventBus.emit("partition:layer-assigned", {
+    this.eventBus.emit('partition:layer-assigned', {
       layerId,
       nodeIds,
       timestamp: Date.now(),
@@ -179,7 +179,7 @@ class PartitionScheme {
     };
 
     // Emit sync status update event
-    this.eventBus.emit("partition:sync-updated", {
+    this.eventBus.emit('partition:sync-updated', {
       layerId,
       status: this.syncStatus[layerId],
       timestamp: Date.now(),
@@ -205,7 +205,7 @@ class PartitionScheme {
               source: nodeIds[i],
               target: nodeIds[j],
               layerId,
-              type: "intra-layer",
+              type: 'intra-layer',
             });
           }
         }
@@ -232,7 +232,7 @@ class PartitionScheme {
               target: targetNodeId,
               sourceLayer: currentLayerId,
               targetLayer: nextLayerId,
-              type: "inter-layer",
+              type: 'inter-layer',
             });
           }
         }
@@ -312,10 +312,10 @@ class PartitionScheme {
       communication: {
         paths: communicationPaths.length,
         intraLayerPaths: communicationPaths.filter(
-          (p) => p.type === "intra-layer",
+          (p) => p.type === 'intra-layer',
         ).length,
         interLayerPaths: communicationPaths.filter(
-          (p) => p.type === "inter-layer",
+          (p) => p.type === 'inter-layer',
         ).length,
       },
       metrics: this.metrics,
@@ -352,7 +352,7 @@ class DataParallelPartition extends PartitionScheme {
    */
   calculateBatchSizes(totalBatchSize, nodeCount) {
     if (nodeCount <= 0) {
-      throw new Prime.ValidationError("Node count must be positive");
+      throw new Prime.ValidationError('Node count must be positive');
     }
 
     // Calculate batch size per node
@@ -388,7 +388,7 @@ class DataParallelPartition extends PartitionScheme {
       config.nodeIds.length === 0
     ) {
       throw new Prime.ValidationError(
-        "Total batch size and node IDs are required",
+        'Total batch size and node IDs are required',
       );
     }
 
@@ -482,7 +482,7 @@ class DataParallelPartition extends PartitionScheme {
   applyPartitionPlan(plan, layerIds) {
     if (!plan || !plan.partitions || !Array.isArray(layerIds)) {
       throw new Prime.ValidationError(
-        "Valid partition plan and layer IDs are required",
+        'Valid partition plan and layer IDs are required',
       );
     }
 
@@ -511,7 +511,7 @@ class DataParallelPartition extends PartitionScheme {
     }
 
     // Emit partition applied event
-    this.eventBus.emit("partition:plan-applied", {
+    this.eventBus.emit('partition:plan-applied', {
       type: this.type,
       strategy: this.strategy,
       layerIds,
@@ -553,7 +553,7 @@ class LayerWisePartition extends PartitionScheme {
    */
   createPartitionPlan(config) {
     if (!config.layers || !config.nodeIds || config.nodeIds.length === 0) {
-      throw new Prime.ValidationError("Layers and node IDs are required");
+      throw new Prime.ValidationError('Layers and node IDs are required');
     }
 
     const nodeCount = config.nodeIds.length;
@@ -580,9 +580,9 @@ class LayerWisePartition extends PartitionScheme {
           let score = capabilities.compute || 1.0;
 
           // Adjust score based on layer type
-          if (layer.type === "conv" && capabilities.gpu) {
+          if (layer.type === 'conv' && capabilities.gpu) {
             score *= 1.5; // GPUs are better for convolutional layers
-          } else if (layer.type === "recurrent" && capabilities.memory) {
+          } else if (layer.type === 'recurrent' && capabilities.memory) {
             score *= 1.2; // High memory nodes are better for recurrent layers
           }
 
@@ -686,7 +686,7 @@ class LayerWisePartition extends PartitionScheme {
    */
   applyPartitionPlan(plan) {
     if (!plan || !plan.partitions) {
-      throw new Prime.ValidationError("Valid partition plan is required");
+      throw new Prime.ValidationError('Valid partition plan is required');
     }
 
     // Clear existing assignments
@@ -718,7 +718,7 @@ class LayerWisePartition extends PartitionScheme {
     }
 
     // Emit partition applied event
-    this.eventBus.emit("partition:plan-applied", {
+    this.eventBus.emit('partition:plan-applied', {
       type: this.type,
       strategy: this.strategy,
       layerIds: plan.partitions.map((p) => p.layerId),
@@ -770,7 +770,7 @@ class IntraLayerPartition extends PartitionScheme {
       ...config,
     });
 
-    this.splitDimension = config.splitDimension || "output";
+    this.splitDimension = config.splitDimension || 'output';
     this.replicationFactor = config.replicationFactor || 1;
   }
 
@@ -784,7 +784,7 @@ class IntraLayerPartition extends PartitionScheme {
    */
   createPartitionPlan(config) {
     if (!config.layers || !config.nodeIds || config.nodeIds.length === 0) {
-      throw new Prime.ValidationError("Layers and node IDs are required");
+      throw new Prime.ValidationError('Layers and node IDs are required');
     }
 
     const nodeCount = config.nodeIds.length;
@@ -839,7 +839,7 @@ class IntraLayerPartition extends PartitionScheme {
    */
   applyPartitionPlan(plan) {
     if (!plan || !plan.partitions || !plan.layerPartitions) {
-      throw new Prime.ValidationError("Valid partition plan is required");
+      throw new Prime.ValidationError('Valid partition plan is required');
     }
 
     // Clear existing assignments
@@ -880,7 +880,7 @@ class IntraLayerPartition extends PartitionScheme {
     }
 
     // Emit partition applied event
-    this.eventBus.emit("partition:plan-applied", {
+    this.eventBus.emit('partition:plan-applied', {
       type: this.type,
       strategy: this.strategy,
       layerIds: Object.keys(plan.layerPartitions),
@@ -901,7 +901,7 @@ class IntraLayerPartition extends PartitionScheme {
   _calculateSplitPoints(layer, nodeCount) {
     // Determine dimension to split on
     const dimensionSize =
-      this.splitDimension === "output" ? layer.outputSize : layer.inputSize;
+      this.splitDimension === 'output' ? layer.outputSize : layer.inputSize;
 
     const splits = [];
     const baseSize = Math.floor(dimensionSize / nodeCount);
@@ -945,7 +945,7 @@ class PartitionManager {
    */
   createScheme(schemeId, config) {
     if (!schemeId) {
-      throw new Prime.ValidationError("Scheme ID is required");
+      throw new Prime.ValidationError('Scheme ID is required');
     }
 
     if (this.schemes.has(schemeId)) {
@@ -971,7 +971,7 @@ class PartitionManager {
     this.schemes.set(schemeId, scheme);
 
     // Emit event
-    this.eventBus.emit("partition:scheme-created", {
+    this.eventBus.emit('partition:scheme-created', {
       schemeId,
       type: scheme.type,
       strategy: scheme.strategy,
@@ -1004,7 +1004,7 @@ class PartitionManager {
     this.schemes.delete(schemeId);
 
     // Emit event
-    this.eventBus.emit("partition:scheme-deleted", {
+    this.eventBus.emit('partition:scheme-deleted', {
       schemeId,
       timestamp: Date.now(),
     });

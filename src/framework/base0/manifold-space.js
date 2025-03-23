@@ -5,8 +5,8 @@
  */
 
 // Import core
-const Prime = require("../../core.js");
-const { Manifold } = require("./manifold.js");
+const Prime = require('../../core.js');
+const { Manifold } = require('./manifold.js');
 
 /**
  * ManifoldSpace represents a mathematical space that contains manifolds
@@ -23,7 +23,7 @@ class ManifoldSpace {
   constructor(config = {}) {
     this.id =
       config.id || `space_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
-    this.name = config.name || "GenericSpace";
+    this.name = config.name || 'GenericSpace';
     this.dimension = config.dimension || 0;
     this.properties = config.properties || {};
 
@@ -37,7 +37,7 @@ class ManifoldSpace {
     if (
       Prime.coherence &&
       Prime.coherence.systemCoherence &&
-      typeof Prime.coherence.systemCoherence.registerSpace === "function"
+      typeof Prime.coherence.systemCoherence.registerSpace === 'function'
     ) {
       Prime.coherence.systemCoherence.registerSpace(this);
     }
@@ -50,7 +50,7 @@ class ManifoldSpace {
    */
   addManifold(manifold) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError("Expected a Manifold instance");
+      throw new Prime.ValidationError('Expected a Manifold instance');
     }
 
     this._manifolds.set(manifold.getId(), manifold);
@@ -241,14 +241,14 @@ class ManifoldSpace {
     const manifolds = this.getManifolds();
     if (manifolds.length === 0) {
       throw new Prime.InvalidOperationError(
-        "Cannot create composite from empty space",
+        'Cannot create composite from empty space',
       );
     }
 
     // Create meta information
     const meta = {
       id: options.id || `composite_${this.id}_${Date.now()}`,
-      type: "composite",
+      type: 'composite',
       name: options.name || `Composite of ${this.name}`,
       description:
         options.description ||
@@ -284,7 +284,7 @@ class ManifoldSpace {
 
     // Create variant data from aggregating manifold values
     const variant = {
-      compositeSource: "space",
+      compositeSource: 'space',
       manifoldCount: manifolds.length,
       coherence: this._coherence,
       relationCount: manifolds.reduce(
@@ -307,7 +307,7 @@ class ManifoldSpace {
 
     // Establish relations to all component manifolds
     for (const manifold of manifolds) {
-      composite.relateTo(manifold, "composed_of");
+      composite.relateTo(manifold, 'composed_of');
     }
 
     return composite;
@@ -328,14 +328,14 @@ class ManifoldSpace {
       const variant = manifold.getVariant();
 
       for (const [key, value] of Object.entries(variant)) {
-        if (typeof value === "number") {
+        if (typeof value === 'number') {
           if (!numericValues[key]) {
             numericValues[key] = [];
           }
           numericValues[key].push(value);
         } else if (
           Array.isArray(value) &&
-          value.every((v) => typeof v === "number")
+          value.every((v) => typeof v === 'number')
         ) {
           if (!arrayValues[key]) {
             arrayValues[key] = [];

@@ -1103,8 +1103,14 @@ const EventBus = require('./event-bus');
         'communication_gradient_sync',
         async (context) => {
           const nodeCount = context.nodeCount || 4;
-          const rows = context.neurOptions && context.neurOptions.layerSizes ? context.neurOptions.layerSizes[0] : 100;
-          const cols = context.neurOptions && context.neurOptions.layerSizes ? context.neurOptions.layerSizes[1] : 50;
+          const rows =
+            context.neurOptions && context.neurOptions.layerSizes
+              ? context.neurOptions.layerSizes[0]
+              : 100;
+          const cols =
+            context.neurOptions && context.neurOptions.layerSizes
+              ? context.neurOptions.layerSizes[1]
+              : 50;
 
           // Create router for benchmark
           const router = new Prime.Distributed.Communication.MessageRouter({

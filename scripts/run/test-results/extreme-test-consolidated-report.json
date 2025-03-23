@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-03-23T02:00:55.454Z",
+  "summary": {
+    "totalTests": 0,
+    "passedTests": 0,
+    "failedTests": 0,
+    "allSuccessful": false
+  },
+  "batches": [
+    {
+      "name": "basic",
+      "description": "Basic extreme precision tests",
+      "success": false,
+      "error": "● Validation Error:\n\n  Module ./test-setup.js in the setupFiles option was not found.\n         <rootDir> is: /workspaces/PrimeOS\n\n  Configuration Documentation:\n  https://jestjs.io/docs/configuration\n"
+    },
+    {
+      "name": "rna-folding",
+      "description": "RNA Folding simulation tests",
+      "success": false,
+      "error": "● Validation Error:\n\n  Module ./test-setup.js in the setupFiles option was not found.\n         <rootDir> is: /workspaces/PrimeOS\n\n  Configuration Documentation:\n  https://jestjs.io/docs/configuration\n"
+    },
+    {
+      "name": "high-dimension",
+      "description": "High-Dimension Fiber Algebra tests",
+      "success": false,
+      "error": "● Validation Error:\n\n  Module ./test-setup.js in the setupFiles option was not found.\n         <rootDir> is: /workspaces/PrimeOS\n\n  Configuration Documentation:\n  https://jestjs.io/docs/configuration\n"
+    },
+    {
+      "name": "coherence-gradient",
+      "description": "Coherence-Gradient Descent tests",
+      "success": false,
+      "error": "● Validation Error:\n\n  Module ./test-setup.js in the setupFiles option was not found.\n         <rootDir> is: /workspaces/PrimeOS\n\n  Configuration Documentation:\n  https://jestjs.io/docs/configuration\n"
+    },
+    {
+      "name": "numerical-propagation",
+      "description": "Numerical Propagation Analysis tests",
+      "success": false,
+      "error": "● Validation Error:\n\n  Module ./test-setup.js in the setupFiles option was not found.\n         <rootDir> is: /workspaces/PrimeOS\n\n  Configuration Documentation:\n  https://jestjs.io/docs/configuration\n"
+    }
+  ]
+}

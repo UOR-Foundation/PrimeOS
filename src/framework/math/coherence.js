@@ -6,7 +6,7 @@
 // Import core if available
 let Prime;
 try {
-  Prime = require("../../core.js");
+  Prime = require('../../core.js');
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
@@ -15,13 +15,13 @@ try {
 // Try to import math utilities
 let mathUtils;
 try {
-  mathUtils = require("./index.js");
+  mathUtils = require('./index.js');
 } catch (e) {
   // Create minimal placeholder if not available
   mathUtils = {
     optimization: {
       gradientDescent: () => {
-        throw new Error("Math utilities not available");
+        throw new Error('Math utilities not available');
       },
     },
   };
@@ -56,11 +56,11 @@ class CliffordAlgebraFiber {
    * @returns {Array} Array of basis element names
    */
   _generateBasis() {
-    const basis = ["1"]; // Scalar basis
+    const basis = ['1']; // Scalar basis
 
     // Generate all basis elements (2^dimension of them)
     for (let i = 1; i < 1 << this.dimension; i++) {
-      let name = "";
+      let name = '';
       for (let j = 0; j < this.dimension; j++) {
         if (i & (1 << j)) {
           name += `e${j + 1}`;
@@ -115,7 +115,7 @@ class CliffordAlgebraFiber {
    * @returns {number} Grade of the element
    */
   getGrade(element) {
-    if (element === "1") return 0;
+    if (element === '1') return 0;
 
     // Count the number of vector basis elements in the product
     const matches = element.match(/e\d+/g);
@@ -281,7 +281,7 @@ class CoherenceGradientDescent {
     // 1. Single bit flips (using vector basis elements)
     for (let i = 0; i < this.dimension; i++) {
       generators.push({
-        type: "bit_flip",
+        type: 'bit_flip',
         index: i,
         description: `Flip bit ${i}`,
       });
@@ -291,7 +291,7 @@ class CoherenceGradientDescent {
     for (let i = 0; i < this.dimension - 1; i++) {
       for (let j = i + 1; j < this.dimension; j++) {
         generators.push({
-          type: "bit_swap",
+          type: 'bit_swap',
           indices: [i, j],
           description: `Swap bits ${i} and ${j}`,
         });
@@ -306,7 +306,7 @@ class CoherenceGradientDescent {
           .fill()
           .map((_, i) => start + i);
         generators.push({
-          type: "cluster_flip",
+          type: 'cluster_flip',
           indices,
           description: `Flip cluster ${JSON.stringify(indices)}`,
         });
@@ -332,7 +332,7 @@ class CoherenceGradientDescent {
     const newState = state.slice();
 
     switch (generator.type) {
-      case "bit_flip":
+      case 'bit_flip':
         {
           const idx = generator.index;
           if (idx < state.length) {
@@ -341,7 +341,7 @@ class CoherenceGradientDescent {
         }
         break;
 
-      case "bit_swap":
+      case 'bit_swap':
         {
           const [i, j] = generator.indices;
           if (i < state.length && j < state.length) {
@@ -350,7 +350,7 @@ class CoherenceGradientDescent {
         }
         break;
 
-      case "cluster_flip":
+      case 'cluster_flip':
         {
           for (const idx of generator.indices) {
             if (idx < state.length) {
@@ -376,7 +376,7 @@ class CoherenceGradientDescent {
   encodeProblem(problem) {
     const constraints = problem.constraints;
     if (!Array.isArray(constraints)) {
-      throw new Error("Problem must have an array of constraints");
+      throw new Error('Problem must have an array of constraints');
     }
 
     const n = problem.dimension || this.dimension;
@@ -659,10 +659,10 @@ class CoherenceGradientDescent {
    */
   _evaluateConstraint(constraint, state) {
     // In a real system, we'd call the constraint function
-    if (typeof constraint === "function") {
+    if (typeof constraint === 'function') {
       const result = constraint(state);
       // Normalize result to 0-1 range if it's not already
-      return typeof result === "boolean"
+      return typeof result === 'boolean'
         ? result
           ? 1
           : 0
@@ -842,13 +842,13 @@ class CoherenceGradientDescent {
       let isPriority = false;
 
       // Check if this generator affects important variables
-      if (generator.type === "bit_flip") {
+      if (generator.type === 'bit_flip') {
         isPriority = importantIndices.has(generator.index);
-      } else if (generator.type === "bit_swap") {
+      } else if (generator.type === 'bit_swap') {
         isPriority =
           importantIndices.has(generator.indices[0]) ||
           importantIndices.has(generator.indices[1]);
-      } else if (generator.type === "cluster_flip") {
+      } else if (generator.type === 'cluster_flip') {
         isPriority = generator.indices.some((idx) => importantIndices.has(idx));
       }
 

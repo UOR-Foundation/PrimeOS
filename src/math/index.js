@@ -45,10 +45,14 @@ const lazyLoadModules = {
 
 // Create getters for lazy loading - with improved circular dependency handling
 Object.keys(lazyLoadModules).forEach((moduleName) => {
-  if (!Prime.Math[moduleName] || moduleName === 'Vector' || moduleName === 'Matrix') {
+  if (
+    !Prime.Math[moduleName] ||
+    moduleName === 'Vector' ||
+    moduleName === 'Matrix'
+  ) {
     let moduleLoaded = false;
     let moduleExports = null;
-    
+
     // Create a placeholder that will be returned before the module is fully loaded
     const tempPlaceholder = Prime.Math[moduleName] || {};
 
@@ -126,6 +130,43 @@ Prime.Math.loadAll = function () {
 require('./vector');
 require('./matrix');
 require('./clifford');
+
+// Ensure matrix operations are loaded - needed for matrix-extreme-values-tests.js
+// These are required to initialize the MatrixAdvanced module
+require('./matrix-advanced');
+require('./matrix-validation');
+
+// Manually connect methods to Matrix for extreme value tests
+const MatrixAdvanced = Prime.Math.MatrixAdvanced;
+const MatrixCore = Prime.Math.MatrixCore;
+
+// Advanced matrix operations
+Prime.Math.Matrix.luDecomposition = function(matrix) {
+  return MatrixAdvanced.luDecomposition(matrix);
+};
+Prime.Math.Matrix.qrDecomposition = function(matrix) {
+  return MatrixAdvanced.qrDecomposition(matrix);
+};
+Prime.Math.Matrix.eigenvalues = function(matrix, options) {
+  return MatrixAdvanced.eigenvalues(matrix, options);
+};
+Prime.Math.Matrix.choleskyDecomposition = function(matrix) {
+  return MatrixAdvanced.choleskyDecomposition(matrix);
+};
+
+// Core matrix operations
+Prime.Math.Matrix.multiply = function(a, b, result) {
+  return MatrixCore.multiply(a, b, result);
+};
+Prime.Math.Matrix.transpose = function(matrix, result) {
+  return MatrixCore.transpose(matrix, result);
+};
+Prime.Math.Matrix.create = function(rows, cols, initialValue = 0, options = {}) {
+  return MatrixCore.create(rows, cols, initialValue, options);
+};
+Prime.Math.Matrix.dimensions = function(matrix) {
+  return MatrixCore.dimensions(matrix);
+};
 
 // Export the enhanced Prime object
 module.exports = Prime;

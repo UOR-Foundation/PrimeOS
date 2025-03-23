@@ -1,0 +1,522 @@
+{
+  "numFailedTestSuites": 1,
+  "numFailedTests": 2,
+  "numPassedTestSuites": 0,
+  "numPassedTests": 4,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 22,
+  "numRuntimeErrorTestSuites": 0,
+  "numTodoTests": 0,
+  "numTotalTestSuites": 1,
+  "numTotalTests": 28,
+  "openHandles": [],
+  "snapshot": {
+    "added": 0,
+    "didUpdate": false,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0
+  },
+  "startTime": 1742695283810,
+  "success": false,
+  "testResults": [
+    {
+      "leaks": false,
+      "numFailingTests": 2,
+      "numPassingTests": 4,
+      "numPendingTests": 22,
+      "numTodoTests": 0,
+      "openHandles": [],
+      "perfStats": {
+        "end": 1742695285486,
+        "runtime": 1670,
+        "slow": false,
+        "start": 1742695283816
+      },
+      "skipped": false,
+      "snapshot": {
+        "added": 0,
+        "fileDeleted": false,
+        "matched": 0,
+        "unchecked": 0,
+        "uncheckedKeys": [],
+        "unmatched": 0,
+        "updated": 0
+      },
+      "testFilePath": "/workspaces/PrimeOS/tests/extreme-conditions-tests.js",
+      "testResults": [
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Formal Coherence Constraints"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Formal Coherence Constraints should validate manifold structures with formal constraints",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should validate manifold structures with formal constraints"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Formal Coherence Constraints"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Formal Coherence Constraints should validate fiber structures with formal constraints",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should validate fiber structures with formal constraints"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Formal Coherence Constraints"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Formal Coherence Constraints should validate transformations with formal group axioms",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should validate transformations with formal group axioms"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Formal Coherence Constraints"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Formal Coherence Constraints should reject invalid manifold structures",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should reject invalid manifold structures"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Formal Coherence Constraints"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Formal Coherence Constraints should validate compound UOR structures with nested constraints",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should validate compound UOR structures with nested constraints"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Pattern Recognition with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Pattern Recognition with UOR Guarantees should create a mathematically rigorous reference manifold",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should create a mathematically rigorous reference manifold"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Pattern Recognition with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Pattern Recognition with UOR Guarantees should compute pattern coherence with formal guarantees",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should compute pattern coherence with formal guarantees"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Pattern Recognition with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Pattern Recognition with UOR Guarantees should maintain stable algebraic representations under small perturbations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should maintain stable algebraic representations under small perturbations"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Pattern Recognition with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Pattern Recognition with UOR Guarantees should detect invariant structures across algebraic transformations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should detect invariant structures across algebraic transformations"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should initialize the fiber manifold with formal mathematical structure",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should initialize the fiber manifold with formal mathematical structure"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should create mathematically valid symmetry generators",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should create mathematically valid symmetry generators"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should maintain transformation consistency under composition",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should maintain transformation consistency under composition"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should handle problem encoding with formal constraint preservation",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle problem encoding with formal constraint preservation"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should compute coherence measures with formal guarantees",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should compute coherence measures with formal guarantees"
+        },
+        {
+          "ancestorTitles": [
+            "UOR Framework Verification",
+            "Coherence-Gradient Descent with UOR Guarantees"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "UOR Framework Verification Coherence-Gradient Descent with UOR Guarantees should optimize solutions with formal constraint satisfaction guarantees",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should optimize solutions with formal constraint satisfaction guarantees"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Large Scale RNA Folding Simulations"
+          ],
+          "duration": 64,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Large Scale RNA Folding Simulations should handle extreme numerical conditions in RNA energy calculations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme numerical conditions in RNA energy calculations"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Large Scale RNA Folding Simulations"
+          ],
+          "duration": 31,
+          "failureDetails": [
+            {
+              "message": "assert(received)\n\nExpected value to be equal to:\n  true\nReceived:\n  false\n\nMessage:\n  Energy difference calculation should handle catastrophic cancellation: relative error 0.3333333333333335 > 0.00001\n    at Object.ok [as assertNoCatastrophicCancellation] (/workspaces/PrimeOS/tests/extreme-conditions-tests.js:139:12)\n    at Object.assertNoCatastrophicCancellation (/workspaces/PrimeOS/tests/extreme-conditions-tests.js:506:21)\n    at Promise.then.completed (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:444:34)"
+            }
+          ],
+          "failureMessages": [
+            "assert(received)\n\nExpected value to be equal to:\n  true\nReceived:\n  false\n\nMessage:\n  Energy difference calculation should handle catastrophic cancellation: relative error 0.3333333333333335 > 0.00001\n    at Object.ok [as assertNoCatastrophicCancellation] (/workspaces/PrimeOS/tests/extreme-conditions-tests.js:139:12)\n    at Object.assertNoCatastrophicCancellation (/workspaces/PrimeOS/tests/extreme-conditions-tests.js:506:21)\n    at Promise.then.completed (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:444:34)"
+          ],
+          "fullName": "Extreme Conditions Handling Large Scale RNA Folding Simulations should handle catastrophic cancellation in energy differences",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "failed",
+          "title": "should handle catastrophic cancellation in energy differences"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Large Scale RNA Folding Simulations"
+          ],
+          "duration": 1,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Large Scale RNA Folding Simulations should handle extreme vector operations in 3D coordinate transformations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme vector operations in 3D coordinate transformations"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Large Scale RNA Folding Simulations"
+          ],
+          "duration": 1,
+          "failureDetails": [
+            {
+              "message": "assert(received)\n\nExpected value to be equal to:\n  true\nReceived:\n  false\n\nMessage:\n  RNA folding constraints should handle extreme parameter values for constraint #0: unnamed with params {\"minBondLength\":3.79999,\"maxBondLength\":3.80001}\n    at Object.ok [as assertConstraintSatisfaction] (/workspaces/PrimeOS/tests/extreme-conditions-tests.js:285:14)\n    at Object.assertConstraintSatisfaction (/workspaces/PrimeOS/tests/extreme-conditions-tests.js:689:21)\n    at Promise.then.completed (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:444:34)"
+            }
+          ],
+          "failureMessages": [
+            "assert(received)\n\nExpected value to be equal to:\n  true\nReceived:\n  false\n\nMessage:\n  RNA folding constraints should handle extreme parameter values for constraint #0: unnamed with params {\"minBondLength\":3.79999,\"maxBondLength\":3.80001}\n    at Object.ok [as assertConstraintSatisfaction] (/workspaces/PrimeOS/tests/extreme-conditions-tests.js:285:14)\n    at Object.assertConstraintSatisfaction (/workspaces/PrimeOS/tests/extreme-conditions-tests.js:689:21)\n    at Promise.then.completed (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:444:34)"
+          ],
+          "fullName": "Extreme Conditions Handling Large Scale RNA Folding Simulations should correctly handle constraint satisfaction with extreme dynamic parameters",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "failed",
+          "title": "should correctly handle constraint satisfaction with extreme dynamic parameters"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "High-Dimension Fiber Algebra with Extreme Conditions"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling High-Dimension Fiber Algebra with Extreme Conditions should handle pattern detection in extremely high dimensions",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle pattern detection in extremely high dimensions"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "High-Dimension Fiber Algebra with Extreme Conditions"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling High-Dimension Fiber Algebra with Extreme Conditions should maintain algebraic invariants with extreme numerical values",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should maintain algebraic invariants with extreme numerical values"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "High-Dimension Fiber Algebra with Extreme Conditions"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling High-Dimension Fiber Algebra with Extreme Conditions should handle extreme pattern feature extraction",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle extreme pattern feature extraction"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "High-Dimension Fiber Algebra with Extreme Conditions"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling High-Dimension Fiber Algebra with Extreme Conditions should perform stable multi-fiber pattern analysis with extreme data",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should perform stable multi-fiber pattern analysis with extreme data"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Coherence-Gradient Descent with Extreme Optimizations"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Coherence-Gradient Descent with Extreme Optimizations should optimize under extreme constraint conditions",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should optimize under extreme constraint conditions"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Coherence-Gradient Descent with Extreme Optimizations"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Coherence-Gradient Descent with Extreme Optimizations should maintain numerical stability in optimizations with extreme landscapes",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should maintain numerical stability in optimizations with extreme landscapes"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Coherence-Gradient Descent with Extreme Optimizations"
+          ],
+          "duration": null,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Coherence-Gradient Descent with Extreme Optimizations should handle extreme symmetry and invariance properties",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "pending",
+          "title": "should handle extreme symmetry and invariance properties"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Numerical Propagation Analysis for RNA Simulations"
+          ],
+          "duration": 6,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Numerical Propagation Analysis for RNA Simulations should control floating point error accumulation in iterative energy calculations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should control floating point error accumulation in iterative energy calculations"
+        },
+        {
+          "ancestorTitles": [
+            "Extreme Conditions Handling",
+            "Numerical Propagation Analysis for RNA Simulations"
+          ],
+          "duration": 22,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "Extreme Conditions Handling Numerical Propagation Analysis for RNA Simulations should maintain precision and invariants in extreme range vector operations",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should maintain precision and invariants in extreme range vector operations"
+        }
+      ],
+      "failureMessage": "  ● Extreme Conditions Handling › Large Scale RNA Folding Simulations › should handle catastrophic cancellation in energy differences\n\n    assert(received)\n\n    Expected value to be equal to:\n      true\n    Received:\n      false\n\n    Message:\n      Energy difference calculation should handle catastrophic cancellation: relative error 0.3333333333333335 > 0.00001\n\n      137 |       Math.max(Math.abs(highPrecisionResult), Number.MIN_VALUE);\n      138 |\n    > 139 |     assert.ok(\n          |            ^\n      140 |       relativeError <= expectedRelativeError,\n      141 |       `${message || \"Catastrophic cancellation detected\"}: relative error ${relativeError} > ${expectedRelativeError}`,\n      142 |     );\n\n      at Object.ok [as assertNoCatastrophicCancellation] (tests/extreme-conditions-tests.js:139:12)\n      at Object.assertNoCatastrophicCancellation (tests/extreme-conditions-tests.js:506:21)\n\n  ● Extreme Conditions Handling › Large Scale RNA Folding Simulations › should correctly handle constraint satisfaction with extreme dynamic parameters\n\n    assert(received)\n\n    Expected value to be equal to:\n      true\n    Received:\n      false\n\n    Message:\n      RNA folding constraints should handle extreme parameter values for constraint #0: unnamed with params {\"minBondLength\":3.79999,\"maxBondLength\":3.80001}\n\n      283 |       const satisfied = constraint(state, params);\n      284 |\n    > 285 |       assert.ok(\n          |              ^\n      286 |         satisfied,\n      287 |         `${message || \"Constraint violation\"} for constraint #${i}: ${constraint.name || \"unnamed\"} with params ${JSON.stringify(params)}`,\n      288 |       );\n\n      at Object.ok [as assertConstraintSatisfaction] (tests/extreme-conditions-tests.js:285:14)\n      at Object.assertConstraintSatisfaction (tests/extreme-conditions-tests.js:689:21)\n"
+    }
+  ],
+  "wasInterrupted": false
+}

@@ -7,7 +7,7 @@
  */
 
 // Import Prime for namespace
-const Prime = require("../../core.js");
+const Prime = require('../../core.js');
 
 // Ensure Prime.Framework.Base0 namespace exists
 Prime.Framework = Prime.Framework || {};
@@ -23,11 +23,11 @@ function safeRequire(modulePath) {
   }
 }
 
-const GeodesicOperations = safeRequire("./geodesic-operations.js");
-const TangentSpaceOperations = safeRequire("./tangent-space.js");
-const ManifoldVisualization = safeRequire("./manifold-visualization.js");
-const ManifoldTransformations = safeRequire("./manifold-transformations.js");
-const ManifoldRelations = safeRequire("./manifold-relations.js");
+const GeodesicOperations = safeRequire('./geodesic-operations.js');
+const TangentSpaceOperations = safeRequire('./tangent-space.js');
+const ManifoldVisualization = safeRequire('./manifold-visualization.js');
+const ManifoldTransformations = safeRequire('./manifold-transformations.js');
+const ManifoldRelations = safeRequire('./manifold-relations.js');
 
 /**
  * ManifoldOperations - Combined operations for manifolds
@@ -38,25 +38,25 @@ const ManifoldOperations = {
   computeGeodesic:
     GeodesicOperations.computeGeodesic ||
     function () {
-      console.warn("GeodesicOperations not fully loaded");
+      console.warn('GeodesicOperations not fully loaded');
       return {};
     },
   interpolate:
     GeodesicOperations.interpolate ||
     function () {
-      console.warn("GeodesicOperations not fully loaded");
+      console.warn('GeodesicOperations not fully loaded');
       return {};
     },
   parallelTransport:
     GeodesicOperations.parallelTransport ||
     function () {
-      console.warn("GeodesicOperations not fully loaded");
+      console.warn('GeodesicOperations not fully loaded');
       return {};
     },
   sectionalCurvature:
     GeodesicOperations.sectionalCurvature ||
     function () {
-      console.warn("GeodesicOperations not fully loaded");
+      console.warn('GeodesicOperations not fully loaded');
       return {};
     },
 
@@ -64,37 +64,37 @@ const ManifoldOperations = {
   tangentSpace:
     TangentSpaceOperations.calculateTangentSpace ||
     function () {
-      console.warn("TangentSpaceOperations not fully loaded");
+      console.warn('TangentSpaceOperations not fully loaded');
       return {};
     },
   calculateTangentSpace:
     TangentSpaceOperations.calculateTangentSpace ||
     function () {
-      console.warn("TangentSpaceOperations not fully loaded");
+      console.warn('TangentSpaceOperations not fully loaded');
       return {};
     },
   calculateCurvature:
     TangentSpaceOperations.calculateCurvature ||
     function () {
-      console.warn("TangentSpaceOperations not fully loaded");
+      console.warn('TangentSpaceOperations not fully loaded');
       return {};
     },
   projectToTangentSpace:
     TangentSpaceOperations.projectToTangentSpace ||
     function () {
-      console.warn("TangentSpaceOperations not fully loaded");
+      console.warn('TangentSpaceOperations not fully loaded');
       return {};
     },
   isTangentVector:
     TangentSpaceOperations.isTangentVector ||
     function () {
-      console.warn("TangentSpaceOperations not fully loaded");
+      console.warn('TangentSpaceOperations not fully loaded');
       return false;
     },
   calculateMetricTensor:
     TangentSpaceOperations.calculateMetricTensor ||
     function () {
-      console.warn("TangentSpaceOperations not fully loaded");
+      console.warn('TangentSpaceOperations not fully loaded');
       return {};
     },
 
@@ -102,19 +102,19 @@ const ManifoldOperations = {
   createVisualization:
     ManifoldVisualization.createVisualization ||
     function () {
-      console.warn("ManifoldVisualization not fully loaded");
+      console.warn('ManifoldVisualization not fully loaded');
       return {};
     },
   createMultiManifoldVisualization:
     ManifoldVisualization.createMultiManifoldVisualization ||
     function () {
-      console.warn("ManifoldVisualization not fully loaded");
+      console.warn('ManifoldVisualization not fully loaded');
       return {};
     },
   createHeatmap:
     ManifoldVisualization.createHeatmap ||
     function () {
-      console.warn("ManifoldVisualization not fully loaded");
+      console.warn('ManifoldVisualization not fully loaded');
       return {};
     },
 
@@ -122,25 +122,25 @@ const ManifoldOperations = {
   alignWith:
     ManifoldTransformations.alignWith ||
     function () {
-      console.warn("ManifoldTransformations not fully loaded");
+      console.warn('ManifoldTransformations not fully loaded');
       return {};
     },
   scale:
     ManifoldTransformations.scale ||
     function () {
-      console.warn("ManifoldTransformations not fully loaded");
+      console.warn('ManifoldTransformations not fully loaded');
       return {};
     },
   rotate:
     ManifoldTransformations.rotate ||
     function () {
-      console.warn("ManifoldTransformations not fully loaded");
+      console.warn('ManifoldTransformations not fully loaded');
       return {};
     },
   mirror:
     ManifoldTransformations.mirror ||
     function () {
-      console.warn("ManifoldTransformations not fully loaded");
+      console.warn('ManifoldTransformations not fully loaded');
       return {};
     },
 
@@ -148,37 +148,37 @@ const ManifoldOperations = {
   connect:
     ManifoldRelations.connect ||
     function () {
-      console.warn("ManifoldRelations not fully loaded");
+      console.warn('ManifoldRelations not fully loaded');
       return {};
     },
   createBidirectionalRelation:
     ManifoldRelations.createBidirectionalRelation ||
     function () {
-      console.warn("ManifoldRelations not fully loaded");
+      console.warn('ManifoldRelations not fully loaded');
       return {};
     },
   findRelatedManifolds:
     ManifoldRelations.findRelatedManifolds ||
     function () {
-      console.warn("ManifoldRelations not fully loaded");
+      console.warn('ManifoldRelations not fully loaded');
       return [];
     },
   createRelationGraph:
     ManifoldRelations.createRelationGraph ||
     function () {
-      console.warn("ManifoldRelations not fully loaded");
+      console.warn('ManifoldRelations not fully loaded');
       return {};
     },
   findPaths:
     ManifoldRelations.findPaths ||
     function () {
-      console.warn("ManifoldRelations not fully loaded");
+      console.warn('ManifoldRelations not fully loaded');
       return [];
     },
   calculateRelationDensity:
     ManifoldRelations.calculateRelationDensity ||
     function () {
-      console.warn("ManifoldRelations not fully loaded");
+      console.warn('ManifoldRelations not fully loaded');
       return 0;
     },
 
@@ -194,19 +194,19 @@ const ManifoldOperations = {
 if (
   Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "ManifoldOperations",
+    'ManifoldOperations',
   ) &&
-  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, "ManifoldOperations")
+  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'ManifoldOperations')
     .get
 ) {
   // Use a more careful approach to update properties that already have getters
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "ManifoldOperations",
+    'ManifoldOperations',
   );
   const originalGetter = descriptor.get;
 
-  Object.defineProperty(Prime.Framework.Base0, "ManifoldOperations", {
+  Object.defineProperty(Prime.Framework.Base0, 'ManifoldOperations', {
     get: function () {
       const result = originalGetter.call(this);
       if (!result || Object.keys(result).length === 0) {

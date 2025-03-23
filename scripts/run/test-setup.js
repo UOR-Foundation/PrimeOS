@@ -80,6 +80,23 @@ if (!Math.nextafter) {
   };
 }
 
+// Enhanced Kahan summation for better numerical stability
+if (!Math.kahanSum) {
+  Math.kahanSum = function (values) {
+    let sum = 0;
+    let compensation = 0;
+
+    for (let i = 0; i < values.length; i++) {
+      const y = values[i] - compensation;
+      const t = sum + y;
+      compensation = t - sum - y;
+      sum = t;
+    }
+
+    return sum;
+  };
+}
+
 // Augment console with memory usage reporting
 const originalLog = console.log;
 console.log = function (...args) {
@@ -97,5 +114,17 @@ console.log = function (...args) {
         `  ${key}: ${Math.round((used[key] / 1024 / 1024) * 100) / 100} MB`,
       );
     }
+  }
+};
+
+// Add global garbage collection request function
+global.requestGC = function () {
+  if (global.gc) {
+    global.gc();
+    console.log('Manual garbage collection performed');
+  } else {
+    console.log(
+      'Garbage collection not available. Run node with --expose-gc flag',
+    );
   }
 };

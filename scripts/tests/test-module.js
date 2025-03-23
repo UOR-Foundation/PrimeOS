@@ -72,38 +72,38 @@ try {
   // Create entities
   const v = Prime.Math.Vector.create(3, 1);
   const m = Prime.Math.Matrix.create(3, 3, 1);
-  
+
   // Test Vector Advanced
   const v_norm = Prime.Math.Vector.normalize(v);
   console.log('Vector normalization:', v_norm);
-  
+
   const vectors = [
     Prime.Math.Vector.create(3, 1),
     Prime.Math.Vector.create(3, 2),
-    Prime.Math.Vector.create(3, 3)
+    Prime.Math.Vector.create(3, 3),
   ];
-  
+
   if (Prime.Math.VectorAdvanced) {
     const avg = Prime.Math.VectorAdvanced.average(vectors);
     console.log('Vector average:', avg);
   } else {
     console.log('VectorAdvanced not directly accessible (lazy loading)');
   }
-  
+
   // Test Matrix Advanced
   const det = Prime.Math.Matrix.determinant(m);
   console.log('Matrix determinant:', det);
-  
+
   // Create a specific matrix for inversion
   const invertible = Prime.Math.Matrix.create(2, 2);
   invertible[0][0] = 4;
   invertible[0][1] = 7;
   invertible[1][0] = 2;
   invertible[1][1] = 6;
-  
+
   const inv = Prime.Math.Matrix.inverse(invertible);
   console.log('Matrix inverse:', inv);
-  
+
   console.log('Advanced operations successful!');
 } catch (error) {
   console.error('Advanced operations failed:', error.message);

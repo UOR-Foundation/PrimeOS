@@ -175,6 +175,56 @@ class SelfReference {
       awarenessTrend: getTrend(awarenessDelta),
     };
   }
+  
+  /**
+   * Create initial self model based on state
+   * @param {Object} state - Initial state
+   * @returns {Object} Initial self model
+   */
+  createInitialSelfModel(state) {
+    // Create a self model from the initial state
+    const selfModel = {
+      coherence: state.coherence || this.currentState.coherence,
+      complexity: state.complexity || this.currentState.complexity,
+      awareness: state.awareness || this.currentState.awareness,
+      timestamp: Date.now(),
+      stateReference: state,
+    };
+    
+    // Store in history
+    this._recordStateInHistory();
+    
+    return selfModel;
+  }
+  
+  /**
+   * Update self model with new state information
+   * @param {Object} state - Current system state
+   * @param {Object} selfModel - Previous self model
+   * @returns {Object} Updated self model
+   */
+  update(state, selfModel) {
+    // Update the current state based on the system state
+    this.currentState = {
+      coherence: state.coherence || this.currentState.coherence,
+      complexity: state.complexity || this.currentState.complexity,
+      awareness: state.awareness || this.currentState.awareness,
+      timestamp: Date.now()
+    };
+    
+    // Record the updated state
+    this._recordStateInHistory();
+    
+    // Create updated self model
+    return {
+      ...selfModel,
+      coherence: this.currentState.coherence,
+      complexity: this.currentState.complexity,
+      awareness: this.currentState.awareness,
+      timestamp: this.currentState.timestamp,
+      stateReference: state
+    };
+  }
 
   /**
    * Record state in history
@@ -188,6 +238,39 @@ class SelfReference {
     if (this.stateHistory.length > this.config.stateHistorySize) {
       this.stateHistory.shift();
     }
+  }
+  
+  /**
+   * Get statistics about self reference module
+   * @returns {Object} Stats about self reference operations
+   */
+  getStats() {
+    return {
+      historySize: this.stateHistory.length,
+      averageCoherence: this.stateHistory.reduce((sum, state) => sum + state.coherence, 0) / 
+                        (this.stateHistory.length || 1),
+      averageComplexity: this.stateHistory.reduce((sum, state) => sum + state.complexity, 0) / 
+                         (this.stateHistory.length || 1),
+      currentCoherence: this.currentState.coherence,
+      stateChanges: this.stateHistory.length,
+      knownLimitationsCount: this.knownLimitations.length
+    };
+  }
+  
+  /**
+   * Reset self reference module
+   */
+  reset() {
+    // Reset to initial state
+    this.currentState = {
+      coherence: 0.8,
+      complexity: 0.5,
+      awareness: 0.6,
+      timestamp: Date.now(),
+    };
+    
+    // Clear history
+    this.stateHistory = [];
   }
 }
 

@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require("../../core");
+const Prime = require('../../core');
 
 // Create the Neural Distributed Model Factory using IIFE
 (function () {
@@ -24,7 +24,7 @@ const Prime = require("../../core");
       this.config = {
         clusterManager: config.clusterManager || null,
         defaultPartitionScheme:
-          config.defaultPartitionScheme || "data_parallel",
+          config.defaultPartitionScheme || 'data_parallel',
         coherenceConfig: config.coherenceConfig || {
           enabled: true,
           minThreshold: 0.7,
@@ -74,7 +74,7 @@ const Prime = require("../../core");
     fromLocalModel(localModel, distributedConfig = {}) {
       if (!(localModel instanceof Prime.Neural.Model.NeuralModel)) {
         throw new Prime.ValidationError(
-          "Local model must be a valid NeuralModel instance",
+          'Local model must be a valid NeuralModel instance',
         );
       }
 
@@ -111,15 +111,15 @@ const Prime = require("../../core");
           // Determine layer type
           let type;
           if (layer instanceof Prime.Neural.Layer.NeuralLayer) {
-            type = "dense";
+            type = 'dense';
           } else if (layer instanceof Prime.Neural.Layer.SelfOptimizingLayer) {
-            type = "selfOptimizing";
+            type = 'selfOptimizing';
           } else if (layer instanceof Prime.Neural.Layer.ConvolutionalLayer) {
-            type = "convolutional";
+            type = 'convolutional';
           } else if (layer instanceof Prime.Neural.Layer.RecurrentLayer) {
-            type = layer.cellType || "recurrent";
+            type = layer.cellType || 'recurrent';
           } else {
-            type = "custom";
+            type = 'custom';
           }
 
           config.type = type;
@@ -128,7 +128,7 @@ const Prime = require("../../core");
         }),
         optimizer: {
           type: localModel.optimizer.constructor.name
-            .replace("Coherence", "")
+            .replace('Coherence', '')
             .toLowerCase(),
           learningRate: localModel.optimizer.learningRate,
         },

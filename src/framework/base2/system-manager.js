@@ -4,8 +4,8 @@
  */
 
 // Import core
-const Prime = require("../../core.js");
-const MathUtils = require("../math");
+const Prime = require('../../core.js');
+const MathUtils = require('../math');
 
 /**
  * System Manager - Handles memory, security, and resource management
@@ -18,10 +18,10 @@ const SystemManager = {
    */
   create: function (config = {}) {
     return {
-      type: "systemManager",
+      type: 'systemManager',
       security: config.security || {},
       memory: config.memory || {},
-      name: config.name || "SystemManager",
+      name: config.name || 'SystemManager',
       _resources: {},
 
       // Memory statistics with enhanced precision
@@ -49,14 +49,14 @@ const SystemManager = {
       allocateMemory: function (size, options = {}) {
         // Validate input parameters with enhanced numerical checks
         if (!Prime.Utils.isNumber(size)) {
-          throw new Prime.ValidationError("Size must be a number", {
+          throw new Prime.ValidationError('Size must be a number', {
             context: { providedSize: size, type: typeof size },
           });
         }
 
         // Ensure size is finite and non-NaN
         if (!Number.isFinite(size)) {
-          throw new Prime.ValidationError("Size must be a finite number", {
+          throw new Prime.ValidationError('Size must be a finite number', {
             context: {
               providedSize: size,
               isNaN: Number.isNaN(size),
@@ -66,7 +66,7 @@ const SystemManager = {
         }
 
         if (size <= 0) {
-          throw new Prime.ValidationError("Size must be a positive number", {
+          throw new Prime.ValidationError('Size must be a positive number', {
             context: { providedSize: size },
           });
         }
@@ -83,7 +83,7 @@ const SystemManager = {
           // Check if total memory limit would be exceeded
           if (totalLimit && memoryStats.totalAllocated + size > totalLimit) {
             throw new Prime.ResourceExhaustionError(
-              "Memory allocation would exceed total memory limit",
+              'Memory allocation would exceed total memory limit',
               {
                 context: {
                   requested: size,
@@ -106,7 +106,7 @@ const SystemManager = {
               processLimit
           ) {
             throw new Prime.ResourceExhaustionError(
-              "Memory allocation would exceed process memory limit",
+              'Memory allocation would exceed process memory limit',
               {
                 context: {
                   processId: options.processId,
@@ -127,7 +127,7 @@ const SystemManager = {
           // Check individual allocation size limit
           if (allocationLimit && size > allocationLimit) {
             throw new Prime.ResourceExhaustionError(
-              "Memory allocation size exceeds individual allocation limit",
+              'Memory allocation size exceeds individual allocation limit',
               {
                 context: {
                   requested: size,
@@ -145,14 +145,14 @@ const SystemManager = {
 
         // Record allocation details with enhanced metadata
         const allocation = {
-          type: "memory",
+          type: 'memory',
           size,
           allocated: Date.now(),
           expiresAt: options.ttl ? Date.now() + options.ttl : null,
           lastAccessed: Date.now(),
-          processId: options.processId || "system",
-          priority: options.priority || "normal",
-          purpose: options.purpose || "general",
+          processId: options.processId || 'system',
+          priority: options.priority || 'normal',
+          purpose: options.purpose || 'general',
           metadata: options.metadata || {},
           accessCount: 0,
         };
@@ -163,12 +163,12 @@ const SystemManager = {
         // Schedule automatic cleanup if TTL is specified
         if (options.ttl) {
           // Use setTimeout in browser or node.js, or a custom scheduler in other environments
-          if (typeof setTimeout === "function") {
+          if (typeof setTimeout === 'function') {
             setTimeout(() => {
               try {
                 // Check if resource still exists and hasn't been manually freed
                 if (this._resources[address]) {
-                  this.freeMemory(address, { reason: "ttl_expired" });
+                  this.freeMemory(address, { reason: 'ttl_expired' });
 
                   // Log cleanup if logging is enabled
                   if (
@@ -201,11 +201,11 @@ const SystemManager = {
         }
 
         // Update memory tracking statistics with the allocationType
-        const allocationType = options.allocationType || "general";
+        const allocationType = options.allocationType || 'general';
         this._updateMemoryStats(
           address,
           size,
-          "allocate",
+          'allocate',
           options.processId,
           allocationType,
         );
@@ -303,7 +303,7 @@ const SystemManager = {
 
         for (const address in this._resources) {
           const resource = this._resources[address];
-          if (resource.type === "memory") {
+          if (resource.type === 'memory') {
             // Update total statistics with Kahan summation
             const y = resource.size - compensation;
             const t = totalAllocated + y;
@@ -313,23 +313,23 @@ const SystemManager = {
             stats.totalCount++;
 
             // Update process statistics
-            const processId = resource.processId || "system";
+            const processId = resource.processId || 'system';
             stats.processAllocations[processId] =
               (stats.processAllocations[processId] || 0) + resource.size;
 
             // Update priority statistics
-            const priority = resource.priority || "normal";
+            const priority = resource.priority || 'normal';
             stats.byPriority[priority] =
               (stats.byPriority[priority] || 0) + resource.size;
 
             // Update purpose statistics
-            const purpose = resource.purpose || "general";
+            const purpose = resource.purpose || 'general';
             stats.byPurpose[purpose] =
               (stats.byPurpose[purpose] || 0) + resource.size;
 
             // Update allocation type statistics
             const allocationType =
-              resource.metadata.allocationType || "general";
+              resource.metadata.allocationType || 'general';
             stats.byAllocationType[allocationType] =
               (stats.byAllocationType[allocationType] || 0) + resource.size;
 
@@ -383,7 +383,7 @@ const SystemManager = {
         size,
         operation,
         processId,
-        allocationType = "general",
+        allocationType = 'general',
       ) {
         // Initialize allocationsByType if needed
         this._memoryTracking.allocationsByType[allocationType] = this
@@ -394,7 +394,7 @@ const SystemManager = {
         };
 
         // Update metrics based on operation
-        if (operation === "allocate") {
+        if (operation === 'allocate') {
           this._memoryTracking.allocations++;
 
           // Update allocation type statistics
@@ -416,7 +416,7 @@ const SystemManager = {
           if (currentUsage > this._memoryTracking.peakUsage) {
             this._memoryTracking.peakUsage = currentUsage;
           }
-        } else if (operation === "free") {
+        } else if (operation === 'free') {
           this._memoryTracking.frees++;
 
           // Update allocation type statistics if we know the type
@@ -446,7 +446,7 @@ const SystemManager = {
             operation,
             address,
             size,
-            processId: processId || "system",
+            processId: processId || 'system',
             allocationType,
           });
         }
@@ -526,27 +526,27 @@ const SystemManager = {
         const cleanupOrder = [
           // First, clean expired allocations
           (resource) =>
-            resource.type === "memory" &&
+            resource.type === 'memory' &&
             resource.expiresAt &&
             resource.expiresAt < Date.now(),
 
           // Target unused resources first
           (resource) =>
-            resource.type === "memory" &&
+            resource.type === 'memory' &&
             resource.accessCount === 0 &&
             Date.now() - resource.allocated > 60000, // Unused for at least 60 seconds
 
           // Then clean low priority resources with no recent access
           (resource) =>
-            resource.type === "memory" &&
-            resource.priority === "low" &&
+            resource.type === 'memory' &&
+            resource.priority === 'low' &&
             Date.now() - resource.lastAccessed >
               (this.memory.idleTimeout || 300000),
 
           // Finally, clean normal priority resources with very old access times
           (resource) =>
-            resource.type === "memory" &&
-            resource.priority === "normal" &&
+            resource.type === 'memory' &&
+            resource.priority === 'normal' &&
             Date.now() - resource.lastAccessed >
               (this.memory.extendedIdleTimeout || 1800000),
         ];
@@ -583,10 +583,10 @@ const SystemManager = {
           for (const address of candidateAddresses) {
             const resource = this._resources[address];
             const resourceSize = resource.size;
-            const resourceType = resource.metadata.allocationType || "general";
+            const resourceType = resource.metadata.allocationType || 'general';
 
             try {
-              this.freeMemory(address, { reason: "gc" });
+              this.freeMemory(address, { reason: 'gc' });
               stats.freed++;
               stats.bytesReclaimed += resourceSize;
 
@@ -661,7 +661,7 @@ const SystemManager = {
           );
         }
 
-        if (this._resources[address].type !== "memory") {
+        if (this._resources[address].type !== 'memory') {
           if (options.ignoreErrors) {
             return false;
           }
@@ -677,10 +677,10 @@ const SystemManager = {
         const resourceSize = this._resources[address].size;
         const processId = this._resources[address].processId;
         const allocationType =
-          this._resources[address].metadata.allocationType || "general";
+          this._resources[address].metadata.allocationType || 'general';
 
         // Run cleanup callback if provided
-        if (options.cleanup && typeof options.cleanup === "function") {
+        if (options.cleanup && typeof options.cleanup === 'function') {
           try {
             options.cleanup(this._resources[address]);
           } catch (error) {
@@ -704,7 +704,7 @@ const SystemManager = {
         this._updateMemoryStats(
           address,
           resourceSize,
-          "free",
+          'free',
           processId,
           allocationType,
         );
@@ -714,7 +714,7 @@ const SystemManager = {
           Prime.Logger.debug(
             `Memory at address ${address} freed (${resourceSize} bytes)`,
             {
-              reason: options.reason || "manual",
+              reason: options.reason || 'manual',
               processId,
               allocationType,
             },
@@ -737,7 +737,7 @@ const SystemManager = {
         if (this.security.policy && this.security.policy[operation]) {
           const policy = this.security.policy[operation];
 
-          if (typeof policy === "function") {
+          if (typeof policy === 'function') {
             try {
               return policy(context);
             } catch (error) {
@@ -748,7 +748,7 @@ const SystemManager = {
               );
               return false;
             }
-          } else if (typeof policy === "boolean") {
+          } else if (typeof policy === 'boolean') {
             return policy;
           }
         }
@@ -765,7 +765,7 @@ const SystemManager = {
        */
       allocateResource: function (type, config = {}) {
         // Check permission
-        if (!this.checkPermission("allocateResource", { type, config })) {
+        if (!this.checkPermission('allocateResource', { type, config })) {
           throw new Prime.InvalidOperationError(
             `Permission denied: allocateResource ${type}`,
           );
@@ -798,7 +798,7 @@ const SystemManager = {
 
         // Check permission
         if (
-          !this.checkPermission("freeResource", {
+          !this.checkPermission('freeResource', {
             address,
             resource: this._resources[address],
           })
@@ -818,9 +818,9 @@ const SystemManager = {
        */
       getResourceUsage: function () {
         // Check permission
-        if (!this.checkPermission("getResourceUsage", {})) {
+        if (!this.checkPermission('getResourceUsage', {})) {
           throw new Prime.InvalidOperationError(
-            "Permission denied: getResourceUsage",
+            'Permission denied: getResourceUsage',
           );
         }
 
@@ -860,7 +860,7 @@ const SystemManager = {
           stats.byType[resource.type].count++;
 
           // Special handling for memory
-          if (resource.type === "memory") {
+          if (resource.type === 'memory') {
             stats.memory.count++;
 
             // Update with Kahan summation for better precision

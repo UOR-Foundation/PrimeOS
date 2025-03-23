@@ -8,7 +8,7 @@
  * - Rendering with various representation formats
  */
 
-const Prime = require("../../core");
+const Prime = require('../../core');
 const { Utils } = Prime;
 
 /**
@@ -19,7 +19,7 @@ const { Utils } = Prime;
 function createComponent(options = {}) {
   // Validate required options
   if (!options.id) {
-    throw new Prime.ValidationError("Component id is required", {
+    throw new Prime.ValidationError('Component id is required', {
       context: { options },
     });
   }
@@ -54,7 +54,7 @@ function createComponent(options = {}) {
   // Core component instance
   const component = {
     id: options.id,
-    type: "component",
+    type: 'component',
     name: options.name || options.id,
     state: Prime.Utils.deepClone(options.state || {}),
     props,
@@ -92,7 +92,7 @@ function createComponent(options = {}) {
         this.isMounted = false;
 
         if (Prime.Utils.isFunction(hooks.errorCaught)) {
-          hooks.errorCaught.call(this, error, "mount");
+          hooks.errorCaught.call(this, error, 'mount');
         } else {
           throw error;
         }
@@ -131,7 +131,7 @@ function createComponent(options = {}) {
         this.isMounted = false;
 
         if (Prime.Utils.isFunction(hooks.errorCaught)) {
-          hooks.errorCaught.call(this, error, "unmount");
+          hooks.errorCaught.call(this, error, 'unmount');
         } else {
           throw error;
         }
@@ -147,7 +147,7 @@ function createComponent(options = {}) {
      */
     updateProps: function (newProps) {
       if (!Prime.Utils.isObject(newProps)) {
-        throw new Prime.ValidationError("Props must be an object", {
+        throw new Prime.ValidationError('Props must be an object', {
           context: { newProps },
         });
       }
@@ -172,7 +172,7 @@ function createComponent(options = {}) {
                         propName,
                         value,
                         validationMessage:
-                          validationResult || "Failed type validation",
+                          validationResult || 'Failed type validation',
                       },
                     },
                   );
@@ -184,7 +184,7 @@ function createComponent(options = {}) {
 
         // Call before update hook if mounted
         if (this.isMounted && Prime.Utils.isFunction(hooks.beforeUpdate)) {
-          hooks.beforeUpdate.call(this, { props: newProps, type: "props" });
+          hooks.beforeUpdate.call(this, { props: newProps, type: 'props' });
         }
 
         // Update props with deep merging and precise numerical handling
@@ -201,14 +201,14 @@ function createComponent(options = {}) {
 
         // Call updated hook if mounted
         if (this.isMounted && Prime.Utils.isFunction(hooks.updated)) {
-          hooks.updated.call(this, { props: newProps, type: "props" });
+          hooks.updated.call(this, { props: newProps, type: 'props' });
         }
 
         return true;
       } catch (error) {
         // Handle update errors
         if (Prime.Utils.isFunction(hooks.errorCaught)) {
-          hooks.errorCaught.call(this, error, "updateProps");
+          hooks.errorCaught.call(this, error, 'updateProps');
           return false;
         } else {
           throw error;
@@ -238,8 +238,8 @@ function createComponent(options = {}) {
 
           // For numerical values, use Kahan summation for the difference
           if (
-            typeof currentValue === "number" &&
-            typeof updateValue === "number"
+            typeof currentValue === 'number' &&
+            typeof updateValue === 'number'
           ) {
             const delta = updateValue - currentValue;
             result[key] = Prime.KahanSum(currentValue, delta);
@@ -256,8 +256,8 @@ function createComponent(options = {}) {
             Array.isArray(currentValue) &&
             Array.isArray(updateValue) &&
             updateValue.length === currentValue.length &&
-            currentValue.every((item) => typeof item === "number") &&
-            updateValue.every((item) => typeof item === "number")
+            currentValue.every((item) => typeof item === 'number') &&
+            updateValue.every((item) => typeof item === 'number')
           ) {
             result[key] = updateValue.map((newVal, i) => {
               const delta = newVal - currentValue[i];
@@ -281,7 +281,7 @@ function createComponent(options = {}) {
      */
     updateState: function (updates) {
       if (!Prime.Utils.isObject(updates)) {
-        throw new Prime.ValidationError("State updates must be an object", {
+        throw new Prime.ValidationError('State updates must be an object', {
           context: { updates },
         });
       }
@@ -289,7 +289,7 @@ function createComponent(options = {}) {
       try {
         // Call before update hook if mounted
         if (this.isMounted && Prime.Utils.isFunction(hooks.beforeUpdate)) {
-          hooks.beforeUpdate.call(this, { state: updates, type: "state" });
+          hooks.beforeUpdate.call(this, { state: updates, type: 'state' });
         }
 
         // Check if update would create coherent state if specified
@@ -299,7 +299,7 @@ function createComponent(options = {}) {
 
           if (!coherenceResult.isCoherent) {
             throw new Prime.CoherenceError(
-              "State update failed coherence check",
+              'State update failed coherence check',
               {
                 context: {
                   componentId: this.id,
@@ -326,14 +326,14 @@ function createComponent(options = {}) {
 
         // Call updated hook if mounted
         if (this.isMounted && Prime.Utils.isFunction(hooks.updated)) {
-          hooks.updated.call(this, { state: updates, type: "state" });
+          hooks.updated.call(this, { state: updates, type: 'state' });
         }
 
         return true;
       } catch (error) {
         // Handle update errors
         if (Prime.Utils.isFunction(hooks.errorCaught)) {
-          hooks.errorCaught.call(this, error, "updateState");
+          hooks.errorCaught.call(this, error, 'updateState');
           return false;
         } else {
           throw error;
@@ -350,7 +350,7 @@ function createComponent(options = {}) {
     addChild: function (child, index) {
       if (!child || !child.id) {
         throw new Prime.ValidationError(
-          "Child must be a valid component with an id",
+          'Child must be a valid component with an id',
           {
             context: { child },
           },
@@ -384,7 +384,7 @@ function createComponent(options = {}) {
      */
     removeChild: function (childId) {
       const id =
-        typeof childId === "string"
+        typeof childId === 'string'
           ? childId
           : childId && childId.id
             ? childId.id
@@ -413,7 +413,7 @@ function createComponent(options = {}) {
     on: function (eventType, handler) {
       if (!eventType || !Prime.Utils.isFunction(handler)) {
         throw new Prime.ValidationError(
-          "Event type and handler function are required",
+          'Event type and handler function are required',
           {
             context: { eventType, handler },
           },
@@ -487,7 +487,7 @@ function createComponent(options = {}) {
           results.push(handler.call(this, event));
         } catch (error) {
           if (Prime.Utils.isFunction(hooks.errorCaught)) {
-            hooks.errorCaught.call(this, error, "eventHandler", {
+            hooks.errorCaught.call(this, error, 'eventHandler', {
               eventType,
               event,
             });
@@ -523,7 +523,7 @@ function createComponent(options = {}) {
 
       try {
         const renderer = options.renderer || this.renderer;
-        const format = options.format || "default";
+        const format = options.format || 'default';
 
         const renderCtx = {
           component: this,
@@ -550,7 +550,7 @@ function createComponent(options = {}) {
         return result;
       } catch (error) {
         if (Prime.Utils.isFunction(hooks.errorCaught)) {
-          hooks.errorCaught.call(this, error, "render", options);
+          hooks.errorCaught.call(this, error, 'render', options);
           return null;
         } else {
           throw new Prime.RenderError(`Error rendering component ${this.id}`, {

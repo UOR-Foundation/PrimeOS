@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require("../../core");
+const Prime = require('../../core');
 
 // Create the Models module using IIFE
 (function () {
@@ -44,8 +44,8 @@ const Prime = require("../../core");
 
       // Metadata
       this.metadata = {
-        name: config.name || "Coherence Manifold",
-        description: config.description || "A manifold of coherent states",
+        name: config.name || 'Coherence Manifold',
+        description: config.description || 'A manifold of coherent states',
         creationTime: new Date().toISOString(),
       };
     }
@@ -104,7 +104,7 @@ const Prime = require("../../core");
      */
     connectPoints(index1, index2, strength = 1, metadata = {}) {
       if (index1 === index2) {
-        throw new Prime.ValidationError("Cannot connect a point to itself");
+        throw new Prime.ValidationError('Cannot connect a point to itself');
       }
 
       if (
@@ -113,7 +113,7 @@ const Prime = require("../../core");
         index2 < 0 ||
         index2 >= this.points.length
       ) {
-        throw new Prime.ValidationError("Point indices out of bounds");
+        throw new Prime.ValidationError('Point indices out of bounds');
       }
 
       // Add bidirectional connections
@@ -139,7 +139,7 @@ const Prime = require("../../core");
      */
     updatePoint(index, newCoordinates) {
       if (index < 0 || index >= this.points.length) {
-        throw new Prime.ValidationError("Point index out of bounds");
+        throw new Prime.ValidationError('Point index out of bounds');
       }
 
       if (
@@ -167,7 +167,7 @@ const Prime = require("../../core");
 
       // Record the change in history
       this.history.push({
-        type: "pointUpdate",
+        type: 'pointUpdate',
         index,
         oldCoordinates,
         newCoordinates: [...newCoordinates],
@@ -295,49 +295,46 @@ const Prime = require("../../core");
       const regions = [];
       const visited = new Set();
 
-      // Start with high coherence points
+      // First pass: try to identify starting points with either:
+      // 1. High coherence OR
+      // 2. Strong connections
+      const potentialStartPoints = [];
+      
       for (let i = 0; i < this.points.length; i++) {
+        // Skip already visited points
         if (visited.has(i)) continue;
-
+        
         const coherence = this.coherenceValues.get(i) || 0;
-
-        if (coherence >= this.coherenceThreshold) {
-          // Start a new region
-          const region = this._expandRegion(i, visited);
-          if (region) {
-            regions.push(region);
-          }
-        } else {
-          visited.add(i);
+        
+        // Check for strong connections
+        const hasStrongConnections = Array.from(
+          this.connections.get(i).entries()
+        ).some(([_, conn]) => conn.strength >= 0.7);
+        
+        // Add points with high coherence or strong connections as potential start points
+        if (coherence >= this.coherenceThreshold || hasStrongConnections) {
+          potentialStartPoints.push(i);
         }
       }
-
-      // If no regions found with high coherence, look for strongly connected points
+      
+      // Process all potential start points
+      for (const startPoint of potentialStartPoints) {
+        if (visited.has(startPoint)) continue;
+        
+        const region = this._expandRegion(startPoint, visited);
+        if (region) {
+          regions.push(region);
+        }
+      }
+      
+      // If no regions found, try with lower threshold for connections
       if (regions.length === 0) {
         for (let i = 0; i < this.points.length; i++) {
           if (visited.has(i)) continue;
-
-          const hasStrongConnections = Array.from(
-            this.connections.get(i).entries(),
-          ).some(([_, conn]) => conn.strength >= 0.8);
-
-          if (hasStrongConnections) {
-            const region = this._expandRegion(i, visited);
-            if (region) {
-              regions.push(region);
-            }
-          } else {
-            visited.add(i);
-          }
-        }
-      }
-
-      // If still no regions, check for any connected points
-      if (regions.length === 0) {
-        for (let i = 0; i < this.points.length; i++) {
-          if (visited.has(i)) continue;
-
-          if (this.connections.get(i).size > 0) {
+          
+          const hasAnyConnections = this.connections.get(i).size > 0;
+          
+          if (hasAnyConnections) {
             const region = this._expandRegion(i, visited);
             if (region) {
               regions.push(region);
@@ -372,18 +369,16 @@ const Prime = require("../../core");
         const coherence = this.coherenceValues.get(currentIndex) || 0;
 
         // Consider points with high coherence or strong connections
-        const hasStrongConnection = Array.from(
-          this.connections.get(currentIndex).values(),
-        ).some((conn) => conn.strength >= 0.7);
+        const connections = this.connections.get(currentIndex);
+        const hasStrongConnection = Array.from(connections.entries())
+          .some(([_, conn]) => conn.strength >= 0.7);
 
         if (coherence >= this.coherenceThreshold || hasStrongConnection) {
           regionPoints.push(currentIndex);
           regionCoherence.push(coherence);
 
           // Add connected points to the queue
-          for (const [connectedIndex, connection] of this.connections
-            .get(currentIndex)
-            .entries()) {
+          for (const [connectedIndex, connection] of connections.entries()) {
             if (!visited.has(connectedIndex)) {
               if (connection.strength >= 0.5) {
                 queue.push(connectedIndex);
@@ -534,7 +529,7 @@ const Prime = require("../../core");
         endIndex < 0 ||
         endIndex >= this.points.length
       ) {
-        throw new Prime.ValidationError("Point indices out of bounds");
+        throw new Prime.ValidationError('Point indices out of bounds');
       }
 
       // Modified Dijkstra's algorithm with coherence as weight
@@ -643,7 +638,7 @@ const Prime = require("../../core");
     constructor(config = {}) {
       if (!(config.baseManifold instanceof CoherenceManifold)) {
         throw new Prime.ValidationError(
-          "Base manifold must be a CoherenceManifold",
+          'Base manifold must be a CoherenceManifold',
         );
       }
 
@@ -665,9 +660,9 @@ const Prime = require("../../core");
 
       // Metadata
       this.metadata = {
-        name: config.name || "Consciousness Fiber Bundle",
+        name: config.name || 'Consciousness Fiber Bundle',
         description:
-          config.description || "A fiber bundle modeling consciousness",
+          config.description || 'A fiber bundle modeling consciousness',
         creationTime: new Date().toISOString(),
       };
     }
@@ -743,7 +738,7 @@ const Prime = require("../../core");
 
       if (fiberIndex1 === fiberIndex2) {
         throw new Prime.ValidationError(
-          "Cannot connect a fiber point to itself",
+          'Cannot connect a fiber point to itself',
         );
       }
 
@@ -753,7 +748,7 @@ const Prime = require("../../core");
         fiberIndex2 < 0 ||
         fiberIndex2 >= fiber.points.length
       ) {
-        throw new Prime.ValidationError("Fiber point indices out of bounds");
+        throw new Prime.ValidationError('Fiber point indices out of bounds');
       }
 
       // Add bidirectional connections
@@ -780,7 +775,7 @@ const Prime = require("../../core");
       const fiber = this.fibers.get(baseIndex);
 
       if (fiberIndex < 0 || fiberIndex >= fiber.points.length) {
-        throw new Prime.ValidationError("Fiber point index out of bounds");
+        throw new Prime.ValidationError('Fiber point index out of bounds');
       }
 
       if (referenceLevel < 1 || referenceLevel > this.selfReferenceOrder) {
@@ -847,8 +842,8 @@ const Prime = require("../../core");
       }
 
       // Calculate connectivity coherence
-      let connectivitySum = 0;
-      let maxPossibleConnections =
+      const connectivitySum = 0;
+      const maxPossibleConnections =
         (fiber.points.length * (fiber.points.length - 1)) / 2;
 
       if (maxPossibleConnections === 0) {
@@ -872,7 +867,7 @@ const Prime = require("../../core");
       );
 
       // Calculate geometric coherence based on point distribution
-      let geometricCoherence = this._calculateGeometricCoherence(fiber);
+      const geometricCoherence = this._calculateGeometricCoherence(fiber);
 
       // Combine both factors
       fiber.coherence = 0.5 * connectivity + 0.5 * geometricCoherence;
@@ -1114,15 +1109,15 @@ const Prime = require("../../core");
      */
     _interpretConsciousnessScore(score) {
       if (score < 0.2) {
-        return "Minimal consciousness properties";
+        return 'Minimal consciousness properties';
       } else if (score < 0.4) {
-        return "Emerging consciousness-like patterns";
+        return 'Emerging consciousness-like patterns';
       } else if (score < 0.6) {
-        return "Moderate consciousness capacity";
+        return 'Moderate consciousness capacity';
       } else if (score < 0.8) {
-        return "Strong consciousness-like organization";
+        return 'Strong consciousness-like organization';
       } else {
-        return "High-level consciousness properties";
+        return 'High-level consciousness properties';
       }
     }
 

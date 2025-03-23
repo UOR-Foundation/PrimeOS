@@ -8,7 +8,7 @@
  */
 
 // Import the Prime object for namespace handling
-const Prime = require("../../core");
+const Prime = require('../../core');
 
 // Ensure the Prime.Framework.Base0 namespace exists
 Prime.Framework = Prime.Framework || {};
@@ -18,27 +18,27 @@ Prime.Framework.Base0 = Prime.Framework.Base0 || {};
 const {
   CoherenceConstraints,
   CoherenceNorms,
-} = require("./coherence-constraints.js");
-const { CoherenceValidator } = require("./coherence-validation.js");
-const { MathematicalCoherenceValidator } = require("./manifold-validator.js");
+} = require('./coherence-constraints.js');
+const { CoherenceValidator } = require('./coherence-validation.js');
+const { MathematicalCoherenceValidator } = require('./manifold-validator.js');
 
 // Add components to the Prime namespace with proper circular dependency handling
 // For CoherenceValidator
 if (
   Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "CoherenceValidator",
+    'CoherenceValidator',
   ) &&
-  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, "CoherenceValidator")
+  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceValidator')
     .get
 ) {
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "CoherenceValidator",
+    'CoherenceValidator',
   );
   const originalGetter = descriptor.get;
 
-  Object.defineProperty(Prime.Framework.Base0, "CoherenceValidator", {
+  Object.defineProperty(Prime.Framework.Base0, 'CoherenceValidator', {
     get: function () {
       const result = originalGetter.call(this);
       if (!result || Object.keys(result).length === 0) {
@@ -56,22 +56,22 @@ if (
 if (
   Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "MathematicalCoherenceValidator",
+    'MathematicalCoherenceValidator',
   ) &&
   Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "MathematicalCoherenceValidator",
+    'MathematicalCoherenceValidator',
   ).get
 ) {
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "MathematicalCoherenceValidator",
+    'MathematicalCoherenceValidator',
   );
   const originalGetter = descriptor.get;
 
   Object.defineProperty(
     Prime.Framework.Base0,
-    "MathematicalCoherenceValidator",
+    'MathematicalCoherenceValidator',
     {
       get: function () {
         const result = originalGetter.call(this);
@@ -92,18 +92,18 @@ if (
 if (
   Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "CoherenceConstraints",
+    'CoherenceConstraints',
   ) &&
-  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, "CoherenceConstraints")
+  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceConstraints')
     .get
 ) {
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "CoherenceConstraints",
+    'CoherenceConstraints',
   );
   const originalGetter = descriptor.get;
 
-  Object.defineProperty(Prime.Framework.Base0, "CoherenceConstraints", {
+  Object.defineProperty(Prime.Framework.Base0, 'CoherenceConstraints', {
     get: function () {
       const result = originalGetter.call(this);
       if (!result || Object.keys(result).length === 0) {
@@ -119,16 +119,16 @@ if (
 
 // For CoherenceNorms
 if (
-  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, "CoherenceNorms") &&
-  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, "CoherenceNorms").get
+  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceNorms') &&
+  Object.getOwnPropertyDescriptor(Prime.Framework.Base0, 'CoherenceNorms').get
 ) {
   const descriptor = Object.getOwnPropertyDescriptor(
     Prime.Framework.Base0,
-    "CoherenceNorms",
+    'CoherenceNorms',
   );
   const originalGetter = descriptor.get;
 
-  Object.defineProperty(Prime.Framework.Base0, "CoherenceNorms", {
+  Object.defineProperty(Prime.Framework.Base0, 'CoherenceNorms', {
     get: function () {
       const result = originalGetter.call(this);
       if (!result || Object.keys(result).length === 0) {

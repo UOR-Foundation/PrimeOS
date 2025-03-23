@@ -1,0 +1,138 @@
+{
+  "numFailedTestSuites": 1,
+  "numFailedTests": 3,
+  "numPassedTestSuites": 0,
+  "numPassedTests": 1,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 0,
+  "numRuntimeErrorTestSuites": 0,
+  "numTodoTests": 0,
+  "numTotalTestSuites": 1,
+  "numTotalTests": 4,
+  "openHandles": [],
+  "snapshot": {
+    "added": 0,
+    "didUpdate": false,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0
+  },
+  "startTime": 1742695281678,
+  "success": false,
+  "testResults": [
+    {
+      "leaks": false,
+      "numFailingTests": 3,
+      "numPassingTests": 1,
+      "numPendingTests": 0,
+      "numTodoTests": 0,
+      "openHandles": [],
+      "perfStats": {
+        "end": 1742695282764,
+        "runtime": 1063,
+        "slow": false,
+        "start": 1742695281701
+      },
+      "skipped": false,
+      "snapshot": {
+        "added": 0,
+        "fileDeleted": false,
+        "matched": 0,
+        "unchecked": 0,
+        "uncheckedKeys": [],
+        "unmatched": 0,
+        "updated": 0
+      },
+      "testFilePath": "/workspaces/PrimeOS/tests/extreme-conditions-basic-test.js",
+      "testResults": [
+        {
+          "ancestorTitles": [
+            "ExtremePrecision Module",
+            "Basic Functionality"
+          ],
+          "duration": 1,
+          "failureDetails": [
+            {}
+          ],
+          "failureMessages": [
+            "TypeError: Prime.ExtremePrecision.sum is not a function\n    at Object.sum (/workspaces/PrimeOS/tests/extreme-conditions-basic-test.js:18:54)\n    at Promise.then.completed (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:444:34)"
+          ],
+          "fullName": "ExtremePrecision Module Basic Functionality should correctly compensate for numerical errors in sum",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "failed",
+          "title": "should correctly compensate for numerical errors in sum"
+        },
+        {
+          "ancestorTitles": [
+            "ExtremePrecision Module",
+            "Basic Functionality"
+          ],
+          "duration": 0,
+          "failureDetails": [],
+          "failureMessages": [],
+          "fullName": "ExtremePrecision Module Basic Functionality should handle extreme values in dot product",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "passed",
+          "title": "should handle extreme values in dot product"
+        },
+        {
+          "ancestorTitles": [
+            "ExtremePrecision Module",
+            "Basic Functionality"
+          ],
+          "duration": 0,
+          "failureDetails": [
+            {}
+          ],
+          "failureMessages": [
+            "TypeError: Prime.ExtremePrecision.norm is not a function\n    at Object.norm (/workspaces/PrimeOS/tests/extreme-conditions-basic-test.js:88:50)\n    at Promise.then.completed (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:444:34)"
+          ],
+          "fullName": "ExtremePrecision Module Basic Functionality should calculate norms with numerical stability",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "failed",
+          "title": "should calculate norms with numerical stability"
+        },
+        {
+          "ancestorTitles": [
+            "ExtremePrecision Module",
+            "Numerical Stability"
+          ],
+          "duration": 1,
+          "failureDetails": [
+            {}
+          ],
+          "failureMessages": [
+            "TypeError: Prime.ExtremePrecision.gradientDescent is not a function\n    at Object.gradientDescent (/workspaces/PrimeOS/tests/extreme-conditions-basic-test.js:121:45)\n    at Promise.then.completed (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/workspaces/PrimeOS/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at _runTestsForDescribeBlock (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:121:9)\n    at run (/workspaces/PrimeOS/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/workspaces/PrimeOS/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/workspaces/PrimeOS/node_modules/jest-runner/build/runTest.js:444:34)"
+          ],
+          "fullName": "ExtremePrecision Module Numerical Stability should handle gradient computation with extreme parameters",
+          "invocations": 1,
+          "location": null,
+          "numPassingAsserts": 0,
+          "retryReasons": [],
+          "status": "failed",
+          "title": "should handle gradient computation with extreme parameters"
+        }
+      ],
+      "failureMessage": "  ● ExtremePrecision Module › Basic Functionality › should correctly compensate for numerical errors in sum\n\n    TypeError: Prime.ExtremePrecision.sum is not a function\n\n      16 |       const values1 = [0.1, 0.2, 0.3, 0.4, 0.5];\n      17 |       const normalSum1 = values1.reduce((a, b) => a + b, 0);\n    > 18 |       const compensatedSum1 = Prime.ExtremePrecision.sum(values1);\n         |                                                      ^\n      19 |\n      20 |       // Both methods should work well on simple values\n      21 |       assert.ok(Math.abs(normalSum1 - 1.5) < 1e-10);\n\n      at Object.sum (tests/extreme-conditions-basic-test.js:18:54)\n\n  ● ExtremePrecision Module › Basic Functionality › should calculate norms with numerical stability\n\n    TypeError: Prime.ExtremePrecision.norm is not a function\n\n      86 |\n      87 |       // Precise calculation with scaling to avoid overflow/underflow\n    > 88 |       const preciseNorm = Prime.ExtremePrecision.norm(v);\n         |                                                  ^\n      89 |\n      90 |       // The norm should be dominated by the largest values\n      91 |       assert.ok(\n\n      at Object.norm (tests/extreme-conditions-basic-test.js:88:50)\n\n  ● ExtremePrecision Module › Numerical Stability › should handle gradient computation with extreme parameters\n\n    TypeError: Prime.ExtremePrecision.gradientDescent is not a function\n\n      119 |\n      120 |       // Gradient descent with adaptive learning rate\n    > 121 |       const result = Prime.ExtremePrecision.gradientDescent(\n          |                                             ^\n      122 |         testCostFunction,\n      123 |         initialParams,\n      124 |         {\n\n      at Object.gradientDescent (tests/extreme-conditions-basic-test.js:121:45)\n"
+    }
+  ],
+  "wasInterrupted": false
+}

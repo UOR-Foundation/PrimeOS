@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require("../../core");
+const Prime = require('../../core');
 
 // Create the Dense Layer module using IIFE
 (function () {
@@ -25,25 +25,25 @@ const Prime = require("../../core");
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          "Layer configuration must be an object",
+          'Layer configuration must be an object',
         );
       }
 
       this.inputSize = config.inputSize;
       this.outputSize = config.outputSize;
-      this.activation = config.activation || "sigmoid";
+      this.activation = config.activation || 'sigmoid';
       this.useTypedArrays = config.useTypedArrays || false;
 
       // Validate dimensions
       if (!Number.isInteger(this.inputSize) || this.inputSize <= 0) {
         throw new Prime.ValidationError(
-          "Input size must be a positive integer",
+          'Input size must be a positive integer',
         );
       }
 
       if (!Number.isInteger(this.outputSize) || this.outputSize <= 0) {
         throw new Prime.ValidationError(
-          "Output size must be a positive integer",
+          'Output size must be a positive integer',
         );
       }
 
@@ -86,7 +86,7 @@ const Prime = require("../../core");
       // Determine initialization scale based on activation function
       let scale = params.scale;
       if (!scale) {
-        if (this.activation === "relu") {
+        if (this.activation === 'relu') {
           // He initialization
           scale = Math.sqrt(2 / this.inputSize);
         } else {
@@ -95,10 +95,10 @@ const Prime = require("../../core");
         }
       }
 
-      const distribution = params.distribution || "xavier";
+      const distribution = params.distribution || 'xavier';
 
       // Create weights matrix
-      if (this.useTypedArrays && typeof Float32Array !== "undefined") {
+      if (this.useTypedArrays && typeof Float32Array !== 'undefined') {
         // Use TypedArrays for memory efficiency
         const flatWeights = new Float32Array(this.outputSize * this.inputSize);
 
@@ -108,13 +108,13 @@ const Prime = require("../../core");
             const index = i * this.inputSize + j;
             let value;
 
-            if (distribution === "xavier") {
+            if (distribution === 'xavier') {
               // Xavier/Glorot initialization
               value = (Math.random() * 2 - 1) * scale;
-            } else if (distribution === "he") {
+            } else if (distribution === 'he') {
               // He initialization
               value = Math.random() * Math.sqrt(2 / this.inputSize);
-            } else if (distribution === "zeros") {
+            } else if (distribution === 'zeros') {
               value = 0;
             } else {
               // Default to small random values
@@ -152,13 +152,13 @@ const Prime = require("../../core");
           for (let j = 0; j < this.inputSize; j++) {
             let value;
 
-            if (distribution === "xavier") {
+            if (distribution === 'xavier') {
               // Xavier/Glorot initialization
               value = (Math.random() * 2 - 1) * scale;
-            } else if (distribution === "he") {
+            } else if (distribution === 'he') {
               // He initialization
               value = Math.random() * Math.sqrt(2 / this.inputSize);
-            } else if (distribution === "zeros") {
+            } else if (distribution === 'zeros') {
               value = 0;
             } else {
               // Default to small random values
@@ -182,7 +182,7 @@ const Prime = require("../../core");
     _initializeBiases(params) {
       const biasValue = params.bias !== undefined ? params.bias : 0;
 
-      if (this.useTypedArrays && typeof Float32Array !== "undefined") {
+      if (this.useTypedArrays && typeof Float32Array !== 'undefined') {
         // Use TypedArrays for memory efficiency
         const biases = new Float32Array(this.outputSize);
 
@@ -203,27 +203,27 @@ const Prime = require("../../core");
      */
     _setupActivationFunctions() {
       switch (this.activation) {
-        case "sigmoid":
+        case 'sigmoid':
           this._activate = this._sigmoid;
           this._activateDerivative = this._sigmoidDerivative;
           break;
-        case "relu":
+        case 'relu':
           this._activate = this._relu;
           this._activateDerivative = this._reluDerivative;
           break;
-        case "leaky_relu":
+        case 'leaky_relu':
           this._activate = this._leakyRelu;
           this._activateDerivative = this._leakyReluDerivative;
           break;
-        case "tanh":
+        case 'tanh':
           this._activate = this._tanh;
           this._activateDerivative = this._tanhDerivative;
           break;
-        case "linear":
+        case 'linear':
           this._activate = this._linear;
           this._activateDerivative = this._linearDerivative;
           break;
-        case "softmax":
+        case 'softmax':
           this._activate = this._softmax;
           this._activateDerivative = this._softmaxDerivative;
           break;
@@ -468,7 +468,7 @@ const Prime = require("../../core");
         !(input instanceof Float32Array) &&
         !(input instanceof Float64Array)
       ) {
-        throw new Prime.ValidationError("Input must be an array or TypedArray");
+        throw new Prime.ValidationError('Input must be an array or TypedArray');
       }
 
       if (input.length !== this.inputSize) {
@@ -523,7 +523,7 @@ const Prime = require("../../core");
         !(dY instanceof Float32Array) &&
         !(dY instanceof Float64Array)
       ) {
-        throw new Prime.ValidationError("dY must be an array or TypedArray");
+        throw new Prime.ValidationError('dY must be an array or TypedArray');
       }
 
       if (dY.length !== this.outputSize) {
@@ -543,14 +543,14 @@ const Prime = require("../../core");
 
       if (!input || !z) {
         throw new Prime.ValidationError(
-          "Cache not provided and no cached values available from forward pass",
+          'Cache not provided and no cached values available from forward pass',
         );
       }
 
       // Handle special case for softmax + crossentropy
       // For softmax, the derivative calculation is special when paired with crossentropy loss
       let dZ;
-      if (this.activation === "softmax") {
+      if (this.activation === 'softmax') {
         // For softmax with crossentropy, dZ is often just (activation - target)
         // But we'll use the provided dY which should already account for this
         dZ = dY;
@@ -653,7 +653,7 @@ const Prime = require("../../core");
 
       // Check for dying ReLUs (if using ReLU activation)
       let activationHealth = 1.0;
-      if (this.activation === "relu" && this.cache.lastActivation) {
+      if (this.activation === 'relu' && this.cache.lastActivation) {
         const numActive = this.cache.lastActivation.filter((a) => a > 0).length;
         activationHealth = numActive / this.outputSize;
       }
@@ -770,7 +770,7 @@ const Prime = require("../../core");
      */
     getSummary() {
       return {
-        type: "Dense",
+        type: 'Dense',
         inputSize: this.inputSize,
         outputSize: this.outputSize,
         activation: this.activation,

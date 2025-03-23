@@ -5,9 +5,9 @@
  */
 
 // Import core
-const Prime = require("../../core.js");
-const MathUtils = require("../math");
-const { Manifold } = require("./manifold.js");
+const Prime = require('../../core.js');
+const MathUtils = require('../math');
+const { Manifold } = require('./manifold.js');
 
 /**
  * TangentSpaceOperations - Operations for working with tangent spaces on manifolds
@@ -22,7 +22,7 @@ const TangentSpaceOperations = {
    */
   calculateTangentSpace: function (manifold, point = null, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError("First argument must be a manifold");
+      throw new Prime.ValidationError('First argument must be a manifold');
     }
 
     // If no point specified, use the current manifold state
@@ -69,7 +69,7 @@ const TangentSpaceOperations = {
    */
   calculateCurvature: function (manifold, point = null, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError("First argument must be a manifold");
+      throw new Prime.ValidationError('First argument must be a manifold');
     }
 
     // If no point specified, use the current manifold state
@@ -90,9 +90,9 @@ const TangentSpaceOperations = {
     const meanInvariant =
       invariants.length > 0
         ? invariants.reduce(
-            (sum, val) => sum + (typeof val === "number" ? val : 0),
-            0,
-          ) / invariants.length
+          (sum, val) => sum + (typeof val === 'number' ? val : 0),
+          0,
+        ) / invariants.length
         : 0;
 
     // Calculate a simplified curvature value
@@ -132,11 +132,11 @@ const TangentSpaceOperations = {
     options = {},
   ) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError("First argument must be a manifold");
+      throw new Prime.ValidationError('First argument must be a manifold');
     }
 
     if (!Array.isArray(vector)) {
-      throw new Prime.ValidationError("Vector must be an array");
+      throw new Prime.ValidationError('Vector must be an array');
     }
 
     // If no point specified, use the current manifold state
@@ -185,11 +185,11 @@ const TangentSpaceOperations = {
    */
   isTangentVector: function (manifold, vector, point = null, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError("First argument must be a manifold");
+      throw new Prime.ValidationError('First argument must be a manifold');
     }
 
     if (!Array.isArray(vector)) {
-      throw new Prime.ValidationError("Vector must be an array");
+      throw new Prime.ValidationError('Vector must be an array');
     }
 
     // If no point specified, use the current manifold state
@@ -257,7 +257,7 @@ const TangentSpaceOperations = {
    */
   calculateMetricTensor: function (manifold, point = null, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError("First argument must be a manifold");
+      throw new Prime.ValidationError('First argument must be a manifold');
     }
 
     // If no point specified, use the current manifold state

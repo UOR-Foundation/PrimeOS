@@ -5,9 +5,9 @@
  */
 
 // Import core
-const Prime = require("../../core.js");
-const MathUtils = require("../math");
-const { Manifold } = require("./manifold.js");
+const Prime = require('../../core.js');
+const MathUtils = require('../math');
+const { Manifold } = require('./manifold.js');
 
 /**
  * GeodesicOperations - Operations for computing geodesics on manifolds
@@ -22,7 +22,7 @@ const GeodesicOperations = {
    */
   computeGeodesic: function (source, target, options = {}) {
     if (!(source instanceof Manifold) || !(target instanceof Manifold)) {
-      throw new Prime.ValidationError("Source and target must be manifolds");
+      throw new Prime.ValidationError('Source and target must be manifolds');
     }
 
     // Check if manifolds exist in compatible spaces
@@ -32,25 +32,25 @@ const GeodesicOperations = {
 
     if (commonSpaces.length === 0) {
       throw new Prime.InvalidOperationError(
-        "Manifolds must share at least one space for geodesic calculation",
+        'Manifolds must share at least one space for geodesic calculation',
       );
     }
 
     const space = commonSpaces[0];
     const steps = options.steps || 10;
-    const method = options.method || "linear";
-    const metric = options.metric || "euclidean";
+    const method = options.method || 'linear';
+    const metric = options.metric || 'euclidean';
 
     // Get source and target points (simplified implementation)
-    let sourcePoint = MathUtils.vector.normalizeSimple(
+    const sourcePoint = MathUtils.vector.normalizeSimple(
       Object.values(source.getVariant()),
     );
-    let targetPoint = MathUtils.vector.normalizeSimple(
+    const targetPoint = MathUtils.vector.normalizeSimple(
       Object.values(target.getVariant()),
     );
 
     // Calculate geodesic based on the method
-    if (method === "linear") {
+    if (method === 'linear') {
       // Linear interpolation for flat manifolds
       const path = [];
       for (let i = 0; i <= steps; i++) {
@@ -78,7 +78,7 @@ const GeodesicOperations = {
         length,
         space,
       };
-    } else if (method === "riemannian") {
+    } else if (method === 'riemannian') {
       // More complex geodesic calculation on curved manifolds
       // This would use Riemannian geometry operations (simplified implementation)
       const path = [];
@@ -119,7 +119,7 @@ const GeodesicOperations = {
         path,
         length,
         space,
-        method: "riemannian",
+        method: 'riemannian',
       };
     }
 
@@ -138,23 +138,23 @@ const GeodesicOperations = {
    */
   interpolate: function (source, target, t, options = {}) {
     if (!(source instanceof Manifold) || !(target instanceof Manifold)) {
-      throw new Prime.ValidationError("Source and target must be manifolds");
+      throw new Prime.ValidationError('Source and target must be manifolds');
     }
 
-    if (typeof t !== "number" || t < 0 || t > 1) {
+    if (typeof t !== 'number' || t < 0 || t > 1) {
       throw new Prime.ValidationError(
-        "Interpolation parameter t must be a number between 0 and 1",
+        'Interpolation parameter t must be a number between 0 and 1',
       );
     }
 
     // Check if manifolds have compatible types
     if (source.getType() !== target.getType()) {
       throw new Prime.InvalidOperationError(
-        "Cannot interpolate between manifolds of different types",
+        'Cannot interpolate between manifolds of different types',
       );
     }
 
-    const method = options.method || "linear";
+    const method = options.method || 'linear';
 
     // Create a new manifold with interpolated properties
 
@@ -197,14 +197,14 @@ const GeodesicOperations = {
       }
 
       // Interpolate based on value types
-      if (typeof sourceValue === "number" && typeof targetValue === "number") {
+      if (typeof sourceValue === 'number' && typeof targetValue === 'number') {
         // Linear interpolation for numbers
         variant[key] = sourceValue * (1 - t) + targetValue * t;
       } else if (Array.isArray(sourceValue) && Array.isArray(targetValue)) {
         // Array interpolation
         if (sourceValue.length === targetValue.length) {
           variant[key] = sourceValue.map((val, i) => {
-            return typeof val === "number" && typeof targetValue[i] === "number"
+            return typeof val === 'number' && typeof targetValue[i] === 'number'
               ? val * (1 - t) + targetValue[i] * t
               : t < 0.5
                 ? val
@@ -233,8 +233,8 @@ const GeodesicOperations = {
     });
 
     // Establish relations to the source and target
-    interpolated.relateTo(source, "interpolated_from", { t });
-    interpolated.relateTo(target, "interpolated_to", { t });
+    interpolated.relateTo(source, 'interpolated_from', { t });
+    interpolated.relateTo(target, 'interpolated_to', { t });
 
     return interpolated;
   },
@@ -249,11 +249,11 @@ const GeodesicOperations = {
    */
   parallelTransport: function (source, target, vector, options = {}) {
     if (!(source instanceof Manifold) || !(target instanceof Manifold)) {
-      throw new Prime.ValidationError("Source and target must be manifolds");
+      throw new Prime.ValidationError('Source and target must be manifolds');
     }
 
     if (!Array.isArray(vector)) {
-      throw new Prime.ValidationError("Vector must be an array");
+      throw new Prime.ValidationError('Vector must be an array');
     }
 
     // Compute the geodesic between source and target
@@ -322,11 +322,11 @@ const GeodesicOperations = {
    */
   sectionalCurvature: function (manifold, vector1, vector2, options = {}) {
     if (!(manifold instanceof Manifold)) {
-      throw new Prime.ValidationError("First argument must be a manifold");
+      throw new Prime.ValidationError('First argument must be a manifold');
     }
 
     if (!Array.isArray(vector1) || !Array.isArray(vector2)) {
-      throw new Prime.ValidationError("Vectors must be arrays");
+      throw new Prime.ValidationError('Vectors must be arrays');
     }
 
     // This is a simplified implementation of sectional curvature
@@ -334,7 +334,7 @@ const GeodesicOperations = {
 
     // Ensure vectors have the same length
     if (vector1.length !== vector2.length) {
-      throw new Prime.ValidationError("Vectors must have the same dimension");
+      throw new Prime.ValidationError('Vectors must have the same dimension');
     }
 
     // Calculate the point on the manifold (use current variant)
@@ -370,9 +370,9 @@ const GeodesicOperations = {
     const meanInvariant =
       invariants.length > 0
         ? invariants.reduce(
-            (sum, val) => sum + (typeof val === "number" ? val : 0),
-            0,
-          ) / invariants.length
+          (sum, val) => sum + (typeof val === 'number' ? val : 0),
+          0,
+        ) / invariants.length
         : 0;
 
     // Calculate a simple curvature value

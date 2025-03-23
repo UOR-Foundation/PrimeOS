@@ -6,14 +6,14 @@
  * and interaction handlers.
  */
 
-const Prime = require("../../core");
+const Prime = require('../../core');
 const { Utils } = Prime;
 
 // Import internal modules
-const createApplication = require("./application");
-const createComponent = require("./component");
-const createFramework = require("./framework");
-const connectToBase2 = require("./connect");
+const createApplication = require('./application');
+const createComponent = require('./component');
+const createFramework = require('./framework');
+const connectToBase2 = require('./connect');
 
 /**
  * Initializes the Base3 application layer

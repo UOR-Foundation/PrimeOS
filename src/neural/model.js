@@ -75,50 +75,57 @@ const Prime = require('../core');
      */
     addLayer(layerConfig) {
       let layer;
+      let updatedConfig = { ...layerConfig };
+      
+      // If this isn't the first layer and inputSize wasn't specified,
+      // set it to the outputSize of the previous layer
+      if (this.layers.length > 0 && !updatedConfig.inputSize) {
+        updatedConfig.inputSize = this.layers[this.layers.length - 1].outputSize;
+      }
 
       // If layerConfig is already a layer instance, use it directly
       if (
         Prime.Neural.Layer &&
         ((Prime.Neural.Layer.NeuralLayer &&
-          layerConfig instanceof Prime.Neural.Layer.NeuralLayer) ||
+          updatedConfig instanceof Prime.Neural.Layer.NeuralLayer) ||
           (Prime.Neural.Layer.SelfOptimizingLayer &&
-            layerConfig instanceof Prime.Neural.Layer.SelfOptimizingLayer) ||
+            updatedConfig instanceof Prime.Neural.Layer.SelfOptimizingLayer) ||
           (Prime.Neural.Layer.ConvolutionalLayer &&
-            layerConfig instanceof Prime.Neural.Layer.ConvolutionalLayer) ||
+            updatedConfig instanceof Prime.Neural.Layer.ConvolutionalLayer) ||
           (Prime.Neural.Layer.RecurrentLayer &&
-            layerConfig instanceof Prime.Neural.Layer.RecurrentLayer))
+            updatedConfig instanceof Prime.Neural.Layer.RecurrentLayer))
       ) {
-        layer = layerConfig;
+        layer = updatedConfig;
       } else {
         // Otherwise, create a layer from the configuration
-        const type = (layerConfig.type || 'dense').toLowerCase();
+        const type = (updatedConfig.type || 'dense').toLowerCase();
 
         // Create layer based on type
         switch (type) {
           case 'dense':
             layer = Prime.Neural.Neural.createLayer('dense', {
-              ...layerConfig,
+              ...updatedConfig,
               useTypedArrays: this.useTypedArrays,
             });
             break;
           case 'conv':
           case 'convolutional':
             layer = Prime.Neural.Neural.createLayer('conv', {
-              ...layerConfig,
+              ...updatedConfig,
               useTypedArrays: this.useTypedArrays,
             });
             break;
           case 'rnn':
           case 'recurrent':
             layer = Prime.Neural.Neural.createLayer('recurrent', {
-              ...layerConfig,
+              ...updatedConfig,
               useTypedArrays: this.useTypedArrays,
             });
             break;
           case 'self_optimizing':
           case 'selfoptimizing':
             layer = new Prime.Neural.Layer.SelfOptimizingLayer({
-              ...layerConfig,
+              ...updatedConfig,
               useTypedArrays: this.useTypedArrays,
             });
             break;
@@ -201,8 +208,10 @@ const Prime = require('../core');
       // Set loss function
       if (typeof config.loss === 'string') {
         this.lossFunction = this._getLossFunction(config.loss);
+        this.lossName = config.loss; // Store the loss name for testing
       } else if (typeof config.loss === 'function') {
         this.lossFunction = config.loss;
+        this.lossName = 'custom'; // Custom function name
       } else {
         throw new Error('Loss function must be a string or function');
       }
@@ -211,8 +220,10 @@ const Prime = require('../core');
       if (config.metric) {
         if (typeof config.metric === 'string') {
           this.metric = this._getMetricFunction(config.metric);
+          this.metricName = config.metric; // Store the metric name for testing
         } else if (typeof config.metric === 'function') {
           this.metric = config.metric;
+          this.metricName = 'custom'; // Custom function name
         }
       }
 
@@ -455,6 +466,44 @@ const Prime = require('../core');
     predict(inputs) {
       const { output } = this.forward(inputs, { training: false });
       return output;
+    }
+
+    /**
+     * Get a summary of the model architecture
+     * @returns {Object} Model summary with layers and parameters information
+     */
+    summary() {
+      const layerSummaries = this.layers.map((layer, index) => {
+        // Count parameters
+        const numWeights = layer.weights ? layer.weights.length * (layer.weights[0]?.length || 0) : 0;
+        const numBiases = layer.biases ? layer.biases.length : 0;
+        const totalParams = numWeights + numBiases;
+        
+        return {
+          index,
+          type: layer.constructor.name,
+          inputSize: layer.inputSize,
+          outputSize: layer.outputSize,
+          activation: layer.activation,
+          parameters: totalParams,
+          shape: `(${layer.inputSize}, ${layer.outputSize})`,
+        };
+      });
+      
+      const totalParameters = layerSummaries.reduce(
+        (sum, layer) => sum + layer.parameters, 
+        0
+      );
+      
+      return {
+        layers: layerSummaries,
+        totalParameters,
+        inputShape: this.layers.length > 0 ? [this.layers[0].inputSize] : [],
+        outputShape: this.layers.length > 0 ? [this.layers[this.layers.length - 1].outputSize] : [],
+        compiled: this.compiled,
+        optimizer: this.optimizer ? this.optimizer.constructor.name : null,
+        lossFunction: this.lossName || null,
+      };
     }
 
     /**

@@ -22,7 +22,7 @@ try {
 
 // Import components
 const ConsciousnessOperator = require('./operator.js');
-const SelfReferentialLoop = require('./self-reference.js');
+const { SelfReference } = require('./self-reference.js');
 const TemporalIntegration = require('./temporal.js');
 const StateRepresentation = require('./state.js');
 const AttentionMechanism = require('./attention.js');
@@ -54,7 +54,7 @@ class ConsciousnessModule {
       dimension: this.dimension,
     });
 
-    this.selfReference = new SelfReferentialLoop({
+    this.selfReference = new SelfReference({
       coherenceThreshold: this.coherenceThreshold,
     });
 

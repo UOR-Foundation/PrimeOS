@@ -17,7 +17,20 @@ const Prime = require("../src/index");
 
 // Import test utilities
 const { performance } = require("perf_hooks");
-const assert = require("assert");
+
+// Create Jest-compatible assertion functions
+const expectEqual = (actual, expected, message) => {
+  expect(actual).toBe(expected);
+};
+
+const expectTrue = (condition, message) => {
+  expect(condition).toBe(true);
+};
+
+// Override assert function to use Jest
+const assert = (condition, message) => {
+  expect(condition).toBe(true);
+};
 
 // Test configuration
 const config = {
@@ -1137,12 +1150,65 @@ async function runAllTests() {
   }
 }
 
-// Run all tests if this file is executed directly
-if (require.main === module) {
-  runAllTests().then((success) => {
-    process.exit(success ? 0 : 1);
+// Jest test suite
+describe('PrimeOS End-to-End Verification', () => {
+  beforeAll(() => {
+    console.log("======================================================");
+    console.log("  PrimeOS End-to-End Verification Test Suite");
+    console.log("======================================================");
+    console.log(`Configuration: verbosity=${config.verbosity}, seed=${config.randomSeed}`);
+    console.log("------------------------------------------------------");
   });
-}
+  
+  describe('Coherence-Preserved Distributed Computation', () => {
+    test('Distributed matrix operations maintain coherence', async () => {
+      try {
+        // Initialize system components
+        const { model, distributedModel } = await initializeSystem();
+
+        if (!distributedModel) {
+          console.warn("Distributed model not available, skipping test");
+          return;
+        }
+
+        // Generate coherent test data
+        const matrixA = generateCoherentTensor([64, 64], "structured");
+        const matrixB = generateCoherentTensor([64, 64], "structured");
+
+        // Calculate initial coherence
+        const initialCoherenceA = calculateCoherence(matrixA);
+        const initialCoherenceB = calculateCoherence(matrixB);
+
+        if (config.verbosity > 0) {
+          console.log(`Initial coherence A: ${initialCoherenceA.toFixed(4)}`);
+          console.log(`Initial coherence B: ${initialCoherenceB.toFixed(4)}`);
+        }
+
+        // Perform distributed matrix multiplication
+        const result = await distributedModel.multiplyMatrices(matrixA, matrixB);
+
+        // Calculate result coherence
+        const resultCoherence = calculateCoherence(result);
+
+        if (config.verbosity > 0) {
+          console.log(`Result coherence: ${resultCoherence.toFixed(4)}`);
+        }
+
+        // VERIFICATION: Coherence should be preserved within tolerance
+        expect(resultCoherence >= config.coherenceThreshold).toBe(true);
+
+        // Additional verification: The result should still be mathematically valid
+        expect(result.length === matrixA.length).toBe(true);
+        expect(result[0].length === matrixB[0].length).toBe(true);
+      } catch (error) {
+        // Properly fail the test if an error occurs
+        fail(error);
+      }
+    });
+  });
+  
+  // Add more Jest test cases here for other verification tests
+});
 
 module.exports = {
   runAllTests,

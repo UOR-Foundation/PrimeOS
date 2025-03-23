@@ -5,8 +5,8 @@
  */
 
 // Import core
-const Prime = require("../../core.js");
-const { Manifold } = require("./manifold.js");
+const Prime = require('../../core.js');
+const { Manifold } = require('./manifold.js');
 
 /**
  * ManifoldRelations - Utilities for working with relationships between manifolds
@@ -22,7 +22,7 @@ const ManifoldRelations = {
    */
   connect: function (source, target, relationType, metadata = {}) {
     if (!(source instanceof Manifold) || !(target instanceof Manifold)) {
-      throw new Prime.ValidationError("Source and target must be manifolds");
+      throw new Prime.ValidationError('Source and target must be manifolds');
     }
 
     // Create the relation
@@ -55,7 +55,7 @@ const ManifoldRelations = {
     metadata = {},
   ) {
     if (!(manifoldA instanceof Manifold) || !(manifoldB instanceof Manifold)) {
-      throw new Prime.ValidationError("Both arguments must be manifolds");
+      throw new Prime.ValidationError('Both arguments must be manifolds');
     }
 
     // Create relations in both directions
@@ -83,7 +83,7 @@ const ManifoldRelations = {
    */
   findRelatedManifolds: function (source, relationType) {
     if (!(source instanceof Manifold)) {
-      throw new Prime.ValidationError("Source must be a manifold");
+      throw new Prime.ValidationError('Source must be a manifold');
     }
 
     // Use the manifold's internal relation tracking
@@ -111,7 +111,7 @@ const ManifoldRelations = {
     const manifoldMap = new Map();
     for (const manifold of manifolds) {
       if (!(manifold instanceof Manifold)) {
-        throw new Prime.ValidationError("All items must be manifolds");
+        throw new Prime.ValidationError('All items must be manifolds');
       }
 
       manifoldMap.set(manifold.getId(), manifold);
@@ -122,7 +122,7 @@ const ManifoldRelations = {
       // Add node for this manifold
       graph.nodes.push({
         id: manifold.getId(),
-        type: "manifold",
+        type: 'manifold',
         label: manifold.getMeta().name || manifold.getId(),
         properties: {
           type: manifold.getType(),
@@ -163,7 +163,7 @@ const ManifoldRelations = {
    */
   findPaths: function (source, target, options = {}) {
     if (!(source instanceof Manifold) || !(target instanceof Manifold)) {
-      throw new Prime.ValidationError("Source and target must be manifolds");
+      throw new Prime.ValidationError('Source and target must be manifolds');
     }
 
     const maxDepth = options.maxDepth || 5;
@@ -230,7 +230,7 @@ const ManifoldRelations = {
    */
   calculateRelationDensity: function (manifolds) {
     if (!Array.isArray(manifolds) || manifolds.length === 0) {
-      throw new Prime.ValidationError("Manifolds must be a non-empty array");
+      throw new Prime.ValidationError('Manifolds must be a non-empty array');
     }
 
     const n = manifolds.length;

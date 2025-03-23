@@ -5,7 +5,7 @@
  */
 
 // Import required modules
-const Prime = require("../../mathematics.js");
+const Prime = require('../../mathematics.js');
 
 /**
  * Vector operations with enhanced numerical stability
@@ -18,11 +18,11 @@ class Vector {
   constructor(values) {
     if (Array.isArray(values)) {
       this.values = [...values];
-    } else if (typeof values === "number" && values >= 0) {
+    } else if (typeof values === 'number' && values >= 0) {
       this.values = new Array(values).fill(0);
     } else {
       throw new Prime.ValidationError(
-        "Vector constructor requires array or positive dimension",
+        'Vector constructor requires array or positive dimension',
       );
     }
   }
@@ -95,7 +95,7 @@ class Vector {
 
     if (otherValues.length !== this.dimension) {
       throw new Prime.MathematicalError(
-        "Vectors must have the same dimension for addition",
+        'Vectors must have the same dimension for addition',
       );
     }
 
@@ -118,7 +118,7 @@ class Vector {
 
     if (otherValues.length !== this.dimension) {
       throw new Prime.MathematicalError(
-        "Vectors must have the same dimension for subtraction",
+        'Vectors must have the same dimension for subtraction',
       );
     }
 
@@ -136,8 +136,8 @@ class Vector {
    * @returns {Vector} Scaled vector
    */
   scale(scalar) {
-    if (typeof scalar !== "number") {
-      throw new Prime.ValidationError("Scale factor must be a number");
+    if (typeof scalar !== 'number') {
+      throw new Prime.ValidationError('Scale factor must be a number');
     }
 
     const result = this.values.map((v) => v * scalar);
@@ -154,7 +154,7 @@ class Vector {
 
     if (otherValues.length !== this.dimension) {
       throw new Prime.MathematicalError(
-        "Vectors must have the same dimension for dot product",
+        'Vectors must have the same dimension for dot product',
       );
     }
 
@@ -186,7 +186,7 @@ class Vector {
     const otherValues = other instanceof Vector ? other.values : other;
 
     if (this.dimension !== 3 || otherValues.length !== 3) {
-      throw new Prime.MathematicalError("Cross product requires 3D vectors");
+      throw new Prime.MathematicalError('Cross product requires 3D vectors');
     }
 
     const [a1, a2, a3] = this.values;
@@ -225,7 +225,7 @@ class Vector {
     // Handle numerical stability for angles
     if (Math.abs(normProduct) < Number.EPSILON) {
       throw new Prime.MathematicalError(
-        "Cannot compute angle with zero vectors",
+        'Cannot compute angle with zero vectors',
       );
     }
 
@@ -250,7 +250,7 @@ class Vector {
       otherValues,
     );
     if (Math.abs(otherDot) < Number.EPSILON) {
-      throw new Prime.MathematicalError("Cannot project onto zero vector");
+      throw new Prime.MathematicalError('Cannot project onto zero vector');
     }
 
     const scalar = this.dot(otherValues) / otherDot;
@@ -292,7 +292,7 @@ class Vector {
         }
 
         return sum;
-      } else if (p === Infinity || p === "inf") {
+      } else if (p === Infinity || p === 'inf') {
         // Maximum norm (L∞)
         let max = 0;
 
@@ -325,7 +325,7 @@ class Vector {
     const magnitude = this.norm();
 
     if (magnitude < Number.EPSILON) {
-      throw new Prime.MathematicalError("Cannot normalize zero vector");
+      throw new Prime.MathematicalError('Cannot normalize zero vector');
     }
 
     return this.scale(1 / magnitude);
@@ -378,7 +378,7 @@ class Vector {
    * @returns {string} String representation
    */
   toString() {
-    return `[${this.values.join(", ")}]`;
+    return `[${this.values.join(', ')}]`;
   }
 
   /**
@@ -409,7 +409,7 @@ class Matrix {
       // Validate all rows have the same length
       for (let i = 1; i < this.rows; i++) {
         if (!Array.isArray(values[i]) || values[i].length !== this.cols) {
-          throw new Prime.ValidationError("All rows must have the same length");
+          throw new Prime.ValidationError('All rows must have the same length');
         }
       }
 
@@ -417,12 +417,12 @@ class Matrix {
       this.values = values.map((row) => [...row]);
     } else if (
       Array.isArray(values) &&
-      typeof rows === "number" &&
-      typeof cols === "number"
+      typeof rows === 'number' &&
+      typeof cols === 'number'
     ) {
       // Flat array with dimensions
       if (values.length !== rows * cols) {
-        throw new Prime.ValidationError("Invalid dimensions for flat array");
+        throw new Prime.ValidationError('Invalid dimensions for flat array');
       }
 
       this.rows = rows;
@@ -437,7 +437,7 @@ class Matrix {
         }
         this.values.push(row);
       }
-    } else if (typeof values === "number" && typeof rows === "number") {
+    } else if (typeof values === 'number' && typeof rows === 'number') {
       // Create matrix with dimensions and default value 0
       this.rows = values;
       this.cols = rows;
@@ -445,7 +445,7 @@ class Matrix {
         .fill()
         .map(() => Array(this.cols).fill(0));
     } else {
-      throw new Prime.ValidationError("Invalid matrix constructor arguments");
+      throw new Prime.ValidationError('Invalid matrix constructor arguments');
     }
   }
 
@@ -602,7 +602,7 @@ class Matrix {
 
     if (this.rows !== otherMatrix.rows || this.cols !== otherMatrix.cols) {
       throw new Prime.MathematicalError(
-        "Matrices must have the same shape for addition",
+        'Matrices must have the same shape for addition',
       );
     }
 
@@ -627,7 +627,7 @@ class Matrix {
 
     if (this.rows !== otherMatrix.rows || this.cols !== otherMatrix.cols) {
       throw new Prime.MathematicalError(
-        "Matrices must have the same shape for subtraction",
+        'Matrices must have the same shape for subtraction',
       );
     }
 
@@ -648,8 +648,8 @@ class Matrix {
    * @returns {Matrix} Scaled matrix
    */
   scale(scalar) {
-    if (typeof scalar !== "number") {
-      throw new Prime.ValidationError("Scale factor must be a number");
+    if (typeof scalar !== 'number') {
+      throw new Prime.ValidationError('Scale factor must be a number');
     }
 
     const result = this.values.map((row) => row.map((v) => v * scalar));
@@ -697,7 +697,7 @@ class Matrix {
   _multiplyVector(vector) {
     if (this.cols !== vector.dimension) {
       throw new Prime.MathematicalError(
-        "Matrix and vector dimensions incompatible for multiplication",
+        'Matrix and vector dimensions incompatible for multiplication',
       );
     }
 
@@ -765,7 +765,7 @@ class Matrix {
    */
   trace() {
     if (this.rows !== this.cols) {
-      throw new Prime.MathematicalError("Trace requires a square matrix");
+      throw new Prime.MathematicalError('Trace requires a square matrix');
     }
 
     let sum = 0;
@@ -782,7 +782,7 @@ class Matrix {
    */
   determinant() {
     if (this.rows !== this.cols) {
-      throw new Prime.MathematicalError("Determinant requires a square matrix");
+      throw new Prime.MathematicalError('Determinant requires a square matrix');
     }
 
     // Handle special cases for efficiency
@@ -838,7 +838,7 @@ class Matrix {
   luDecomposition() {
     if (this.rows !== this.cols) {
       throw new Prime.MathematicalError(
-        "LU decomposition requires a square matrix",
+        'LU decomposition requires a square matrix',
       );
     }
 
@@ -868,7 +868,7 @@ class Matrix {
       // Check for singularity
       if (Math.abs(A[pivot][k]) < Number.EPSILON) {
         throw new Prime.MathematicalError(
-          "Matrix is singular, LU decomposition failed",
+          'Matrix is singular, LU decomposition failed',
         );
       }
 
@@ -916,7 +916,7 @@ class Matrix {
    */
   inverse() {
     if (this.rows !== this.cols) {
-      throw new Prime.MathematicalError("Inverse requires a square matrix");
+      throw new Prime.MathematicalError('Inverse requires a square matrix');
     }
 
     const n = this.rows;
@@ -926,7 +926,7 @@ class Matrix {
       const det = this.values[0][0];
       if (Math.abs(det) < Number.EPSILON) {
         throw new Prime.MathematicalError(
-          "Matrix is singular, cannot compute inverse",
+          'Matrix is singular, cannot compute inverse',
         );
       }
       return new Matrix([[1 / det]]);
@@ -936,7 +936,7 @@ class Matrix {
       const det = this.determinant();
       if (Math.abs(det) < Number.EPSILON) {
         throw new Prime.MathematicalError(
-          "Matrix is singular, cannot compute inverse",
+          'Matrix is singular, cannot compute inverse',
         );
       }
 
@@ -990,7 +990,7 @@ class Matrix {
 
         if (Math.abs(U.values[i][i]) < Number.EPSILON) {
           throw new Prime.MathematicalError(
-            "Matrix is singular, cannot compute inverse",
+            'Matrix is singular, cannot compute inverse',
           );
         }
 
@@ -1010,12 +1010,12 @@ class Matrix {
     const bVector = b instanceof Vector ? b : new Vector(b);
 
     if (this.rows !== this.cols) {
-      throw new Prime.MathematicalError("System matrix must be square");
+      throw new Prime.MathematicalError('System matrix must be square');
     }
 
     if (this.rows !== bVector.dimension) {
       throw new Prime.MathematicalError(
-        "Vector dimension must match matrix size",
+        'Vector dimension must match matrix size',
       );
     }
 
@@ -1053,7 +1053,7 @@ class Matrix {
 
       if (Math.abs(U.values[i][i]) < Number.EPSILON) {
         throw new Prime.MathematicalError(
-          "Matrix is singular, cannot solve system",
+          'Matrix is singular, cannot solve system',
         );
       }
 
@@ -1070,7 +1070,7 @@ class Matrix {
   eigen() {
     if (this.rows !== this.cols) {
       throw new Prime.MathematicalError(
-        "Eigendecomposition requires a square matrix",
+        'Eigendecomposition requires a square matrix',
       );
     }
 
@@ -1146,7 +1146,7 @@ class Matrix {
 
     if (discriminant < 0) {
       // Complex eigenvalues, not implemented
-      throw new Prime.MathematicalError("Complex eigenvalues not implemented");
+      throw new Prime.MathematicalError('Complex eigenvalues not implemented');
     }
 
     const sqrtDiscriminant = Math.sqrt(discriminant);
@@ -1204,15 +1204,15 @@ class Matrix {
       if (isNearlyDiagonal) break;
 
       // QR decomposition using Gram-Schmidt
-      let R = Array(n)
+      const R = Array(n)
         .fill()
         .map(() => Array(n).fill(0));
-      let Qi = Array(n)
+      const Qi = Array(n)
         .fill()
         .map(() => Array(n).fill(0));
 
       // Get matrix columns
-      let columns = [];
+      const columns = [];
       for (let j = 0; j < n; j++) {
         columns.push(
           Array(n)
@@ -1223,7 +1223,7 @@ class Matrix {
 
       // Gram-Schmidt process
       for (let j = 0; j < n; j++) {
-        let q = [...columns[j]];
+        const q = [...columns[j]];
 
         for (let i = 0; i < j; i++) {
           // Calculate dot product
@@ -1250,7 +1250,7 @@ class Matrix {
         if (norm < epsilon) {
           // Linearly dependent
           throw new Prime.MathematicalError(
-            "QR decomposition failed for eigendecomposition",
+            'QR decomposition failed for eigendecomposition',
           );
         }
 
@@ -1262,7 +1262,7 @@ class Matrix {
       }
 
       // Update A = R * Q
-      let newA = Array(n)
+      const newA = Array(n)
         .fill()
         .map(() => Array(n).fill(0));
       for (let i = 0; i < n; i++) {
@@ -1275,7 +1275,7 @@ class Matrix {
       A = newA;
 
       // Update Q matrix (eigenvectors)
-      let newQ = Array(n)
+      const newQ = Array(n)
         .fill()
         .map(() => Array(n).fill(0));
       for (let i = 0; i < n; i++) {
@@ -1326,7 +1326,7 @@ class Matrix {
     const epsilon = 1e-10;
 
     // Create a copy of the matrix
-    let A = this.toArray();
+    const A = this.toArray();
 
     // Storage for eigenvalues and eigenvectors
     const eigenvalues = [];
@@ -1335,7 +1335,7 @@ class Matrix {
     // Power iteration for each eigenvalue
     for (let eigenIndex = 0; eigenIndex < n; eigenIndex++) {
       // Start with a random vector
-      let v = Array(n).fill(0);
+      const v = Array(n).fill(0);
       v[eigenIndex % n] = 1; // Try different starting vectors
 
       let lambda = 0;
@@ -1344,7 +1344,7 @@ class Matrix {
       // Power iteration
       for (let iter = 0; iter < maxIterations; iter++) {
         // Multiply A * v
-        let Av = Array(n).fill(0);
+        const Av = Array(n).fill(0);
         for (let i = 0; i < n; i++) {
           for (let j = 0; j < n; j++) {
             Av[i] += A[i][j] * v[j];
@@ -1403,7 +1403,7 @@ class Matrix {
   qrDecomposition() {
     if (this.rows < this.cols) {
       throw new Prime.MathematicalError(
-        "QR decomposition requires rows >= columns",
+        'QR decomposition requires rows >= columns',
       );
     }
 
@@ -1502,7 +1502,7 @@ class Matrix {
           const newNorm = q.norm();
           if (newNorm < 1e-10) {
             throw new Prime.MathematicalError(
-              "QR decomposition failed to find orthogonal basis",
+              'QR decomposition failed to find orthogonal basis',
             );
           }
 
@@ -1592,7 +1592,7 @@ class Matrix {
     const A = workingMatrix.toArray();
 
     // Compute A^T A or AA^T (whichever is smaller) with Kahan summation
-    let useTranspose = m > n;
+    const useTranspose = m > n;
     let B;
 
     if (useTranspose) {
@@ -2309,7 +2309,7 @@ class Matrix {
    * @returns {string} String representation
    */
   toString() {
-    return this.values.map((row) => `[${row.join(", ")}]`).join("\n");
+    return this.values.map((row) => `[${row.join(', ')}]`).join('\n');
   }
 }
 

@@ -6,7 +6,7 @@
 // Import core if available
 let Prime;
 try {
-  Prime = require("../../core.js");
+  Prime = require('../../core.js');
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
@@ -47,7 +47,7 @@ const CONSTANTS = {
  * @param {string} context - Context of the calculation (e.g., 'vector', 'matrix')
  * @returns {number} Appropriate epsilon value scaled to the magnitude
  */
-function adaptiveEpsilon(magnitude, context = "general") {
+function adaptiveEpsilon(magnitude, context = 'general') {
   // Get base tolerance for the context
   const baseTolerance =
     CONSTANTS.TOLERANCES[context] || CONSTANTS.EPSILON_GENERAL;
@@ -76,7 +76,7 @@ function adaptiveEpsilon(magnitude, context = "general") {
  */
 function kahanSum(values) {
   if (!Array.isArray(values)) {
-    throw new TypeError("Expected an array of values");
+    throw new TypeError('Expected an array of values');
   }
 
   let sum = 0;
@@ -128,7 +128,7 @@ const vector = {
    */
   lerp: function (a, b, t) {
     if (!Array.isArray(a) || !Array.isArray(b)) {
-      throw new TypeError("Vectors must be arrays");
+      throw new TypeError('Vectors must be arrays');
     }
 
     // Ensure t is clamped to [0,1]
@@ -157,7 +157,7 @@ const vector = {
    */
   norm: function (v) {
     if (!Array.isArray(v)) {
-      throw new TypeError("Vector must be an array");
+      throw new TypeError('Vector must be an array');
     }
 
     // Calculate vector norm using Kahan summation for better precision
@@ -179,7 +179,7 @@ const vector = {
   distance: function (a, b, options = {}) {
     // Validate inputs
     if (!Array.isArray(a) || !Array.isArray(b)) {
-      throw new TypeError("Vectors must be arrays");
+      throw new TypeError('Vectors must be arrays');
     }
 
     const maxLength = Math.max(a.length, b.length);
@@ -227,7 +227,7 @@ const vector = {
   cosineSimilarity: function (a, b, options = {}) {
     // Validate inputs
     if (!Array.isArray(a) || !Array.isArray(b)) {
-      throw new TypeError("Vectors must be arrays");
+      throw new TypeError('Vectors must be arrays');
     }
 
     const maxLength = Math.max(a.length, b.length);
@@ -256,7 +256,7 @@ const vector = {
     const dotProduct = dotResult.sum;
 
     // Calculate adaptive epsilon based on vector magnitudes
-    const adaptiveEps = adaptiveEpsilon(Math.max(aNorm, bNorm), "vector");
+    const adaptiveEps = adaptiveEpsilon(Math.max(aNorm, bNorm), 'vector');
 
     // Mathematically principled handling of zero or near-zero vectors
     if (aNorm < adaptiveEps || bNorm < adaptiveEps) {
@@ -267,7 +267,7 @@ const vector = {
           distance: 0,
           relativeError: 0,
           absoluteError: 0,
-          reason: "Both vectors are effectively zero",
+          reason: 'Both vectors are effectively zero',
         };
       }
 
@@ -277,7 +277,7 @@ const vector = {
         distance: 1,
         relativeError: 0,
         absoluteError: 0,
-        reason: "One vector is effectively zero",
+        reason: 'One vector is effectively zero',
       };
     }
 
@@ -338,7 +338,7 @@ const vector = {
   manhattanDistance: function (a, b) {
     // Validate inputs
     if (!Array.isArray(a) || !Array.isArray(b)) {
-      throw new TypeError("Vectors must be arrays");
+      throw new TypeError('Vectors must be arrays');
     }
 
     const maxLength = Math.max(a.length, b.length);
@@ -373,7 +373,7 @@ const vector = {
   chebyshevDistance: function (a, b) {
     // Validate inputs
     if (!Array.isArray(a) || !Array.isArray(b)) {
-      throw new TypeError("Vectors must be arrays");
+      throw new TypeError('Vectors must be arrays');
     }
 
     const maxLength = Math.max(a.length, b.length);
@@ -409,7 +409,7 @@ const vector = {
    */
   normalize: function (v, options = {}) {
     if (!Array.isArray(v)) {
-      throw new TypeError("Vector must be an array");
+      throw new TypeError('Vector must be an array');
     }
 
     // Calculate vector norm using Kahan summation for better precision
@@ -420,14 +420,14 @@ const vector = {
     const norm = Math.sqrt(Math.max(0, sumResult.sum));
 
     // Handle zero or near-zero vectors
-    const eps = options.epsilon || adaptiveEpsilon(norm, "vector");
+    const eps = options.epsilon || adaptiveEpsilon(norm, 'vector');
     if (norm < eps) {
       return {
         vector: Array(v.length).fill(0),
         norm: 0,
         relativeError: 0,
         isZero: true,
-        message: "Vector is effectively zero; returned zero vector",
+        message: 'Vector is effectively zero; returned zero vector',
       };
     }
 
@@ -451,7 +451,7 @@ const vector = {
   // This version returns just the normalized vector array (not the object with metadata)
   normalizeSimple: function (v) {
     if (!Array.isArray(v)) {
-      throw new TypeError("Vector must be an array");
+      throw new TypeError('Vector must be an array');
     }
 
     const normVal = this.norm(v);
@@ -474,13 +474,13 @@ const vector = {
    */
   gramSchmidt: function (vectors, options = {}) {
     if (!Array.isArray(vectors) || vectors.length === 0) {
-      throw new TypeError("Expected non-empty array of vectors");
+      throw new TypeError('Expected non-empty array of vectors');
     }
 
     // Extract configuration options
     const reorthogonalize = options.reorthogonalize !== false;
     const normalize = options.normalize !== false;
-    const tolerance = options.tolerance || adaptiveEpsilon(0, "vector");
+    const tolerance = options.tolerance || adaptiveEpsilon(0, 'vector');
 
     const n = vectors.length;
     const dim = vectors[0].length;
@@ -488,7 +488,7 @@ const vector = {
 
     for (let i = 0; i < n; i++) {
       // Start with the original vector
-      let q = vectors[i].slice();
+      const q = vectors[i].slice();
 
       // Modified Gram-Schmidt process
       for (let j = 0; j < basis.length; j++) {
@@ -530,7 +530,7 @@ const vector = {
    */
   dotProduct: function (a, b) {
     if (!Array.isArray(a) || !Array.isArray(b)) {
-      throw new TypeError("Vectors must be arrays");
+      throw new TypeError('Vectors must be arrays');
     }
 
     const maxLength = Math.max(a.length, b.length);
@@ -567,7 +567,7 @@ const matrix = {
       !Array.isArray(b) ||
       !b.every(Array.isArray)
     ) {
-      throw new TypeError("Matrices must be arrays of arrays");
+      throw new TypeError('Matrices must be arrays of arrays');
     }
 
     const aRows = a.length;
@@ -634,14 +634,14 @@ const matrix = {
    */
   determinant: function (matrix) {
     if (!Array.isArray(matrix) || !matrix.every(Array.isArray)) {
-      throw new TypeError("Matrix must be an array of arrays");
+      throw new TypeError('Matrix must be an array of arrays');
     }
 
     const n = matrix.length;
 
     // Check if matrix is square
     if (!matrix.every((row) => row.length === n)) {
-      throw new Error("Matrix must be square");
+      throw new Error('Matrix must be square');
     }
 
     // Handle special cases
@@ -740,9 +740,9 @@ const matrix = {
         determinant: det,
         relativeError: n * n * CONSTANTS.EPSILON, // Higher error for naive method
         absoluteError: n * n * CONSTANTS.EPSILON * Math.abs(det),
-        method: "cofactor expansion",
+        method: 'cofactor expansion',
         warning:
-          "Used less numerically stable method, result may have larger errors",
+          'Used less numerically stable method, result may have larger errors',
       };
     }
   },
@@ -755,14 +755,14 @@ const matrix = {
    */
   luDecomposition: function (matrix) {
     if (!Array.isArray(matrix) || !matrix.every(Array.isArray)) {
-      throw new TypeError("Matrix must be an array of arrays");
+      throw new TypeError('Matrix must be an array of arrays');
     }
 
     const n = matrix.length;
 
     // Check if matrix is square
     if (!matrix.every((row) => row.length === n)) {
-      throw new Error("Matrix must be square");
+      throw new Error('Matrix must be square');
     }
 
     // Create a copy of the matrix
@@ -787,7 +787,7 @@ const matrix = {
       }
 
       if (rowMax === 0) {
-        throw new Error("Matrix is singular");
+        throw new Error('Matrix is singular');
       }
 
       implicitScaling[i] = 1.0 / rowMax;
@@ -880,12 +880,12 @@ const optimization = {
    * @returns {Object} Optimization result
    */
   gradientDescent: function (f, initialPoint, options = {}) {
-    if (typeof f !== "function") {
-      throw new TypeError("First argument must be a function");
+    if (typeof f !== 'function') {
+      throw new TypeError('First argument must be a function');
     }
 
     if (!Array.isArray(initialPoint)) {
-      throw new TypeError("Initial point must be an array");
+      throw new TypeError('Initial point must be an array');
     }
 
     // Configuration options with defaults
@@ -897,31 +897,31 @@ const optimization = {
     const momentum = options.momentum || 0;
 
     // Initialize variables
-    let x = [...initialPoint];
+    const x = [...initialPoint];
     let fx = f(x);
     let iter = 0;
     let converged = false;
     let stepSize = learningRate;
     let previousGradient = null;
-    let velocity = Array(x.length).fill(0);
+    const velocity = Array(x.length).fill(0);
 
     // Track iteration history if requested
     const history = options.trackHistory
       ? [
-          {
-            iteration: 0,
-            x: [...x],
-            fx,
-            stepSize,
-          },
-        ]
+        {
+          iteration: 0,
+          x: [...x],
+          fx,
+          stepSize,
+        },
+      ]
       : null;
 
     // Optimization loop
     while (iter < maxIterations && !converged) {
       // Calculate gradient
       const gradient = this._computeGradient(f, x, {
-        method: options.gradientMethod || "central",
+        method: options.gradientMethod || 'central',
         epsilon: options.gradientEpsilon,
       });
 
@@ -1014,18 +1014,18 @@ const optimization = {
    * @returns {Object} Gradient vector and metadata
    */
   _computeGradient: function (f, x, options = {}) {
-    if (typeof f !== "function") {
-      throw new TypeError("First argument must be a function");
+    if (typeof f !== 'function') {
+      throw new TypeError('First argument must be a function');
     }
 
     if (!Array.isArray(x)) {
-      throw new TypeError("Point must be an array");
+      throw new TypeError('Point must be an array');
     }
 
     // Configure differentiation method
-    const method = options.method || "central";
+    const method = options.method || 'central';
     const epsilon =
-      options.epsilon || adaptiveEpsilon(Math.abs(f(x)), "optimization");
+      options.epsilon || adaptiveEpsilon(Math.abs(f(x)), 'optimization');
 
     const n = x.length;
     const gradient = new Array(n);
@@ -1039,20 +1039,20 @@ const optimization = {
       const xMinus2 = [...x];
 
       switch (method) {
-        case "forward":
+        case 'forward':
           // Forward difference: (f(x+h) - f(x)) / h
           xPlus[i] += epsilon;
           gradient[i] = (f(xPlus) - f(x)) / epsilon;
           break;
 
-        case "central":
+        case 'central':
           // Central difference: (f(x+h) - f(x-h)) / (2h)
           xPlus[i] += epsilon;
           xMinus[i] -= epsilon;
           gradient[i] = (f(xPlus) - f(xMinus)) / (2 * epsilon);
           break;
 
-        case "high-order":
+        case 'high-order':
           // 5-point stencil for higher accuracy:
           // (-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)) / (12h)
           xPlus[i] += epsilon;
@@ -1065,7 +1065,7 @@ const optimization = {
             (12 * epsilon);
           break;
 
-        case "adaptive":
+        case 'adaptive':
           // Richardson extrapolation with adaptive step sizes
           const h1 = epsilon;
           const h2 = 0.5 * epsilon;
@@ -1104,12 +1104,12 @@ const optimization = {
    * @returns {Object} Optimization result
    */
   simulatedAnnealing: function (f, initialPoint, options = {}) {
-    if (typeof f !== "function") {
-      throw new TypeError("First argument must be a function");
+    if (typeof f !== 'function') {
+      throw new TypeError('First argument must be a function');
     }
 
     if (!Array.isArray(initialPoint)) {
-      throw new TypeError("Initial point must be an array");
+      throw new TypeError('Initial point must be an array');
     }
 
     // Configure algorithm options
@@ -1135,21 +1135,21 @@ const optimization = {
     // Track history if requested
     const history = options.trackHistory
       ? [
-          {
-            iteration: 0,
-            x: [...x],
-            fx,
-            temperature: temp,
-            accepted: true,
-            improvement: false,
-          },
-        ]
+        {
+          iteration: 0,
+          x: [...x],
+          fx,
+          temperature: temp,
+          accepted: true,
+          improvement: false,
+        },
+      ]
       : null;
 
     // Helper function to check constraints
     const satisfiesConstraints = (point) => {
       for (const constraint of constraints) {
-        if (typeof constraint === "function" && !constraint(point)) {
+        if (typeof constraint === 'function' && !constraint(point)) {
           return false;
         }
       }
@@ -1286,7 +1286,7 @@ const optimization = {
     // Helper function to check constraints
     const satisfiesConstraints = (pt) => {
       for (const constraint of constraints) {
-        if (typeof constraint === "function" && !constraint(pt)) {
+        if (typeof constraint === 'function' && !constraint(pt)) {
           return false;
         }
       }
@@ -1302,11 +1302,11 @@ const optimization = {
       let projected = true;
 
       for (const constraint of constraints) {
-        if (typeof constraint === "function" && !constraint(point)) {
+        if (typeof constraint === 'function' && !constraint(point)) {
           // If constraint provides a projection method, use it
-          if (typeof constraint.project === "function") {
+          if (typeof constraint.project === 'function') {
             constraint.project(point);
-          } else if (typeof constraint.gradient === "function") {
+          } else if (typeof constraint.gradient === 'function') {
             // If gradient is available, move along gradient
             const gradient = constraint.gradient(point);
             const stepSize = 0.1 / (attempts + 1);
@@ -1363,12 +1363,12 @@ const integration = {
    * @returns {Object} Integration result and error estimation
    */
   adaptiveQuadrature: function (f, a, b, options = {}) {
-    if (typeof f !== "function") {
-      throw new TypeError("First argument must be a function");
+    if (typeof f !== 'function') {
+      throw new TypeError('First argument must be a function');
     }
 
-    if (typeof a !== "number" || typeof b !== "number") {
-      throw new TypeError("Integration bounds must be numbers");
+    if (typeof a !== 'number' || typeof b !== 'number') {
+      throw new TypeError('Integration bounds must be numbers');
     }
 
     // Configure integration options
@@ -1490,21 +1490,21 @@ const integration = {
 // Import additional math modules if available
 let patternRecognition;
 try {
-  patternRecognition = require("./patternRecognition.js");
+  patternRecognition = require('./patternRecognition.js');
 } catch (e) {
   patternRecognition = {};
 }
 
 let spectral;
 try {
-  spectral = require("./spectral.js");
+  spectral = require('./spectral.js');
 } catch (e) {
   spectral = {};
 }
 
 let coherence;
 try {
-  coherence = require("./coherence.js");
+  coherence = require('./coherence.js');
 } catch (e) {
   coherence = {};
 }
@@ -1512,7 +1512,7 @@ try {
 // Import linear algebra module
 let linalg;
 try {
-  linalg = require("./linalg.js");
+  linalg = require('./linalg.js');
 } catch (e) {
   linalg = {};
 }
@@ -1520,7 +1520,7 @@ try {
 // Import Prime.math module
 let primeMath;
 try {
-  primeMath = require("./prime-math.js");
+  primeMath = require('./prime-math.js');
 } catch (e) {
   primeMath = {};
 }
@@ -1536,14 +1536,14 @@ try {
 vector.embedData = function (data, dimensions) {
   // Ensure dimensions is valid
   if (!Number.isInteger(dimensions) || dimensions <= 0) {
-    throw new Error("Embedding dimensions must be a positive integer");
+    throw new Error('Embedding dimensions must be a positive integer');
   }
 
   // Handle different data types
-  if (typeof data === "number") {
+  if (typeof data === 'number') {
     // For numbers, use spectral encoding
     return this._embedNumber(data, dimensions);
-  } else if (typeof data === "string") {
+  } else if (typeof data === 'string') {
     // For strings, use pattern-based encoding
     return this._embedString(data, dimensions);
   } else if (Array.isArray(data)) {
@@ -1552,10 +1552,10 @@ vector.embedData = function (data, dimensions) {
   } else if (data === null || data === undefined) {
     // For null/undefined, return zero vector
     return Array(dimensions).fill(0);
-  } else if (typeof data === "object") {
+  } else if (typeof data === 'object') {
     // For objects, create feature-based embedding
     return this._embedObject(data, dimensions);
-  } else if (typeof data === "boolean") {
+  } else if (typeof data === 'boolean') {
     // For booleans, use bipolar representation
     return this._embedBoolean(data, dimensions);
   } else {
@@ -1607,7 +1607,7 @@ vector._embedArray = function (arr, dimensions) {
   // If array already has the right size, normalize it
   if (
     arr.length === dimensions &&
-    arr.every((item) => typeof item === "number")
+    arr.every((item) => typeof item === 'number')
   ) {
     return this.normalizeSimple(arr);
   }
@@ -1615,7 +1615,7 @@ vector._embedArray = function (arr, dimensions) {
   const result = Array(dimensions).fill(0);
 
   // Handle numeric arrays of different sizes
-  if (arr.every((item) => typeof item === "number")) {
+  if (arr.every((item) => typeof item === 'number')) {
     // If array is smaller than target, use values directly
     if (arr.length <= dimensions) {
       for (let i = 0; i < arr.length; i++) {
@@ -1666,7 +1666,7 @@ vector._embedObject = function (obj, dimensions) {
     const keyHash = this._simpleHash(key);
 
     // Add contribution based on value type
-    if (typeof value === "number") {
+    if (typeof value === 'number') {
       const dimIndex = i % dimensions;
       result[dimIndex] += Math.tanh(value / 100) * Math.sin(keyHash);
     } else {
@@ -1732,10 +1732,10 @@ vector._simpleHash = function (str) {
 let vectorCore, vectorAdvanced, vectorValidation;
 try {
   // First try to import from new modular structure - import Prime object
-  const Prime = require("../../core");
+  const Prime = require('../../core');
 
   // Ensure math modules are loaded - this will trigger lazy loading
-  require("../../math/index");
+  require('../../math/index');
 
   // Access through the Prime.Math namespace which should now have the modules
   vectorCore = Prime.Math.VectorCore || null;
@@ -1746,7 +1746,7 @@ try {
   vectorCore = null;
   vectorAdvanced = null;
   vectorValidation = null;
-  console.error("Error loading vector modules:", e.message);
+  console.error('Error loading vector modules:', e.message);
 }
 
 // Enhance vector module with refactored functionality if available
@@ -1757,11 +1757,11 @@ if (vectorCore && vectorAdvanced && vectorValidation) {
     const result = args[args.length - 1];
 
     switch (operation) {
-      case "add":
+      case 'add':
         return vectorCore.add(args[0], args[1], result);
-      case "subtract":
+      case 'subtract':
         return vectorCore.subtract(args[0], args[1], result);
-      case "scale":
+      case 'scale':
         return vectorCore.scale(args[0], args[1], result);
       default:
         throw new Error(`Unknown operation: ${operation}`);

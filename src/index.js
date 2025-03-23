@@ -5,30 +5,30 @@
  */
 
 // Import refactored core Prime
-const Prime = require("./core");
+const Prime = require('./core');
 
 // Import refactored math module
-require("./math");
+require('./math');
 
 // Import neural module
-require("./neural");
+require('./neural');
 
 // Import consciousness module
-require("./consciousness");
+require('./consciousness');
 
 // Import distributed computation module
-require("./distributed");
+require('./distributed');
 
 // Import legacy modules
 // These will be refactored in future phases
-require("./coherence.js");
-require("./framework/index.js");
-require("./components/index.js");
+require('./coherence.js');
+require('./framework/index.js');
+require('./components/index.js');
 
 // Import verification modules
-require("./coherence/verification.js");
-require("./mathematics/advanced.js");
-require("./neural/advanced-models.js");
+require('./coherence/verification.js');
+require('./mathematics/advanced.js');
+require('./neural/advanced-models.js');
 
 // Initialize framework as a top-level property
 Prime.framework = Prime.createPrimeFramework();

@@ -905,7 +905,10 @@ function applyMapping(targetLayer, mapping) {
     const [targetRow, targetCol] = entry.targetIndex;
     // sourceIndex may be used in future expansions of this function
     // Keeping indices unpacked for code clarity and future expandability
-    const [/* sourceRow */, /* sourceCol */] = entry.sourceIndex;
+    const [
+      ,/* sourceRow */
+      /* sourceCol */
+    ] = entry.sourceIndex;
 
     // Skip if indices are out of bounds
     if (targetRow >= targetLayer.length || targetCol >= targetLayer[0].length) {

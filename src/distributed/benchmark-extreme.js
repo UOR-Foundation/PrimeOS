@@ -5,7 +5,6 @@
  * to ensure numerical stability and performance under challenging conditions.
  */
 
-
 const { performance } = require('perf_hooks');
 const Prime = require('../mathematics.js');
 

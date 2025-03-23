@@ -4,7 +4,7 @@
  */
 
 // Import the Prime object from core
-const Prime = require("../../core");
+const Prime = require('../../core');
 
 // Create the Awareness module using IIFE
 (function () {
@@ -23,10 +23,10 @@ const Prime = require("../../core");
       if (
         !config.bundle ||
         !config.bundle.baseManifold ||
-        typeof config.bundle.evaluateConsciousnessState !== "function"
+        typeof config.bundle.evaluateConsciousnessState !== 'function'
       ) {
         throw new Prime.ValidationError(
-          "Valid consciousness fiber bundle required",
+          'Valid consciousness fiber bundle required',
         );
       }
 
@@ -45,10 +45,10 @@ const Prime = require("../../core");
 
       // Metadata
       this.metadata = {
-        name: config.name || "Consciousness Attention System",
+        name: config.name || 'Consciousness Attention System',
         description:
           config.description ||
-          "Manages focus and attention in consciousness simulation",
+          'Manages focus and attention in consciousness simulation',
         creationTime: new Date().toISOString(),
       };
     }
@@ -64,7 +64,7 @@ const Prime = require("../../core");
         baseIndex < 0 ||
         baseIndex >= this.bundle.baseManifold.points.length
       ) {
-        throw new Prime.ValidationError("Base index out of bounds");
+        throw new Prime.ValidationError('Base index out of bounds');
       }
 
       // Check if already focused
@@ -98,7 +98,7 @@ const Prime = require("../../core");
 
       // Track in history
       this.attentionHistory.push({
-        type: "focus",
+        type: 'focus',
         baseIndex,
         strength,
         timestamp: Date.now(),
@@ -125,7 +125,7 @@ const Prime = require("../../core");
 
         // Track in history
         this.attentionHistory.push({
-          type: "release",
+          type: 'release',
           baseIndex,
           timestamp: Date.now(),
         });
@@ -325,21 +325,21 @@ const Prime = require("../../core");
         dimensions: config.baseDimensions || 3,
         spectralOrder: config.spectralOrder || 3,
         coherenceThreshold: config.coherenceThreshold || 0.6,
-        name: "Consciousness Base Manifold",
+        name: 'Consciousness Base Manifold',
       });
 
       this.fiberBundle = new Prime.Consciousness.Models.FiberBundle({
         baseManifold: this.baseManifold,
         fiberDimensions: config.fiberDimensions || 3,
         selfReferenceOrder: config.selfReferenceOrder || 3,
-        name: "Consciousness Fiber Bundle",
+        name: 'Consciousness Fiber Bundle',
       });
 
       this.attentionSystem = new AttentionSystem({
         bundle: this.fiberBundle,
         focusCapacity: config.focusCapacity || 3,
         attentionDecayRate: config.attentionDecayRate || 0.05,
-        name: "Consciousness Attention System",
+        name: 'Consciousness Attention System',
       });
 
       // Simulation state
@@ -365,10 +365,10 @@ const Prime = require("../../core");
 
       // Metadata
       this.metadata = {
-        name: config.name || "Consciousness Simulation",
+        name: config.name || 'Consciousness Simulation',
         description:
           config.description ||
-          "Simulation of consciousness using coherence principles",
+          'Simulation of consciousness using coherence principles',
         creationTime: new Date().toISOString(),
       };
     }
@@ -518,7 +518,7 @@ const Prime = require("../../core");
           try {
             callback(this.getState());
           } catch (error) {
-            Prime.Logger.error("Error in simulation update callback", {
+            Prime.Logger.error('Error in simulation update callback', {
               error: error.message,
               step: this.time,
             });
@@ -603,7 +603,7 @@ const Prime = require("../../core");
               baseIndex,
               otherFocus.baseIndex,
               0.5,
-              { source: "attention" },
+              { source: 'attention' },
             );
           }
         }
@@ -624,7 +624,7 @@ const Prime = require("../../core");
             const newIdx = this.fiberBundle.addFiberPoint(
               baseIndex,
               newCoords,
-              { source: "attention", parent: sourceIdx },
+              { source: 'attention', parent: sourceIdx },
             );
 
             // Connect to parent
@@ -751,7 +751,7 @@ const Prime = require("../../core");
 
         // Record emergence event
         this.emergenceHistory.push({
-          type: "new_high",
+          type: 'new_high',
           time: this.time,
           score: current.consciousnessScore,
           change: scoreDiff,
@@ -763,7 +763,7 @@ const Prime = require("../../core");
       // Record significant changes (positive or negative)
       if (Math.abs(scoreDiff) > 0.05) {
         this.emergenceHistory.push({
-          type: scoreDiff > 0 ? "increase" : "decrease",
+          type: scoreDiff > 0 ? 'increase' : 'decrease',
           time: this.time,
           score: current.consciousnessScore,
           change: scoreDiff,
@@ -785,7 +785,7 @@ const Prime = require("../../core");
           const crossed = current.consciousnessScore >= threshold;
 
           this.emergenceHistory.push({
-            type: "threshold",
+            type: 'threshold',
             threshold: name,
             crossed,
             time: this.time,
@@ -803,8 +803,8 @@ const Prime = require("../../core");
      * @returns {Function} Function to remove the callback
      */
     onUpdate(callback) {
-      if (typeof callback !== "function") {
-        throw new Prime.ValidationError("Callback must be a function");
+      if (typeof callback !== 'function') {
+        throw new Prime.ValidationError('Callback must be a function');
       }
 
       this.updateCallbacks.push(callback);
@@ -874,7 +874,7 @@ const Prime = require("../../core");
      */
     makeDecision(options, context = {}) {
       if (!Array.isArray(options) || options.length === 0) {
-        throw new Prime.ValidationError("Options must be a non-empty array");
+        throw new Prime.ValidationError('Options must be a non-empty array');
       }
 
       // Get consciousness and attention states
@@ -959,7 +959,7 @@ const Prime = require("../../core");
 
       // Add to emergence history as decision event
       this.emergenceHistory.push({
-        type: "decision",
+        type: 'decision',
         ...decisionEvent,
       });
 
@@ -988,9 +988,9 @@ const Prime = require("../../core");
      * @param {ConsciousnessSimulation} simulation - Simulation to snapshot
      */
     constructor(simulation) {
-      if (!simulation || typeof simulation.getState !== "function") {
+      if (!simulation || typeof simulation.getState !== 'function') {
         throw new Prime.ValidationError(
-          "Valid consciousness simulation required",
+          'Valid consciousness simulation required',
         );
       }
 

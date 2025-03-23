@@ -4,8 +4,8 @@
  */
 
 // Import core
-const Prime = require("../../core.js");
-const MathUtils = require("../math");
+const Prime = require('../../core.js');
+const MathUtils = require('../math');
 
 /**
  * Runtime Model - Manages model execution lifecycle
@@ -18,12 +18,12 @@ const RuntimeModel = {
    */
   create: function (config = {}) {
     return {
-      type: "runtime",
+      type: 'runtime',
       embedding: config.embedding,
       logic: config.logic,
       representation: config.representation,
       processor: config.processor,
-      name: config.name || "RuntimeModel",
+      name: config.name || 'RuntimeModel',
 
       // Track performance and resource statistics
       _stats: {
@@ -42,11 +42,11 @@ const RuntimeModel = {
        */
       start: function (model) {
         if (!model) {
-          throw new Prime.ValidationError("Model is required");
+          throw new Prime.ValidationError('Model is required');
         }
 
         // Initialize the model
-        if (typeof model.initialize === "function") {
+        if (typeof model.initialize === 'function') {
           model.initialize();
         }
 
@@ -58,7 +58,7 @@ const RuntimeModel = {
         this._stats.modelStarts++;
 
         // Publish event
-        Prime.EventBus.publish("model:started", { model });
+        Prime.EventBus.publish('model:started', { model });
 
         return model;
       },
@@ -71,12 +71,12 @@ const RuntimeModel = {
        */
       run: function (model, input) {
         if (!model) {
-          throw new Prime.ValidationError("Model is required");
+          throw new Prime.ValidationError('Model is required');
         }
 
         if (!model._running) {
-          throw new Prime.InvalidOperationError("Model is not running", {
-            context: { model: model.name || "unnamed" },
+          throw new Prime.InvalidOperationError('Model is not running', {
+            context: { model: model.name || 'unnamed' },
           });
         }
 
@@ -99,9 +99,9 @@ const RuntimeModel = {
           }
 
           // 3. Process with the model's own function
-          if (typeof model.process === "function") {
+          if (typeof model.process === 'function') {
             data = model.process(data);
-          } else if (typeof model === "function") {
+          } else if (typeof model === 'function') {
             data = model(data);
           }
 
@@ -119,7 +119,7 @@ const RuntimeModel = {
           this._updateRunningStats(runTime);
 
           // Publish event
-          Prime.EventBus.publish("model:ran", {
+          Prime.EventBus.publish('model:ran', {
             model,
             input,
             output: data,
@@ -133,11 +133,11 @@ const RuntimeModel = {
           error = err;
 
           // Log error and rethrow
-          Prime.Logger.error("Error running model:", err);
+          Prime.Logger.error('Error running model:', err);
           throw err;
         } finally {
           // Calculate memory usage for statistics (if available)
-          if (typeof process !== "undefined" && process.memoryUsage) {
+          if (typeof process !== 'undefined' && process.memoryUsage) {
             const memUsage = process.memoryUsage().heapUsed;
             this._stats.peakMemoryUsage = Math.max(
               this._stats.peakMemoryUsage,
@@ -146,7 +146,7 @@ const RuntimeModel = {
           }
 
           // Always publish completion event for monitoring purposes
-          Prime.EventBus.publish("model:completed", {
+          Prime.EventBus.publish('model:completed', {
             model,
             success: !error,
             runTime: performance.now() - startTime,
@@ -162,7 +162,7 @@ const RuntimeModel = {
        */
       stop: function (model) {
         if (!model) {
-          throw new Prime.ValidationError("Model is required");
+          throw new Prime.ValidationError('Model is required');
         }
 
         // Set the model's status to not running
@@ -177,12 +177,12 @@ const RuntimeModel = {
         this._stats.modelStops++;
 
         // Clean up resources if necessary
-        if (typeof model.cleanup === "function") {
+        if (typeof model.cleanup === 'function') {
           model.cleanup();
         }
 
         // Publish event
-        Prime.EventBus.publish("model:stopped", { model });
+        Prime.EventBus.publish('model:stopped', { model });
 
         return true;
       },

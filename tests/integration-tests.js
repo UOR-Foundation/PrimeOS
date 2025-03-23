@@ -367,10 +367,14 @@ describe("PrimeOS Integration Tests", () => {
       // Create vectors using Vector.create
       const v1 = Prime.Math.Vector.create(3, 0);
       const v2 = Prime.Math.Vector.create(3, 0);
-      
+
       // Initialize vectors
-      v1[0] = 1; v1[1] = 2; v1[2] = 3;
-      v2[0] = 4; v2[1] = 5; v2[2] = 6;
+      v1[0] = 1;
+      v1[1] = 2;
+      v1[2] = 3;
+      v2[0] = 4;
+      v2[1] = 5;
+      v2[2] = 6;
 
       // Test vector addition
       const sum = Prime.Math.Vector.add(v1, v2);
@@ -399,12 +403,16 @@ describe("PrimeOS Integration Tests", () => {
 
       // Create matrices using Matrix.create
       const m1 = Prime.Math.Matrix.create(2, 2, 0);
-      m1[0][0] = 1; m1[0][1] = 2;
-      m1[1][0] = 3; m1[1][1] = 4;
-      
+      m1[0][0] = 1;
+      m1[0][1] = 2;
+      m1[1][0] = 3;
+      m1[1][1] = 4;
+
       const m2 = Prime.Math.Matrix.create(2, 2, 0);
-      m2[0][0] = 5; m2[0][1] = 6;
-      m2[1][0] = 7; m2[1][1] = 8;
+      m2[0][0] = 5;
+      m2[0][1] = 6;
+      m2[1][0] = 7;
+      m2[1][1] = 8;
 
       // Test matrix addition
       const sum = Prime.Math.Matrix.add(m1, m2);

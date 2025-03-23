@@ -7,22 +7,22 @@ process.env.EXTREME_TESTING = 'true';
 if (!Math.nextafter) {
   // Add nextafter implementation for ULP-based testing
   // This is a simplified implementation for testing
-  Math.nextafter = function (x, y) {
+  Math.nextafter = function(x, y) {
     if (x === y) return y;
-
+    
     // Convert to IEEE-754 representation
     const buffer = new ArrayBuffer(8);
     const bytes = new Uint8Array(buffer);
     const doubles = new Float64Array(buffer);
-
+    
     doubles[0] = x;
-
+    
     // Increment or decrement the bit pattern based on direction
     const sign = y > x ? 1 : -1;
-
+    
     // Handle special cases
     if (!Number.isFinite(x)) return x;
-
+    
     if (x === 0) {
       // Handle positive/negative zero
       if (sign > 0) {
@@ -31,7 +31,7 @@ if (!Math.nextafter) {
         return -Number.MIN_VALUE;
       }
     }
-
+    
     // Increment or decrement the bit pattern
     let hiByte, loByte;
     if (sign > 0) {
@@ -75,27 +75,48 @@ if (!Math.nextafter) {
         bytes[0] = loByte - 1;
       }
     }
-
+    
     return doubles[0];
+  };
+}
+
+// Enhanced Kahan summation for better numerical stability
+if (!Math.kahanSum) {
+  Math.kahanSum = function(values) {
+    let sum = 0;
+    let compensation = 0;
+    
+    for (let i = 0; i < values.length; i++) {
+      const y = values[i] - compensation;
+      const t = sum + y;
+      compensation = (t - sum) - y;
+      sum = t;
+    }
+    
+    return sum;
   };
 }
 
 // Augment console with memory usage reporting
 const originalLog = console.log;
-console.log = function (...args) {
+console.log = function(...args) {
   originalLog.apply(console, args);
-  if (
-    process.env.EXTREME_TESTING === 'true' &&
-    args[0] &&
-    typeof args[0] === 'string' &&
-    args[0].includes('MEMORY')
-  ) {
+  if (process.env.EXTREME_TESTING === 'true' && args[0] && typeof args[0] === 'string' && 
+      args[0].includes('MEMORY')) {
     const used = process.memoryUsage();
     originalLog('Memory usage:');
-    for (const key in used) {
-      originalLog(
-        `  ${key}: ${Math.round((used[key] / 1024 / 1024) * 100) / 100} MB`,
-      );
+    for (let key in used) {
+      originalLog(`  ${key}: ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
     }
+  }
+};
+
+// Add global garbage collection request function
+global.requestGC = function() {
+  if (global.gc) {
+    global.gc();
+    console.log('Manual garbage collection performed');
+  } else {
+    console.log('Garbage collection not available. Run node with --expose-gc flag');
   }
 };

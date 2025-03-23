@@ -618,7 +618,7 @@ const MatrixAdvanced = {
         const Av = new Array(n).fill(0);
         // Compensation arrays used in per-element Kahan summation implemented below
         // Used directly by the loop variables, not as a separate accumulator
-        
+
         for (let i = 0; i < n; i++) {
           let sum = 0;
           let compensation = 0;

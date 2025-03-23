@@ -37,34 +37,34 @@ const DecisionMaking = require('./src/consciousness/decision.js');
 const ThresholdManager = require('./src/consciousness/threshold.js');
 
 // Create a simple test
-console.log("=== Testing Consciousness Module Components ===\n");
+console.log('=== Testing Consciousness Module Components ===\n');
 
 try {
   // Create a MemoryStructure component
   const memory = new MemoryStructure({
     indexDimension: 5,
     shortTermCapacity: 10,
-    longTermCapacity: 50
+    longTermCapacity: 50,
   });
-  
-  console.log("✓ PASS: MemoryStructure created successfully");
-  
+
+  console.log('✓ PASS: MemoryStructure created successfully');
+
   // Create a DecisionMaking component
   const decision = new DecisionMaking({
     perspectives: 3,
-    coherenceThreshold: 0.6
+    coherenceThreshold: 0.6,
   });
-  
-  console.log("✓ PASS: DecisionMaking created successfully");
-  
+
+  console.log('✓ PASS: DecisionMaking created successfully');
+
   // Create a ThresholdManager component
   const threshold = new ThresholdManager({
     baseCoherenceThreshold: 0.65,
-    adaptationRate: 0.2
+    adaptationRate: 0.2,
   });
-  
-  console.log("✓ PASS: ThresholdManager created successfully");
-  
+
+  console.log('✓ PASS: ThresholdManager created successfully');
+
   // Test memory storage
   const testState = {
     id: 'test_state_1',
@@ -73,42 +73,52 @@ try {
     awareness: 0.6,
     coherence: 0.7,
     integration: 0.4,
-    differentiation: 0.3
+    differentiation: 0.3,
   };
-  
+
   memory.store(testState, { type: 'test' });
-  console.log("✓ PASS: Memory storage works");
-  
+  console.log('✓ PASS: Memory storage works');
+
   // Test memory retrieval
   const retrievedMemories = memory.retrieve(testState);
-  console.log(`✓ PASS: Memory retrieval works (found ${retrievedMemories.length} matches)`);
-  
+  console.log(
+    `✓ PASS: Memory retrieval works (found ${retrievedMemories.length} matches)`,
+  );
+
   // Initialize decision making
   decision.initialize(testState);
-  
-  // Test decision making
-  const alternatives = ["Option A", "Option B", "Option C"];
-  const decisionResult = decision.decide(alternatives, testState, { importance: 0.7 });
-  console.log(`✓ PASS: Decision making works (selected ${decisionResult.selected})`);
-  
-  // Test threshold evaluation
-  const threshold_result = threshold.evaluateTransition(
-    testState,
-    { ...testState, coherence: 0.8, attention: 0.7 }
-  );
-  console.log(`✓ PASS: Threshold evaluation works (significant: ${threshold_result.isSignificant})`);
-  
-  // Show comprehensive status
-  console.log("\n=== Component Implementation Status ===");
-  console.log("✓ MemoryStructure: Complete");
-  console.log("✓ DecisionMaking: Complete");
-  console.log("✓ ThresholdManager: Complete");
-  console.log("✓ ConsciousnessModule: Complete (see integration test results)");
-  
-  console.log("\nComponents are ready for further integration with the full system.");
 
+  // Test decision making
+  const alternatives = ['Option A', 'Option B', 'Option C'];
+  const decisionResult = decision.decide(alternatives, testState, {
+    importance: 0.7,
+  });
+  console.log(
+    `✓ PASS: Decision making works (selected ${decisionResult.selected})`,
+  );
+
+  // Test threshold evaluation
+  const threshold_result = threshold.evaluateTransition(testState, {
+    ...testState,
+    coherence: 0.8,
+    attention: 0.7,
+  });
+  console.log(
+    `✓ PASS: Threshold evaluation works (significant: ${threshold_result.isSignificant})`,
+  );
+
+  // Show comprehensive status
+  console.log('\n=== Component Implementation Status ===');
+  console.log('✓ MemoryStructure: Complete');
+  console.log('✓ DecisionMaking: Complete');
+  console.log('✓ ThresholdManager: Complete');
+  console.log('✓ ConsciousnessModule: Complete (see integration test results)');
+
+  console.log(
+    '\nComponents are ready for further integration with the full system.',
+  );
 } catch (error) {
-  console.error("Test failed:", error.message);
+  console.error('Test failed:', error.message);
   console.error(error.stack);
   process.exit(1);
 }

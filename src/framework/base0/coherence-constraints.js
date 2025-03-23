@@ -7,7 +7,7 @@
 // Import core if available
 let Prime;
 try {
-  Prime = require("../../core.js");
+  Prime = require('../../core.js');
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
@@ -29,11 +29,11 @@ const CoherenceConstraints = {
      * @returns {boolean} True if value is finite
      */
     finiteness: {
-      name: "finiteness",
+      name: 'finiteness',
       validator: (value) => Number.isFinite(value),
       priority: 10,
       description:
-        "Checks if a numeric value is finite (not Infinity or -Infinity)",
+        'Checks if a numeric value is finite (not Infinity or -Infinity)',
     },
 
     /**
@@ -42,10 +42,10 @@ const CoherenceConstraints = {
      * @returns {boolean} True if value is not NaN
      */
     nonNaN: {
-      name: "non_nan",
+      name: 'non_nan',
       validator: (value) => !Number.isNaN(value),
       priority: 10,
-      description: "Checks if a numeric value is not NaN (Not a Number)",
+      description: 'Checks if a numeric value is not NaN (Not a Number)',
     },
 
     /**
@@ -55,13 +55,13 @@ const CoherenceConstraints = {
      * @returns {boolean} True if value is within bounds
      */
     reasonableBounds: {
-      name: "reasonable_bounds",
+      name: 'reasonable_bounds',
       validator: (value, context = {}) => {
         const { min = -1e12, max = 1e12 } = context;
         return value >= min && value <= max;
       },
       priority: 5,
-      description: "Checks if a numeric value is within reasonable bounds",
+      description: 'Checks if a numeric value is within reasonable bounds',
     },
   },
 
@@ -76,11 +76,11 @@ const CoherenceConstraints = {
      * @returns {boolean} True if all elements are numbers
      */
     arrayElements: {
-      name: "array_elements",
+      name: 'array_elements',
       validator: (value) =>
-        Array.isArray(value) && value.every((item) => typeof item === "number"),
+        Array.isArray(value) && value.every((item) => typeof item === 'number'),
       priority: 8,
-      description: "Checks if all elements in an array are numbers",
+      description: 'Checks if all elements in an array are numbers',
     },
 
     /**
@@ -89,11 +89,11 @@ const CoherenceConstraints = {
      * @returns {boolean} True if all elements are finite
      */
     finiteElements: {
-      name: "finite_elements",
+      name: 'finite_elements',
       validator: (value) =>
         Array.isArray(value) && value.every((item) => Number.isFinite(item)),
       priority: 7,
-      description: "Checks if all elements in an array are finite numbers",
+      description: 'Checks if all elements in an array are finite numbers',
     },
 
     /**
@@ -102,13 +102,13 @@ const CoherenceConstraints = {
      * @returns {boolean} True if vector has non-zero magnitude
      */
     nonZeroMagnitude: {
-      name: "non_zero_magnitude",
+      name: 'non_zero_magnitude',
       validator: (value) => {
         if (!Array.isArray(value)) return false;
         return value.some((v) => v !== 0);
       },
       priority: 4,
-      description: "Checks if a vector has at least one non-zero element",
+      description: 'Checks if a vector has at least one non-zero element',
     },
   },
 
@@ -123,7 +123,7 @@ const CoherenceConstraints = {
      * @returns {boolean} True if matrix has proper structure
      */
     matrixStructure: {
-      name: "matrix_structure",
+      name: 'matrix_structure',
       validator: (value) => {
         if (!Array.isArray(value) || value.length === 0) return false;
         if (!value.every((row) => Array.isArray(row))) return false;
@@ -134,7 +134,7 @@ const CoherenceConstraints = {
       },
       priority: 9,
       description:
-        "Checks if a matrix has proper structure with consistent row lengths",
+        'Checks if a matrix has proper structure with consistent row lengths',
     },
 
     /**
@@ -143,19 +143,19 @@ const CoherenceConstraints = {
      * @returns {boolean} True if all elements are finite numbers
      */
     matrixElements: {
-      name: "matrix_elements",
+      name: 'matrix_elements',
       validator: (value) => {
         if (!Array.isArray(value)) return false;
         return value.every(
           (row) =>
             Array.isArray(row) &&
             row.every(
-              (item) => typeof item === "number" && Number.isFinite(item),
+              (item) => typeof item === 'number' && Number.isFinite(item),
             ),
         );
       },
       priority: 8,
-      description: "Checks if all elements in a matrix are finite numbers",
+      description: 'Checks if all elements in a matrix are finite numbers',
     },
 
     /**
@@ -164,7 +164,7 @@ const CoherenceConstraints = {
      * @returns {boolean} True if matrix is square
      */
     squareMatrix: {
-      name: "square_matrix",
+      name: 'square_matrix',
       validator: (value) => {
         if (!Array.isArray(value) || value.length === 0) return false;
         if (!value.every((row) => Array.isArray(row))) return false;
@@ -173,7 +173,7 @@ const CoherenceConstraints = {
       },
       priority: 6,
       description:
-        "Checks if a matrix is square (same number of rows and columns)",
+        'Checks if a matrix is square (same number of rows and columns)',
     },
   },
 
@@ -188,10 +188,10 @@ const CoherenceConstraints = {
      * @returns {boolean} True if value is a function
      */
     isFunction: {
-      name: "is_function",
-      validator: (value) => typeof value === "function",
+      name: 'is_function',
+      validator: (value) => typeof value === 'function',
       priority: 10,
-      description: "Checks if a value is a function",
+      description: 'Checks if a value is a function',
     },
 
     /**
@@ -201,16 +201,16 @@ const CoherenceConstraints = {
      * @returns {boolean} True if function has expected arity
      */
     functionArity: {
-      name: "function_arity",
+      name: 'function_arity',
       validator: (value, context = {}) => {
-        if (typeof value !== "function") return false;
+        if (typeof value !== 'function') return false;
         return (
           context.expectedArity === undefined ||
           value.length === context.expectedArity
         );
       },
       priority: 7,
-      description: "Checks if a function has the expected number of parameters",
+      description: 'Checks if a function has the expected number of parameters',
     },
   },
 
@@ -225,7 +225,7 @@ const CoherenceConstraints = {
      * @returns {boolean} True if tensor has valid structure
      */
     tensorStructure: {
-      name: "tensor_structure",
+      name: 'tensor_structure',
       validator: (value) => {
         // Recursive check for multi-dimensional arrays with consistent structure
         const checkTensorStructure = (arr, dims = null, depth = 0) => {
@@ -259,7 +259,7 @@ const CoherenceConstraints = {
         return checkTensorStructure(value);
       },
       priority: 9,
-      description: "Checks if a tensor has valid and consistent structure",
+      description: 'Checks if a tensor has valid and consistent structure',
     },
 
     /**
@@ -268,12 +268,12 @@ const CoherenceConstraints = {
      * @returns {boolean} True if all elements are finite numbers
      */
     tensorElements: {
-      name: "tensor_elements",
+      name: 'tensor_elements',
       validator: (value) => {
         // Recursive check for all values in a tensor
         const checkAllValues = (arr) => {
           if (!Array.isArray(arr)) {
-            return typeof arr === "number" && Number.isFinite(arr);
+            return typeof arr === 'number' && Number.isFinite(arr);
           }
           return arr.every((subArr) => checkAllValues(subArr));
         };
@@ -281,7 +281,7 @@ const CoherenceConstraints = {
         return checkAllValues(value);
       },
       priority: 8,
-      description: "Checks if all elements in a tensor are finite numbers",
+      description: 'Checks if all elements in a tensor are finite numbers',
     },
   },
 };
@@ -312,7 +312,7 @@ const CoherenceNorms = {
     if (!Array.isArray(value)) return 0.0;
 
     // If fundamental constraints are violated, coherence is 0
-    if (!results.find((r) => r.name === "array_elements")?.satisfied) {
+    if (!results.find((r) => r.name === 'array_elements')?.satisfied) {
       return 0.0;
     }
 
@@ -329,7 +329,7 @@ const CoherenceNorms = {
    */
   matrixAlgebra: (results, value) => {
     // For matrices, consider structure and element validity
-    if (!results.find((r) => r.name === "matrix_structure")?.satisfied) {
+    if (!results.find((r) => r.name === 'matrix_structure')?.satisfied) {
       return 0.0;
     }
 
@@ -340,7 +340,7 @@ const CoherenceNorms = {
     for (const row of value) {
       for (const element of row) {
         totalCount++;
-        if (typeof element === "number" && Number.isFinite(element)) {
+        if (typeof element === 'number' && Number.isFinite(element)) {
           validCount++;
         }
       }
@@ -356,7 +356,7 @@ const CoherenceNorms = {
    */
   functional: (results) => {
     // For functions, coherence is primarily based on type correctness
-    if (!results.find((r) => r.name === "is_function")?.satisfied) {
+    if (!results.find((r) => r.name === 'is_function')?.satisfied) {
       return 0.0;
     }
 
@@ -382,7 +382,7 @@ const CoherenceNorms = {
    */
   tensorAlgebra: (results, value) => {
     // For tensors, check structure first
-    if (!results.find((r) => r.name === "tensor_structure")?.satisfied) {
+    if (!results.find((r) => r.name === 'tensor_structure')?.satisfied) {
       return 0.0;
     }
 
@@ -395,7 +395,7 @@ const CoherenceNorms = {
     // Count valid elements (recursively)
     const countValidElements = (arr) => {
       if (!Array.isArray(arr)) {
-        return typeof arr === "number" && Number.isFinite(arr) ? 1 : 0;
+        return typeof arr === 'number' && Number.isFinite(arr) ? 1 : 0;
       }
       return arr.reduce((sum, subArr) => sum + countValidElements(subArr), 0);
     };

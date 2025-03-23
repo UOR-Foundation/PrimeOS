@@ -9,7 +9,7 @@ const Prime = (function () {
   /**
    * Library version with semantic validation support
    */
-  const VERSION = "1.0.0";
+  const VERSION = '1.0.0';
 
   /**
    * Parses a semantic version string into its components
@@ -18,7 +18,7 @@ const Prime = (function () {
    * @returns {Object|null} Parsed version object or null if invalid
    */
   const _parseVersion = (version) => {
-    if (typeof version !== "string") return null;
+    if (typeof version !== 'string') return null;
 
     // Regular expression for SemVer 2.0.0 (major.minor.patch-prerelease+build)
     const semverRegex =
@@ -35,10 +35,10 @@ const Prime = (function () {
     const patch = patchStr !== undefined ? parseInt(patchStr, 10) : 0;
 
     // Parse prerelease identifiers
-    const prerelease = prereleaseStr ? prereleaseStr.split(".") : [];
+    const prerelease = prereleaseStr ? prereleaseStr.split('.') : [];
 
     // Parse build metadata
-    const build = buildStr ? buildStr.split(".") : [];
+    const build = buildStr ? buildStr.split('.') : [];
 
     return {
       major,
@@ -161,11 +161,11 @@ const Prime = (function () {
    */
   const Utils = {
     isObject: function (obj) {
-      return obj !== null && typeof obj === "object" && !Array.isArray(obj);
+      return obj !== null && typeof obj === 'object' && !Array.isArray(obj);
     },
 
     isFunction: function (fn) {
-      return typeof fn === "function";
+      return typeof fn === 'function';
     },
 
     isArray: function (arr) {
@@ -173,19 +173,19 @@ const Prime = (function () {
     },
 
     isNumber: function (num) {
-      return typeof num === "number" && !isNaN(num) && isFinite(num);
+      return typeof num === 'number' && !isNaN(num) && isFinite(num);
     },
 
     isString: function (str) {
-      return typeof str === "string";
+      return typeof str === 'string';
     },
 
     isBoolean: function (bool) {
-      return typeof bool === "boolean";
+      return typeof bool === 'boolean';
     },
 
     isUndefined: function (val) {
-      return typeof val === "undefined";
+      return typeof val === 'undefined';
     },
 
     isNull: function (val) {
@@ -193,12 +193,12 @@ const Prime = (function () {
     },
 
     isNullOrUndefined: function (val) {
-      return val === null || typeof val === "undefined";
+      return val === null || typeof val === 'undefined';
     },
 
     isPrimitive: function (val) {
       const type = typeof val;
-      return val === null || (type !== "object" && type !== "function");
+      return val === null || (type !== 'object' && type !== 'function');
     },
 
     /**
@@ -241,7 +241,7 @@ const Prime = (function () {
 
         // Handle various object types
         switch (type) {
-          case "[object Array]": {
+          case '[object Array]': {
             copy = [];
             cache.set(item, copy);
             for (let i = 0; i < item.length; i++) {
@@ -250,13 +250,13 @@ const Prime = (function () {
             return copy;
           }
 
-          case "[object Date]":
+          case '[object Date]':
             return new Date(item.getTime());
 
-          case "[object RegExp]":
+          case '[object RegExp]':
             return new RegExp(item.source, item.flags);
 
-          case "[object Map]": {
+          case '[object Map]': {
             copy = new Map();
             cache.set(item, copy);
             item.forEach((val, key) => {
@@ -265,7 +265,7 @@ const Prime = (function () {
             return copy;
           }
 
-          case "[object Set]": {
+          case '[object Set]': {
             copy = new Set();
             cache.set(item, copy);
             item.forEach((val) => {
@@ -274,23 +274,23 @@ const Prime = (function () {
             return copy;
           }
 
-          case "[object ArrayBuffer]":
+          case '[object ArrayBuffer]':
             return item.slice(0);
 
-          case "[object DataView]": {
+          case '[object DataView]': {
             const buffer = clone(item.buffer);
             return new DataView(buffer, item.byteOffset, item.byteLength);
           }
 
-          case "[object Int8Array]":
-          case "[object Uint8Array]":
-          case "[object Uint8ClampedArray]":
-          case "[object Int16Array]":
-          case "[object Uint16Array]":
-          case "[object Int32Array]":
-          case "[object Uint32Array]":
-          case "[object Float32Array]":
-          case "[object Float64Array]": {
+          case '[object Int8Array]':
+          case '[object Uint8Array]':
+          case '[object Uint8ClampedArray]':
+          case '[object Int16Array]':
+          case '[object Uint16Array]':
+          case '[object Int32Array]':
+          case '[object Uint32Array]':
+          case '[object Float32Array]':
+          case '[object Float64Array]': {
             const TypedArrayConstructor = item.constructor;
             return new TypedArrayConstructor(
               clone(item.buffer),
@@ -299,29 +299,29 @@ const Prime = (function () {
             );
           }
 
-          case "[object Blob]":
+          case '[object Blob]':
             try {
               return new Blob([item], { type: item.type });
             } catch (e) {
               return item; // Fallback if Blob not supported
             }
 
-          case "[object Function]":
-          case "[object GeneratorFunction]":
-          case "[object AsyncFunction]":
-          case "[object Promise]":
+          case '[object Function]':
+          case '[object GeneratorFunction]':
+          case '[object AsyncFunction]':
+          case '[object Promise]':
             return item; // Functions, generators, promises aren't cloned
 
-          case "[object Error]":
-          case "[object DOMException]": {
+          case '[object Error]':
+          case '[object DOMException]': {
             // Clone error objects preserving message and stack
             const ErrorConstructor = item.constructor;
             const error = new ErrorConstructor(item.message);
             // Copy properties like code, name, etc.
             Object.getOwnPropertyNames(item).forEach((prop) => {
               if (
-                prop !== "stack" &&
-                prop !== "message" &&
+                prop !== 'stack' &&
+                prop !== 'message' &&
                 !ignoreProps.has(prop)
               ) {
                 try {
@@ -334,7 +334,7 @@ const Prime = (function () {
             return error;
           }
 
-          case "[object Object]":
+          case '[object Object]':
           default: {
             // Get the prototype and create a new instance
             const proto = Object.getPrototypeOf(item);
@@ -382,9 +382,9 @@ const Prime = (function () {
         return clone(obj);
       } catch (e) {
         // If cloning fails critically, return a new empty object with same prototype
-        console.error("Deep clone failed:", e);
+        console.error('Deep clone failed:', e);
 
-        if (typeof obj === "object" && obj !== null) {
+        if (typeof obj === 'object' && obj !== null) {
           return Object.create(Object.getPrototypeOf(obj));
         }
         return {};
@@ -507,21 +507,21 @@ const Prime = (function () {
     _defaultKeyGenerator: function (args) {
       try {
         // Handle primitive arguments efficiently
-        if (args.length === 0) return "_empty_";
+        if (args.length === 0) return '_empty_';
         if (args.length === 1) {
           const arg = args[0];
           const type = typeof arg;
 
           // Fast path for primitives
-          if (type === "string") return "s_" + arg;
-          if (type === "number") {
-            if (isNaN(arg)) return "NaN";
-            if (!isFinite(arg)) return arg > 0 ? "Infinity" : "-Infinity";
-            return "n_" + arg;
+          if (type === 'string') return 's_' + arg;
+          if (type === 'number') {
+            if (isNaN(arg)) return 'NaN';
+            if (!isFinite(arg)) return arg > 0 ? 'Infinity' : '-Infinity';
+            return 'n_' + arg;
           }
-          if (type === "boolean") return arg ? "true" : "false";
-          if (arg === null) return "null";
-          if (arg === undefined) return "undefined";
+          if (type === 'boolean') return arg ? 'true' : 'false';
+          if (arg === null) return 'null';
+          if (arg === undefined) return 'undefined';
         }
 
         // For multiple or complex arguments, use JSON serialization
@@ -530,12 +530,12 @@ const Prime = (function () {
         const safeStringify = (obj) => {
           return JSON.stringify(obj, (key, value) => {
             // Handle special values
-            if (typeof value === "function") return "[Function]";
-            if (typeof value === "symbol") return value.toString();
+            if (typeof value === 'function') return '[Function]';
+            if (typeof value === 'symbol') return value.toString();
 
             // Detect circular references
-            if (typeof value === "object" && value !== null) {
-              if (seen.has(value)) return "[Circular]";
+            if (typeof value === 'object' && value !== null) {
+              if (seen.has(value)) return '[Circular]';
               seen.add(value);
             }
             return value;
@@ -568,8 +568,8 @@ const Prime = (function () {
 
         // Special handling for NaN
         if (
-          typeof a === "number" &&
-          typeof b === "number" &&
+          typeof a === 'number' &&
+          typeof b === 'number' &&
           isNaN(a) &&
           isNaN(b)
         )
@@ -588,7 +588,7 @@ const Prime = (function () {
     get: function (obj, path, defaultValue) {
       if (!obj || !path) return defaultValue;
 
-      const keys = this.isArray(path) ? path : path.split(".");
+      const keys = this.isArray(path) ? path : path.split('.');
       let result = obj;
 
       for (const key of keys) {
@@ -607,7 +607,7 @@ const Prime = (function () {
     set: function (obj, path, value) {
       if (!obj || !path) return obj;
 
-      const keys = this.isArray(path) ? path : path.split(".");
+      const keys = this.isArray(path) ? path : path.split('.');
       let current = obj;
 
       for (let i = 0; i < keys.length - 1; i++) {
@@ -633,8 +633,8 @@ const Prime = (function () {
      * @returns {Function} Throttled function
      */
     throttle: function (fn, delay, options = {}) {
-      if (typeof delay !== "number" || isNaN(delay) || delay < 0) {
-        throw new Error("Throttle delay must be a positive number");
+      if (typeof delay !== 'number' || isNaN(delay) || delay < 0) {
+        throw new Error('Throttle delay must be a positive number');
       }
 
       const leading = options.leading !== false;
@@ -662,8 +662,8 @@ const Prime = (function () {
       const now = () => {
         if (
           highResolution &&
-          typeof performance !== "undefined" &&
-          typeof performance.now === "function"
+          typeof performance !== 'undefined' &&
+          typeof performance.now === 'function'
         ) {
           return performance.now();
         }
@@ -756,8 +756,8 @@ const Prime = (function () {
      * @returns {Function} Debounced function
      */
     debounce: function (fn, delay, options = {}) {
-      if (typeof delay !== "number" || isNaN(delay) || delay < 0) {
-        throw new Error("Debounce delay must be a positive number");
+      if (typeof delay !== 'number' || isNaN(delay) || delay < 0) {
+        throw new Error('Debounce delay must be a positive number');
       }
 
       const leading = options.leading === true;
@@ -768,10 +768,10 @@ const Prime = (function () {
       // Validate that maxWait is greater than or equal to delay if specified
       if (
         maxWait !== undefined &&
-        (typeof maxWait !== "number" || maxWait < delay)
+        (typeof maxWait !== 'number' || maxWait < delay)
       ) {
         throw new Error(
-          "maxWait must be a number greater than or equal to delay",
+          'maxWait must be a number greater than or equal to delay',
         );
       }
 
@@ -794,8 +794,8 @@ const Prime = (function () {
       const now = () => {
         if (
           highResolution &&
-          typeof performance !== "undefined" &&
-          typeof performance.now === "function"
+          typeof performance !== 'undefined' &&
+          typeof performance.now === 'function'
         ) {
           return performance.now();
         }
@@ -953,24 +953,24 @@ const Prime = (function () {
       let getRandomValues;
 
       if (
-        typeof crypto !== "undefined" &&
-        typeof crypto.getRandomValues === "function"
+        typeof crypto !== 'undefined' &&
+        typeof crypto.getRandomValues === 'function'
       ) {
         // Browser environment with crypto support
         getRandomValues = function (arr) {
           return crypto.getRandomValues(arr);
         };
-      } else if (typeof require === "function") {
+      } else if (typeof require === 'function') {
         try {
           // Node.js environment - try to use crypto module
-          const nodeCrypto = require("crypto");
+          const nodeCrypto = require('crypto');
           getRandomValues = function (arr) {
             return nodeCrypto.randomFillSync(arr);
           };
         } catch (e) {
           // Fallback to Math.random with warning
           console.warn(
-            "PrimeOS: Cryptographically secure random values unavailable, using Math.random fallback",
+            'PrimeOS: Cryptographically secure random values unavailable, using Math.random fallback',
           );
           getRandomValues = function (arr) {
             for (let i = 0; i < arr.length; i++) {
@@ -998,14 +998,14 @@ const Prime = (function () {
       buffer[8] = (buffer[8] & 0x3f) | 0x80; // variant RFC4122
 
       // Format as UUID string
-      let uuid = "";
+      let uuid = '';
       for (let i = 0; i < 16; i++) {
         if (i === 4 || i === 6 || i === 8 || i === 10) {
-          uuid += "-";
+          uuid += '-';
         }
         let hex = buffer[i].toString(16);
         if (hex.length === 1) {
-          hex = "0" + hex;
+          hex = '0' + hex;
         }
         uuid += hex;
       }
@@ -1020,9 +1020,9 @@ const Prime = (function () {
   class PrimeError extends Error {
     constructor(message, options = {}) {
       super(message);
-      this.name = "PrimeError";
+      this.name = 'PrimeError';
       this.timestamp = new Date();
-      this.code = options.code || "GENERIC_ERROR";
+      this.code = options.code || 'GENERIC_ERROR';
 
       // Capture stack trace
       if (Error.captureStackTrace) {
@@ -1050,10 +1050,10 @@ const Prime = (function () {
   class CoherenceViolationError extends PrimeError {
     constructor(message, constraint, magnitude, options = {}) {
       super(message, {
-        code: options.code || "COHERENCE_VIOLATION",
+        code: options.code || 'COHERENCE_VIOLATION',
         context: { ...options.context, constraint, magnitude },
       });
-      this.name = "CoherenceViolationError";
+      this.name = 'CoherenceViolationError';
       this.constraint = constraint;
       this.magnitude = magnitude;
     }
@@ -1066,10 +1066,10 @@ const Prime = (function () {
   class CoherenceError extends PrimeError {
     constructor(message, options = {}) {
       super(message, {
-        code: options.code || "COHERENCE_ERROR",
+        code: options.code || 'COHERENCE_ERROR',
         context: options.context,
       });
-      this.name = "CoherenceError";
+      this.name = 'CoherenceError';
 
       // Store coherence metrics if provided
       if (options.context && options.context.currentScore !== undefined) {
@@ -1087,40 +1087,40 @@ const Prime = (function () {
   class MathematicalError extends PrimeError {
     constructor(message, options = {}) {
       super(message, {
-        code: options.code || "MATHEMATICAL_ERROR",
+        code: options.code || 'MATHEMATICAL_ERROR',
         context: options.context,
       });
-      this.name = "MathematicalError";
+      this.name = 'MathematicalError';
     }
   }
 
   class InvalidOperationError extends PrimeError {
     constructor(message, options = {}) {
       super(message, {
-        code: options.code || "INVALID_OPERATION",
+        code: options.code || 'INVALID_OPERATION',
         context: options.context,
       });
-      this.name = "InvalidOperationError";
+      this.name = 'InvalidOperationError';
     }
   }
 
   class ConfigurationError extends PrimeError {
     constructor(message, options = {}) {
       super(message, {
-        code: options.code || "CONFIGURATION_ERROR",
+        code: options.code || 'CONFIGURATION_ERROR',
         context: options.context,
       });
-      this.name = "ConfigurationError";
+      this.name = 'ConfigurationError';
     }
   }
 
   class ValidationError extends PrimeError {
     constructor(message, options = {}) {
       super(message, {
-        code: options.code || "VALIDATION_ERROR",
+        code: options.code || 'VALIDATION_ERROR',
         context: options.context,
       });
-      this.name = "ValidationError";
+      this.name = 'ValidationError';
     }
   }
 
@@ -1138,13 +1138,13 @@ const Prime = (function () {
      */
     subscribe: function (event, callback) {
       if (!Utils.isString(event)) {
-        throw new ValidationError("Event name must be a string", {
+        throw new ValidationError('Event name must be a string', {
           context: { providedType: typeof event },
         });
       }
 
       if (!Utils.isFunction(callback)) {
-        throw new ValidationError("Callback must be a function", {
+        throw new ValidationError('Callback must be a function', {
           context: { providedType: typeof callback },
         });
       }
@@ -1173,7 +1173,7 @@ const Prime = (function () {
         return [];
       }
 
-      const errorMode = options.errorMode || "log";
+      const errorMode = options.errorMode || 'log';
       const errorCallback = options.errorCallback;
       const results = [];
       const errors = [];
@@ -1188,23 +1188,23 @@ const Prime = (function () {
           errors.push({
             error,
             event,
-            handler: callback.name || "anonymous",
+            handler: callback.name || 'anonymous',
             timestamp: new Date(),
           });
 
           switch (errorMode) {
-            case "throw":
+            case 'throw':
               // Collect all errors and throw at the end
               break;
 
-            case "callback":
+            case 'callback':
               // Call the provided error callback
-              if (typeof errorCallback === "function") {
+              if (typeof errorCallback === 'function') {
                 try {
                   errorCallback(error, event, callback);
                 } catch (callbackError) {
                   console.error(
-                    "Error in event error callback:",
+                    'Error in event error callback:',
                     callbackError,
                   );
                 }
@@ -1213,11 +1213,11 @@ const Prime = (function () {
               }
               break;
 
-            case "silence":
+            case 'silence':
               // Silently ignore the error
               break;
 
-            case "log":
+            case 'log':
             default:
               // Log the error (default behavior)
               console.error(`Error in event handler for ${event}:`, error);
@@ -1228,11 +1228,11 @@ const Prime = (function () {
       }
 
       // If in 'throw' mode and we have errors, throw a composite error
-      if (errorMode === "throw" && errors.length > 0) {
+      if (errorMode === 'throw' && errors.length > 0) {
         const compositeError = new Error(
           `${errors.length} errors occurred during event handling`,
         );
-        compositeError.name = "EventHandlerError";
+        compositeError.name = 'EventHandlerError';
         compositeError.errors = errors;
         throw compositeError;
       }
@@ -1288,27 +1288,27 @@ const Prime = (function () {
      * @returns {string} Environment type: 'browser', 'node', 'worker', or 'unknown'
      */
     detectEnvironment: function () {
-      if (typeof window !== "undefined" && typeof document !== "undefined") {
-        return "browser";
+      if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+        return 'browser';
       }
 
       if (
-        typeof process !== "undefined" &&
+        typeof process !== 'undefined' &&
         process.versions &&
         process.versions.node
       ) {
-        return "node";
+        return 'node';
       }
 
       if (
-        typeof self !== "undefined" &&
-        typeof self.WorkerGlobalScope !== "undefined" &&
+        typeof self !== 'undefined' &&
+        typeof self.WorkerGlobalScope !== 'undefined' &&
         self instanceof self.WorkerGlobalScope
       ) {
-        return "worker";
+        return 'worker';
       }
 
-      return "unknown";
+      return 'unknown';
     },
 
     /**
@@ -1319,7 +1319,7 @@ const Prime = (function () {
     load: async function (modulePath) {
       const env = this.detectEnvironment();
 
-      if (env === "browser" || env === "worker") {
+      if (env === 'browser' || env === 'worker') {
         try {
           return await import(modulePath);
         } catch (error) {
@@ -1330,7 +1330,7 @@ const Prime = (function () {
             },
           );
         }
-      } else if (env === "node") {
+      } else if (env === 'node') {
         try {
           // Use dynamic import for Node.js ESM compatibility
           return await import(modulePath);
@@ -1344,7 +1344,7 @@ const Prime = (function () {
         }
       } else {
         throw new InvalidOperationError(
-          "Module loading not supported in this environment",
+          'Module loading not supported in this environment',
         );
       }
     },
@@ -1356,17 +1356,17 @@ const Prime = (function () {
      */
     register: function (name, module) {
       if (!Utils.isString(name)) {
-        throw new ValidationError("Module name must be a string");
+        throw new ValidationError('Module name must be a string');
       }
 
       if (!Utils.isObject(module)) {
-        throw new ValidationError("Module must be an object");
+        throw new ValidationError('Module must be an object');
       }
 
       // Extend Prime with the module
       Prime[name] = module;
 
-      EventBus.publish("module:loaded", { name, module });
+      EventBus.publish('module:loaded', { name, module });
 
       return true;
     },
@@ -1381,7 +1381,7 @@ const Prime = (function () {
      * @param {boolean} condition - Condition to check
      * @param {string} message - Error message if condition is false
      */
-    assert: function (condition, message = "Assertion failed") {
+    assert: function (condition, message = 'Assertion failed') {
       if (!condition) {
         throw new ValidationError(message);
       }
@@ -1403,8 +1403,8 @@ const Prime = (function () {
       Object.keys(mock).forEach((key) => {
         if (
           Utils.isFunction(mock[key]) &&
-          key !== "calls" &&
-          key !== "results"
+          key !== 'calls' &&
+          key !== 'results'
         ) {
           const originalFn = mock[key];
 
@@ -1479,7 +1479,7 @@ const Prime = (function () {
       } else if (Utils.isNumber(level) && level >= 0 && level <= 4) {
         this.currentLevel = level;
       } else {
-        throw new ValidationError("Log level must be a valid string or number");
+        throw new ValidationError('Log level must be a valid string or number');
       }
     },
 
@@ -1496,26 +1496,26 @@ const Prime = (function () {
     },
 
     debug: function (message, context) {
-      if (this.shouldLog("DEBUG")) {
-        console.debug(this.format("DEBUG", message, context));
+      if (this.shouldLog('DEBUG')) {
+        console.debug(this.format('DEBUG', message, context));
       }
     },
 
     info: function (message, context) {
-      if (this.shouldLog("INFO")) {
-        console.info(this.format("INFO", message, context));
+      if (this.shouldLog('INFO')) {
+        console.info(this.format('INFO', message, context));
       }
     },
 
     warn: function (message, context) {
-      if (this.shouldLog("WARN")) {
-        console.warn(this.format("WARN", message, context));
+      if (this.shouldLog('WARN')) {
+        console.warn(this.format('WARN', message, context));
       }
     },
 
     error: function (message, context) {
-      if (this.shouldLog("ERROR")) {
-        console.error(this.format("ERROR", message, context));
+      if (this.shouldLog('ERROR')) {
+        console.error(this.format('ERROR', message, context));
       }
     },
   };
@@ -1547,7 +1547,7 @@ const Prime = (function () {
     // Version compatibility system
     isCompatible: function (requirements) {
       const features = requirements.features || [];
-      const minVersion = requirements.minVersion || "0.0.0";
+      const minVersion = requirements.minVersion || '0.0.0';
 
       // Check version compatibility
       if (!validateVersion(minVersion)) {
@@ -1556,9 +1556,9 @@ const Prime = (function () {
 
       // Check feature availability
       for (const feature of features) {
-        if (feature === "coherence" && !this.coherence) return false;
-        if (feature === "spectral" && !this.spectral) return false;
-        if (feature === "lie" && !this.Lie) return false;
+        if (feature === 'coherence' && !this.coherence) return false;
+        if (feature === 'spectral' && !this.spectral) return false;
+        if (feature === 'lie' && !this.Lie) return false;
       }
 
       return true;
@@ -1578,11 +1578,11 @@ const Prime = (function () {
 })();
 
 // For CommonJS compatibility
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = Prime;
 }
 
 // For browser global scope
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.Prime = Prime;
 }

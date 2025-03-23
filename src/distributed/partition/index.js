@@ -4,8 +4,8 @@
  */
 
 // Import the Prime object from core
-const Prime = require("../../core");
-const EventBus = require("../event-bus");
+const Prime = require('../../core');
+const EventBus = require('../event-bus');
 
 // Create the Partition module using IIFE
 (function () {
@@ -15,15 +15,15 @@ const EventBus = require("../event-bus");
    */
   const PartitionType = {
     /** Split network horizontally across layers */
-    LAYER_WISE: "layer_wise",
+    LAYER_WISE: 'layer_wise',
     /** Split individual layers across nodes */
-    INTRA_LAYER: "intra_layer",
+    INTRA_LAYER: 'intra_layer',
     /** Split training data across nodes */
-    DATA_PARALLEL: "data_parallel",
+    DATA_PARALLEL: 'data_parallel',
     /** Split model state for parameter averaging */
-    MODEL_PARALLEL: "model_parallel",
+    MODEL_PARALLEL: 'model_parallel',
     /** Hybrid partitioning based on coherence optimization */
-    COHERENCE_ADAPTIVE: "coherence_adaptive",
+    COHERENCE_ADAPTIVE: 'coherence_adaptive',
   };
 
   /**
@@ -42,7 +42,7 @@ const EventBus = require("../event-bus");
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          "Partition configuration must be an object",
+          'Partition configuration must be an object',
         );
       }
 
@@ -112,8 +112,10 @@ const EventBus = require("../event-bus");
       const layerIds = Object.keys(this.layerConfig);
 
       if (layerIds.length === 0) {
-        Prime.Logger.debug("No layers provided for partitioning, creating empty partition structure");
-        
+        Prime.Logger.debug(
+          'No layers provided for partitioning, creating empty partition structure',
+        );
+
         // Create empty partition structure with one node
         const nodeId = `node_0`;
         this.partitionMap.set(nodeId, {
@@ -121,7 +123,7 @@ const EventBus = require("../event-bus");
           dataIndices: null,
           partialComputation: false,
         });
-        
+
         return;
       }
 
@@ -160,8 +162,10 @@ const EventBus = require("../event-bus");
       const layerIds = Object.keys(this.layerConfig);
 
       if (layerIds.length === 0) {
-        Prime.Logger.debug("No layers provided for intra-layer partitioning, creating empty partition structure");
-        
+        Prime.Logger.debug(
+          'No layers provided for intra-layer partitioning, creating empty partition structure',
+        );
+
         // Create empty partition structure with one node
         const nodeId = `node_0`;
         this.partitionMap.set(nodeId, {
@@ -169,7 +173,7 @@ const EventBus = require("../event-bus");
           dataIndices: null,
           partialComputation: true,
         });
-        
+
         return;
       }
 
@@ -232,20 +236,22 @@ const EventBus = require("../event-bus");
       const layerIds = Object.keys(this.layerConfig);
 
       if (layerIds.length === 0) {
-        Prime.Logger.debug("No layers provided for data-parallel partitioning, creating empty partition structure");
-        
+        Prime.Logger.debug(
+          'No layers provided for data-parallel partitioning, creating empty partition structure',
+        );
+
         // Determine batch size from configuration or use default
         const batchSize = this.layerConfig.batchSize || 32;
-        
+
         // Create empty partition structures
         for (let nodeIndex = 0; nodeIndex < this.nodeCount; nodeIndex++) {
           const nodeId = `node_${nodeIndex}`;
-          
+
           // Calculate this node's data range
           const dataIndicesPerNode = Math.ceil(batchSize / this.nodeCount);
           const startIndex = nodeIndex * dataIndicesPerNode;
           const endIndex = Math.min(startIndex + dataIndicesPerNode, batchSize);
-          
+
           this.partitionMap.set(nodeId, {
             layers: [],
             dataIndices: {
@@ -255,7 +261,7 @@ const EventBus = require("../event-bus");
             partialComputation: false,
           });
         }
-        
+
         return;
       }
 
@@ -304,19 +310,21 @@ const EventBus = require("../event-bus");
       const layerIds = Object.keys(this.layerConfig);
 
       if (layerIds.length === 0) {
-        Prime.Logger.debug("No layers provided for model-parallel partitioning, creating empty partition structure");
-        
+        Prime.Logger.debug(
+          'No layers provided for model-parallel partitioning, creating empty partition structure',
+        );
+
         // Create empty partition structures with balanced distribution
         for (let nodeIndex = 0; nodeIndex < this.nodeCount; nodeIndex++) {
           const nodeId = `node_${nodeIndex}`;
-          
+
           this.partitionMap.set(nodeId, {
             layers: [],
             dataIndices: null,
             partialComputation: false,
           });
         }
-        
+
         return;
       }
 
@@ -369,7 +377,7 @@ const EventBus = require("../event-bus");
           currentNodeId !== `node_${this.nodeCount - 1}`
         ) {
           // Create new node
-          const nodeIndex = parseInt(currentNodeId.split("_")[1]) + 1;
+          const nodeIndex = parseInt(currentNodeId.split('_')[1]) + 1;
           if (nodeIndex >= this.nodeCount) {
             break;
           }
@@ -560,8 +568,8 @@ const EventBus = require("../event-bus");
       // based on communication patterns, load balance, and mathematical properties
 
       // Simple coherence score based on load balance and layer grouping
-      let loadBalanceScore = this._calculateLoadBalanceScore();
-      let layerGroupingScore = this._calculateLayerGroupingScore();
+      const loadBalanceScore = this._calculateLoadBalanceScore();
+      const layerGroupingScore = this._calculateLayerGroupingScore();
 
       // Combined coherence score
       this.coherenceScore = 0.6 * loadBalanceScore + 0.4 * layerGroupingScore;
@@ -635,7 +643,7 @@ const EventBus = require("../event-bus");
       // to minimize communication overhead
       const layerIds = Object.keys(this.layerConfig);
       let adjacentLayersOnSameNode = 0;
-      let totalAdjacentPairs = layerIds.length - 1;
+      const totalAdjacentPairs = layerIds.length - 1;
 
       if (totalAdjacentPairs <= 0) {
         return 1.0; // No adjacent pairs to evaluate
@@ -737,7 +745,7 @@ const EventBus = require("../event-bus");
      */
     static import(exportedConfig) {
       if (!exportedConfig || !exportedConfig.type) {
-        throw new Prime.ValidationError("Invalid exported configuration");
+        throw new Prime.ValidationError('Invalid exported configuration');
       }
 
       // Create new scheme with minimal config
@@ -771,20 +779,20 @@ const EventBus = require("../event-bus");
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
         throw new Prime.ValidationError(
-          "Distributed layer configuration must be an object",
+          'Distributed layer configuration must be an object',
         );
       }
 
       if (!config.id) {
-        throw new Prime.ValidationError("Layer ID is required");
+        throw new Prime.ValidationError('Layer ID is required');
       }
 
       if (!Prime.Utils.isObject(config.layerConfig)) {
-        throw new Prime.ValidationError("Layer configuration is required");
+        throw new Prime.ValidationError('Layer configuration is required');
       }
 
       if (!Array.isArray(config.nodeIds) || config.nodeIds.length === 0) {
-        throw new Prime.ValidationError("At least one node ID is required");
+        throw new Prime.ValidationError('At least one node ID is required');
       }
 
       this.id = config.id;
@@ -832,7 +840,7 @@ const EventBus = require("../event-bus");
      */
     async forward(input, options = {}) {
       if (!Array.isArray(input)) {
-        throw new Prime.ValidationError("Input must be an array");
+        throw new Prime.ValidationError('Input must be an array');
       }
 
       const startTime = performance.now();
@@ -896,7 +904,7 @@ const EventBus = require("../event-bus");
         // Prepare forward task
         const nodeTask = {
           id: `${taskId}_node${i}`,
-          type: "forward_pass",
+          type: 'forward_pass',
           data: {
             layerConfig: this.layerConfig,
             input: nodeInput,
@@ -912,7 +920,7 @@ const EventBus = require("../event-bus");
 
       // Combine results
       let combinedActivation = [];
-      let combinedCache = { input, z: [] };
+      const combinedCache = { input, z: [] };
 
       for (const result of nodeResults) {
         if (!result || !result.activation) {
@@ -961,7 +969,7 @@ const EventBus = require("../event-bus");
 
         // Check for slicing information
         if (
-          typeof layerAssignment === "object" &&
+          typeof layerAssignment === 'object' &&
           layerAssignment.outputRange
         ) {
           outputRange = layerAssignment.outputRange;
@@ -976,7 +984,7 @@ const EventBus = require("../event-bus");
         // Prepare forward task
         const nodeTask = {
           id: `${taskId}_node${i}`,
-          type: "forward_pass",
+          type: 'forward_pass',
           data: {
             layerConfig: nodeConfig,
             input,
@@ -993,7 +1001,7 @@ const EventBus = require("../event-bus");
 
       // Combine results
       const combinedActivation = new Array(this.layerConfig.outputSize).fill(0);
-      let combinedCache = {
+      const combinedCache = {
         input,
         z: new Array(this.layerConfig.outputSize).fill(0),
       };
@@ -1049,7 +1057,7 @@ const EventBus = require("../event-bus");
       // Prepare forward task
       const nodeTask = {
         id: taskId,
-        type: "forward_pass",
+        type: 'forward_pass',
         data: {
           layerConfig: this.layerConfig,
           input,
@@ -1074,11 +1082,11 @@ const EventBus = require("../event-bus");
      */
     async backward(gradOutput, cache, options = {}) {
       if (!Array.isArray(gradOutput)) {
-        throw new Prime.ValidationError("Gradient output must be an array");
+        throw new Prime.ValidationError('Gradient output must be an array');
       }
 
       if (!Prime.Utils.isObject(cache)) {
-        throw new Prime.ValidationError("Cache must be an object");
+        throw new Prime.ValidationError('Cache must be an object');
       }
 
       const startTime = performance.now();
@@ -1152,7 +1160,7 @@ const EventBus = require("../event-bus");
         // Prepare backward task
         const nodeTask = {
           id: `${taskId}_node${i}`,
-          type: "backward_pass",
+          type: 'backward_pass',
           data: {
             layerConfig: this.layerConfig,
             gradOutput: nodeGradOutput,
@@ -1171,8 +1179,8 @@ const EventBus = require("../event-bus");
       const dW = Array.isArray(this.layerConfig.weights)
         ? JSON.parse(JSON.stringify(this.layerConfig.weights))
         : Array.from({ length: this.layerConfig.outputSize }, () =>
-            Array(this.layerConfig.inputSize).fill(0),
-          );
+          Array(this.layerConfig.inputSize).fill(0),
+        );
 
       const dB = new Array(this.layerConfig.outputSize).fill(0);
       const dX = new Array(this.layerConfig.inputSize).fill(0);
@@ -1297,7 +1305,7 @@ const EventBus = require("../event-bus");
 
         // Check for slicing information
         if (
-          typeof layerAssignment === "object" &&
+          typeof layerAssignment === 'object' &&
           layerAssignment.outputRange
         ) {
           outputRange = layerAssignment.outputRange;
@@ -1319,7 +1327,7 @@ const EventBus = require("../event-bus");
         // Prepare backward task
         const nodeTask = {
           id: `${taskId}_node${i}`,
-          type: "backward_pass",
+          type: 'backward_pass',
           data: {
             layerConfig: nodeConfig,
             gradOutput: nodeGradOutput,
@@ -1435,7 +1443,7 @@ const EventBus = require("../event-bus");
       // Prepare backward task
       const nodeTask = {
         id: taskId,
-        type: "backward_pass",
+        type: 'backward_pass',
         data: {
           layerConfig: this.layerConfig,
           gradOutput,
@@ -1510,7 +1518,7 @@ const EventBus = require("../event-bus");
           for (const nodeId of this.nodeIds) {
             const updateTask = {
               id: `${taskId}_${nodeId}`,
-              type: "weight_update",
+              type: 'weight_update',
               data: {
                 layerConfig: this.layerConfig,
                 gradients,
@@ -1543,7 +1551,7 @@ const EventBus = require("../event-bus");
 
             // Check for slicing information
             if (
-              typeof layerAssignment === "object" &&
+              typeof layerAssignment === 'object' &&
               layerAssignment.outputRange
             ) {
               outputRange = layerAssignment.outputRange;
@@ -1563,7 +1571,7 @@ const EventBus = require("../event-bus");
 
             const updateTask = {
               id: `${taskId}_${nodeId}`,
-              type: "weight_update",
+              type: 'weight_update',
               data: {
                 layerConfig: nodeConfig,
                 gradients: nodeGradients,
@@ -1589,7 +1597,7 @@ const EventBus = require("../event-bus");
 
           const updateTask = {
             id: taskId,
-            type: "weight_update",
+            type: 'weight_update',
             data: {
               layerConfig: this.layerConfig,
               gradients,
@@ -1628,7 +1636,7 @@ const EventBus = require("../event-bus");
       // Create a coherence check task
       const checkTask = {
         id: `coherence_check_${this.id}_${Date.now()}`,
-        type: "coherence_check",
+        type: 'coherence_check',
         data: {
           layerConfig: this.layerConfig,
           parameters: {
@@ -1645,7 +1653,7 @@ const EventBus = require("../event-bus");
           checkTask,
         );
 
-        if (coherenceResult && typeof coherenceResult.score === "number") {
+        if (coherenceResult && typeof coherenceResult.score === 'number') {
           this.metrics.coherenceScore = coherenceResult.score;
 
           // Only synchronize if coherence is poor
@@ -1731,13 +1739,13 @@ const EventBus = require("../event-bus");
     _simulateTaskExecution(nodeId, task) {
       // This method simulates what would happen on a real compute node
       switch (task.type) {
-        case "forward_pass":
+        case 'forward_pass':
           return this._simulateForwardPass(task.data);
-        case "backward_pass":
+        case 'backward_pass':
           return this._simulateBackwardPass(task.data);
-        case "weight_update":
+        case 'weight_update':
           return this._simulateWeightUpdate(task.data);
-        case "coherence_check":
+        case 'coherence_check':
           return this._simulateCoherenceCheck(task.data);
         default:
           throw new Error(`Unknown task type: ${task.type}`);
@@ -1761,10 +1769,10 @@ const EventBus = require("../event-bus");
       ) {
         // This is a critical dependency - ensure proper dependency loading order
         // First load the base layer module
-        require("../../neural/layer/index");
+        require('../../neural/layer/index');
 
         // Then load the main neural module which ties everything together
-        require("../../neural/index");
+        require('../../neural/index');
 
         // After loading, verify again
         if (
@@ -1773,7 +1781,7 @@ const EventBus = require("../event-bus");
           !Prime.Neural.Layer.NeuralLayer
         ) {
           throw new Error(
-            "Neural module not loaded or NeuralLayer not available",
+            'Neural module not loaded or NeuralLayer not available',
           );
         }
       }
@@ -1809,7 +1817,7 @@ const EventBus = require("../event-bus");
       ) {
         // This is a critical dependency - we should have proper module loading
         // Try to load the module if not already loaded
-        require("../../neural/layer/index");
+        require('../../neural/layer/index');
 
         // After loading, verify again
         if (
@@ -1818,7 +1826,7 @@ const EventBus = require("../event-bus");
           !Prime.Neural.Layer.NeuralLayer
         ) {
           throw new Error(
-            "Neural module not loaded or NeuralLayer not available",
+            'Neural module not loaded or NeuralLayer not available',
           );
         }
       }
@@ -1855,7 +1863,7 @@ const EventBus = require("../event-bus");
       ) {
         // This is a critical dependency - we should have proper module loading
         // Try to load the module if not already loaded
-        require("../../neural/layer/index");
+        require('../../neural/layer/index');
 
         // After loading, verify again
         if (
@@ -1864,7 +1872,7 @@ const EventBus = require("../event-bus");
           !Prime.Neural.Layer.NeuralLayer
         ) {
           throw new Error(
-            "Neural module not loaded or NeuralLayer not available",
+            'Neural module not loaded or NeuralLayer not available',
           );
         }
       }
@@ -1907,7 +1915,7 @@ const EventBus = require("../event-bus");
       ) {
         // This is a critical dependency - we should have proper module loading
         // Try to load the module if not already loaded
-        require("../coherence-core");
+        require('../coherence-core');
 
         // After loading, verify again
         if (
@@ -1916,7 +1924,7 @@ const EventBus = require("../event-bus");
           !Prime.Distributed.Coherence.DistributedCoherenceManager
         ) {
           throw new Error(
-            "Coherence module not loaded or DistributedCoherenceManager not available",
+            'Coherence module not loaded or DistributedCoherenceManager not available',
           );
         }
       }

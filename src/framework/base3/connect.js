@@ -8,12 +8,12 @@
  * - Resource binding and access control
  */
 
-const Prime = require("../../core");
+const Prime = require('../../core');
 const { Utils } = Prime;
 // Import Base3 modules directly to avoid circular imports
-const createApplication = require("./application");
-const createComponent = require("./component");
-const createFramework = require("./framework");
+const createApplication = require('./application');
+const createComponent = require('./component');
+const createFramework = require('./framework');
 
 /**
  * Connect Base3 (Application) to Base2 (Kernel)
@@ -28,7 +28,7 @@ function connectToBase2(base2) {
     !base2.resourceClient ||
     !base2.applicationManager
   ) {
-    throw new Prime.ValidationError("Invalid Base2 components", {
+    throw new Prime.ValidationError('Invalid Base2 components', {
       context: { base2 },
     });
   }
@@ -88,9 +88,9 @@ function connectToBase2(base2) {
     // Enhance with resource access methods
     app.allocateMemory = function (size, allocOptions = {}) {
       // Require syscall permissions
-      if (!options.permissions || !options.permissions.includes("memory")) {
+      if (!options.permissions || !options.permissions.includes('memory')) {
         throw new Prime.SecurityError(
-          "Application does not have memory allocation permission",
+          'Application does not have memory allocation permission',
           {
             context: { appId: app.id, permissions: options.permissions },
           },
@@ -101,7 +101,7 @@ function connectToBase2(base2) {
       const enhancedOptions = {
         ...allocOptions,
         processId: app.id,
-        purpose: allocOptions.purpose || "application",
+        purpose: allocOptions.purpose || 'application',
       };
 
       // Use system manager to allocate memory
@@ -111,9 +111,9 @@ function connectToBase2(base2) {
     // Add syscall capability
     app.syscall = function (name, ...args) {
       // Validate syscall permissions
-      if (!options.permissions || !options.permissions.includes("syscall")) {
+      if (!options.permissions || !options.permissions.includes('syscall')) {
         throw new Prime.SecurityError(
-          "Application does not have syscall permission",
+          'Application does not have syscall permission',
           {
             context: { appId: app.id, permissions: options.permissions },
           },
@@ -127,9 +127,9 @@ function connectToBase2(base2) {
     // Add resource client access
     app.getResourceClient = function () {
       // Validate resource access permissions
-      if (!options.permissions || !options.permissions.includes("resources")) {
+      if (!options.permissions || !options.permissions.includes('resources')) {
         throw new Prime.SecurityError(
-          "Application does not have resource access permission",
+          'Application does not have resource access permission',
           {
             context: { appId: app.id, permissions: options.permissions },
           },
@@ -158,7 +158,7 @@ function connectToBase2(base2) {
     const component = base3.createComponent(options);
 
     // Attach resource utilities if component has appropriate permissions
-    if (options.permissions && options.permissions.includes("resources")) {
+    if (options.permissions && options.permissions.includes('resources')) {
       component.bindResource = function (resourceId) {
         // Retrieve the resource
         const resource = base2.resourceClient.getResource(resourceId);
@@ -205,10 +205,10 @@ function connectToBase2(base2) {
       // Security check
       if (
         !application.permissions ||
-        !application.permissions.includes("system")
+        !application.permissions.includes('system')
       ) {
         throw new Prime.SecurityError(
-          "Application does not have system access permission",
+          'Application does not have system access permission',
           {
             context: {
               appId: application.id,
@@ -241,8 +241,8 @@ function connectToBase2(base2) {
         !bundleConfig.name ||
         !bundleConfig.version
       ) {
-        throw new Prime.ValidationError("Invalid bundle configuration", {
-          context: { bundleConfig, required: ["id", "name", "version"] },
+        throw new Prime.ValidationError('Invalid bundle configuration', {
+          context: { bundleConfig, required: ['id', 'name', 'version'] },
         });
       }
 

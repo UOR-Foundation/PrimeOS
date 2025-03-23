@@ -6,7 +6,7 @@
 // Import core if available
 let Prime;
 try {
-  Prime = require("../../core.js");
+  Prime = require('../../core.js');
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
@@ -15,7 +15,7 @@ try {
 // Try to import math utilities and coherence module
 let mathUtils;
 try {
-  mathUtils = require("./index.js");
+  mathUtils = require('./index.js');
 } catch (e) {
   // Create minimal placeholder if not available
   mathUtils = {
@@ -27,7 +27,7 @@ try {
 
 let coherenceModule;
 try {
-  coherenceModule = require("./coherence.js");
+  coherenceModule = require('./coherence.js');
 } catch (e) {
   coherenceModule = { CliffordAlgebraFiber: null };
 }
@@ -286,7 +286,7 @@ class FiberAlgebraPatternRecognition {
       encodedStates[idx] = state.slice();
 
       // If using CliffordAlgebraFiber, also set its state
-      if (typeof fiber.setState === "function") {
+      if (typeof fiber.setState === 'function') {
         fiber.setState(state);
       } else {
         fiber.state = state.slice();
@@ -455,7 +455,7 @@ class FiberAlgebraPatternRecognition {
 
     // Add the base pattern
     const basePattern = {
-      type: "base",
+      type: 'base',
       coherence: baseCoherence,
       states: encodedStates,
       transformation: null,
@@ -474,7 +474,7 @@ class FiberAlgebraPatternRecognition {
       const amount = [0.05, 0.1, 0.2][amountIdx];
 
       const pattern = {
-        type: "transformation",
+        type: 'transformation',
         coherence: Math.max(0, Math.min(1, coherence)), // Ensure coherence is in [0,1]
         states: transformedStates,
         transformation: generatorIdx,
@@ -520,7 +520,7 @@ class FiberAlgebraPatternRecognition {
       features[i][0] = pattern.coherence;
 
       // Feature 2: Pattern type (0 for base, 1 for transformation)
-      features[i][1] = pattern.type === "base" ? 0 : 1;
+      features[i][1] = pattern.type === 'base' ? 0 : 1;
 
       // Feature 3: Transformation strength (if applicable)
       features[i][2] = pattern.strength || 0;
@@ -725,7 +725,7 @@ class SequencePatternRecognition {
   findPatterns(sequence, maxPatterns = 10) {
     // Validate input
     if (!Array.isArray(sequence)) {
-      throw new TypeError("Input must be an array");
+      throw new TypeError('Input must be an array');
     }
 
     if (sequence.length === 0) {
@@ -866,9 +866,9 @@ class SequencePatternRecognition {
         const strB = JSON.stringify(patternB);
 
         if (strA.includes(strB)) {
-          relationship = "contains";
+          relationship = 'contains';
         } else if (strB.includes(strA)) {
-          relationship = "contained_in";
+          relationship = 'contained_in';
         } else {
           // Check for overlap
           const overlapThreshold =
@@ -904,7 +904,7 @@ class SequencePatternRecognition {
           }
 
           if (maxOverlap >= overlapThreshold) {
-            relationship = "overlaps";
+            relationship = 'overlaps';
           }
         }
 

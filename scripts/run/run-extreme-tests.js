@@ -32,8 +32,8 @@ const baseOptions = {
   // Enable extended precision for numerical operations
   globals: {
     EXTENDED_PRECISION: true,
-    EXTREME_TESTING: true
-  }
+    EXTREME_TESTING: true,
+  },
 };
 
 // Define test batches for extreme-conditions-tests.js to manage memory consumption
@@ -43,32 +43,35 @@ const testBatches = [
     name: 'basic',
     description: 'Basic extreme precision tests',
     testMatch: ['**/extreme-conditions-basic-test.js'],
-    outputFile: 'extreme-basic-report.json'
+    outputFile: 'extreme-basic-report.json',
   },
   {
     name: 'rna-folding',
     description: 'RNA Folding simulation tests',
     testMatch: ['**/extreme-conditions-tests.js'],
-    testNamePattern: 'Extreme Conditions Handling.*RNA.*'
+    testNamePattern: 'Extreme Conditions Handling.*RNA.*',
   },
   {
     name: 'high-dimension',
     description: 'High-Dimension Fiber Algebra tests',
     testMatch: ['**/extreme-conditions-tests.js'],
-    testNamePattern: 'Extreme Conditions Handling.*High-Dimension Fiber Algebra.*'
+    testNamePattern:
+      'Extreme Conditions Handling.*High-Dimension Fiber Algebra.*',
   },
   {
     name: 'coherence-gradient',
     description: 'Coherence-Gradient Descent tests',
     testMatch: ['**/extreme-conditions-tests.js'],
-    testNamePattern: 'Extreme Conditions Handling.*Coherence-Gradient Descent.*'
+    testNamePattern:
+      'Extreme Conditions Handling.*Coherence-Gradient Descent.*',
   },
   {
     name: 'numerical-propagation',
     description: 'Numerical Propagation Analysis tests',
     testMatch: ['**/extreme-conditions-tests.js'],
-    testNamePattern: 'Extreme Conditions Handling.*Numerical Propagation Analysis.*'
-  }
+    testNamePattern:
+      'Extreme Conditions Handling.*Numerical Propagation Analysis.*',
+  },
 ];
 
 // Create test setup file if it doesn't exist
@@ -210,7 +213,7 @@ if (!fs.existsSync(resultsDir)) {
 async function runTestBatch(batch) {
   console.log(`\n=== Starting batch: ${batch.name} - ${batch.description} ===`);
   console.log('Testing with extended precision and memory profiling enabled');
-  
+
   // Create a fresh options object for each batch
   const options = {
     testTimeout: 120000,
@@ -223,12 +226,12 @@ async function runTestBatch(batch) {
     detectLeaks: false,
     globals: {
       EXTENDED_PRECISION: true,
-      EXTREME_TESTING: true
+      EXTREME_TESTING: true,
     },
     // Override the default testPathIgnorePatterns to allow running extreme-conditions-tests.js
-    testPathIgnorePatterns: ['/node_modules/']
+    testPathIgnorePatterns: ['/node_modules/'],
   };
-  
+
   // Configure test matching - only set one of testMatch or testRegex
   if (batch.testMatch) {
     options.testMatch = batch.testMatch;
@@ -238,34 +241,36 @@ async function runTestBatch(batch) {
   if (batch.testNamePattern) {
     options.testNamePattern = batch.testNamePattern;
   }
-  
+
   // Initial memory usage
   console.log('MEMORY: Initial memory snapshot for batch');
-  
+
   // Run the tests
   try {
     const { results } = await jest.runCLI(options, [__dirname]);
-    
+
     console.log(`Batch ${batch.name} completed`);
-    console.log(`Tests: ${results.numTotalTests}, Passed: ${results.numPassedTests}, Failed: ${results.numFailedTests}`);
-    
+    console.log(
+      `Tests: ${results.numTotalTests}, Passed: ${results.numPassedTests}, Failed: ${results.numFailedTests}`,
+    );
+
     // Save detailed test results
     const outputFile = batch.outputFile || `extreme-${batch.name}-report.json`;
     fs.writeFileSync(
       path.resolve(resultsDir, outputFile),
-      JSON.stringify(results, null, 2)
+      JSON.stringify(results, null, 2),
     );
-    
+
     // Log memory usage
     console.log(`MEMORY: Final memory snapshot for batch ${batch.name}`);
-    
+
     return {
       name: batch.name,
       description: batch.description,
       success: results.success,
       totalTests: results.numTotalTests,
       passedTests: results.numPassedTests,
-      failedTests: results.numFailedTests
+      failedTests: results.numFailedTests,
     };
   } catch (error) {
     console.error(`Error running batch ${batch.name}:`, error);
@@ -273,7 +278,7 @@ async function runTestBatch(batch) {
       name: batch.name,
       description: batch.description,
       success: false,
-      error: error.message
+      error: error.message,
     };
   } finally {
     // Force garbage collection between batches if possible
@@ -282,100 +287,110 @@ async function runTestBatch(batch) {
         global.gc();
         console.log(`Forced garbage collection after batch ${batch.name}`);
       } else {
-        console.log('Note: Run with --expose-gc flag to enable garbage collection between batches');
+        console.log(
+          'Note: Run with --expose-gc flag to enable garbage collection between batches',
+        );
       }
     } catch (e) {
       console.log('Unable to force garbage collection');
     }
-    
+
     // Small delay to allow memory to be reclaimed
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 }
 
 // Main function to run all batches
 async function runAllBatches() {
   console.log('=== PrimeOS Extreme Conditions Test Runner ===');
-  
+
   const allResults = [];
   let totalTests = 0;
   let totalPassed = 0;
   let totalFailed = 0;
   let allSuccessful = true;
-  
+
   // Process arguments
   const args = process.argv.slice(2);
   const specificBatch = args.length > 0 ? args[0] : null;
-  
+
   // Filter batches if a specific one was requested
-  const batchesToRun = specificBatch 
-    ? testBatches.filter(batch => batch.name === specificBatch)
+  const batchesToRun = specificBatch
+    ? testBatches.filter((batch) => batch.name === specificBatch)
     : testBatches;
-  
+
   if (specificBatch && batchesToRun.length === 0) {
     console.error(`No batch found with name: ${specificBatch}`);
     console.log('Available batches:');
-    testBatches.forEach(batch => {
+    testBatches.forEach((batch) => {
       console.log(`- ${batch.name}: ${batch.description}`);
     });
     process.exit(1);
   }
-  
+
   for (const batch of batchesToRun) {
     const result = await runTestBatch(batch);
     allResults.push(result);
-    
+
     if (result.success === false) {
       allSuccessful = false;
     }
-    
+
     if (result.totalTests !== undefined) {
       totalTests += result.totalTests;
       totalPassed += result.passedTests;
       totalFailed += result.failedTests;
     }
   }
-  
+
   // Generate consolidated report
   console.log('\n=== Extreme Conditions Test Summary ===');
-  allResults.forEach(result => {
+  allResults.forEach((result) => {
     const status = result.success ? '✅ PASS' : '❌ FAIL';
     console.log(`${status} - ${result.name}: ${result.description}`);
     if (result.totalTests !== undefined) {
-      console.log(`  Tests: ${result.totalTests}, Passed: ${result.passedTests}, Failed: ${result.failedTests}`);
+      console.log(
+        `  Tests: ${result.totalTests}, Passed: ${result.passedTests}, Failed: ${result.failedTests}`,
+      );
     }
     if (result.error) {
       console.log(`  Error: ${result.error}`);
     }
   });
-  
+
   console.log('\nTotal Results:');
-  console.log(`Tests: ${totalTests}, Passed: ${totalPassed}, Failed: ${totalFailed}`);
-  
+  console.log(
+    `Tests: ${totalTests}, Passed: ${totalPassed}, Failed: ${totalFailed}`,
+  );
+
   // Save consolidated results
   fs.writeFileSync(
     path.resolve(resultsDir, 'extreme-test-consolidated-report.json'),
-    JSON.stringify({
-      timestamp: new Date().toISOString(),
-      summary: {
-        totalTests,
-        passedTests: totalPassed,
-        failedTests: totalFailed,
-        allSuccessful
+    JSON.stringify(
+      {
+        timestamp: new Date().toISOString(),
+        summary: {
+          totalTests,
+          passedTests: totalPassed,
+          failedTests: totalFailed,
+          allSuccessful,
+        },
+        batches: allResults,
       },
-      batches: allResults
-    }, null, 2)
+      null,
+      2,
+    ),
   );
-  
+
   return allSuccessful;
 }
 
 // Run the batched test suite
 runAllBatches()
-  .then(success => {
+  .then((success) => {
     process.exit(success ? 0 : 1);
   })
-  .catch(error => {
+  .catch((error) => {
     console.error('Unhandled error in test execution:', error);
     process.exit(1);
   });

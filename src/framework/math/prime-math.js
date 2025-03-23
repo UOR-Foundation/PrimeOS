@@ -5,12 +5,12 @@
  */
 
 // Import dependencies
-const Prime = require("../../mathematics.js");
-const { Vector, Matrix } = require("./linalg.js");
+const Prime = require('../../mathematics.js');
+const { Vector, Matrix } = require('./linalg.js');
 
 // Define isNumber function if not available
 function isNumber(value) {
-  return typeof value === "number" && !isNaN(value) && isFinite(value);
+  return typeof value === 'number' && !isNaN(value) && isFinite(value);
 }
 
 // Define clamp function if not available
@@ -249,7 +249,7 @@ const PrimeMath = {
    */
   createMatrix: function (values, rows, cols) {
     // Ensure we're using the correct Matrix constructor from linalg
-    const { Matrix } = require("./linalg.js");
+    const { Matrix } = require('./linalg.js');
     return new Matrix(values, rows, cols);
   },
 
@@ -352,7 +352,7 @@ const PrimeMath = {
    */
   multiplyMatrices: function (m1, m2) {
     // Ensure we're using the correct Matrix constructor from linalg
-    const { Matrix } = require("./linalg.js");
+    const { Matrix } = require('./linalg.js');
 
     const mat1 = m1 instanceof Matrix ? m1 : new Matrix(m1);
     return mat1.multiply(m2);
@@ -365,7 +365,7 @@ const PrimeMath = {
    */
   transposeMatrix: function (m) {
     // Ensure we're using the correct Matrix constructor from linalg
-    const { Matrix } = require("./linalg.js");
+    const { Matrix } = require('./linalg.js');
 
     const mat = m instanceof Matrix ? m : new Matrix(m);
     return mat.transpose();
@@ -449,7 +449,7 @@ const PrimeMath = {
    */
   svd: function (m) {
     // Ensure we're using the correct Matrix constructor from linalg
-    const { Matrix } = require("./linalg.js");
+    const { Matrix } = require('./linalg.js');
 
     // Use the specialized extreme precision implementation if available
     if (Prime.ExtremePrecision && Prime.ExtremePrecision.svd) {
@@ -515,7 +515,7 @@ const PrimeMath = {
   sqrt: function (x) {
     if (!isNumber(x) || x < 0) {
       throw new Prime.MathematicalError(
-        "Square root requires a non-negative number",
+        'Square root requires a non-negative number',
       );
     }
 
@@ -537,7 +537,7 @@ const PrimeMath = {
    */
   pow: function (base, exponent) {
     if (!isNumber(base) || !isNumber(exponent)) {
-      throw new Prime.ValidationError("Power requires numeric values");
+      throw new Prime.ValidationError('Power requires numeric values');
     }
 
     // Handle special cases for enhanced precision
@@ -596,7 +596,7 @@ const PrimeMath = {
    */
   exp: function (x) {
     if (!isNumber(x)) {
-      throw new Prime.ValidationError("Exp requires a numeric value");
+      throw new Prime.ValidationError('Exp requires a numeric value');
     }
 
     // For values close to zero, use a Taylor series for better precision
@@ -615,7 +615,7 @@ const PrimeMath = {
    */
   log: function (x) {
     if (!isNumber(x) || x <= 0) {
-      throw new Prime.MathematicalError("Logarithm requires a positive number");
+      throw new Prime.MathematicalError('Logarithm requires a positive number');
     }
 
     // For values close to 1, use a Taylor series for better precision
@@ -635,7 +635,7 @@ const PrimeMath = {
    */
   sin: function (x) {
     if (!isNumber(x)) {
-      throw new Prime.ValidationError("Sine requires a numeric value");
+      throw new Prime.ValidationError('Sine requires a numeric value');
     }
 
     // Normalize angle to [0, 2π)
@@ -657,7 +657,7 @@ const PrimeMath = {
    */
   cos: function (x) {
     if (!isNumber(x)) {
-      throw new Prime.ValidationError("Cosine requires a numeric value");
+      throw new Prime.ValidationError('Cosine requires a numeric value');
     }
 
     // Normalize angle to [0, 2π)
@@ -682,13 +682,13 @@ const PrimeMath = {
    */
   tan: function (x) {
     if (!isNumber(x)) {
-      throw new Prime.ValidationError("Tangent requires a numeric value");
+      throw new Prime.ValidationError('Tangent requires a numeric value');
     }
 
     // Check for values close to singularities (π/2 + nπ)
     const normalized = x % Math.PI;
     if (Math.abs(normalized - Math.PI / 2) < 1e-10) {
-      throw new Prime.MathematicalError("Tangent is undefined at π/2 + nπ");
+      throw new Prime.MathematicalError('Tangent is undefined at π/2 + nπ');
     }
 
     // For better precision, use the ratio of sine and cosine
@@ -707,12 +707,12 @@ const PrimeMath = {
    * @returns {number} Derivative value
    */
   derivative: function (f, x, h = 1e-8) {
-    if (typeof f !== "function") {
-      throw new Prime.ValidationError("Derivative requires a function");
+    if (typeof f !== 'function') {
+      throw new Prime.ValidationError('Derivative requires a function');
     }
 
     if (!isNumber(x)) {
-      throw new Prime.ValidationError("Derivative requires a numeric point");
+      throw new Prime.ValidationError('Derivative requires a numeric point');
     }
 
     // Use central difference for better accuracy
@@ -782,14 +782,14 @@ const PrimeMath = {
    * @returns {number} Root of the equation
    */
   solveNewton: function (f, df, x0, options = {}) {
-    if (typeof f !== "function" || typeof df !== "function") {
+    if (typeof f !== 'function' || typeof df !== 'function') {
       throw new Prime.ValidationError(
-        "Newton method requires function and derivative",
+        'Newton method requires function and derivative',
       );
     }
 
     if (!isNumber(x0)) {
-      throw new Prime.ValidationError("Initial guess must be a number");
+      throw new Prime.ValidationError('Initial guess must be a number');
     }
 
     const tolerance = options.tolerance || 1e-10;
@@ -810,7 +810,7 @@ const PrimeMath = {
       // Check for division by zero
       if (Math.abs(dfx) < 1e-14) {
         throw new Prime.MathematicalError(
-          "Derivative near zero, Newton method failed",
+          'Derivative near zero, Newton method failed',
         );
       }
 
@@ -825,7 +825,7 @@ const PrimeMath = {
       x = newX;
     }
 
-    throw new Prime.MathematicalError("Newton method failed to converge");
+    throw new Prime.MathematicalError('Newton method failed to converge');
   },
 
   /**
@@ -933,7 +933,7 @@ const PrimeMath = {
    */
   lerp: function (a, b, t) {
     if (!isNumber(a) || !isNumber(b) || !isNumber(t)) {
-      throw new Prime.ValidationError("Lerp requires numeric values");
+      throw new Prime.ValidationError('Lerp requires numeric values');
     }
 
     // Clamp t to [0, 1]
@@ -952,7 +952,7 @@ const PrimeMath = {
    */
   clamp: function (value, min, max) {
     if (!isNumber(value) || !isNumber(min) || !isNumber(max)) {
-      throw new Prime.ValidationError("Clamp requires numeric values");
+      throw new Prime.ValidationError('Clamp requires numeric values');
     }
 
     return Math.max(min, Math.min(max, value));
@@ -972,7 +972,7 @@ const PrimeMath = {
   approxEqual: function (a, b, epsilon = Number.EPSILON) {
     if (!isNumber(a) || !isNumber(b)) {
       throw new Prime.ValidationError(
-        "Approximate equality requires numeric values",
+        'Approximate equality requires numeric values',
       );
     }
 
@@ -1015,7 +1015,7 @@ const PrimeMath = {
    */
   random: function (min = 0, max = 1) {
     if (!isNumber(min) || !isNumber(max)) {
-      throw new Prime.ValidationError("Random range requires numeric values");
+      throw new Prime.ValidationError('Random range requires numeric values');
     }
 
     return min + Math.random() * (max - min);
@@ -1030,7 +1030,7 @@ const PrimeMath = {
   randomNormal: function (mean = 0, stdDev = 1) {
     if (!isNumber(mean) || !isNumber(stdDev)) {
       throw new Prime.ValidationError(
-        "Normal distribution requires numeric parameters",
+        'Normal distribution requires numeric parameters',
       );
     }
 
@@ -1050,7 +1050,7 @@ const PrimeMath = {
    */
   toRadians: function (degrees) {
     if (!isNumber(degrees)) {
-      throw new Prime.ValidationError("Degrees must be a number");
+      throw new Prime.ValidationError('Degrees must be a number');
     }
 
     return (degrees * Math.PI) / 180;
@@ -1063,7 +1063,7 @@ const PrimeMath = {
    */
   toDegrees: function (radians) {
     if (!isNumber(radians)) {
-      throw new Prime.ValidationError("Radians must be a number");
+      throw new Prime.ValidationError('Radians must be a number');
     }
 
     return (radians * 180) / Math.PI;

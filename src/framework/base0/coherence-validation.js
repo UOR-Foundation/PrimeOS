@@ -7,7 +7,7 @@
 // Import core if available
 let Prime;
 try {
-  Prime = require("../../core.js");
+  Prime = require('../../core.js');
 } catch (e) {
   // Handle case where core isn't available yet
   Prime = {};
@@ -17,7 +17,7 @@ try {
 const {
   CoherenceConstraints,
   CoherenceNorms,
-} = require("./coherence-constraints.js");
+} = require('./coherence-constraints.js');
 
 /**
  * CoherenceValidator implements formal coherence checking for mathematical operations
@@ -72,35 +72,35 @@ class CoherenceValidator {
       for (const [name, constraint] of Object.entries(
         CoherenceConstraints.numeric,
       )) {
-        this.registerConstraint("numeric", constraint);
+        this.registerConstraint('numeric', constraint);
       }
 
       // Register vector space constraints
       for (const [name, constraint] of Object.entries(
         CoherenceConstraints.vectorSpace,
       )) {
-        this.registerConstraint("vectorSpace", constraint);
+        this.registerConstraint('vectorSpace', constraint);
       }
 
       // Register matrix algebra constraints
       for (const [name, constraint] of Object.entries(
         CoherenceConstraints.matrixAlgebra,
       )) {
-        this.registerConstraint("matrixAlgebra", constraint);
+        this.registerConstraint('matrixAlgebra', constraint);
       }
 
       // Register functional constraints
       for (const [name, constraint] of Object.entries(
         CoherenceConstraints.functional,
       )) {
-        this.registerConstraint("functional", constraint);
+        this.registerConstraint('functional', constraint);
       }
 
       // Register tensor algebra constraints
       for (const [name, constraint] of Object.entries(
         CoherenceConstraints.tensorAlgebra,
       )) {
-        this.registerConstraint("tensorAlgebra", constraint);
+        this.registerConstraint('tensorAlgebra', constraint);
       }
     }
 
@@ -123,12 +123,12 @@ class CoherenceValidator {
    * @returns {string} Constraint ID
    */
   registerConstraint(domain, constraint) {
-    if (!constraint || typeof constraint.validator !== "function") {
-      throw new Error("Constraint must have a validator function");
+    if (!constraint || typeof constraint.validator !== 'function') {
+      throw new Error('Constraint must have a validator function');
     }
 
     // Generate a unique ID for this constraint
-    const id = `${domain}_${constraint.name || "constraint"}_${Date.now()}`;
+    const id = `${domain}_${constraint.name || 'constraint'}_${Date.now()}`;
 
     // Ensure domain exists in registry
     if (!this.constraintRegistry.has(domain)) {
@@ -169,8 +169,8 @@ class CoherenceValidator {
    * @param {Function} validator - Validation function
    */
   registerValidator(type, validator) {
-    if (typeof validator !== "function") {
-      throw new Error("Validator must be a function");
+    if (typeof validator !== 'function') {
+      throw new Error('Validator must be a function');
     }
     this.validators[type] = validator;
   }
@@ -182,8 +182,8 @@ class CoherenceValidator {
    * @param {Function} normFn - Function to compute the coherence norm
    */
   defineCoherenceNorm(domain, normFn) {
-    if (typeof normFn !== "function") {
-      throw new Error("Coherence norm must be a function");
+    if (typeof normFn !== 'function') {
+      throw new Error('Coherence norm must be a function');
     }
     this.coherenceNorms.set(domain, normFn);
   }
@@ -213,7 +213,7 @@ class CoherenceValidator {
       return {
         valid: true,
         coherence: 1.0,
-        message: "No constraints defined for this domain",
+        message: 'No constraints defined for this domain',
       };
     }
 
@@ -292,8 +292,8 @@ class CoherenceValidator {
       coherence,
       constraintResults: results,
       message: allSatisfied
-        ? "All constraints satisfied"
-        : "Some constraints violated",
+        ? 'All constraints satisfied'
+        : 'Some constraints violated',
     };
   }
 
@@ -337,11 +337,11 @@ class CoherenceValidator {
    */
   registerManifoldConstraint(constraintName, validator, options = {}) {
     if (!this.enableManifoldValidation) {
-      throw new Error("Manifold validation is not enabled");
+      throw new Error('Manifold validation is not enabled');
     }
 
-    if (typeof validator !== "function") {
-      throw new Error("Manifold constraint validator must be a function");
+    if (typeof validator !== 'function') {
+      throw new Error('Manifold constraint validator must be a function');
     }
 
     // Generate a unique ID for this constraint
@@ -357,7 +357,7 @@ class CoherenceValidator {
       validator,
       name: constraintName,
       priority: options.priority || 1,
-      type: options.type || "soft",
+      type: options.type || 'soft',
     });
 
     return id;
@@ -373,11 +373,11 @@ class CoherenceValidator {
    */
   registerCrossManifoldMetric(metricName, metricFn, options = {}) {
     if (!this.enableManifoldValidation) {
-      throw new Error("Manifold validation is not enabled");
+      throw new Error('Manifold validation is not enabled');
     }
 
-    if (typeof metricFn !== "function") {
-      throw new Error("Cross-manifold metric must be a function");
+    if (typeof metricFn !== 'function') {
+      throw new Error('Cross-manifold metric must be a function');
     }
 
     // Generate a unique ID for this metric
@@ -388,7 +388,7 @@ class CoherenceValidator {
       name: metricName,
       fn: metricFn,
       weight: options.weight || 1,
-      description: options.description || "",
+      description: options.description || '',
     });
 
     return id;
@@ -419,22 +419,22 @@ class CoherenceValidator {
     }
 
     // Specific validators for different types
-    let domainValid = true;
-    let domainCoherence = 1.0;
+    const domainValid = true;
+    const domainCoherence = 1.0;
 
     // Choose appropriate validator based on type
     switch (type) {
-      case "number":
-        return this.validate("numeric", value, constraints);
-      case "array":
-      case "vector":
-        return this.validate("vectorSpace", value, constraints);
-      case "matrix":
-        return this.validate("matrixAlgebra", value, constraints);
-      case "function":
-        return this.validate("functional", value, constraints);
-      case "tensor":
-        return this.validate("tensorAlgebra", value, constraints);
+      case 'number':
+        return this.validate('numeric', value, constraints);
+      case 'array':
+      case 'vector':
+        return this.validate('vectorSpace', value, constraints);
+      case 'matrix':
+        return this.validate('matrixAlgebra', value, constraints);
+      case 'function':
+        return this.validate('functional', value, constraints);
+      case 'tensor':
+        return this.validate('tensorAlgebra', value, constraints);
       default:
         // Use custom validator if registered
         if (this.validators[type]) {
@@ -517,7 +517,7 @@ class CoherenceValidator {
     let Manifold;
     try {
       if (!Manifold) {
-        const manifestModule = require("./manifold.js");
+        const manifestModule = require('./manifold.js');
         Manifold = manifestModule.Manifold;
       }
     } catch (e) {
@@ -529,7 +529,7 @@ class CoherenceValidator {
       return {
         valid: true,
         coherence: 1.0,
-        message: "Manifold validation is not enabled",
+        message: 'Manifold validation is not enabled',
       };
     }
 
@@ -543,7 +543,7 @@ class CoherenceValidator {
       return {
         valid: false,
         coherence: 0,
-        message: "Invalid manifold object",
+        message: 'Invalid manifold object',
       };
     }
 
@@ -563,7 +563,7 @@ class CoherenceValidator {
       return {
         valid: true,
         coherence: 1.0,
-        message: "No constraints defined for manifolds",
+        message: 'No constraints defined for manifolds',
       };
     }
 
@@ -590,7 +590,7 @@ class CoherenceValidator {
         });
 
         if (!satisfied) {
-          if (constraint.type === "hard") {
+          if (constraint.type === 'hard') {
             allHardConstraintsSatisfied = false;
 
             // In strict mode, fail on first violated hard constraint
@@ -610,7 +610,7 @@ class CoherenceValidator {
           error: error.message,
         });
 
-        if (constraint.type === "hard") {
+        if (constraint.type === 'hard') {
           allHardConstraintsSatisfied = false;
           if (this.strictMode) {
             break;
@@ -633,7 +633,7 @@ class CoherenceValidator {
     let softSatisfiedPrioritySum = 0;
 
     for (const result of results) {
-      if (result.type === "hard") {
+      if (result.type === 'hard') {
         hardPrioritySum += result.priority;
         if (result.satisfied) {
           hardSatisfiedPrioritySum += result.priority;
@@ -675,9 +675,9 @@ class CoherenceValidator {
       constraintResults: results,
       message: valid
         ? allSoftConstraintsSatisfied
-          ? "All constraints satisfied"
-          : "All hard constraints satisfied, some soft constraints violated"
-        : "Some hard constraints violated",
+          ? 'All constraints satisfied'
+          : 'All hard constraints satisfied, some soft constraints violated'
+        : 'Some hard constraints violated',
     };
   }
 
@@ -694,7 +694,7 @@ class CoherenceValidator {
     let Manifold;
     try {
       if (!Manifold) {
-        const manifestModule = require("./manifold.js");
+        const manifestModule = require('./manifold.js');
         Manifold = manifestModule.Manifold;
       }
     } catch (e) {
@@ -706,7 +706,7 @@ class CoherenceValidator {
       return {
         valid: true,
         coherence: 1.0,
-        message: "Manifold validation is not enabled",
+        message: 'Manifold validation is not enabled',
       };
     }
 
@@ -724,7 +724,7 @@ class CoherenceValidator {
       return {
         valid: false,
         coherence: 0,
-        message: "Invalid manifold objects",
+        message: 'Invalid manifold objects',
       };
     }
 
@@ -743,7 +743,7 @@ class CoherenceValidator {
       return {
         valid: true,
         coherence: baseCoherence,
-        message: "Manifolds have different types",
+        message: 'Manifolds have different types',
         metrics: {
           typeCompatibility: 0,
         },
@@ -771,8 +771,8 @@ class CoherenceValidator {
           valid,
           coherence,
           message: valid
-            ? "Manifolds are coherent"
-            : "Manifolds are not sufficiently coherent",
+            ? 'Manifolds are coherent'
+            : 'Manifolds are not sufficiently coherent',
           metrics: coherenceCheck.metrics || {},
         };
       } catch (e) {
@@ -824,8 +824,8 @@ class CoherenceValidator {
           valid,
           coherence,
           message: valid
-            ? "Manifolds are coherent"
-            : "Manifolds are not sufficiently coherent",
+            ? 'Manifolds are coherent'
+            : 'Manifolds are not sufficiently coherent',
           metrics: {
             invariantSimilarity,
             spaceOverlap,
@@ -843,14 +843,14 @@ class CoherenceValidator {
         try {
           const result = metric.fn(manifold1, manifold2, options);
           const metricValue =
-            typeof result === "number" ? result : result.value || 0;
+            typeof result === 'number' ? result : result.value || 0;
 
           metricResults.push({
             id,
             name: metric.name,
             value: metricValue,
             weight: metric.weight,
-            details: typeof result === "object" ? result : null,
+            details: typeof result === 'object' ? result : null,
           });
 
           weightedSum += metricValue * metric.weight;
@@ -885,8 +885,8 @@ class CoherenceValidator {
         valid,
         coherence,
         message: valid
-          ? "Manifolds are coherent according to registered metrics"
-          : "Manifolds are not sufficiently coherent",
+          ? 'Manifolds are coherent according to registered metrics'
+          : 'Manifolds are not sufficiently coherent',
         metrics: metricResults,
       };
     }
@@ -902,24 +902,24 @@ class CoherenceValidator {
    */
   _validateType(value, expectedType) {
     switch (expectedType) {
-      case "number":
-        return typeof value === "number" && !isNaN(value);
-      case "string":
-        return typeof value === "string";
-      case "boolean":
-        return typeof value === "boolean";
-      case "function":
-        return typeof value === "function";
-      case "object":
+      case 'number':
+        return typeof value === 'number' && !isNaN(value);
+      case 'string':
+        return typeof value === 'string';
+      case 'boolean':
+        return typeof value === 'boolean';
+      case 'function':
+        return typeof value === 'function';
+      case 'object':
         return (
-          value !== null && typeof value === "object" && !Array.isArray(value)
+          value !== null && typeof value === 'object' && !Array.isArray(value)
         );
-      case "array":
-      case "vector":
+      case 'array':
+      case 'vector':
         return Array.isArray(value);
-      case "matrix":
+      case 'matrix':
         return Array.isArray(value) && value.every((row) => Array.isArray(row));
-      case "tensor":
+      case 'tensor':
         // Recursive check for multi-dimensional arrays
         const checkTensor = (arr, depth = 0) => {
           if (depth > 0 && !Array.isArray(arr)) return true;
