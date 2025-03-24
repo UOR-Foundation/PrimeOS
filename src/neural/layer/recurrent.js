@@ -6,6 +6,10 @@
 // Import the Prime object from core
 const Prime = require("../../core");
 
+// Ensure Prime and Neural namespace exist
+Prime.Neural = Prime.Neural || {};
+Prime.Neural.Layer = Prime.Neural.Layer || {};
+
 // Create the Recurrent Layer module using IIFE
 (function () {
   /**
@@ -1906,5 +1910,4 @@ const Prime = require("../../core");
   Prime.Neural.Layer.RecurrentLayer = RecurrentLayer;
 })();
 
-// Export the enhanced Prime object
-module.exports = Prime;
+// This module does not export anything directly

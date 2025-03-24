@@ -455,4 +455,71 @@ const Setup = {
   },
 };
 
+// Initialize testing utilities
+const initializePrimeForTesting = () => {
+  // Setup environment variables for testing
+  process.env.NODE_ENV = 'test';
+  
+  try {
+    // Load the core Prime object first
+    const Prime = require('../../src/core');
+    
+    // Ensure Neural and Layer namespaces exist
+    Prime.Neural = Prime.Neural || {};
+    Prime.Neural.Layer = Prime.Neural.Layer || {};
+    
+    // Force initialize all modules in the correct order
+    // Core modules
+    require('../../src/math');
+    
+    // Neural modules - in dependency order
+    require('../../src/neural/layer/index');
+    require('../../src/neural/activation/index');
+    require('../../src/neural/optimization/index');
+    require('../../src/neural/layer/dense-unified');
+    require('../../src/neural/layer/convolutional');
+    require('../../src/neural/layer/recurrent');
+    require('../../src/neural/model');
+    
+    // Now load the main neural index which contains the factory methods
+    require('../../src/neural');
+    
+    // Other main modules
+    require('../../src/consciousness');
+    require('../../src/distributed');
+    require('../../src/storage');
+    require('../../src/coherence.js');
+    require('../../src/framework/index.js');
+    require('../../src/components/index.js');
+    
+    // Finally, load the main index to get all exports
+    const FullPrime = require('../../src');
+    
+    // Ensure Neural module is properly initialized
+    if (Prime.Neural) {
+      // Call resetForTesting if it exists
+      if (typeof Prime.Neural.resetForTesting === 'function') {
+        Prime.Neural.resetForTesting();
+      }
+      
+      console.log('[PrimeOS Test Setup] Neural module initialized successfully');
+    } else {
+      console.warn('[PrimeOS Test Setup] Neural module not available');
+    }
+    
+    // Return the fully initialized Prime object
+    return FullPrime;
+  } catch (error) {
+    console.error('[PrimeOS Test Setup] Error initializing Prime:', error);
+    throw error;
+  }
+};
+
+// Run initialization
+const Prime = initializePrimeForTesting();
+
+// Export testing utilities
 module.exports = Setup;
+
+// Export initialized Prime for test consistency
+module.exports.Prime = Prime;

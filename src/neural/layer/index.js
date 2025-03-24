@@ -12,6 +12,7 @@ const Matrix = Prime.Math.Matrix;
 // These will be implemented later
 
 // Create the Layer module using IIFE
+
 (function () {
   /**
    * Base Neural Layer class
@@ -841,7 +842,20 @@ const Matrix = Prime.Math.Matrix;
     NeuralLayer,
     SelfOptimizingLayer,
   });
+  
+  // Eagerly load other layer types to ensure they're registered
+  try {
+    require('./dense.js');
+    require('./dense-layer.js');
+    require('./convolutional.js');
+    require('./recurrent.js');
+  } catch (e) {
+    // Silently ignore errors if files can't be loaded
+    // This happens in browser environments where require() might not work
+    if (Prime.Logger && Prime.Logger.debug) {
+      Prime.Logger.debug('Could not eagerly load all layer types', { error: e.message });
+    }
+  }
 })();
 
-// Export the enhanced Prime object
-module.exports = Prime;
+// This module does not export anything directly
