@@ -24,13 +24,23 @@ const Prime = require("../../core");
      * @param {boolean} [config.useTypedArrays=false] - Whether to use TypedArrays for memory efficiency
      */
     constructor(config = {}) {
-      this.learningRate = config.learningRate || 0.001;
-      this.beta1 = config.beta1 || 0.9;
-      this.beta2 = config.beta2 || 0.999;
-      this.epsilon = config.epsilon || 1e-8;
-      this.weightDecay = config.weightDecay || 0;
-      this.amsgrad = config.amsgrad || false;
-      this.useTypedArrays = config.useTypedArrays || false;
+      // Validate config object
+      if (config !== null && typeof config !== "object") {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Optimizer configuration must be an object",
+          { providedConfig: config },
+          "INVALID_OPTIMIZER_CONFIG"
+        );
+      }
+      
+      // Get config parameters with validation
+      this.learningRate = this._validateLearningRate(config.learningRate || 0.001);
+      this.beta1 = this._validateBeta("beta1", config.beta1 || 0.9);
+      this.beta2 = this._validateBeta("beta2", config.beta2 || 0.999);
+      this.epsilon = this._validateEpsilon(config.epsilon || 1e-8);
+      this.weightDecay = this._validateWeightDecay(config.weightDecay || 0);
+      this.amsgrad = !!config.amsgrad;
+      this.useTypedArrays = !!config.useTypedArrays;
 
       // Internal state
       this.iteration = 0;
@@ -46,6 +56,119 @@ const Prime = require("../../core");
         updateRatio: 0,
         parameterCount: 0,
       };
+    }
+    
+    /**
+     * Validate learning rate parameter
+     * @private
+     * @param {any} lr - Learning rate to validate
+     * @returns {number} Validated learning rate
+     */
+    _validateLearningRate(lr) {
+      const numLr = Number(lr);
+      
+      if (isNaN(numLr)) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Learning rate must be a number",
+          { providedValue: lr },
+          "INVALID_LEARNING_RATE"
+        );
+      }
+      
+      if (numLr <= 0) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Learning rate must be positive",
+          { providedValue: numLr },
+          "NEGATIVE_LEARNING_RATE"
+        );
+      }
+      
+      return numLr;
+    }
+    
+    /**
+     * Validate beta parameter (beta1 or beta2)
+     * @private
+     * @param {string} name - Parameter name ("beta1" or "beta2")
+     * @param {any} beta - Beta value to validate
+     * @returns {number} Validated beta value
+     */
+    _validateBeta(name, beta) {
+      const numBeta = Number(beta);
+      
+      if (isNaN(numBeta)) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          `${name} must be a number`,
+          { providedValue: beta },
+          `INVALID_${name.toUpperCase()}`
+        );
+      }
+      
+      if (numBeta < 0 || numBeta >= 1) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          `${name} must be between 0 and 1 (exclusive)`,
+          { providedValue: numBeta },
+          `${name.toUpperCase()}_OUT_OF_RANGE`
+        );
+      }
+      
+      return numBeta;
+    }
+    
+    /**
+     * Validate epsilon parameter
+     * @private
+     * @param {any} epsilon - Epsilon value to validate
+     * @returns {number} Validated epsilon value
+     */
+    _validateEpsilon(epsilon) {
+      const numEpsilon = Number(epsilon);
+      
+      if (isNaN(numEpsilon)) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Epsilon must be a number",
+          { providedValue: epsilon },
+          "INVALID_EPSILON"
+        );
+      }
+      
+      if (numEpsilon <= 0) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Epsilon must be positive",
+          { providedValue: numEpsilon },
+          "NEGATIVE_EPSILON"
+        );
+      }
+      
+      return numEpsilon;
+    }
+    
+    /**
+     * Validate weight decay parameter
+     * @private
+     * @param {any} decay - Weight decay to validate
+     * @returns {number} Validated weight decay
+     */
+    _validateWeightDecay(decay) {
+      const numDecay = Number(decay);
+      
+      if (isNaN(numDecay)) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Weight decay must be a number",
+          { providedValue: decay },
+          "INVALID_WEIGHT_DECAY"
+        );
+      }
+      
+      if (numDecay < 0) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Weight decay must be non-negative",
+          { providedValue: numDecay },
+          "NEGATIVE_WEIGHT_DECAY"
+        );
+      }
+      
+      return numDecay;
     }
 
     /**
@@ -478,36 +601,146 @@ const Prime = require("../../core");
 
     /**
      * Calculate coherence score for the optimizer
+     * @param {Object} [options={}] - Options for coherence calculation
+     * @param {boolean} [options.throwOnViolation=false] - Whether to throw error on coherence violations
      * @returns {number} Coherence score between 0 and 1
+     * @throws {NeuralCoherenceError} If throwOnViolation is true and coherence violations are detected
      */
-    calculateCoherence() {
+    calculateCoherence(options = {}) {
       // Base score starts at 1.0
       let score = 1.0;
+      const violations = [];
+      
+      // Validate options
+      const throwOnViolation = !!options.throwOnViolation;
 
-      // Penalize for unstable gradient norms (hinting at possible training issues)
-      const normalizedGradientNorm = Math.min(
-        1.0,
-        this.metrics.meanGradientNorm / 10.0,
-      );
-      if (normalizedGradientNorm > 0.7) {
-        score -= (0.3 * (normalizedGradientNorm - 0.7)) / 0.3;
+      try {
+        // Check for unstable gradient norms (hinting at possible training issues)
+        const normalizedGradientNorm = Math.min(
+          1.0,
+          this.metrics.meanGradientNorm / 10.0,
+        );
+        
+        const gradientNormThreshold = 0.7;
+        if (normalizedGradientNorm > gradientNormThreshold) {
+          score -= (0.3 * (normalizedGradientNorm - gradientNormThreshold)) / 0.3;
+          violations.push({
+            type: "HIGH_GRADIENT_NORM",
+            severity: "medium",
+            message: "Unusually high gradient norm detected",
+            threshold: gradientNormThreshold,
+            actual: normalizedGradientNorm,
+            details: {
+              meanGradientNorm: this.metrics.meanGradientNorm,
+              iteration: this.iteration
+            }
+          });
+        }
+  
+        // Check for unusually large parameter updates (could indicate instability)
+        const updateRatioThreshold = 0.1;
+        if (this.metrics.updateRatio > updateRatioThreshold) {
+          score -= 0.3 * Math.min(1.0, (this.metrics.updateRatio - updateRatioThreshold) / 0.4);
+          violations.push({
+            type: "HIGH_UPDATE_RATIO",
+            severity: this.metrics.updateRatio > 0.3 ? "high" : "medium",
+            message: "Unusually large parameter updates detected",
+            threshold: updateRatioThreshold,
+            actual: this.metrics.updateRatio,
+            details: {
+              learningRate: this.metrics.lastLearningRate,
+              iteration: this.iteration
+            }
+          });
+        }
+  
+        // Check for excessive second moments (can indicate exploding gradients)
+        const secondMomentThreshold = 0.5;
+        const normalizedSecondMoment = Math.min(
+          1.0,
+          this.metrics.maxSecondMoment / 100.0,
+        );
+        if (normalizedSecondMoment > secondMomentThreshold) {
+          score -= (0.4 * (normalizedSecondMoment - secondMomentThreshold)) / 0.5;
+          violations.push({
+            type: "HIGH_SECOND_MOMENT",
+            severity: normalizedSecondMoment > 0.8 ? "high" : "medium",
+            message: "Excessive second moment values detected (potential gradient explosion)",
+            threshold: secondMomentThreshold,
+            actual: normalizedSecondMoment,
+            details: {
+              maxSecondMoment: this.metrics.maxSecondMoment,
+              iteration: this.iteration,
+              recommendedAction: "Consider gradient clipping or reducing learning rate"
+            }
+          });
+        }
+        
+        // Check for combined instability indicators
+        if (this.metrics.updateRatio > 0.3 && normalizedSecondMoment > 0.7) {
+          score -= 0.5;
+          violations.push({
+            type: "OPTIMIZER_INSTABILITY",
+            severity: "high",
+            message: "Adam optimizer showing signs of instability",
+            threshold: 0.3, // Combined threshold
+            actual: this.metrics.updateRatio,
+            details: {
+              learningRate: this.metrics.lastLearningRate,
+              maxSecondMoment: this.metrics.maxSecondMoment,
+              meanGradientNorm: this.metrics.meanGradientNorm,
+              recommendedAction: "Reduce learning rate and consider resetting optimizer state",
+              iteration: this.iteration
+            }
+          });
+        }
+  
+        // Ensure score is between 0 and 1
+        score = Math.max(0, Math.min(1, score));
+  
+        // Throw error if violations detected and throwOnViolation is true
+        if (throwOnViolation && violations.length > 0) {
+          // Find the most severe violation
+          const sortedViolations = [...violations].sort((a, b) => {
+            const severityRank = { high: 3, medium: 2, low: 1 };
+            return severityRank[b.severity] - severityRank[a.severity];
+          });
+          
+          const worstViolation = sortedViolations[0];
+          
+          throw new (Prime.Neural.Errors.NeuralCoherenceError || Prime.ValidationError)(
+            worstViolation.message,
+            worstViolation.threshold,
+            worstViolation.actual,
+            { 
+              violations: violations,
+              score: score,
+              iteration: this.iteration,
+              optimizer: "Adam",
+              learningRate: this.metrics.lastLearningRate
+            },
+            worstViolation.type
+          );
+        }
+  
+        return score;
+      } catch (error) {
+        // Re-throw NeuralCoherenceError
+        if (error instanceof Prime.Neural.Errors.NeuralCoherenceError) {
+          throw error;
+        }
+        
+        // Wrap other errors
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Error during coherence calculation",
+          { 
+            iteration: this.iteration,
+            originalError: error.message
+          },
+          "COHERENCE_CALCULATION_ERROR",
+          error
+        );
       }
-
-      // Penalize for unusually large parameter updates
-      if (this.metrics.updateRatio > 0.1) {
-        score -= 0.3 * Math.min(1.0, (this.metrics.updateRatio - 0.1) / 0.4);
-      }
-
-      // Penalize for excessive second moments (can indicate exploding gradients)
-      const normalizedSecondMoment = Math.min(
-        1.0,
-        this.metrics.maxSecondMoment / 100.0,
-      );
-      if (normalizedSecondMoment > 0.5) {
-        score -= (0.4 * (normalizedSecondMoment - 0.5)) / 0.5;
-      }
-
-      return Math.max(0, score);
     }
   }
 

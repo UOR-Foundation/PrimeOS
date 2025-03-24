@@ -22,11 +22,21 @@ const Prime = require("../../core");
      * @param {boolean} [config.useTypedArrays=false] - Whether to use TypedArrays for memory efficiency
      */
     constructor(config = {}) {
-      this.learningRate = config.learningRate || 0.01;
-      this.momentum = config.momentum || 0;
-      this.weightDecay = config.weightDecay || 0;
-      this.useNesterov = config.useNesterov || false;
-      this.useTypedArrays = config.useTypedArrays || false;
+      // Validate config object
+      if (config !== null && typeof config !== "object") {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Optimizer configuration must be an object",
+          { providedConfig: config },
+          "INVALID_OPTIMIZER_CONFIG"
+        );
+      }
+      
+      // Get config parameters with validation
+      this.learningRate = this._validateLearningRate(config.learningRate || 0.01);
+      this.momentum = this._validateMomentum(config.momentum || 0);
+      this.weightDecay = this._validateWeightDecay(config.weightDecay || 0);
+      this.useNesterov = !!config.useNesterov;
+      this.useTypedArrays = !!config.useTypedArrays;
 
       // Internal state
       this.iteration = 0;
@@ -39,6 +49,90 @@ const Prime = require("../../core");
         updateRatio: 0,
         parameterCount: 0,
       };
+    }
+    
+    /**
+     * Validate learning rate parameter
+     * @private
+     * @param {any} lr - Learning rate to validate
+     * @returns {number} Validated learning rate
+     */
+    _validateLearningRate(lr) {
+      const numLr = Number(lr);
+      
+      if (isNaN(numLr)) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Learning rate must be a number",
+          { providedValue: lr },
+          "INVALID_LEARNING_RATE"
+        );
+      }
+      
+      if (numLr <= 0) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Learning rate must be positive",
+          { providedValue: numLr },
+          "NEGATIVE_LEARNING_RATE"
+        );
+      }
+      
+      return numLr;
+    }
+    
+    /**
+     * Validate momentum parameter
+     * @private
+     * @param {any} momentum - Momentum to validate
+     * @returns {number} Validated momentum
+     */
+    _validateMomentum(momentum) {
+      const numMomentum = Number(momentum);
+      
+      if (isNaN(numMomentum)) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Momentum must be a number",
+          { providedValue: momentum },
+          "INVALID_MOMENTUM"
+        );
+      }
+      
+      if (numMomentum < 0 || numMomentum >= 1) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Momentum must be between 0 and 1 (exclusive)",
+          { providedValue: numMomentum },
+          "MOMENTUM_OUT_OF_RANGE"
+        );
+      }
+      
+      return numMomentum;
+    }
+    
+    /**
+     * Validate weight decay parameter
+     * @private
+     * @param {any} decay - Weight decay to validate
+     * @returns {number} Validated weight decay
+     */
+    _validateWeightDecay(decay) {
+      const numDecay = Number(decay);
+      
+      if (isNaN(numDecay)) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Weight decay must be a number",
+          { providedValue: decay },
+          "INVALID_WEIGHT_DECAY"
+        );
+      }
+      
+      if (numDecay < 0) {
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Weight decay must be non-negative",
+          { providedValue: numDecay },
+          "NEGATIVE_WEIGHT_DECAY"
+        );
+      }
+      
+      return numDecay;
     }
 
     /**
@@ -211,117 +305,326 @@ const Prime = require("../../core");
      * @returns {Object} Updated parameters
      */
     update(parameters, gradients, options = {}) {
-      const lr = options.learningRate || this.learningRate;
-      const inPlace = options.inPlace !== false;
+      try {
+        // Validate inputs
+        if (!parameters || typeof parameters !== "object") {
+          throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+            "Parameters must be an object",
+            { providedType: typeof parameters },
+            "INVALID_PARAMETERS"
+          );
+        }
+        
+        if (!gradients || typeof gradients !== "object") {
+          throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+            "Gradients must be an object",
+            { providedType: typeof gradients },
+            "INVALID_GRADIENTS"
+          );
+        }
+        
+        // Validate options
+        if (options !== null && typeof options !== "object") {
+          throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+            "Options must be an object",
+            { providedType: typeof options },
+            "INVALID_OPTIONS"
+          );
+        }
+        
+        // Extract and validate learning rate from options
+        let lr = this.learningRate;
+        if (options.learningRate !== undefined) {
+          lr = this._validateLearningRate(options.learningRate);
+        }
+        
+        const inPlace = options.inPlace !== false;
 
-      // Increment iteration counter
-      this.iteration++;
+        // Increment iteration counter
+        this.iteration++;
 
-      // Apply weight decay (L2 regularization)
-      this._applyWeightDecay(gradients, parameters);
+        // Apply weight decay (L2 regularization)
+        this._applyWeightDecay(gradients, parameters);
 
-      // Calculate gradient norm for metrics
-      const gradientNorm = this._calculateGradientNorm(gradients);
-      this.metrics.meanGradientNorm =
-        0.9 * this.metrics.meanGradientNorm + 0.1 * gradientNorm;
-      this.metrics.lastLearningRate = lr;
+        // Calculate gradient norm for metrics
+        const gradientNorm = this._calculateGradientNorm(gradients);
+        this.metrics.meanGradientNorm =
+          0.9 * this.metrics.meanGradientNorm + 0.1 * gradientNorm;
+        this.metrics.lastLearningRate = lr;
 
-      // Track the average size of parameter updates
-      let updateMagnitude = 0;
-      let paramMagnitude = 0;
-      let valueCount = 0;
+        // Check for NaN gradients, which indicate numerical issues
+        if (isNaN(gradientNorm)) {
+          throw new (Prime.Neural.Errors.NeuralCoherenceError || Prime.ValidationError)(
+            "NaN gradients detected during update",
+            null, // threshold
+            null, // actual
+            { iteration: this.iteration },
+            "NAN_GRADIENTS"
+          );
+        }
 
-      // Create a copy of parameters if not updating in-place
-      const updatedParams = inPlace
-        ? parameters
-        : JSON.parse(JSON.stringify(parameters));
+        // Track the average size of parameter updates
+        let updateMagnitude = 0;
+        let paramMagnitude = 0;
+        let valueCount = 0;
 
-      // Update each parameter
-      for (const paramName in gradients) {
-        if (
-          gradients.hasOwnProperty(paramName) &&
-          updatedParams.hasOwnProperty(paramName)
-        ) {
-          const grad = gradients[paramName];
-          const param = updatedParams[paramName];
+        // Create a copy of parameters if not updating in-place
+        const updatedParams = inPlace
+          ? parameters
+          : JSON.parse(JSON.stringify(parameters));
 
-          // Make sure velocities are initialized
-          this._initializeVelocity(paramName, param);
-          const velocity = this.velocities[paramName];
+        // Update each parameter
+        for (const paramName in gradients) {
+          if (
+            gradients.hasOwnProperty(paramName) &&
+            updatedParams.hasOwnProperty(paramName)
+          ) {
+            const grad = gradients[paramName];
+            const param = updatedParams[paramName];
 
-          // Update based on parameter type
-          if (Array.isArray(grad)) {
-            if (Array.isArray(grad[0])) {
-              // 2D array (matrix)
-              for (let i = 0; i < grad.length; i++) {
-                for (let j = 0; j < grad[i].length; j++) {
+            // Make sure velocities are initialized
+            this._initializeVelocity(paramName, param);
+            const velocity = this.velocities[paramName];
+
+            // Update based on parameter type
+            if (Array.isArray(grad)) {
+              if (Array.isArray(grad[0])) {
+                // Validate array shape matches
+                if (!Array.isArray(param) || !Array.isArray(param[0])) {
+                  throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+                    `Parameter and gradient shapes don't match for ${paramName}`,
+                    { 
+                      paramShape: Array.isArray(param) ? (Array.isArray(param[0]) ? '2D' : '1D') : typeof param,
+                      gradShape: '2D'
+                    },
+                    "SHAPE_MISMATCH"
+                  );
+                }
+                
+                // Validate array dimensions match
+                if (grad.length !== param.length || grad[0].length !== param[0].length) {
+                  throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+                    `Parameter and gradient dimensions don't match for ${paramName}`,
+                    { 
+                      paramDimensions: [param.length, param[0].length],
+                      gradDimensions: [grad.length, grad[0].length]
+                    },
+                    "DIMENSION_MISMATCH"
+                  );
+                }
+                
+                // 2D array (matrix)
+                for (let i = 0; i < grad.length; i++) {
+                  for (let j = 0; j < grad[i].length; j++) {
+                    // Check for non-finite gradient values
+                    if (!Number.isFinite(grad[i][j])) {
+                      throw new (Prime.Neural.Errors.NeuralCoherenceError || Prime.ValidationError)(
+                        `Non-finite gradient detected at ${paramName}[${i}][${j}]`,
+                        null, // threshold
+                        grad[i][j], // actual
+                        { iteration: this.iteration },
+                        "NON_FINITE_GRADIENT"
+                      );
+                    }
+                    
+                    // Update velocity with momentum
+                    velocity[i][j] =
+                      this.momentum * velocity[i][j] - lr * grad[i][j];
+
+                    // Nesterov momentum adjustment if enabled
+                    const update = this.useNesterov
+                      ? -lr * grad[i][j] + this.momentum * velocity[i][j]
+                      : velocity[i][j];
+
+                    // Track update magnitudes for metrics
+                    updateMagnitude += Math.abs(update);
+                    paramMagnitude += Math.abs(param[i][j]);
+                    valueCount++;
+
+                    // Apply the update
+                    param[i][j] += update;
+                    
+                    // Check for numerical issues after update
+                    if (!Number.isFinite(param[i][j])) {
+                      throw new (Prime.Neural.Errors.NeuralCoherenceError || Prime.ValidationError)(
+                        `Parameter became non-finite after update at ${paramName}[${i}][${j}]`,
+                        null, // threshold
+                        param[i][j], // actual
+                        { 
+                          originalParam: param[i][j] - update,
+                          update: update,
+                          gradient: grad[i][j]
+                        },
+                        "NON_FINITE_PARAMETER"
+                      );
+                    }
+                  }
+                }
+              } else {
+                // Validate array shape matches
+                if (!Array.isArray(param) || Array.isArray(param[0])) {
+                  throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+                    `Parameter and gradient shapes don't match for ${paramName}`,
+                    { 
+                      paramShape: Array.isArray(param) ? (Array.isArray(param[0]) ? '2D' : '1D') : typeof param,
+                      gradShape: '1D'
+                    },
+                    "SHAPE_MISMATCH"
+                  );
+                }
+                
+                // Validate array dimensions match
+                if (grad.length !== param.length) {
+                  throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+                    `Parameter and gradient dimensions don't match for ${paramName}`,
+                    { 
+                      paramDimensions: [param.length],
+                      gradDimensions: [grad.length]
+                    },
+                    "DIMENSION_MISMATCH"
+                  );
+                }
+                
+                // 1D array (vector)
+                for (let i = 0; i < grad.length; i++) {
+                  // Check for non-finite gradient values
+                  if (!Number.isFinite(grad[i])) {
+                    throw new (Prime.Neural.Errors.NeuralCoherenceError || Prime.ValidationError)(
+                      `Non-finite gradient detected at ${paramName}[${i}]`,
+                      null, // threshold
+                      grad[i], // actual
+                      { iteration: this.iteration },
+                      "NON_FINITE_GRADIENT"
+                    );
+                  }
+                  
                   // Update velocity with momentum
-                  velocity[i][j] =
-                    this.momentum * velocity[i][j] - lr * grad[i][j];
+                  velocity[i] = this.momentum * velocity[i] - lr * grad[i];
 
                   // Nesterov momentum adjustment if enabled
                   const update = this.useNesterov
-                    ? -lr * grad[i][j] + this.momentum * velocity[i][j]
-                    : velocity[i][j];
+                    ? -lr * grad[i] + this.momentum * velocity[i]
+                    : velocity[i];
 
                   // Track update magnitudes for metrics
                   updateMagnitude += Math.abs(update);
-                  paramMagnitude += Math.abs(param[i][j]);
+                  paramMagnitude += Math.abs(param[i]);
                   valueCount++;
 
                   // Apply the update
-                  param[i][j] += update;
+                  param[i] += update;
+                  
+                  // Check for numerical issues after update
+                  if (!Number.isFinite(param[i])) {
+                    throw new (Prime.Neural.Errors.NeuralCoherenceError || Prime.ValidationError)(
+                      `Parameter became non-finite after update at ${paramName}[${i}]`,
+                      null, // threshold
+                      param[i], // actual
+                      { 
+                        originalParam: param[i] - update,
+                        update: update,
+                        gradient: grad[i]
+                      },
+                      "NON_FINITE_PARAMETER"
+                    );
+                  }
                 }
               }
-            } else {
-              // 1D array (vector)
-              for (let i = 0; i < grad.length; i++) {
-                // Update velocity with momentum
-                velocity[i] = this.momentum * velocity[i] - lr * grad[i];
-
-                // Nesterov momentum adjustment if enabled
-                const update = this.useNesterov
-                  ? -lr * grad[i] + this.momentum * velocity[i]
-                  : velocity[i];
-
-                // Track update magnitudes for metrics
-                updateMagnitude += Math.abs(update);
-                paramMagnitude += Math.abs(param[i]);
-                valueCount++;
-
-                // Apply the update
-                param[i] += update;
+            } else if (typeof grad === "number") {
+              // Validate parameter is a number
+              if (typeof param !== "number") {
+                throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+                  `Parameter and gradient types don't match for ${paramName}`,
+                  { 
+                    paramType: typeof param,
+                    gradType: typeof grad
+                  },
+                  "TYPE_MISMATCH"
+                );
               }
+              
+              // Check for non-finite gradient value
+              if (!Number.isFinite(grad)) {
+                throw new (Prime.Neural.Errors.NeuralCoherenceError || Prime.ValidationError)(
+                  `Non-finite gradient detected at ${paramName}`,
+                  null, // threshold
+                  grad, // actual
+                  { iteration: this.iteration },
+                  "NON_FINITE_GRADIENT"
+                );
+              }
+              
+              // Scalar value
+              let newVelocity = this.momentum * this.velocities[paramName] - lr * grad;
+              this.velocities[paramName] = newVelocity;
+
+              // Nesterov momentum adjustment if enabled
+              const update = this.useNesterov
+                ? -lr * grad + this.momentum * newVelocity
+                : newVelocity;
+
+              // Track update magnitudes for metrics
+              updateMagnitude += Math.abs(update);
+              paramMagnitude += Math.abs(param);
+              valueCount++;
+
+              // Apply the update
+              updatedParams[paramName] += update;
+              
+              // Check for numerical issues after update
+              if (!Number.isFinite(updatedParams[paramName])) {
+                throw new (Prime.Neural.Errors.NeuralCoherenceError || Prime.ValidationError)(
+                  `Parameter became non-finite after update at ${paramName}`,
+                  null, // threshold
+                  updatedParams[paramName], // actual
+                  { 
+                    originalParam: param,
+                    update: update,
+                    gradient: grad
+                  },
+                  "NON_FINITE_PARAMETER"
+                );
+              }
+            } else {
+              // Handle unexpected gradient type
+              throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+                `Unsupported gradient type for ${paramName}`,
+                { gradientType: typeof grad },
+                "UNSUPPORTED_GRADIENT_TYPE"
+              );
             }
-          } else if (typeof grad === "number") {
-            // Scalar value
-            velocity = this.momentum * velocity - lr * grad;
-            this.velocities[paramName] = velocity;
-
-            // Nesterov momentum adjustment if enabled
-            const update = this.useNesterov
-              ? -lr * grad + this.momentum * velocity
-              : velocity;
-
-            // Track update magnitudes for metrics
-            updateMagnitude += Math.abs(update);
-            paramMagnitude += Math.abs(param);
-            valueCount++;
-
-            // Apply the update
-            updatedParams[paramName] += update;
           }
         }
-      }
 
-      // Update metrics
-      if (valueCount > 0) {
-        const avgUpdate = updateMagnitude / valueCount;
-        const avgParam = paramMagnitude / valueCount;
-        this.metrics.updateRatio = avgParam > 0 ? avgUpdate / avgParam : 0;
-      }
+        // Update metrics
+        if (valueCount > 0) {
+          const avgUpdate = updateMagnitude / valueCount;
+          const avgParam = paramMagnitude / valueCount;
+          this.metrics.updateRatio = avgParam > 0 ? avgUpdate / avgParam : 0;
+          
+          // Check for unusually large updates that might indicate instability
+          if (this.metrics.updateRatio > 0.5) {
+            console.warn(`SGDOptimizer: Large update ratio detected (${this.metrics.updateRatio.toFixed(3)}). Consider reducing learning rate.`);
+          }
+        }
 
-      return updatedParams;
+        return updatedParams;
+      } catch (error) {
+        // Wrap lower-level errors in OptimizerError to provide context
+        if (!(error instanceof Prime.Neural.Errors.OptimizerError || 
+              error instanceof Prime.Neural.Errors.NeuralCoherenceError)) {
+          throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+            "Error during optimizer update",
+            { 
+              iteration: this.iteration,
+              originalError: error.message
+            },
+            "UPDATE_ERROR",
+            error
+          );
+        }
+        throw error;
+      }
     }
 
     /**
@@ -358,27 +661,123 @@ const Prime = require("../../core");
 
     /**
      * Calculate coherence score for the optimizer
+     * @param {Object} [options={}] - Options for coherence calculation
+     * @param {boolean} [options.throwOnViolation=false] - Whether to throw error on coherence violations
      * @returns {number} Coherence score between 0 and 1
+     * @throws {NeuralCoherenceError} If throwOnViolation is true and coherence violations are detected
      */
-    calculateCoherence() {
+    calculateCoherence(options = {}) {
       // Base score starts at 1.0
       let score = 1.0;
+      const violations = [];
+  
+      // Validate options
+      const throwOnViolation = !!options.throwOnViolation;
 
-      // Penalize for unstable gradient norms (hinting at possible training issues)
-      const normalizedGradientNorm = Math.min(
-        1.0,
-        this.metrics.meanGradientNorm / 10.0,
-      );
-      if (normalizedGradientNorm > 0.7) {
-        score -= (0.3 * (normalizedGradientNorm - 0.7)) / 0.3;
+      try {
+        // Check for unstable gradient norms (hinting at possible training issues)
+        const normalizedGradientNorm = Math.min(
+          1.0,
+          this.metrics.meanGradientNorm / 10.0,
+        );
+        
+        const gradientNormThreshold = 0.7;
+        if (normalizedGradientNorm > gradientNormThreshold) {
+          score -= (0.3 * (normalizedGradientNorm - gradientNormThreshold)) / 0.3;
+          violations.push({
+            type: "HIGH_GRADIENT_NORM",
+            severity: "medium",
+            message: "Unusually high gradient norm detected",
+            threshold: gradientNormThreshold,
+            actual: normalizedGradientNorm,
+            details: {
+              meanGradientNorm: this.metrics.meanGradientNorm,
+              iteration: this.iteration
+            }
+          });
+        }
+  
+        // Check for unusually large parameter updates (could indicate instability)
+        const updateRatioThreshold = 0.1;
+        if (this.metrics.updateRatio > updateRatioThreshold) {
+          score -= 0.3 * Math.min(1.0, (this.metrics.updateRatio - updateRatioThreshold) / 0.4);
+          violations.push({
+            type: "HIGH_UPDATE_RATIO",
+            severity: this.metrics.updateRatio > 0.3 ? "high" : "medium",
+            message: "Unusually large parameter updates detected",
+            threshold: updateRatioThreshold,
+            actual: this.metrics.updateRatio,
+            details: {
+              learningRate: this.metrics.lastLearningRate,
+              iteration: this.iteration
+            }
+          });
+        }
+  
+        // Check for learning rate stability
+        if (this.metrics.updateRatio > 0.5 && this.metrics.meanGradientNorm > 5.0) {
+          score -= 0.5;
+          violations.push({
+            type: "LEARNING_RATE_INSTABILITY",
+            severity: "high",
+            message: "Learning rate may be too high for stable convergence",
+            threshold: 0.5,
+            actual: this.metrics.updateRatio,
+            details: {
+              learningRate: this.metrics.lastLearningRate,
+              meanGradientNorm: this.metrics.meanGradientNorm,
+              recommendedAction: "Reduce learning rate by factor of 5-10",
+              iteration: this.iteration
+            }
+          });
+        }
+  
+        // Ensure score is between 0 and 1
+        score = Math.max(0, Math.min(1, score));
+  
+        // Throw error if violations detected and throwOnViolation is true
+        if (throwOnViolation && violations.length > 0) {
+          // Find the most severe violation
+          const sortedViolations = [...violations].sort((a, b) => {
+            const severityRank = { high: 3, medium: 2, low: 1 };
+            return severityRank[b.severity] - severityRank[a.severity];
+          });
+          
+          const worstViolation = sortedViolations[0];
+          
+          throw new (Prime.Neural.Errors.NeuralCoherenceError || Prime.ValidationError)(
+            worstViolation.message,
+            worstViolation.threshold,
+            worstViolation.actual,
+            { 
+              violations: violations,
+              score: score,
+              iteration: this.iteration,
+              optimizer: "SGD",
+              learningRate: this.metrics.lastLearningRate
+            },
+            worstViolation.type
+          );
+        }
+  
+        return score;
+      } catch (error) {
+        // Re-throw NeuralCoherenceError
+        if (error instanceof Prime.Neural.Errors.NeuralCoherenceError) {
+          throw error;
+        }
+        
+        // Wrap other errors
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          "Error during coherence calculation",
+          { 
+            iteration: this.iteration,
+            originalError: error.message
+          },
+          "COHERENCE_CALCULATION_ERROR",
+          error
+        );
       }
-
-      // Penalize for unusually large parameter updates
-      if (this.metrics.updateRatio > 0.1) {
-        score -= 0.3 * Math.min(1.0, (this.metrics.updateRatio - 0.1) / 0.4);
-      }
-
-      return Math.max(0, score);
     }
   }
 
