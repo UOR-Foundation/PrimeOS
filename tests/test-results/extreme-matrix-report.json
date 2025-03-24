@@ -26,7 +26,7 @@
     "unmatched": 0,
     "updated": 0
   },
-  "startTime": 1742759045590,
+  "startTime": 1742774875220,
   "success": true,
   "testResults": [
     {
@@ -37,10 +37,10 @@
       "numTodoTests": 0,
       "openHandles": [],
       "perfStats": {
-        "end": 1742759046825,
-        "runtime": 1212,
+        "end": 1742774875544,
+        "runtime": 301,
         "slow": false,
-        "start": 1742759045613
+        "start": 1742774875243
       },
       "skipped": false,
       "snapshot": {
@@ -59,7 +59,7 @@
             "Matrix Extreme Value Handling",
             "Matrix Creation with Extreme Values"
           ],
-          "duration": 19,
+          "duration": 47,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "Matrix Extreme Value Handling Matrix Creation with Extreme Values creates matrices with extremely large values",
@@ -75,7 +75,7 @@
             "Matrix Extreme Value Handling",
             "Matrix Creation with Extreme Values"
           ],
-          "duration": 3,
+          "duration": 4,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "Matrix Extreme Value Handling Matrix Creation with Extreme Values creates matrices with extremely small values",
@@ -91,7 +91,7 @@
             "Matrix Extreme Value Handling",
             "Matrix Creation with Extreme Values"
           ],
-          "duration": 2,
+          "duration": 5,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "Matrix Extreme Value Handling Matrix Creation with Extreme Values creates matrices with mixed extreme values",
@@ -107,7 +107,7 @@
             "Matrix Extreme Value Handling",
             "Matrix Basic Operations with Extreme Values"
           ],
-          "duration": 1,
+          "duration": 0,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "Matrix Extreme Value Handling Matrix Basic Operations with Extreme Values adds matrices with extreme values correctly",
@@ -123,7 +123,7 @@
             "Matrix Extreme Value Handling",
             "Matrix Basic Operations with Extreme Values"
           ],
-          "duration": 0,
+          "duration": 1,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "Matrix Extreme Value Handling Matrix Basic Operations with Extreme Values subtracts matrices with extreme values correctly",
@@ -171,7 +171,7 @@
             "Matrix Extreme Value Handling",
             "Matrix Advanced Operations with Extreme Values"
           ],
-          "duration": 1,
+          "duration": 0,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "Matrix Extreme Value Handling Matrix Advanced Operations with Extreme Values computes inverse with extreme values correctly",

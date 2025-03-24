@@ -26,7 +26,7 @@
     "unmatched": 0,
     "updated": 0
   },
-  "startTime": 1742757643679,
+  "startTime": 1742774876638,
   "success": true,
   "testResults": [
     {
@@ -37,10 +37,10 @@
       "numTodoTests": 0,
       "openHandles": [],
       "perfStats": {
-        "end": 1742757644210,
-        "runtime": 527,
+        "end": 1742774876823,
+        "runtime": 177,
         "slow": false,
-        "start": 1742757643683
+        "start": 1742774876646
       },
       "skipped": false,
       "snapshot": {
@@ -59,7 +59,7 @@
             "SVD Extreme Values",
             "SVD with Extreme Values"
           ],
-          "duration": 71,
+          "duration": 9,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "SVD Extreme Values SVD with Extreme Values computes SVD for matrix with extremely large values",
@@ -75,7 +75,7 @@
             "SVD Extreme Values",
             "SVD with Extreme Values"
           ],
-          "duration": 23,
+          "duration": 14,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "SVD Extreme Values SVD with Extreme Values computes SVD for matrix with extremely small values",
@@ -91,7 +91,7 @@
             "SVD Extreme Values",
             "SVD with Extreme Values"
           ],
-          "duration": 2,
+          "duration": 1,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "SVD Extreme Values SVD with Extreme Values computes SVD for ill-conditioned matrix",
@@ -139,7 +139,7 @@
             "SVD Extreme Values",
             "SVD Catastrophic Cancellation"
           ],
-          "duration": 1,
+          "duration": 0,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "SVD Extreme Values SVD Catastrophic Cancellation avoids catastrophic cancellation in SVD computations",
@@ -155,7 +155,7 @@
             "SVD Extreme Values",
             "SVD Performance with Extreme Values"
           ],
-          "duration": 2,
+          "duration": 4,
           "failureDetails": [],
           "failureMessages": [],
           "fullName": "SVD Extreme Values SVD Performance with Extreme Values maintains reasonable performance with extreme values",
