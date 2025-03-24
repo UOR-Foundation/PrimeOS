@@ -135,20 +135,29 @@ This document tracks the refactoring of the PrimeOS neural package to ensure it 
 
 We addressed several critical issues with how modules are initialized and loaded:
 
-1. **Module Loading Order**: Identified that the neural module components needed to be loaded in a specific order to avoid circular dependencies. Now the loading order starts with core primitives, then layer classes, then composition modules.
+1. **Module Loading Order**: Identified that the neural module components needed to be loaded in a specific order to avoid circular dependencies. Now the loading order starts with core primitives, then math module (which is a dependency), then layer classes, then composition modules.
 
-2. **Early Module Exports**: Fixed instances where modules were exporting Prime too early, causing circular reference issues. Now modules only export at the end, after all definitions.
+2. **Consolidated Module Export**: Created a consolidated neural.js module that handles proper initialization and dependency management, following a pattern similar to the mathematics.js module used in other parts of the codebase.
 
 3. **Namespace Initialization**: Standardized the approach for creating namespaces to ensure they exist before attempting to add properties to them.
 
-4. **Test Environment**: Created a mocking approach for testing that avoids circular dependencies while still allowing tests to verify the behavior of neural layers.
+4. **Testing Approach**: Implemented proper module loading in tests that uses the actual implementation rather than mocks by importing the consolidated neural.js module, which ensures all dependencies are loaded in the correct order.
 
 The key changes made include:
 
+- Created a consolidated neural.js module for proper module initialization and dependency management
 - Refactored namespace initialization in all layer modules (dense-unified.js, convolutional.js, recurrent.js)
 - Removed premature module exports that were causing circular dependencies
-- Updated the module loading order in neural/index.js to ensure proper initialization sequence
+- Updated the test files to use the proper module loading approach
 - Added robust error handling when modules don't load properly
+
+This approach aligns with the module loading patterns used in other parts of the codebase (particularly mathematics.js) and resolves the circular dependency issues in a more fundamental way rather than working around them.
+
+These changes provide several advantages:
+- More predictable module initialization
+- Better alignment with the existing codebase patterns 
+- Proper handling of dependencies between modules
+- Less reliance on the order of imports within individual files
 
 Remaining work involves extending this pattern to the rest of the neural module files and ensuring consistent namespace usage across all components.
 
