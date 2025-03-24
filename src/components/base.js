@@ -76,30 +76,22 @@ require("../framework/index.js");
          * @returns {boolean} Success
          */
         initialize: function () {
+          // Don't re-initialize if already done
+          if (component._initialized && component.meta.initialized) {
+            return true;
+          }
+          
           try {
-            // Run user-provided initializer if available
-            // Check for the init method first (test expectation)
-            if (
-              component.invariant.init &&
-              typeof component.invariant.init === "function" &&
-              !component._initialized
-            ) {
-              component.invariant.init.call(component);
-              component._initialized = true;
-            }
-            // Also check for initialize method (implementation expectation)
-            else if (
-              component.invariant.initialize &&
-              typeof component.invariant.initialize === "function"
-            ) {
-              component.invariant.initialize.call(component);
+            // Create a safe initialization function that works with both patterns
+            const initMethod = component.invariant.initialize || component.invariant.init;
+            
+            // Call the initialization method if available
+            if (initMethod && typeof initMethod === "function") {
+              initMethod.call(component);
             }
 
             // Set initial state
             component.setState(component.variant);
-
-            // Trigger initialization event
-            component.emit("initialize");
 
             // Register with coherence system if available
             if (Prime.coherence && Prime.coherence.systemCoherence) {
@@ -114,12 +106,10 @@ require("../framework/index.js");
             if (!component._events) {
               component._events = [];
             }
-
-            // Add default _events array if not already present
-            if (!component._events) {
-              component._events = [];
-            }
             component._events.push("initialize");
+            
+            // Trigger initialization event after everything is set up
+            component.emit("initialize");
 
             return true;
           } catch (error) {
@@ -128,8 +118,25 @@ require("../framework/index.js");
               {
                 error: error.message,
                 stack: error.stack,
+                component: component.meta.id,
               },
             );
+            
+            // Emit error event for better error recovery
+            if (component._listeners && component._listeners['error']) {
+              try {
+                component.emit('error', {
+                  phase: 'initialization',
+                  error: error
+                });
+              } catch (emitError) {
+                // Just log if error event handler fails
+                Prime.Logger.error(`Failed to emit error event during initialization`, {
+                  error: emitError.message,
+                  component: component.meta.id,
+                });
+              }
+            }
 
             return false;
           }
@@ -455,20 +462,42 @@ require("../framework/index.js");
 
         // Clone listeners array to avoid issues if handlers modify the array
         const listeners = [...this._listeners[event]];
+        let hasErrors = false;
+        let successCount = 0;
 
         for (const callback of listeners) {
           try {
             callback.call(this, { ...data, component: this });
+            successCount++;
           } catch (error) {
+            hasErrors = true;
             Prime.Logger.error(`Error in event handler for ${event}`, {
               error: error.message,
               stack: error.stack,
               component: this.meta.id,
             });
+            
+            // Emit an error event so the error can be handled by the component
+            if (this._listeners['error'] && event !== 'error') {
+              try {
+                this.emit('error', {
+                  originalEvent: event,
+                  originalData: data,
+                  error: error
+                });
+              } catch (emitError) {
+                // Prevent infinite loops with error events
+                Prime.Logger.error(`Failed to emit error event`, {
+                  error: emitError.message,
+                  component: this.meta.id,
+                });
+              }
+            }
           }
         }
 
-        return true;
+        // Return true only if all handlers succeeded
+        return !hasErrors && successCount > 0;
       },
 
       /**
@@ -647,56 +676,10 @@ require("../framework/index.js");
       }
     }
 
-    // Automatically initialize the component based on integration test expectations
-    if (
-      component.invariant.init &&
-      typeof component.invariant.init === "function"
-    ) {
-      component.invariant.init.call(component);
-      component._initialized = true;
-      component.meta.initialized = true;
-    } else {
-      // If initialize method exists, call it for compatibility
-      component.lifecycle.initialize();
-      // Ensure both initialization flags are set to true
-      component._initialized = true;
-      component.meta.initialized = true;
-    }
+    // Call lifecycle.initialize() which will handle both init and initialize methods
+    component.lifecycle.initialize();
 
-    // Ensure component has coherenceNorm method - critical for tests
-    if (typeof component.coherenceNorm !== "function") {
-      Prime.Logger.warn(
-        `Component ${component.meta.id} missing coherenceNorm method, adding it now`,
-      );
-
-      // Add the coherenceNorm method directly
-      component.coherenceNorm = function () {
-        // If there are constraints, calculate coherence based on them
-        if (
-          this.invariant.constraints &&
-          this.invariant.constraints.length > 0
-        ) {
-          let normSquared = 0;
-
-          for (const constraint of this.invariant.constraints) {
-            if (!constraint.check(this.variant)) {
-              const weight = constraint.weight || 1;
-              normSquared += weight * weight;
-            }
-          }
-
-          return Math.sqrt(normSquared);
-        }
-
-        // If no constraints, delegate to coherence system
-        if (Prime.coherence && Prime.coherence.norm) {
-          return Prime.coherence.norm(this.variant);
-        }
-
-        // Default to 0 (perfectly coherent)
-        return 0;
-      };
-    }
+    // coherenceNorm method is already defined on the component
 
     return component;
   }

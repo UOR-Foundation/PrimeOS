@@ -1042,7 +1042,213 @@ require("./base.js");
       gl.drawArrays(gl.LINES, 0, 6);
 
       // Now draw the multivector representation
-      // This is a simplified implementation - a full implementation would be much more complex
+      try {
+        // Create vertex data based on multivector components
+        const vertexData = [];
+        const colorData = [];
+        
+        // Process each component based on its grade
+        for (const component of components) {
+          const { grade, value: coefficient, basis } = component;
+          
+          // Only visualize components with non-zero coefficients
+          if (Math.abs(coefficient) < 0.00001) {
+            continue;
+          }
+          
+          // Get the absolute coefficient (for scaling)
+          const absCoef = Math.abs(coefficient);
+          // Normalize coefficient for visualization (min 0.1, max 1.0)
+          const normCoef = 0.1 + 0.9 * Math.min(absCoef, 1.0);
+          
+          // Convert coefficient to color: positive = blue-green, negative = red-orange
+          const isPositive = coefficient > 0;
+          const r = isPositive ? 0 : 1.0;
+          const g = isPositive ? 0.8 * normCoef : 0.5 * normCoef;
+          const b = isPositive ? 1.0 * normCoef : 0;
+          const alpha = 0.7 + 0.3 * normCoef;
+          
+          // Process by grade
+          switch (grade) {
+            case 0: // Scalar - draw a point at origin
+              vertexData.push(0, 0, 0, 1);
+              colorData.push(r, g, b, alpha);
+              break;
+              
+            case 1: // Vector - draw a line
+              // Extract coordinates from basis
+              const coords = [0, 0, 0, 0];
+              for (let i = 0; i < basis.length; i++) {
+                const basisIdx = parseInt(basis[i].substring(1)) - 1;
+                if (basisIdx >= 0 && basisIdx < 3) {
+                  coords[basisIdx] = coefficient;
+                }
+              }
+              
+              // Create line from origin to point
+              vertexData.push(
+                0, 0, 0, 1,                       // Origin
+                coords[0], coords[1], coords[2], 1 // End point
+              );
+              
+              // Same color for both vertices
+              colorData.push(
+                r, g, b, alpha,
+                r, g, b, alpha
+              );
+              break;
+              
+            case 2: // Bivector - draw a parallelogram
+              // Extract plane information from basis (e.g., "e12", "e23", "e31")
+              const plane = basis.substring(1).split('').map(c => parseInt(c) - 1);
+              const scale = normCoef;
+              
+              // Only handle standard basis planes (xy, yz, zx)
+              if (plane.length === 2 && 
+                  plane[0] >= 0 && plane[0] < 3 && 
+                  plane[1] >= 0 && plane[1] < 3) {
+                
+                // Create basis vectors for the plane
+                const v1 = [0, 0, 0];
+                const v2 = [0, 0, 0];
+                v1[plane[0]] = scale;
+                v2[plane[1]] = scale;
+                
+                // Create vertices for parallelogram
+                const v3 = [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]];
+                
+                // Draw first triangle
+                vertexData.push(
+                  0, 0, 0, 1,      // Origin
+                  v1[0], v1[1], v1[2], 1,
+                  v3[0], v3[1], v3[2], 1
+                );
+                
+                // Draw second triangle
+                vertexData.push(
+                  0, 0, 0, 1,      // Origin
+                  v2[0], v2[1], v2[2], 1,
+                  v3[0], v3[1], v3[2], 1
+                );
+                
+                // Same color for all vertices in triangles
+                for (let i = 0; i < 6; i++) {
+                  colorData.push(r, g, b, alpha * 0.7);
+                }
+              }
+              break;
+              
+            case 3: // Trivector - draw a parallelepiped
+              // Scale factor based on coefficient
+              const boxScale = normCoef * 0.5;
+              
+              // Create vertices for cube/parallelepiped
+              const boxVertices = [
+                // Front face - 2 triangles
+                -boxScale, -boxScale,  boxScale, 1,
+                 boxScale, -boxScale,  boxScale, 1,
+                 boxScale,  boxScale,  boxScale, 1,
+                
+                -boxScale, -boxScale,  boxScale, 1,
+                 boxScale,  boxScale,  boxScale, 1,
+                -boxScale,  boxScale,  boxScale, 1,
+                
+                // Back face - 2 triangles
+                -boxScale, -boxScale, -boxScale, 1,
+                 boxScale,  boxScale, -boxScale, 1,
+                 boxScale, -boxScale, -boxScale, 1,
+                
+                -boxScale, -boxScale, -boxScale, 1,
+                -boxScale,  boxScale, -boxScale, 1,
+                 boxScale,  boxScale, -boxScale, 1,
+                
+                // Top face - 2 triangles
+                -boxScale,  boxScale, -boxScale, 1,
+                -boxScale,  boxScale,  boxScale, 1,
+                 boxScale,  boxScale,  boxScale, 1,
+                
+                -boxScale,  boxScale, -boxScale, 1,
+                 boxScale,  boxScale,  boxScale, 1,
+                 boxScale,  boxScale, -boxScale, 1,
+                
+                // Bottom face - 2 triangles
+                -boxScale, -boxScale, -boxScale, 1,
+                 boxScale, -boxScale, -boxScale, 1,
+                 boxScale, -boxScale,  boxScale, 1,
+                
+                -boxScale, -boxScale, -boxScale, 1,
+                 boxScale, -boxScale,  boxScale, 1,
+                -boxScale, -boxScale,  boxScale, 1,
+                
+                // Right face - 2 triangles
+                 boxScale, -boxScale, -boxScale, 1,
+                 boxScale,  boxScale, -boxScale, 1,
+                 boxScale,  boxScale,  boxScale, 1,
+                
+                 boxScale, -boxScale, -boxScale, 1,
+                 boxScale,  boxScale,  boxScale, 1,
+                 boxScale, -boxScale,  boxScale, 1,
+                
+                // Left face - 2 triangles
+                -boxScale, -boxScale, -boxScale, 1,
+                -boxScale, -boxScale,  boxScale, 1,
+                -boxScale,  boxScale,  boxScale, 1,
+                
+                -boxScale, -boxScale, -boxScale, 1,
+                -boxScale,  boxScale,  boxScale, 1,
+                -boxScale,  boxScale, -boxScale, 1,
+              ];
+              
+              vertexData.push(...boxVertices);
+              
+              // Same color for all vertices in the cube
+              for (let i = 0; i < boxVertices.length / 4; i++) {
+                colorData.push(r, g, b, alpha * 0.5);
+              }
+              break;
+              
+            default:
+              // Higher-dimensional components cannot be directly visualized
+              break;
+          }
+        }
+        
+        // If we have vertex data, render it
+        if (vertexData.length > 0) {
+          // Create and bind vertex buffer
+          const vertexBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW);
+          
+          // Create and bind color buffer
+          const colorBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.STATIC_DRAW);
+          
+          // Enable blending for transparent surfaces
+          gl.enable(gl.BLEND);
+          gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+          
+          // Draw the multivector objects
+          gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+          gl.vertexAttribPointer(positionAttributeLocation, 4, gl.FLOAT, false, 0, 0);
+          gl.enableVertexAttribArray(positionAttributeLocation);
+          
+          gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+          gl.vertexAttribPointer(colorAttributeLocation, 4, gl.FLOAT, false, 0, 0);
+          gl.enableVertexAttribArray(colorAttributeLocation);
+          
+          // Determine the number of vertices
+          const numVertices = vertexData.length / 4;
+          gl.drawArrays(gl.TRIANGLES, 0, numVertices);
+        }
+      } catch (error) {
+        Prime.Logger.error("Error rendering multivector in WebGL", {
+          error: error.message,
+          stack: error.stack,
+          multivector: JSON.stringify(multivector)
+        });
+      }
 
       return gl;
     },
@@ -1050,9 +1256,197 @@ require("./base.js");
     _renderMultivectorSVG: function (multivector, options) {
       const width = options.dimensions[0] || 300;
       const height = options.dimensions[1] || 150;
-      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-        <text x="10" y="20">Multivector: ${JSON.stringify(multivector)}</text>
+      
+      // Extract components from multivector
+      const components = Prime.Clifford.extractComponents(multivector);
+      
+      // Only proceed if we have components to visualize
+      if (components.length === 0) {
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+          <text x="10" y="20">Empty Multivector</text>
+        </svg>`;
+      }
+      
+      // Set up SVG with header and stylesheet
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+        <defs>
+          <style>
+            .mv-axis { stroke: #aaa; stroke-width: 1; }
+            .mv-vector { stroke-width: 2; }
+            .mv-vector-label { font-size: 10px; fill: #000; }
+            .mv-scalar { fill: #555; stroke: #000; }
+            .mv-bivector { fill-opacity: 0.3; stroke-width: 1; }
+            .mv-positive { stroke: #36c; fill: #36c; }
+            .mv-negative { stroke: #f60; fill: #f60; }
+            .mv-title { font-family: sans-serif; font-size: 12px; fill: #333; }
+          </style>
+        </defs>
+        <rect width="${width}" height="${height}" fill="#f8f8f8" />
+        <text x="10" y="16" class="mv-title">Multivector Visualization</text>`;
+        
+      // Center coordinates for visualization
+      const centerX = width / 2;
+      const centerY = height / 2;
+      
+      // Draw coordinate system
+      svg += `<g transform="translate(${centerX}, ${centerY})">
+        <line x1="-${width/2 - 20}" y1="0" x2="${width/2 - 20}" y2="0" class="mv-axis" />
+        <line x1="0" y1="-${height/2 - 20}" x2="0" y2="${height/2 - 20}" class="mv-axis" />
+        <text x="${width/2 - 15}" y="12" class="mv-vector-label">x</text>
+        <text x="-10" y="-${height/2 - 10}" class="mv-vector-label">y</text>`;
+      
+      // Determine scale based on largest component
+      const maxValue = Math.max(0.1, ...components.map(c => Math.abs(c.value)));
+      const scale = (Math.min(width, height) * 0.4) / maxValue;
+      
+      // Process each component by grade
+      for (const component of components) {
+        const { grade, value: coefficient, basis } = component;
+        
+        // Only visualize components with non-zero coefficients
+        if (Math.abs(coefficient) < 0.00001) {
+          continue;
+        }
+        
+        // Coefficient properties for visualization
+        const absCoef = Math.abs(coefficient);
+        const signClass = coefficient > 0 ? 'mv-positive' : 'mv-negative';
+        
+        // Process by grade
+        switch (grade) {
+          case 0: // Scalar - draw a circle at origin
+            const radius = 5 + 10 * Math.min(absCoef, 1);
+            svg += `<circle cx="0" cy="0" r="${radius}" class="mv-scalar ${signClass}" />`;
+            svg += `<text x="8" y="-8" class="mv-vector-label">${coefficient.toFixed(2)}</text>`;
+            break;
+            
+          case 1: // Vector - draw an arrow
+            // Extract basis vector (e1, e2, e3, etc.)
+            let x = 0, y = 0;
+            const basisIdx = parseInt(basis.substring(1)) - 1;
+            
+            if (basisIdx === 0) { // e1 (x-axis)
+              x = coefficient * scale;
+            } else if (basisIdx === 1) { // e2 (y-axis)
+              y = -coefficient * scale; // SVG y-axis is flipped
+            } else {
+              // For higher dimensions, position them at angles
+              const angle = (basisIdx * Math.PI) / 4;
+              x = Math.cos(angle) * coefficient * scale;
+              y = -Math.sin(angle) * coefficient * scale;
+            }
+            
+            // Calculate arrow properties
+            const arrowLength = Math.sqrt(x*x + y*y);
+            const arrowHead = 10; // Size of arrow head
+            const angle = Math.atan2(y, x);
+            
+            // Draw vector
+            svg += `<line x1="0" y1="0" x2="${x}" y2="${y}" class="mv-vector ${signClass}" />`;
+            
+            // Draw arrowhead
+            svg += `<polygon points="
+              ${x},${y},
+              ${x - arrowHead * Math.cos(angle - Math.PI/6)},${y - arrowHead * Math.sin(angle - Math.PI/6)},
+              ${x - arrowHead * Math.cos(angle + Math.PI/6)},${y - arrowHead * Math.sin(angle + Math.PI/6)}
+            " class="${signClass}" />`;
+            
+            // Label
+            svg += `<text x="${x + 5}" y="${y - 5}" class="mv-vector-label">${coefficient.toFixed(2)}${basis}</text>`;
+            break;
+            
+          case 2: // Bivector - draw a shaded area
+            // Extract plane information
+            const planeIndices = basis.substring(1).split('').map(c => parseInt(c) - 1);
+            
+            // Only visualize standard planes
+            if (planeIndices.length === 2 && planeIndices[0] >= 0 && planeIndices[0] < 3 &&
+                planeIndices[1] >= 0 && planeIndices[1] < 3) {
+              
+              const scaledCoef = coefficient * scale * 0.7;
+              
+              // Handle different basis planes (e12, e23, e31)
+              if (planeIndices[0] === 0 && planeIndices[1] === 1) { // e12 (xy-plane)
+                const radius = Math.abs(scaledCoef);
+                svg += `<ellipse cx="0" cy="0" rx="${radius}" ry="${radius}" class="mv-bivector ${signClass}" />`;
+                
+                // Add orientation arrow
+                const arcFlag = coefficient > 0 ? 1 : 0;
+                svg += `<path d="M ${radius * 0.7} 0 A ${radius * 0.7} ${radius * 0.7} 0 0 ${arcFlag} 0 ${-radius * 0.7}" 
+                            class="${signClass}" fill="none" stroke-width="1.5" />`;
+                            
+                // Arrowhead on the arc
+                const arrowX = coefficient > 0 ? 0 : 0;
+                const arrowY = coefficient > 0 ? -radius * 0.7 : radius * 0.7;
+                const arrowAngle = coefficient > 0 ? -Math.PI/2 : Math.PI/2;
+                
+                svg += `<polygon points="
+                  ${arrowX},${arrowY},
+                  ${arrowX + 5 * Math.cos(arrowAngle - Math.PI/6)},${arrowY + 5 * Math.sin(arrowAngle - Math.PI/6)},
+                  ${arrowX + 5 * Math.cos(arrowAngle + Math.PI/6)},${arrowY + 5 * Math.sin(arrowAngle + Math.PI/6)}
+                " class="${signClass}" />`;
+              }
+              else {
+                // For other planes, draw a parallelogram
+                let v1x = 0, v1y = 0, v2x = 0, v2y = 0;
+                
+                // Set up vectors for the plane
+                if (planeIndices[0] === 0) v1x = scaledCoef; // e1
+                else if (planeIndices[0] === 1) v1y = -scaledCoef; // e2
+                
+                if (planeIndices[1] === 0) v2x = scaledCoef; // e1
+                else if (planeIndices[1] === 1) v2y = -scaledCoef; // e2
+                
+                // Calculate vertices of parallelogram
+                const v3x = v1x + v2x;
+                const v3y = v1y + v2y;
+                
+                // Draw filled parallelogram
+                svg += `<polygon points="0,0 ${v1x},${v1y} ${v3x},${v3y} ${v2x},${v2y}" 
+                                class="mv-bivector ${signClass}" />`;
+              }
+              
+              // Label
+              svg += `<text x="5" y="-${height/2 - 40 + planeIndices[0] * 15}" 
+                            class="mv-vector-label">${coefficient.toFixed(2)}${basis}</text>`;
+            }
+            break;
+            
+          case 3: // Trivector - visualize as a sphere/cube
+            const volScale = Math.abs(coefficient) * scale * 0.4;
+            const volClass = coefficient > 0 ? 'mv-positive' : 'mv-negative';
+            
+            // Draw a shaded circle to represent volume
+            svg += `<circle cx="0" cy="0" r="${volScale}" 
+                            class="mv-bivector ${volClass}" 
+                            style="fill-opacity: 0.2; stroke-dasharray: 3,2" />`;
+            
+            // Add text label for volume
+            svg += `<text x="0" y="0" dy="4" text-anchor="middle" 
+                          class="mv-vector-label">${coefficient.toFixed(2)}${basis}</text>`;
+            break;
+        }
+      }
+      
+      // Close the group and SVG
+      svg += `</g>
+      
+        <!-- Component Table -->
+        <g transform="translate(10, ${height - 10 - (components.length * 15)})">
+          <rect x="0" y="0" width="120" height="${components.length * 15 + 20}" 
+                fill="white" fill-opacity="0.8" stroke="#ccc" />
+          <text x="5" y="15" class="mv-title">Components:</text>`;
+      
+      // Add component list
+      components.forEach((comp, idx) => {
+        const y = 32 + idx * 15;
+        svg += `<text x="10" y="${y}" class="mv-vector-label">${comp.value.toFixed(2)}${comp.basis}</text>`;
+      });
+      
+      svg += `</g>
       </svg>`;
+      
+      return svg;
     },
 
     _renderArray: function (array, element, options) {
@@ -1084,20 +1478,588 @@ require("./base.js");
     },
 
     _renderArrayCanvas: function (array, ctx, options) {
-      ctx.fillText(JSON.stringify(array), 10, 20);
+      // Get canvas dimensions
+      const width = ctx.canvas.width;
+      const height = ctx.canvas.height;
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+      
+      // Draw title
+      ctx.fillStyle = "#333";
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText("Array Visualization", 10, 10);
+      
+      // Set up visualization area
+      const margin = 40;
+      const chartWidth = width - 2 * margin;
+      const chartHeight = height - 2 * margin;
+      const maxItems = Math.min(array.length, 50); // Limit display to 50 items
+      
+      // Check if array contains numbers
+      const isNumeric = array.every(item => typeof item === 'number' || (typeof item === 'string' && !isNaN(item)));
+      
+      if (isNumeric) {
+        // Convert all items to numbers
+        const numericArray = array.slice(0, maxItems).map(item => Number(item));
+        
+        // Find the min and max values
+        const minValue = Math.min(0, ...numericArray);
+        const maxValue = Math.max(0, ...numericArray);
+        const valueRange = maxValue - minValue;
+        
+        // Calculate bar properties
+        const barWidth = chartWidth / numericArray.length;
+        const barSpacing = Math.max(1, barWidth * 0.2);
+        const adjustedBarWidth = barWidth - barSpacing;
+        
+        // Draw coordinate system
+        ctx.strokeStyle = "#ccc";
+        ctx.lineWidth = 1;
+        
+        // X-axis
+        ctx.beginPath();
+        ctx.moveTo(margin, height - margin);
+        ctx.lineTo(width - margin, height - margin);
+        ctx.stroke();
+        
+        // Y-axis
+        ctx.beginPath();
+        ctx.moveTo(margin, margin);
+        ctx.lineTo(margin, height - margin);
+        ctx.stroke();
+        
+        // Draw zero line if needed
+        if (minValue < 0) {
+          const zeroY = height - margin - (0 - minValue) / valueRange * chartHeight;
+          ctx.beginPath();
+          ctx.moveTo(margin, zeroY);
+          ctx.lineTo(width - margin, zeroY);
+          ctx.stroke();
+        }
+        
+        // Draw bars
+        numericArray.forEach((value, index) => {
+          const x = margin + index * barWidth + barSpacing / 2;
+          
+          // Calculate bar height and position
+          let barHeight, y;
+          if (value >= 0) {
+            barHeight = (value / valueRange) * chartHeight;
+            y = height - margin - barHeight;
+          } else {
+            barHeight = (Math.abs(value) / valueRange) * chartHeight;
+            y = height - margin;
+          }
+          
+          // Choose color based on value
+          if (value >= 0) {
+            ctx.fillStyle = "#36c"; // Blue for positive
+          } else {
+            ctx.fillStyle = "#f60"; // Orange for negative
+          }
+          
+          // Draw the bar
+          ctx.fillRect(x, y, adjustedBarWidth, barHeight);
+          
+          // Draw value label for larger bars
+          if (Math.abs(barHeight) > 20) {
+            ctx.fillStyle = "#fff";
+            ctx.font = "10px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(value.toFixed(1), x + adjustedBarWidth / 2, y + barHeight / 2);
+          }
+          
+          // Draw index labels for every nth item depending on array size
+          const labelInterval = Math.ceil(numericArray.length / 10);
+          if (index % labelInterval === 0) {
+            ctx.fillStyle = "#333";
+            ctx.font = "10px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.fillText(index.toString(), x + adjustedBarWidth / 2, height - margin + 5);
+          }
+        });
+      } else {
+        // For non-numeric arrays, display as text with styling
+        const fontSize = Math.min(14, Math.max(8, Math.floor(250 / array.length)));
+        ctx.font = `${fontSize}px monospace`;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        
+        // Draw array structure
+        ctx.fillStyle = "#333";
+        ctx.fillText("[", margin, margin);
+        
+        // Calculate item positions
+        const items = array.slice(0, maxItems).map(item => {
+          // Format different types
+          if (typeof item === 'object' && item !== null) {
+            return '{ obj }';
+          } else if (typeof item === 'string') {
+            return `"${item.length > 20 ? item.substring(0, 17) + '...' : item}"`;
+          } else {
+            return String(item);
+          }
+        });
+        
+        // Join with commas and draw
+        const itemsText = items.join(", ");
+        ctx.fillText(itemsText, margin + 10, margin);
+        ctx.fillText("]", margin + 20 + ctx.measureText(itemsText).width, margin);
+        
+        // Add length indicator
+        ctx.fillStyle = "#666";
+        ctx.fillText(`Length: ${array.length}`, margin, margin + fontSize + 10);
+        
+        // If array is truncated, indicate it
+        if (array.length > maxItems) {
+          ctx.fillStyle = "#900";
+          ctx.fillText(`(${array.length - maxItems} more items not shown)`, margin, margin + (fontSize + 10) * 2);
+        }
+      }
+      
       return ctx;
     },
 
     _renderArraySVG: function (array, options) {
       const width = options.dimensions[0] || 300;
       const height = options.dimensions[1] || 150;
-      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-        <text x="10" y="20">${JSON.stringify(array)}</text>
-      </svg>`;
+      const margin = 40;
+      const chartWidth = width - 2 * margin;
+      const chartHeight = height - 2 * margin;
+      const maxItems = Math.min(array.length, 50); // Limit display to 50 items
+      
+      // Determine if array is numeric
+      const isNumeric = array.every(item => typeof item === 'number' || (typeof item === 'string' && !isNaN(item)));
+      
+      // Start SVG with styles
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+        <defs>
+          <style>
+            .array-title { font-family: sans-serif; font-size: 12px; fill: #333; }
+            .array-axis { stroke: #ccc; stroke-width: 1; }
+            .array-bar-positive { fill: #36c; }
+            .array-bar-negative { fill: #f60; }
+            .array-label { font-family: sans-serif; font-size: 10px; fill: #333; }
+            .array-value { font-family: sans-serif; font-size: 10px; fill: #fff; text-anchor: middle; }
+            .array-text { font-family: monospace; font-size: 12px; fill: #333; }
+            .array-info { font-family: sans-serif; font-size: 11px; fill: #666; }
+            .array-warning { font-family: sans-serif; font-size: 11px; fill: #900; }
+          </style>
+        </defs>
+        <rect width="${width}" height="${height}" fill="#f8f8f8" />
+        <text x="10" y="20" class="array-title">Array Visualization</text>`;
+      
+      if (isNumeric && array.length > 0) {
+        // Convert values to numbers and limit to maxItems
+        const numericArray = array.slice(0, maxItems).map(item => Number(item));
+        
+        // Find the min and max values
+        const minValue = Math.min(0, ...numericArray);
+        const maxValue = Math.max(0, ...numericArray);
+        const valueRange = maxValue - minValue || 1; // Avoid division by zero
+        
+        // Calculate bar properties
+        const barWidth = chartWidth / numericArray.length;
+        const barSpacing = Math.max(1, barWidth * 0.2);
+        const adjustedBarWidth = barWidth - barSpacing;
+        
+        // Draw coordinate system
+        svg += `<g transform="translate(0, 0)">
+          <!-- X-axis -->
+          <line x1="${margin}" y1="${height - margin}" x2="${width - margin}" y2="${height - margin}" class="array-axis" />
+          
+          <!-- Y-axis -->
+          <line x1="${margin}" y1="${margin}" x2="${margin}" y2="${height - margin}" class="array-axis" />`;
+        
+        // Draw zero line if needed
+        if (minValue < 0) {
+          const zeroY = height - margin - (0 - minValue) / valueRange * chartHeight;
+          svg += `<line x1="${margin}" y1="${zeroY}" x2="${width - margin}" y2="${zeroY}" class="array-axis" stroke-dasharray="4 2" />`;
+        }
+        
+        // Draw bars
+        numericArray.forEach((value, index) => {
+          const x = margin + index * barWidth + barSpacing / 2;
+          
+          // Calculate bar height and position
+          let barHeight, y;
+          if (value >= 0) {
+            barHeight = (value / valueRange) * chartHeight;
+            y = height - margin - barHeight;
+          } else {
+            barHeight = (Math.abs(value) / valueRange) * chartHeight;
+            y = height - margin;
+          }
+          
+          // Ensure minimum visible height
+          barHeight = Math.max(barHeight, 1);
+          
+          // Choose bar class based on value
+          const barClass = value >= 0 ? 'array-bar-positive' : 'array-bar-negative';
+          
+          // Draw the bar
+          svg += `<rect x="${x}" y="${y}" width="${adjustedBarWidth}" height="${barHeight}" class="${barClass}" />`;
+          
+          // Draw value label for larger bars
+          if (Math.abs(barHeight) > 20) {
+            svg += `<text x="${x + adjustedBarWidth / 2}" y="${y + barHeight / 2}" dy="0.35em" class="array-value">${value.toFixed(1)}</text>`;
+          }
+          
+          // Draw index labels for every nth item
+          const labelInterval = Math.ceil(numericArray.length / 10);
+          if (index % labelInterval === 0) {
+            svg += `<text x="${x + adjustedBarWidth / 2}" y="${height - margin + 15}" class="array-label" text-anchor="middle">${index}</text>`;
+          }
+        });
+        
+        // Add min/max labels
+        svg += `<text x="${margin}" y="${margin - 5}" class="array-label" text-anchor="start">Max: ${maxValue}</text>`;
+        if (minValue < 0) {
+          svg += `<text x="${margin}" y="${height - margin + 25}" class="array-label" text-anchor="start">Min: ${minValue}</text>`;
+        }
+        
+        svg += `</g>`;
+      } else {
+        // For non-numeric arrays, display as text
+        svg += `<g transform="translate(${margin}, ${margin + 20})">`;
+        
+        // Format array items
+        const items = array.slice(0, maxItems).map(item => {
+          // Format different types
+          if (typeof item === 'object' && item !== null) {
+            return '{ obj }';
+          } else if (typeof item === 'string') {
+            return `"${item.length > 20 ? item.substring(0, 17) + '...' : item}"`;
+          } else {
+            return String(item);
+          }
+        });
+        
+        // Draw array brackets and items
+        svg += `<text x="0" y="0" class="array-text">[</text>`;
+        
+        if (items.length > 0) {
+          const formattedText = items.join(", ");
+          svg += `<text x="15" y="0" class="array-text">${formattedText}</text>`;
+          
+          // Close bracket - need to estimate text width
+          const estimatedWidth = 15 + formattedText.length * 7; // Rough monospace width estimate
+          svg += `<text x="${estimatedWidth + 5}" y="0" class="array-text">]</text>`;
+        } else {
+          svg += `<text x="15" y="0" class="array-text">]</text>`;
+        }
+        
+        // Add array info
+        svg += `<text x="0" y="25" class="array-info">Length: ${array.length}</text>`;
+        
+        // If array is truncated, indicate it
+        if (array.length > maxItems) {
+          svg += `<text x="0" y="45" class="array-warning">(${array.length - maxItems} more items not shown)</text>`;
+        }
+        
+        svg += `</g>`;
+      }
+      
+      svg += `</svg>`;
+      return svg;
     },
 
     _renderTransformationCanvas: function (transformation, ctx, options) {
-      ctx.fillText(`Transformation: ${JSON.stringify(transformation)}`, 10, 20);
+      // Get canvas dimensions
+      const width = ctx.canvas.width;
+      const height = ctx.canvas.height;
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+      
+      // Draw title
+      ctx.fillStyle = "#333";
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText("Transformation Visualization", 10, 10);
+      
+      // Set up grid parameters
+      const gridSize = Math.min(width, height) * 0.8;
+      const cellSize = gridSize / 10;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      
+      // Check if transformation has a matrix representation
+      if (transformation.matrix || (transformation.getMatrix && typeof transformation.getMatrix === 'function')) {
+        const matrix = transformation.matrix || transformation.getMatrix();
+        
+        // Draw the original coordinate grid (before transformation)
+        ctx.strokeStyle = "#ccc";
+        ctx.lineWidth = 0.5;
+        
+        // Draw grid lines
+        for (let i = -5; i <= 5; i++) {
+          // Vertical lines
+          ctx.beginPath();
+          ctx.moveTo(centerX + i * cellSize, centerY - gridSize / 2);
+          ctx.lineTo(centerX + i * cellSize, centerY + gridSize / 2);
+          ctx.stroke();
+          
+          // Horizontal lines
+          ctx.beginPath();
+          ctx.moveTo(centerX - gridSize / 2, centerY + i * cellSize);
+          ctx.lineTo(centerX + gridSize / 2, centerY + i * cellSize);
+          ctx.stroke();
+        }
+        
+        // Draw coordinate axes
+        ctx.strokeStyle = "#666";
+        ctx.lineWidth = 1;
+        
+        // X-axis
+        ctx.beginPath();
+        ctx.moveTo(centerX - gridSize / 2, centerY);
+        ctx.lineTo(centerX + gridSize / 2, centerY);
+        ctx.stroke();
+        
+        // Y-axis
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY - gridSize / 2);
+        ctx.lineTo(centerX, centerY + gridSize / 2);
+        ctx.stroke();
+        
+        // Draw transformed coordinate system
+        ctx.strokeStyle = "#36c";
+        ctx.lineWidth = 2;
+        
+        // Determine the transformation type and dimensions
+        const is2D = matrix.length === 4 || matrix.length === 9; // 2x2 or 3x3 matrix
+        const is3D = matrix.length === 16; // 4x4 matrix
+        
+        if (is2D) {
+          // Get the transformed basis vectors
+          let e1x, e1y, e2x, e2y;
+          
+          if (matrix.length === 4) {
+            // 2x2 matrix
+            e1x = matrix[0];
+            e1y = matrix[1];
+            e2x = matrix[2];
+            e2y = matrix[3];
+          } else {
+            // 3x3 matrix (homogeneous coordinates)
+            e1x = matrix[0];
+            e1y = matrix[1];
+            e2x = matrix[3];
+            e2y = matrix[4];
+          }
+          
+          // Scale the vectors for visualization
+          const scale = cellSize * 2;
+          e1x *= scale;
+          e1y *= scale;
+          e2x *= scale;
+          e2y *= scale;
+          
+          // Draw transformed x-axis (e1)
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.lineTo(centerX + e1x, centerY - e1y); // Flip y-coordinate for canvas
+          ctx.stroke();
+          
+          // Draw transformed y-axis (e2)
+          ctx.strokeStyle = "#f60";
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.lineTo(centerX + e2x, centerY - e2y); // Flip y-coordinate for canvas
+          ctx.stroke();
+          
+          // Draw arrows on the transformed axes
+          const drawArrow = (x, y, angle) => {
+            const arrowSize = 10;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(
+              x - arrowSize * Math.cos(angle - Math.PI / 6),
+              y - arrowSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+              x - arrowSize * Math.cos(angle + Math.PI / 6),
+              y - arrowSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fill();
+          };
+          
+          // Draw arrow for e1 (x-axis)
+          ctx.fillStyle = "#36c";
+          const e1Angle = Math.atan2(-e1y, e1x); // Flip y-coordinate for canvas
+          drawArrow(centerX + e1x, centerY - e1y, e1Angle);
+          
+          // Draw arrow for e2 (y-axis)
+          ctx.fillStyle = "#f60";
+          const e2Angle = Math.atan2(-e2y, e2x); // Flip y-coordinate for canvas
+          drawArrow(centerX + e2x, centerY - e2y, e2Angle);
+          
+          // Draw transformed grid (optional, can be visually complex)
+          if (options.showTransformedGrid) {
+            ctx.strokeStyle = "rgba(54, 108, 204, 0.3)";
+            ctx.lineWidth = 0.5;
+            
+            // Draw a few grid lines to show the transformation
+            for (let i = -2; i <= 2; i++) {
+              // Vertical transformed grid lines
+              ctx.beginPath();
+              ctx.moveTo(centerX + i * e1x, centerY - i * e1y);
+              ctx.lineTo(centerX + i * e1x + 5 * e2x, centerY - i * e1y - 5 * e2y);
+              ctx.stroke();
+              
+              // Horizontal transformed grid lines
+              ctx.beginPath();
+              ctx.moveTo(centerX + i * e2x, centerY - i * e2y);
+              ctx.lineTo(centerX + i * e2x + 5 * e1x, centerY - i * e2y - 5 * e1y);
+              ctx.stroke();
+            }
+          }
+          
+          // Draw matrix values
+          ctx.fillStyle = "#333";
+          ctx.font = "12px monospace";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "top";
+          
+          const formatValue = (val) => val.toFixed(2).replace(/\.00$/, '');
+          
+          if (matrix.length === 4) {
+            ctx.fillText(`[${formatValue(matrix[0])}, ${formatValue(matrix[2])}]`, 10, height - 60);
+            ctx.fillText(`[${formatValue(matrix[1])}, ${formatValue(matrix[3])}]`, 10, height - 40);
+          } else {
+            ctx.fillText(`[${formatValue(matrix[0])}, ${formatValue(matrix[3])}, ${formatValue(matrix[6])}]`, 10, height - 80);
+            ctx.fillText(`[${formatValue(matrix[1])}, ${formatValue(matrix[4])}, ${formatValue(matrix[7])}]`, 10, height - 60);
+            ctx.fillText(`[${formatValue(matrix[2])}, ${formatValue(matrix[5])}, ${formatValue(matrix[8])}]`, 10, height - 40);
+          }
+        } else if (is3D) {
+          // For 3D transformations, we'll create a simple projection
+          // Get the transformed basis vectors
+          const e1x = matrix[0];
+          const e1y = matrix[1];
+          const e1z = matrix[2];
+          
+          const e2x = matrix[4];
+          const e2y = matrix[5];
+          const e2z = matrix[6];
+          
+          const e3x = matrix[8];
+          const e3y = matrix[9];
+          const e3z = matrix[10];
+          
+          // Scale the vectors for visualization
+          const scale = cellSize * 1.5;
+          
+          // Simple perspective projection
+          const project = (x, y, z) => {
+            // Move z further away for better perspective
+            const projZ = z + 4;
+            // Perspective divide
+            const factor = 2 / projZ;
+            return {
+              x: centerX + x * scale * factor,
+              y: centerY - y * scale * factor // Flip y-coordinate for canvas
+            };
+          };
+          
+          // Draw the transformed coordinate axes
+          const origin = project(0, 0, 0);
+          
+          // Draw x-axis (red)
+          const e1Proj = project(e1x, e1y, e1z);
+          ctx.strokeStyle = "#c33";
+          ctx.beginPath();
+          ctx.moveTo(origin.x, origin.y);
+          ctx.lineTo(e1Proj.x, e1Proj.y);
+          ctx.stroke();
+          
+          // Draw y-axis (green)
+          const e2Proj = project(e2x, e2y, e2z);
+          ctx.strokeStyle = "#3c3";
+          ctx.beginPath();
+          ctx.moveTo(origin.x, origin.y);
+          ctx.lineTo(e2Proj.x, e2Proj.y);
+          ctx.stroke();
+          
+          // Draw z-axis (blue)
+          const e3Proj = project(e3x, e3y, e3z);
+          ctx.strokeStyle = "#33c";
+          ctx.beginPath();
+          ctx.moveTo(origin.x, origin.y);
+          ctx.lineTo(e3Proj.x, e3Proj.y);
+          ctx.stroke();
+          
+          // Label the axes
+          ctx.font = "12px sans-serif";
+          ctx.fillStyle = "#c33";
+          ctx.fillText("x", e1Proj.x + 5, e1Proj.y);
+          ctx.fillStyle = "#3c3";
+          ctx.fillText("y", e2Proj.x + 5, e2Proj.y);
+          ctx.fillStyle = "#33c";
+          ctx.fillText("z", e3Proj.x + 5, e3Proj.y);
+          
+          // Draw matrix values in a compact form
+          ctx.fillStyle = "#333";
+          ctx.font = "10px monospace";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "top";
+          
+          const formatValue = (val) => val.toFixed(1).replace(/\.0$/, '');
+          
+          ctx.fillText("Matrix:", 10, height - 100);
+          ctx.fillText(`[${formatValue(matrix[0])}, ${formatValue(matrix[4])}, ${formatValue(matrix[8])}, ${formatValue(matrix[12])}]`, 10, height - 85);
+          ctx.fillText(`[${formatValue(matrix[1])}, ${formatValue(matrix[5])}, ${formatValue(matrix[9])}, ${formatValue(matrix[13])}]`, 10, height - 70);
+          ctx.fillText(`[${formatValue(matrix[2])}, ${formatValue(matrix[6])}, ${formatValue(matrix[10])}, ${formatValue(matrix[14])}]`, 10, height - 55);
+          ctx.fillText(`[${formatValue(matrix[3])}, ${formatValue(matrix[7])}, ${formatValue(matrix[11])}, ${formatValue(matrix[15])}]`, 10, height - 40);
+        }
+        
+        // Draw transformation type
+        ctx.fillStyle = "#333";
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        
+        // Determine transformation type
+        let transformationType = "Linear Transformation";
+        
+        if (transformation.type) {
+          transformationType = transformation.type;
+        } else if (is2D) {
+          // For 2D transformations, try to identify common types
+          const det = is2D && matrix.length === 4 ? 
+            matrix[0] * matrix[3] - matrix[1] * matrix[2] : 
+            matrix[0] * matrix[4] - matrix[1] * matrix[3];
+            
+          if (Math.abs(det - 1) < 0.001) {
+            if (matrix[0] === 1 && matrix[1] === 0 && matrix[2] === 0 && matrix[3] === 1) {
+              transformationType = "Identity";
+            } else if (matrix[0] * matrix[3] - matrix[1] * matrix[2] > 0) {
+              transformationType = "Rotation/Reflection";
+            }
+          } else if (det === 0) {
+            transformationType = "Singular (Projection/Collapse)";
+          } else {
+            transformationType = `Scaling (det=${det.toFixed(2)})`;
+          }
+        }
+        
+        ctx.fillText(`Type: ${transformationType}`, 10, height - 20);
+      } else {
+        // No matrix representation available, just show the JSON
+        ctx.fillStyle = "#333";
+        ctx.font = "12px monospace";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillText(`Transformation: ${JSON.stringify(transformation)}`, 10, 40);
+      }
+      
       return ctx;
     },
 
