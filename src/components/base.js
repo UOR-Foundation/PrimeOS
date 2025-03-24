@@ -10,6 +10,8 @@ const Prime = require("../core.js");
 require("../mathematics.js");
 require("../coherence.js");
 require("../framework/index.js");
+// Load component utilities with optimized clone methods
+require("./componentUtils.js");
 
 (function (Prime) {
   /**
@@ -41,19 +43,25 @@ require("../framework/index.js");
       config.invariant = {};
     }
 
-    // Log the createComponent call for debugging
-    Prime.Logger.debug("Creating component", { name: config.meta.name });
+    // Log the createComponent call for debugging with safe access
+    try {
+      if (Prime.Logger && typeof Prime.Logger.debug === 'function') {
+        Prime.Logger.debug("Creating component", { name: config.meta.name });
+      }
+    } catch (err) {
+      console.log("Creating component:", config.meta.name);
+    }
 
     // Create a coherence-aware component
     const component = {
       // Meta: contextual information and metadata
-      meta: Prime.Utils.deepClone(config.meta),
+      meta: Prime.Components.Utils.fastClone(config.meta),
 
       // Invariant: static assets and code
-      invariant: Prime.Utils.deepClone(config.invariant),
+      invariant: Prime.Components.Utils.fastClone(config.invariant),
 
       // Variant: dynamic data and state
-      variant: Prime.Utils.deepClone(config.variant || {}),
+      variant: Prime.Components.Utils.fastClone(config.variant || {}),
 
       // For compatibility with integration tests
       _initialized: false,
@@ -113,14 +121,22 @@ require("../framework/index.js");
 
             return true;
           } catch (error) {
-            Prime.Logger.error(
-              `Failed to initialize component ${component.meta.id}`,
-              {
-                error: error.message,
-                stack: error.stack,
-                component: component.meta.id,
-              },
-            );
+            try {
+              if (Prime.Logger && typeof Prime.Logger.error === 'function') {
+                Prime.Logger.error(
+                  `Failed to initialize component ${component.meta.id}`,
+                  {
+                    error: error.message,
+                    stack: error.stack,
+                    component: component.meta.id,
+                  }
+                );
+              } else {
+                console.error(`Failed to initialize component ${component.meta.id}`, error);
+              }
+            } catch (logErr) {
+              console.error(`Failed to initialize component ${component.meta.id}`, error);
+            }
             
             // Emit error event for better error recovery
             if (component._listeners && component._listeners['error']) {
@@ -131,10 +147,18 @@ require("../framework/index.js");
                 });
               } catch (emitError) {
                 // Just log if error event handler fails
-                Prime.Logger.error(`Failed to emit error event during initialization`, {
-                  error: emitError.message,
-                  component: component.meta.id,
-                });
+                try {
+                  if (Prime.Logger && typeof Prime.Logger.error === 'function') {
+                    Prime.Logger.error(`Failed to emit error event during initialization`, {
+                      error: emitError.message,
+                      component: component.meta.id,
+                    });
+                  } else {
+                    console.error(`Failed to emit error event during initialization for ${component.meta.id}`, emitError);
+                  }
+                } catch (logErr) {
+                  console.error(`Failed to emit error event during initialization for ${component.meta.id}`, emitError);
+                }
               }
             }
 
@@ -177,13 +201,21 @@ require("../framework/index.js");
 
             return true;
           } catch (error) {
-            Prime.Logger.error(
-              `Failed to mount component ${component.meta.id}`,
-              {
-                error: error.message,
-                stack: error.stack,
-              },
-            );
+            try {
+              if (Prime.Logger && typeof Prime.Logger.error === 'function') {
+                Prime.Logger.error(
+                  `Failed to mount component ${component.meta.id}`,
+                  {
+                    error: error.message,
+                    stack: error.stack,
+                  }
+                );
+              } else {
+                console.error(`Failed to mount component ${component.meta.id}`, error);
+              }
+            } catch (logErr) {
+              console.error(`Failed to mount component ${component.meta.id}`, error);
+            }
 
             return false;
           }
@@ -196,8 +228,8 @@ require("../framework/index.js");
          */
         update: function (newState) {
           try {
-            // Calculate previous state for comparison
-            const prevState = Prime.Utils.deepClone(component.variant);
+            // Calculate previous state for comparison - use fast clone for performance
+            const prevState = Prime.Components.Utils.fastClone(component.variant);
 
             // Update the variant with new state
             component.setState(newState);
@@ -225,13 +257,21 @@ require("../framework/index.js");
 
             return true;
           } catch (error) {
-            Prime.Logger.error(
-              `Failed to update component ${component.meta.id}`,
-              {
-                error: error.message,
-                stack: error.stack,
-              },
-            );
+            try {
+              if (Prime.Logger && typeof Prime.Logger.error === 'function') {
+                Prime.Logger.error(
+                  `Failed to update component ${component.meta.id}`,
+                  {
+                    error: error.message,
+                    stack: error.stack,
+                  }
+                );
+              } else {
+                console.error(`Failed to update component ${component.meta.id}`, error);
+              }
+            } catch (logErr) {
+              console.error(`Failed to update component ${component.meta.id}`, error);
+            }
 
             return false;
           }
@@ -282,13 +322,21 @@ require("../framework/index.js");
 
             return true;
           } catch (error) {
-            Prime.Logger.error(
-              `Failed to unmount component ${component.meta.id}`,
-              {
-                error: error.message,
-                stack: error.stack,
-              },
-            );
+            try {
+              if (Prime.Logger && typeof Prime.Logger.error === 'function') {
+                Prime.Logger.error(
+                  `Failed to unmount component ${component.meta.id}`,
+                  {
+                    error: error.message,
+                    stack: error.stack,
+                  }
+                );
+              } else {
+                console.error(`Failed to unmount component ${component.meta.id}`, error);
+              }
+            } catch (logErr) {
+              console.error(`Failed to unmount component ${component.meta.id}`, error);
+            }
 
             return false;
           }
@@ -326,13 +374,21 @@ require("../framework/index.js");
 
             return true;
           } catch (error) {
-            Prime.Logger.error(
-              `Failed to destroy component ${component.meta.id}`,
-              {
-                error: error.message,
-                stack: error.stack,
-              },
-            );
+            try {
+              if (Prime.Logger && typeof Prime.Logger.error === 'function') {
+                Prime.Logger.error(
+                  `Failed to destroy component ${component.meta.id}`,
+                  {
+                    error: error.message,
+                    stack: error.stack,
+                  }
+                );
+              } else {
+                console.error(`Failed to destroy component ${component.meta.id}`, error);
+              }
+            } catch (logErr) {
+              console.error(`Failed to destroy component ${component.meta.id}`, error);
+            }
 
             return false;
           }
@@ -349,13 +405,19 @@ require("../framework/index.js");
           return this;
         }
 
+        // Skip update if nothing has changed (performance optimization)
+        if (Object.keys(newState).length === 0) {
+          return this;
+        }
+
         // Check if using coherence constraints
         if (
           this.invariant.constraints &&
           this.invariant.constraints.length > 0
         ) {
           const constraints = this.invariant.constraints;
-          const proposed = { ...this.variant, ...newState };
+          // Create proposed state with efficient merge
+          const proposed = Prime.Components.Utils.shallowMerge(this.variant, newState);
 
           // Check all constraints
           for (const constraint of constraints) {
@@ -370,19 +432,37 @@ require("../framework/index.js");
               }
 
               // For soft constraints, we'll just log a warning
-              Prime.Logger.warn(
-                `State update violates soft constraint "${constraint.name}"`,
-                {
-                  component: this.meta.id,
-                  constraint: constraint.name,
-                },
-              );
+              try {
+                if (Prime.Logger && typeof Prime.Logger.warn === 'function') {
+                  Prime.Logger.warn(
+                    `State update violates soft constraint "${constraint.name}"`,
+                    {
+                      component: this.meta.id,
+                      constraint: constraint.name,
+                    }
+                  );
+                } else {
+                  console.warn(`State update violates soft constraint "${constraint.name}" for component ${this.meta.id}`);
+                }
+              } catch (logErr) {
+                console.warn(`State update violates soft constraint "${constraint.name}" for component ${this.meta.id}`);
+              }
             }
           }
         }
 
-        // Update variant with new state
-        this.variant = { ...this.variant, ...newState };
+        // Optimize: Skip deep merging for top-level primitive values
+        const hasNestedObjects = Object.values(newState).some(v => 
+          v !== null && typeof v === 'object'
+        );
+
+        if (hasNestedObjects) {
+          // For complex nested updates, use efficient merging
+          this.variant = Prime.Components.Utils.efficientMerge(this.variant, newState);
+        } else {
+          // For simple updates, shallow merge is faster
+          this.variant = Prime.Components.Utils.shallowMerge(this.variant, newState);
+        }
 
         return this;
       },
@@ -392,7 +472,7 @@ require("../framework/index.js");
        * @returns {Object} Component state
        */
       getState: function () {
-        return Prime.Utils.deepClone(this.variant);
+        return Prime.Components.Utils.fastClone(this.variant);
       },
 
       /**
@@ -471,11 +551,19 @@ require("../framework/index.js");
             successCount++;
           } catch (error) {
             hasErrors = true;
-            Prime.Logger.error(`Error in event handler for ${event}`, {
-              error: error.message,
-              stack: error.stack,
-              component: this.meta.id,
-            });
+            try {
+              if (Prime.Logger && typeof Prime.Logger.error === 'function') {
+                Prime.Logger.error(`Error in event handler for ${event}`, {
+                  error: error.message,
+                  stack: error.stack,
+                  component: this.meta.id,
+                });
+              } else {
+                console.error(`Error in event handler for ${event} in component ${this.meta.id}`, error);
+              }
+            } catch (logErr) {
+              console.error(`Error in event handler for ${event} in component ${this.meta.id}`, error);
+            }
             
             // Emit an error event so the error can be handled by the component
             if (this._listeners['error'] && event !== 'error') {
@@ -487,10 +575,18 @@ require("../framework/index.js");
                 });
               } catch (emitError) {
                 // Prevent infinite loops with error events
-                Prime.Logger.error(`Failed to emit error event`, {
-                  error: emitError.message,
-                  component: this.meta.id,
-                });
+                try {
+                  if (Prime.Logger && typeof Prime.Logger.error === 'function') {
+                    Prime.Logger.error(`Failed to emit error event`, {
+                      error: emitError.message,
+                      component: this.meta.id,
+                    });
+                  } else {
+                    console.error(`Failed to emit error event for component ${this.meta.id}`, emitError);
+                  }
+                } catch (logErr) {
+                  console.error(`Failed to emit error event for component ${this.meta.id}`, emitError);
+                }
               }
             }
           }
@@ -617,12 +713,108 @@ require("../framework/index.js");
       /**
        * Check if component is coherent
        * @param {number} [tolerance=1e-6] - Tolerance for coherence check
+       * @param {Object} [options] - Additional coherence check options
        * @returns {boolean} True if component is coherent
        */
-      isCoherent: function (tolerance = 1e-6) {
-        return this.coherenceNorm() <= tolerance;
+      isCoherent: function (tolerance = 1e-6, options = {}) {
+        // Basic coherence check based on constraints
+        const basicCoherent = this.coherenceNorm() <= tolerance;
+        
+        // If basic check fails, return false immediately
+        if (!basicCoherent) {
+          return false;
+        }
+        
+        // Enhanced mathematical coherence checks if requested
+        if (options.checkMathematical !== false) {
+          // Perform mathematical coherence checks on variant data
+          return Prime.Components.CoherenceCheck.isCoherent(this.variant, options);
+        }
+        
+        return true;
       },
 
+      /**
+       * Add mathematical coherence constraints
+       * @param {string} path - Path to property to constrain
+       * @param {Object} [options] - Constraint options
+       * @returns {Object} Component instance for chaining
+       */
+      addMathConstraint: function (path, options = {}) {
+        // Initialize constraints array if not present
+        if (!this.invariant.constraints) {
+          this.invariant.constraints = [];
+        }
+        
+        // Create appropriate constraint type based on property type
+        let value;
+        try {
+          if (Prime.Utils && typeof Prime.Utils.getPath === 'function') {
+            value = Prime.Utils.getPath(this.variant, path);
+          } else {
+            // Simple fallback path traversal
+            value = path.split('.').reduce((o, p) => o && o[p], this.variant);
+          }
+        } catch (err) {
+          console.error(`Error getting path ${path} in addMathConstraint`, err);
+          // Continue with undefined value
+        }
+        
+        let constraint;
+        
+        if (Array.isArray(value)) {
+          // Array constraint
+          constraint = Prime.Components.CoherenceCheck.createUniformArrayConstraint(
+            path, 
+            options.name || `Array coherence (${path})`
+          );
+        } else if (Prime.Math && Prime.Math.Matrix && value instanceof Prime.Math.Matrix) {
+          // Matrix constraint
+          constraint = Prime.Components.CoherenceCheck.createMatrixConstraint(
+            path,
+            options,
+            options.name || `Matrix coherence (${path})`
+          );
+        } else {
+          // Generic constraint
+          constraint = Prime.Components.CoherenceCheck.createMathConstraint(
+            (obj) => {
+              let val;
+              try {
+                if (Prime.Utils && typeof Prime.Utils.getPath === 'function') {
+                  val = Prime.Utils.getPath(obj, path);
+                } else {
+                  // Simple fallback path traversal
+                  val = path.split('.').reduce((o, p) => o && o[p], obj);
+                }
+              } catch (err) {
+                console.error(`Error getting path ${path}`, err);
+                return false;
+              }
+              
+              try {
+                if (Prime.Components && Prime.Components.CoherenceCheck && 
+                    typeof Prime.Components.CoherenceCheck.isCoherent === 'function') {
+                  return Prime.Components.CoherenceCheck.isCoherent(val, options);
+                }
+                // If CoherenceCheck not available, consider it valid
+                return true;
+              } catch (err) {
+                console.error(`Error checking coherence for ${path}`, err);
+                return false;
+              }
+            },
+            options.name || `Math coherence (${path})`,
+            { type: options.type || 'hard' }
+          );
+        }
+        
+        // Add constraint
+        this.invariant.constraints.push(constraint);
+        
+        return this;
+      },
+      
       /**
        * Clone this component
        * @param {Object} [overrides={}] - Configuration overrides
@@ -687,8 +879,14 @@ require("../framework/index.js");
   // Export createComponent to Prime
   Prime.createComponent = createComponent;
 
-  // Publish component module loaded event
-  Prime.EventBus.publish("module:loaded", { name: "component-base" });
+  // Add event publishing wrapped in a try-catch to handle potential initialization issues
+  try {
+    if (Prime.EventBus && typeof Prime.EventBus.publish === 'function') {
+      Prime.EventBus.publish("module:loaded", { name: "component-base" });
+    }
+  } catch (err) {
+    console.error('Error publishing module:loaded event for component-base:', err);
+  }
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)

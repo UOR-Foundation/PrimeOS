@@ -12,6 +12,8 @@ require("../coherence.js");
 require("../framework/index.js");
 
 // Import component modules in correct dependency order
+require("./componentUtils.js"); // Load utilities first
+require("./coherenceCheck.js"); // Load coherence checks
 require("./base.js");
 require("./registry.js");
 require("./factory.js");
@@ -39,8 +41,14 @@ require("./mock.js"); // Mock for tests
     "documentation",
   ];
 
-  // Publish component system loaded event
-  Prime.EventBus.publish("module:loaded", { name: "component-system" });
+  // Add event publishing wrapped in a try-catch to handle potential initialization issues
+  try {
+    if (Prime.EventBus && typeof Prime.EventBus.publish === 'function') {
+      Prime.EventBus.publish("module:loaded", { name: "component-system" });
+    }
+  } catch (err) {
+    console.error('Error publishing module:loaded event for component-system:', err);
+  }
 })(Prime);
 
 // CommonJS export (no ES module export to avoid circular dependency)

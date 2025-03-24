@@ -11,6 +11,8 @@ require("../mathematics.js");
 require("../coherence.js");
 require("../framework/index.js");
 require("./base.js");
+// Load component utilities with optimized clone methods
+require("./componentUtils.js");
 
 (function (Prime) {
   /**
@@ -282,7 +284,7 @@ require("./base.js");
     };
 
     return Prime.createComponent(
-      Prime.Utils.deepClone({ ...defaults, ...config }),
+      Prime.Components.Utils.efficientMerge(defaults, config)
     );
   });
 
@@ -319,7 +321,7 @@ require("./base.js");
     };
 
     return Prime.createComponent(
-      Prime.Utils.deepClone({ ...defaults, ...config }),
+      Prime.Components.Utils.efficientMerge(defaults, config)
     );
   });
 
@@ -351,12 +353,12 @@ require("./base.js");
     };
 
     // Ensure initialState is copied to state
-    const merged = Prime.Utils.deepClone({ ...defaults, ...config });
+    const merged = Prime.Components.Utils.efficientMerge(defaults, config);
     if (
       !merged.variant.state ||
       Object.keys(merged.variant.state).length === 0
     ) {
-      merged.variant.state = Prime.Utils.deepClone(merged.variant.initialState);
+      merged.variant.state = Prime.Components.Utils.fastClone(merged.variant.initialState);
     }
 
     return Prime.createComponent(merged);
