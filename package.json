@@ -39,7 +39,6 @@
     "test:ci": "node tests/runners/run-all.js",
     "test:all": "node tests/runners/run-all.js",
     "cleanup:tests": "node scripts/cleanup-old-tests.js",
-    
     "benchmark:extreme": "node scripts/benchmarks/run-extreme-benchmarks.js",
     "benchmark:extreme:verbose": "node scripts/benchmarks/run-extreme-benchmarks.js --verbose",
     "benchmark:extreme:json": "node scripts/benchmarks/run-extreme-benchmarks.js --json",
@@ -119,6 +118,7 @@
   },
   "dependencies": {
     "archiver": "^7.0.1",
+    "benchmark": "^2.1.4",
     "semver": "^7.7.1",
     "yargs": "^17.7.2"
   }

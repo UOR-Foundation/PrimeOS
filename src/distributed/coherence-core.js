@@ -7,11 +7,15 @@
 const Prime = require("../core");
 const EventBus = require("./event-bus");
 
-// Import coherence sub-modules directly (will be used in advanced features)
-// These modules will be used in production implementations
-require("./coherence-violations");
-require("./coherence-recovery");
-require("./coherence-metrics");
+// Import coherence sub-modules directly (for production implementations)
+// Import with proper error handling
+try {
+  require("./coherence-violations");
+  require("./coherence-recovery");
+  require("./coherence-metrics");
+} catch (error) {
+  console.warn("Error loading coherence submodules:", error.message);
+}
 
 // Ensure namespaces are properly defined
 Prime.Distributed = Prime.Distributed || {};

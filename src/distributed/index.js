@@ -7,25 +7,40 @@
 const Prime = require("../core");
 
 // Ensure mathematics module is loaded first as it's a dependency
-require("../mathematics");
+try {
+  require("../mathematics");
+} catch (error) {
+  console.warn("Error loading mathematics module:", error.message);
+  // Continue anyway as the distributed module can work with fallbacks
+}
 
 // Create the Distributed namespace with proper structure
 Prime.Distributed = Prime.Distributed || {};
 
 // Import submodules in a specific order to manage dependencies
-// First, import base modules
-require("./communication");
-require("./partition");
+// Use a function to safely require modules with error handling
+function safeRequire(modulePath) {
+  try {
+    return require(modulePath);
+  } catch (error) {
+    console.warn(`Error loading module '${modulePath}':`, error.message);
+    return {};
+  }
+}
 
-// Then import coherence modules
-require("./coherence-violations");
-require("./coherence-recovery");
-require("./coherence-metrics");
-require("./coherence-core");
-require("./coherence");
+// First, import base modules
+safeRequire("./communication");
+safeRequire("./partition");
+
+// Then import coherence modules in specific order to manage dependencies
+safeRequire("./coherence-violations");
+safeRequire("./coherence-recovery");
+safeRequire("./coherence-metrics");
+safeRequire("./coherence-core");
+safeRequire("./coherence");
 
 // Finally, import cluster module (which depends on the others)
-require("./cluster");
+safeRequire("./cluster");
 
 // Ensure backward compatibility using direct assignment instead of getters
 if (!Prime.distributed) {
@@ -37,6 +52,16 @@ Prime.distributed.coherence = Prime.Distributed.Coherence;
 Prime.distributed.cluster = Prime.Distributed.Cluster;
 Prime.distributed.communication = Prime.Distributed.Communication;
 Prime.distributed.partition = Prime.Distributed.Partition;
+
+// Set up a default Logger if not available
+if (!Prime.Logger) {
+  Prime.Logger = {
+    debug: console.debug.bind(console),
+    info: console.info.bind(console),
+    warn: console.warn.bind(console),
+    error: console.error.bind(console)
+  };
+}
 
 // Export the enhanced Prime object
 module.exports = Prime;

@@ -1521,6 +1521,11 @@ const Prime = (function () {
   };
 
   /**
+   * Set up a global logger instance for use across modules
+   */
+  const GlobalLogger = { ...Logger };
+
+  /**
    * Return core Prime object (to be extended by other modules)
    */
   return {
@@ -1533,7 +1538,7 @@ const Prime = (function () {
     EventBus,
     ModuleLoader,
     Testing,
-    Logger,
+    Logger: GlobalLogger,
 
     // Error classes
     PrimeError,

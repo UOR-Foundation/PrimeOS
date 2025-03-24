@@ -10,10 +10,9 @@ const { Assertions } = require("../../utils");
 describe("Neural Model", () => {
   describe("Basic Model Creation", () => {
     test("should create neural model with correct properties", () => {
-      if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-        console.log("⚠ Skipping: NeuralModel not implemented");
-        return;
-      }
+      // Ensure NeuralModel is available
+      expect(Prime.Neural.Model).toBeDefined();
+      expect(Prime.Neural.Model.NeuralModel).toBeDefined();
 
       // Create a simple model
       const model = new Prime.Neural.Model.NeuralModel();
@@ -67,10 +66,9 @@ describe("Neural Model", () => {
 
   describe("Coherence Integration", () => {
     test("should create model with coherence configuration", () => {
-      if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-        console.log("⚠ Skipping: NeuralModel coherence not tested");
-        return;
-      }
+      // Ensure NeuralModel and coherence modules are available
+      expect(Prime.Neural.Model).toBeDefined();
+      expect(Prime.Neural.Model.NeuralModel).toBeDefined();
 
       const model = new Prime.Neural.Model.NeuralModel({
         coherence: {
@@ -91,10 +89,9 @@ describe("Neural Model", () => {
     });
 
     test("should validate coherence during layer addition", () => {
-      if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-        console.log("⚠ Skipping: NeuralModel coherence validation not tested");
-        return;
-      }
+      // Ensure NeuralModel is available
+      expect(Prime.Neural.Model).toBeDefined();
+      expect(Prime.Neural.Model.NeuralModel).toBeDefined();
 
       const model = new Prime.Neural.Model.NeuralModel();
 
@@ -115,10 +112,9 @@ describe("Neural Model", () => {
     });
 
     test("should track coherence metrics after updates", () => {
-      if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-        console.log("⚠ Skipping: NeuralModel coherence metrics not tested");
-        return;
-      }
+      // Ensure NeuralModel and coherence modules are available
+      expect(Prime.Neural.Model).toBeDefined();
+      expect(Prime.Neural.Model.NeuralModel).toBeDefined();
 
       // Create model with coherence tracking
       const model = new Prime.Neural.Model.NeuralModel({
@@ -167,11 +163,8 @@ describe("Neural Model", () => {
 
   describe("Neural Architecture Search", () => {
     test("should create architecture search with coherence guidance", () => {
-      // Skip if NeuralArchitectureSearch is not available
-      if (!Prime.Neural.Model.NeuralArchitectureSearch) {
-        console.log("⚠ Skipping: NeuralArchitectureSearch not available");
-        return;
-      }
+      // Ensure NeuralArchitectureSearch is available
+      expect(Prime.Neural.Model.NeuralArchitectureSearch).toBeDefined();
 
       // Create search configuration focused on coherence
       const searchConfig = {
@@ -211,13 +204,8 @@ describe("Neural Model", () => {
     });
 
     test("should generate and enhance architecture", () => {
-      // Skip if NeuralArchitectureSearch is not available
-      if (!Prime.Neural.Model.NeuralArchitectureSearch) {
-        console.log(
-          "⚠ Skipping: NeuralArchitectureSearch generation not tested",
-        );
-        return;
-      }
+      // Ensure NeuralArchitectureSearch is available
+      expect(Prime.Neural.Model.NeuralArchitectureSearch).toBeDefined();
 
       const search = new Prime.Neural.Model.NeuralArchitectureSearch({
         searchSpace: {
@@ -264,10 +252,9 @@ describe("Neural Model", () => {
 
   describe("Model Visualization", () => {
     test("should provide visualization data", () => {
-      if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-        console.log("⚠ Skipping: NeuralModel visualization not tested");
-        return;
-      }
+      // Ensure NeuralModel is available
+      expect(Prime.Neural.Model).toBeDefined();
+      expect(Prime.Neural.Model.NeuralModel).toBeDefined();
 
       const model = new Prime.Neural.Model.NeuralModel();
 
@@ -305,6 +292,11 @@ describe("Neural Model", () => {
 
   describe("Integrated Network Training", () => {
     test("should train a simple XOR neural network with self-optimization", () => {
+      // Ensure required layer types are available
+      expect(Prime.Neural.Layer).toBeDefined();
+      expect(Prime.Neural.Layer.SelfOptimizingLayer).toBeDefined();
+      expect(Prime.Neural.Layer.NeuralLayer).toBeDefined();
+
       // Training data for XOR
       const trainingData = [
         { input: [0, 0], expected: [0] },

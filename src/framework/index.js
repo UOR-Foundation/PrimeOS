@@ -8,9 +8,25 @@
 const Prime = require("../core/prime.js");
 
 // Ensure core modules are loaded first in the proper order
-require("../mathematics.js");
-require("../coherence.js");
-require("../distributed");  // Ensure distributed is loaded for framework integration
+try {
+  require("../mathematics.js");
+} catch (error) {
+  console.warn("Error loading mathematics module:", error.message);
+}
+
+try {
+  require("../coherence.js");
+} catch (error) {
+  console.warn("Error loading coherence module:", error.message);
+}
+
+// Ensure distributed is loaded for framework integration
+// This needs to happen after coherence but before other framework components
+try {
+  require("../distributed");
+} catch (error) {
+  console.warn("Error loading distributed module:", error.message);
+}
 
 // Import framework components
 require("./base0"); // This sets up Prime.Base0

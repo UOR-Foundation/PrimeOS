@@ -8,6 +8,10 @@ const Prime = require("../../core");
 
 // Create the Neural Distributed Model Factory using IIFE
 (function () {
+  // Ensure the Neural and Distributed namespaces exist
+  Prime.Neural = Prime.Neural || {};
+  Prime.Neural.Distributed = Prime.Neural.Distributed || {};
+
   /**
    * Neural Distributed Model Factory
    * Factory for creating distributed neural models with cluster integration

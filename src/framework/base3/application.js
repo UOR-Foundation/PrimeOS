@@ -342,6 +342,7 @@ function createApplication(options = {}) {
         // Check coherence if specified in options and coherence checking is available
         if (options.checkCoherence !== false) {
           try {
+            // First try Prime.checkCoherence (standard approach)
             if (Prime.checkCoherence && typeof Prime.checkCoherence === 'function') {
               const coherenceResult = Prime.checkCoherence(prevState, nextState);
 
@@ -356,10 +357,36 @@ function createApplication(options = {}) {
                   },
                 );
               }
+            } 
+            // Then try distributed coherence checking if available
+            else if (Prime.Distributed && Prime.Distributed.Coherence) {
+              // Adapt to distributed coherence system
+              let distributedCoherence;
+              
+              if (Prime.Distributed.Coherence.Core && 
+                  Prime.Distributed.Coherence.Core.Manager) {
+                // Try to use the manager
+                const manager = new Prime.Distributed.Coherence.Core.Manager();
+                const coherenceResult = manager.checkLayerCoherence(
+                  { config: { inputSize: 1, outputSize: 1 }, state: nextState },
+                  { prevState: prevState }
+                );
+                if (coherenceResult && !coherenceResult.isCoherent) {
+                  throw new (Prime.ValidationError || Error)(
+                    "State update failed distributed coherence check",
+                    {
+                      context: {
+                        action: processedAction,
+                        violations: coherenceResult.violations,
+                      },
+                    }
+                  );
+                }
+              }
             }
           } catch (error) {
-            // If error is not a CoherenceError, it's likely due to the coherence system not being available
-            if (error.name !== 'CoherenceError') {
+            // If error is not a CoherenceError or ValidationError, it's likely due to the coherence system not being available
+            if (error.name !== 'CoherenceError' && error.name !== 'ValidationError') {
               console.warn("Coherence check failed:", error.message);
             } else {
               throw error; // Re-throw actual coherence errors

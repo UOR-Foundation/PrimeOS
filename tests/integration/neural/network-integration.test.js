@@ -10,10 +10,9 @@ const { Assertions } = require("../../utils");
 describe("Neural Network Integration", () => {
   describe("Model Training Pipeline", () => {
     test("should construct and train a simple model through the pipeline", () => {
-      if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-        console.log("⚠ Skipping: NeuralModel not implemented");
-        return;
-      }
+      // Ensure NeuralModel is available
+      expect(Prime.Neural.Model).toBeDefined();
+      expect(Prime.Neural.Model.NeuralModel).toBeDefined();
 
       // Create a simple regression model
       const model = new Prime.Neural.Model.NeuralModel();
@@ -85,10 +84,10 @@ describe("Neural Network Integration", () => {
 
   describe("Optimizer Integration", () => {
     test("should correctly integrate optimizer with model", () => {
-      if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-        console.log("⚠ Skipping: Optimizer integration not tested");
-        return;
-      }
+      // Ensure NeuralModel and optimizers are available
+      expect(Prime.Neural.Model).toBeDefined();
+      expect(Prime.Neural.Model.NeuralModel).toBeDefined();
+      expect(Prime.Neural.Optimization).toBeDefined();
 
       // Create a model with Adam optimizer
       const model = new Prime.Neural.Model.NeuralModel();
@@ -137,12 +136,10 @@ describe("Neural Network Integration", () => {
 
   describe("Self-Optimizing Layer Integration", () => {
     test("should integrate self-optimizing layers in model architecture", () => {
-      if (!Prime.Neural.Model || !Prime.Neural.Model.NeuralModel) {
-        console.log(
-          "⚠ Skipping: Self-optimizing layer integration not tested",
-        );
-        return;
-      }
+      // Ensure NeuralModel and SelfOptimizingLayer are available
+      expect(Prime.Neural.Model).toBeDefined();
+      expect(Prime.Neural.Model.NeuralModel).toBeDefined();
+      expect(Prime.Neural.Layer.SelfOptimizingLayer).toBeDefined();
 
       // Create model with self-optimizing hidden layer
       const model = new Prime.Neural.Model.NeuralModel();

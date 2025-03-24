@@ -19,21 +19,27 @@ const metrics = require("./coherence-metrics");
 const core = require("./coherence-core");
 
 // Directly assign components to avoid circular references
-// Use direct property assignments instead of descriptors and getters
-Prime.Distributed.Coherence.Violations = violations.Distributed && 
-  violations.Distributed.Coherence && 
-  violations.Distributed.Coherence.Violations || {};
+// Use defensive programming approach for module resolution
+Prime.Distributed.Coherence.Violations = 
+  (violations.Distributed && violations.Distributed.Coherence && violations.Distributed.Coherence.Violations) ||
+  (violations.Violations) || // Check for direct export pattern 
+  {};
 
-Prime.Distributed.Coherence.Recovery = recovery.Distributed && 
-  recovery.Distributed.Coherence && 
-  recovery.Distributed.Coherence.Recovery || {};
+Prime.Distributed.Coherence.Recovery = 
+  (recovery.Distributed && recovery.Distributed.Coherence && recovery.Distributed.Coherence.Recovery) ||
+  (recovery.Recovery) || // Check for direct export pattern
+  {};
 
-Prime.Distributed.Coherence.Metrics = metrics.Distributed && 
-  metrics.Distributed.Coherence && 
-  metrics.Distributed.Coherence.Metrics || {};
+Prime.Distributed.Coherence.Metrics = 
+  (metrics.Distributed && metrics.Distributed.Coherence && metrics.Distributed.Coherence.Metrics) ||
+  (metrics.Metrics) || // Check for direct export pattern
+  {};
 
-Prime.Distributed.Coherence.Core = core.CoherenceCore || 
-  (core.Distributed && core.Distributed.Coherence && core.Distributed.Coherence.Core) || {};
+Prime.Distributed.Coherence.Core = 
+  (core.Distributed && core.Distributed.Coherence && core.Distributed.Coherence.Core) ||
+  (core.Core) || // Check for direct export pattern
+  (core.CoherenceCore) || // Original pattern
+  {};
 
 // Use the proper CoherenceManager from the core module
 if (core.CoherenceCore && core.CoherenceCore.Manager) {
