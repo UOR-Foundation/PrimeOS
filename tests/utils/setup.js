@@ -461,30 +461,24 @@ const initializePrimeForTesting = () => {
   process.env.NODE_ENV = 'test';
   
   try {
-    // Load the core Prime object first
-    const Prime = require('../../src/core');
+    // Clear any cached modules to ensure fresh imports
+    Object.keys(require.cache).forEach(key => {
+      if (key.includes('/src/') && !key.includes('node_modules')) {
+        delete require.cache[key];
+      }
+    });
     
-    // Ensure Neural and Layer namespaces exist
-    Prime.Neural = Prime.Neural || {};
-    Prime.Neural.Layer = Prime.Neural.Layer || {};
+    // Import modules in the correct dependency order
+    // First, load core which everything depends on
+    require('../../src/core');
     
-    // Force initialize all modules in the correct order
-    // Core modules
+    // Load math next as it's needed by many modules
     require('../../src/math');
     
-    // Neural modules - in dependency order
-    require('../../src/neural/layer/index');
-    require('../../src/neural/activation/index');
-    require('../../src/neural/optimization/index');
-    require('../../src/neural/layer/dense-unified');
-    require('../../src/neural/layer/convolutional');
-    require('../../src/neural/layer/recurrent');
-    require('../../src/neural/model');
-    
-    // Now load the main neural index which contains the factory methods
+    // Load neural using our consolidated module
     require('../../src/neural');
     
-    // Other main modules
+    // Finally load all other top-level modules
     require('../../src/consciousness');
     require('../../src/distributed');
     require('../../src/storage');
@@ -492,14 +486,14 @@ const initializePrimeForTesting = () => {
     require('../../src/framework/index.js');
     require('../../src/components/index.js');
     
-    // Finally, load the main index to get all exports
+    // Get the fully initialized Prime object from the main index
     const FullPrime = require('../../src');
     
     // Ensure Neural module is properly initialized
-    if (Prime.Neural) {
+    if (FullPrime.Neural) {
       // Call resetForTesting if it exists
-      if (typeof Prime.Neural.resetForTesting === 'function') {
-        Prime.Neural.resetForTesting();
+      if (typeof FullPrime.Neural.resetForTesting === 'function') {
+        FullPrime.Neural.resetForTesting();
       }
       
       console.log('[PrimeOS Test Setup] Neural module initialized successfully');
