@@ -528,18 +528,79 @@ const crypto = require('crypto'); // Node.js crypto module for secure cryptograp
      * @returns {Uint8Array} Encryption key
      */
     _getEncryptionKey() {
-      // In a real implementation, this would use a secure key management system
-      // For this implementation, we'll generate a deterministic key based on nodeId
-
       if (!this._encryptionKey) {
-        // Use node ID to create a deterministic seed
-        const seed = this.nodeId + "_encryption_key_v1";
-        // Generate a 32-byte key (256 bits)
-        this._encryptionKey = this._generateDeterministicKey(seed, 32);
+        // Check if we have a stored key for this node
+        const storedKey = this._retrieveStoredKey();
+        
+        if (storedKey) {
+          // Use the stored key if available
+          this._encryptionKey = storedKey;
+        } else {
+          // Generate a new secure random key using crypto module
+          this._encryptionKey = this._generateRandomBytes(32); // 256-bit key
+          
+          // Store the key for future use
+          this._storeKey(this._encryptionKey);
+        }
+        
+        // Generate a key ID based on the key content
         this._keyId = this._generateKeyId(this._encryptionKey);
       }
 
       return this._encryptionKey;
+    }
+    
+    /**
+     * Retrieve stored encryption key for this node
+     * @private
+     * @returns {Uint8Array|null} Stored key or null if not found
+     */
+    _retrieveStoredKey() {
+      try {
+        // For security, we're using an in-memory key storage during the session
+        // In a production environment, this would integrate with a secure key vault
+        // or hardware security module (HSM)
+        if (!Prime.Distributed.KeyStorage) {
+          Prime.Distributed.KeyStorage = new Map();
+        }
+        
+        const keyId = `channel_key_${this.nodeId}`;
+        const storedKey = Prime.Distributed.KeyStorage.get(keyId);
+        
+        if (storedKey) {
+          Prime.Logger.debug(`Retrieved stored encryption key for node ${this.nodeId}`);
+          return storedKey;
+        }
+        
+        return null;
+      } catch (error) {
+        Prime.Logger.warn(`Error retrieving stored key: ${error.message}`);
+        return null;
+      }
+    }
+    
+    /**
+     * Store encryption key for this node
+     * @private
+     * @param {Uint8Array} key - The encryption key to store
+     */
+    _storeKey(key) {
+      try {
+        // For security, we're using an in-memory key storage during the session
+        // In a production environment, this would integrate with a secure key vault
+        // or hardware security module (HSM)
+        if (!Prime.Distributed.KeyStorage) {
+          Prime.Distributed.KeyStorage = new Map();
+        }
+        
+        const keyId = `channel_key_${this.nodeId}`;
+        Prime.Distributed.KeyStorage.set(keyId, key);
+        
+        Prime.Logger.debug(`Stored encryption key for node ${this.nodeId}`);
+      } catch (error) {
+        Prime.Logger.warn(`Error storing key: ${error.message}`);
+        // Continue using the key in memory even if storage fails
+      }
     }
 
     /**
@@ -556,29 +617,39 @@ const crypto = require('crypto'); // Node.js crypto module for secure cryptograp
     }
 
     /**
-     * Generate a deterministic key from a seed
+     * Derive a cryptographically secure key from a seed
      * @private
      * @param {string} seed - Seed for key generation
      * @param {number} length - Key length in bytes
      * @returns {Uint8Array} Generated key
      */
-    _generateDeterministicKey(seed, length) {
-      // In a real implementation, this would use a proper key derivation function
-      // For this implementation, we'll use a simple hash-based approach
-
+    _deriveKeyFromSeed(seed, length) {
       // Convert seed to byte array
       const seedBytes = new TextEncoder().encode(seed);
-
-      // Create result array
-      const result = new Uint8Array(length);
-
-      // Simple deterministic algorithm (not for production use)
-      for (let i = 0; i < length; i++) {
-        // XOR operation with position and seed bytes
-        result[i] = (i * 97 + (seedBytes[i % seedBytes.length] || 83)) % 256;
-      }
-
-      return result;
+      
+      // Generate a random salt for key derivation
+      const salt = this._generateRandomBytes(16);
+      
+      // Use PBKDF2 for secure key derivation
+      // Parameters: password, salt, iterations, key length, hash algorithm
+      const iterations = 100000; // High iteration count for security
+      const keyLength = length; // Length as requested
+      const hashAlgorithm = 'sha256';
+      
+      // Convert seedBytes to Buffer
+      const seedBuffer = Buffer.from(seedBytes);
+      const saltBuffer = Buffer.from(salt);
+      
+      // Generate the key using PBKDF2
+      const derivedKeyBuffer = crypto.pbkdf2Sync(
+        seedBuffer, 
+        saltBuffer, 
+        iterations, 
+        keyLength, 
+        hashAlgorithm
+      );
+      
+      return new Uint8Array(derivedKeyBuffer);
     }
 
     /**

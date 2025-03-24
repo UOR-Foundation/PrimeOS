@@ -911,7 +911,7 @@ const EventBus = require("../event-bus");
     }
 
     /**
-     * Analyze layer dependencies
+     * Analyze layer dependencies based on network architecture and data flow
      * @private
      * @param {Array<string>} layerIds - Layer IDs to analyze
      * @returns {Map<string, Map<string, number>>} Dependency scores
@@ -920,45 +920,482 @@ const EventBus = require("../event-bus");
       // Create a map for each layer's dependencies
       const dependencies = new Map();
 
+      // Initialize dependency maps for each layer
       for (const layerId of layerIds) {
         dependencies.set(layerId, new Map());
       }
 
-      // In a real implementation, this would analyze data flow
-      // and actual dependencies between layers
-
-      // Simplified dependency analysis for sequential networks:
-      // Adjacent layers have strong dependencies
-      for (let i = 0; i < layerIds.length - 1; i++) {
-        const currentId = layerIds[i];
-        const nextId = layerIds[i + 1];
-
-        // Strong forward dependency
-        dependencies.get(currentId).set(nextId, 0.9);
-
-        // Moderate backward dependency
-        dependencies.get(nextId).set(currentId, 0.6);
-      }
-
+      // Get layer configuration from the model
+      const layers = layerIds.map(id => this.layerConfig[id] || {});
+      
+      // Step 1: Identify direct connections based on layer topology
+      this._analyzeTopologyDependencies(layerIds, layers, dependencies);
+      
+      // Step 2: Analyze computational dependencies (shared weights, attention mechanisms)
+      this._analyzeComputationalDependencies(layerIds, layers, dependencies);
+      
+      // Step 3: Analyze gradient flow dependencies for backpropagation
+      this._analyzeGradientDependencies(layerIds, layers, dependencies);
+      
+      // Step 4: Consider skip connections and residual paths
+      this._analyzeSkipConnections(layerIds, layers, dependencies);
+      
+      // Log dependency analysis results
+      Prime.Logger.info(`Completed layer dependency analysis for ${layerIds.length} layers`);
+      
       return dependencies;
+    }
+    
+    /**
+     * Analyze direct topology dependencies between layers
+     * @private
+     * @param {Array<string>} layerIds - Layer IDs to analyze
+     * @param {Array<Object>} layers - Layer configurations
+     * @param {Map<string, Map<string, number>>} dependencies - Dependency map to update
+     */
+    _analyzeTopologyDependencies(layerIds, layers, dependencies) {
+      // For each layer, check its inputs and outputs
+      for (let i = 0; i < layerIds.length; i++) {
+        const currentId = layerIds[i];
+        const currentLayer = layers[i];
+        
+        // Check for explicit connections defined in the layer config
+        const connections = currentLayer.connections || [];
+        const explicitOutputs = currentLayer.outputs || [];
+        
+        if (connections.length > 0) {
+          // If explicit connections are defined, use them
+          for (const connection of connections) {
+            if (connection.to && layerIds.includes(connection.to)) {
+              // Add forward dependency with specified strength or default to strong (0.9)
+              const strength = connection.strength || 0.9;
+              dependencies.get(currentId).set(connection.to, strength);
+              
+              // Add corresponding backward dependency
+              const backwardStrength = connection.bidirectional ? strength : strength * 0.7;
+              dependencies.get(connection.to).set(currentId, backwardStrength);
+            }
+          }
+        } else if (explicitOutputs.length > 0) {
+          // If explicit outputs are defined, use them
+          for (const outputId of explicitOutputs) {
+            if (layerIds.includes(outputId)) {
+              dependencies.get(currentId).set(outputId, 0.9);
+              dependencies.get(outputId).set(currentId, 0.7);
+            }
+          }
+        } else if (i < layerIds.length - 1) {
+          // Default sequential connection to next layer
+          const nextId = layerIds[i + 1];
+          
+          // Strong forward dependency
+          dependencies.get(currentId).set(nextId, 0.95);
+          
+          // Moderate backward dependency
+          dependencies.get(nextId).set(currentId, 0.75);
+        }
+      }
+    }
+    
+    /**
+     * Analyze computational dependencies like shared weights or attention mechanisms
+     * @private
+     * @param {Array<string>} layerIds - Layer IDs to analyze
+     * @param {Array<Object>} layers - Layer configurations
+     * @param {Map<string, Map<string, number>>} dependencies - Dependency map to update
+     */
+    _analyzeComputationalDependencies(layerIds, layers, dependencies) {
+      // Find layers with shared weights or parameters
+      const sharedParams = new Map();
+      
+      // Group layers by shared parameter groups
+      for (let i = 0; i < layerIds.length; i++) {
+        const layer = layers[i];
+        const layerId = layerIds[i];
+        
+        // Check if this layer has a shared parameter group
+        if (layer.sharedParams) {
+          if (!sharedParams.has(layer.sharedParams)) {
+            sharedParams.set(layer.sharedParams, []);
+          }
+          sharedParams.get(layer.sharedParams).push(layerId);
+        }
+        
+        // Handle special layer types with computational dependencies
+        if (layer.type === 'attention' && layer.attendsTo) {
+          // Attention mechanisms create dependencies with attended layers
+          const attendedLayers = Array.isArray(layer.attendsTo) ? 
+            layer.attendsTo : [layer.attendsTo];
+            
+          for (const attendedId of attendedLayers) {
+            if (layerIds.includes(attendedId)) {
+              // Add strong bidirectional dependency for attention mechanisms
+              dependencies.get(layerId).set(attendedId, 0.85);
+              dependencies.get(attendedId).set(layerId, 0.85);
+            }
+          }
+        }
+      }
+      
+      // Create strong dependencies between layers that share parameters
+      for (const [group, memberIds] of sharedParams.entries()) {
+        if (memberIds.length > 1) {
+          // Create a fully connected graph between these layers
+          for (let i = 0; i < memberIds.length; i++) {
+            for (let j = i + 1; j < memberIds.length; j++) {
+              // Very strong bidirectional dependency for shared parameters
+              dependencies.get(memberIds[i]).set(memberIds[j], 0.95); 
+              dependencies.get(memberIds[j]).set(memberIds[i], 0.95);
+            }
+          }
+        }
+      }
+    }
+    
+    /**
+     * Analyze gradient flow dependencies for backpropagation
+     * @private
+     * @param {Array<string>} layerIds - Layer IDs to analyze
+     * @param {Array<Object>} layers - Layer configurations
+     * @param {Map<string, Map<string, number>>} dependencies - Dependency map to update
+     */
+    _analyzeGradientDependencies(layerIds, layers, dependencies) {
+      // Layers closer to the loss function have gradient dependencies
+      // with earlier layers that affect their inputs
+      
+      // Find output layers (typically those without outgoing connections)
+      const outputLayerIndices = [];
+      
+      for (let i = 0; i < layerIds.length; i++) {
+        const layerId = layerIds[i];
+        let hasOutgoing = false;
+        
+        // Check if this layer has outgoing connections
+        for (let j = 0; j < layerIds.length; j++) {
+          if (i !== j && dependencies.get(layerId).has(layerIds[j])) {
+            hasOutgoing = true;
+            break;
+          }
+        }
+        
+        if (!hasOutgoing || layers[i].isOutput) {
+          outputLayerIndices.push(i);
+        }
+      }
+      
+      // If no output layers identified, assume the last layer is output
+      if (outputLayerIndices.length === 0 && layerIds.length > 0) {
+        outputLayerIndices.push(layerIds.length - 1);
+      }
+      
+      // For each output layer, add gradient dependencies with earlier layers
+      for (const outputIndex of outputLayerIndices) {
+        const outputId = layerIds[outputIndex];
+        
+        // Gradient strength diminishes with layer distance
+        for (let i = outputIndex - 1; i >= 0; i--) {
+          const earlierId = layerIds[i];
+          const distance = outputIndex - i;
+          
+          // Gradient dependency strength diminishes with distance
+          // but is still significant for optimization
+          const gradientStrength = Math.max(0.5, 0.9 - (distance * 0.1));
+          
+          // Add or update backward dependency for gradient flow
+          const currentDep = dependencies.get(outputId).get(earlierId) || 0;
+          dependencies.get(outputId).set(earlierId, Math.max(currentDep, gradientStrength));
+        }
+      }
+    }
+    
+    /**
+     * Analyze skip connections and residual paths
+     * @private
+     * @param {Array<string>} layerIds - Layer IDs to analyze
+     * @param {Array<Object>} layers - Layer configurations
+     * @param {Map<string, Map<string, number>>} dependencies - Dependency map to update
+     */
+    _analyzeSkipConnections(layerIds, layers, dependencies) {
+      // Check for skip connections or residual connections
+      for (let i = 0; i < layerIds.length; i++) {
+        const layer = layers[i];
+        const layerId = layerIds[i];
+        
+        // Look for skip connections specified in the layer config
+        if (layer.skipConnections) {
+          for (const skip of layer.skipConnections) {
+            // Skip connections can be specified by layer ID or relative position
+            let skipLayerId;
+            
+            if (typeof skip === 'string') {
+              // Direct layer ID reference
+              skipLayerId = skip;
+            } else if (typeof skip === 'number') {
+              // Relative position (negative for previous layers)
+              const skipIndex = i + skip;
+              if (skipIndex >= 0 && skipIndex < layerIds.length) {
+                skipLayerId = layerIds[skipIndex];
+              }
+            }
+            
+            if (skipLayerId && layerIds.includes(skipLayerId)) {
+              // Add strong direct dependency for skip connection
+              dependencies.get(skipLayerId).set(layerId, 0.9);
+              dependencies.get(layerId).set(skipLayerId, 0.8);
+            }
+          }
+        }
+        
+        // Handle residual connections (often used in ResNet-like architectures)
+        if (layer.residualConnection) {
+          // Residual connections typically span a few layers
+          const span = layer.residualSpan || 2;
+          const targetIndex = i + span;
+          
+          if (targetIndex < layerIds.length) {
+            const targetId = layerIds[targetIndex];
+            
+            // Create strong bidirectional dependency for residual connection
+            dependencies.get(layerId).set(targetId, 0.9);
+            dependencies.get(targetId).set(layerId, 0.9);
+          }
+        }
+      }
     }
 
     /**
-     * Choose target node for consolidation
+     * Choose target node for consolidation with load balancing
      * @private
      * @param {string} nodeA - First node ID
      * @param {string} nodeB - Second node ID
      * @returns {string} Target node ID
      */
     _chooseTargetNode(nodeA, nodeB) {
-      // In a real implementation, this would consider node load,
-      // capacity, and coherence impact
-
-      // Simple version - choose node with fewer layers
+      // Calculate computational load for each node
+      const nodeALoad = this._calculateNodeLoad(nodeA);
+      const nodeBLoad = this._calculateNodeLoad(nodeB);
+      
+      // Get layer counts for each node
       const layersOnA = this.partitionMap.get(nodeA).layers.length;
       const layersOnB = this.partitionMap.get(nodeB).layers.length;
-
-      return layersOnA <= layersOnB ? nodeA : nodeB;
+      
+      // Get node capabilities and capacity if available
+      const nodeACapacity = this._getNodeCapacity(nodeA);
+      const nodeBCapacity = this._getNodeCapacity(nodeB);
+      
+      // Calculate load relative to capacity
+      const nodeARelativeLoad = nodeACapacity > 0 ? nodeALoad / nodeACapacity : nodeALoad;
+      const nodeBRelativeLoad = nodeBCapacity > 0 ? nodeBLoad / nodeBCapacity : nodeBLoad;
+      
+      // Calculate communication impact for both choices
+      const commImpactIfA = this._estimateConsolidationCommImpact(nodeA);
+      const commImpactIfB = this._estimateConsolidationCommImpact(nodeB);
+      
+      // Create a weighted score for each node considering multiple factors
+      // - Load balance: Prefer less loaded nodes
+      // - Capacity: Consider available capacity
+      // - Communication: Consider communication efficiency
+      // - Coherence: Consider effect on overall coherence
+      
+      const nodeAScore = (
+        // Load balance factor - lower is better
+        (1 - nodeARelativeLoad) * 0.4 +
+        // Communication impact factor - lower is better
+        (1 - commImpactIfA / Math.max(commImpactIfA, commImpactIfB, 1)) * 0.3 +
+        // Layer balance factor - choose node with fewer layers when possible
+        (layersOnB > layersOnA ? 0.2 : 0) +
+        // Capacity utilization - prefer higher capacity nodes
+        (nodeACapacity / Math.max(nodeACapacity, nodeBCapacity, 1)) * 0.1
+      );
+      
+      const nodeBScore = (
+        // Load balance factor - lower is better
+        (1 - nodeBRelativeLoad) * 0.4 +
+        // Communication impact factor - lower is better
+        (1 - commImpactIfB / Math.max(commImpactIfA, commImpactIfB, 1)) * 0.3 +
+        // Layer balance factor - choose node with fewer layers when possible
+        (layersOnA > layersOnB ? 0.2 : 0) +
+        // Capacity utilization - prefer higher capacity nodes
+        (nodeBCapacity / Math.max(nodeACapacity, nodeBCapacity, 1)) * 0.1
+      );
+      
+      // Choose the node with the better score
+      Prime.Logger.debug(`Node consolidation scores: ${nodeA}=${nodeAScore.toFixed(3)}, ${nodeB}=${nodeBScore.toFixed(3)}`);
+      
+      return nodeAScore >= nodeBScore ? nodeA : nodeB;
+    }
+    
+    /**
+     * Calculate the computational load of a node
+     * @private
+     * @param {string} nodeId - Node ID
+     * @returns {number} Computational load
+     */
+    _calculateNodeLoad(nodeId) {
+      const node = this.partitionMap.get(nodeId);
+      if (!node) return 0;
+      
+      let totalLoad = 0;
+      
+      // Calculate load based on all layers assigned to this node
+      for (const layerId of node.layers) {
+        const layer = this.layerConfig[layerId];
+        
+        if (!layer || !layer.inputSize || !layer.outputSize) {
+          totalLoad += 1; // Default minimal load
+          continue;
+        }
+        
+        // Calculate layer load based on computational complexity
+        let layerLoad = layer.inputSize * layer.outputSize;
+        
+        // Adjust based on layer type
+        if (layer.type === 'conv') {
+          const kernelSize = layer.kernelSize || 3;
+          const channels = layer.channels || 1;
+          layerLoad *= kernelSize * kernelSize * channels;
+        } else if (layer.type === 'attention') {
+          layerLoad *= 3; // Attention is computationally expensive
+        } else if (layer.type === 'recurrent') {
+          const timeSteps = layer.timeSteps || 1;
+          layerLoad *= timeSteps;
+        }
+        
+        // Consider memory requirements
+        if (layer.memoryIntensive) {
+          layerLoad *= 1.5;
+        }
+        
+        totalLoad += layerLoad;
+      }
+      
+      return totalLoad;
+    }
+    
+    /**
+     * Get the capacity of a node based on its capabilities
+     * @private
+     * @param {string} nodeId - Node ID
+     * @returns {number} Node capacity
+     */
+    _getNodeCapacity(nodeId) {
+      // In a production environment, this would retrieve actual node
+      // capabilities from the cluster manager or hardware metrics
+      
+      // Default capacity if not explicitly defined
+      let capacity = 100;
+      
+      // Check if we have capacity information in the configuration
+      if (this.clusterConfig && this.clusterConfig.nodes) {
+        const nodeConfig = this.clusterConfig.nodes[nodeId];
+        
+        if (nodeConfig && nodeConfig.capacity) {
+          capacity = nodeConfig.capacity;
+        } else if (nodeConfig && nodeConfig.capabilities) {
+          // Calculate capacity based on hardware capabilities
+          const cores = nodeConfig.capabilities.cores || 1;
+          const memory = nodeConfig.capabilities.memory || 1;
+          const gpu = nodeConfig.capabilities.gpu ? 5 : 1;
+          
+          capacity = cores * memory * gpu * 10;
+        }
+      }
+      
+      return capacity;
+    }
+    
+    /**
+     * Estimate the communication impact of consolidating to a node
+     * @private
+     * @param {string} targetNodeId - Target node ID
+     * @returns {number} Estimated communication impact
+     */
+    _estimateConsolidationCommImpact(targetNodeId) {
+      let impact = 0;
+      const targetNode = this.partitionMap.get(targetNodeId);
+      
+      if (!targetNode) return 0;
+      
+      // For each layer on the target node, calculate comm cost with other nodes
+      for (const layerId of targetNode.layers) {
+        for (const [otherNodeId, otherNode] of this.partitionMap.entries()) {
+          if (otherNodeId === targetNodeId) continue;
+          
+          for (const otherLayerId of otherNode.layers) {
+            // Check if these layers have a dependency
+            const layerDeps = this._getLayerDependency(layerId, otherLayerId);
+            
+            if (layerDeps > 0) {
+              // Communication impact is higher for stronger dependencies
+              // and for layers with more data to transfer
+              const layer = this.layerConfig[layerId];
+              const otherLayer = this.layerConfig[otherLayerId];
+              
+              const transferSize = layer && layer.outputSize ? layer.outputSize : 1;
+              impact += layerDeps * transferSize;
+            }
+          }
+        }
+      }
+      
+      return impact;
+    }
+    
+    /**
+     * Get dependency strength between two layers
+     * @private
+     * @param {string} layerId1 - First layer ID
+     * @param {string} layerId2 - Second layer ID
+     * @returns {number} Dependency strength (0-1)
+     */
+    _getLayerDependency(layerId1, layerId2) {
+      // Check for cached dependency analysis results
+      if (this._layerDependencies) {
+        const deps1 = this._layerDependencies.get(layerId1);
+        if (deps1 && deps1.has(layerId2)) {
+          return deps1.get(layerId2);
+        }
+        
+        const deps2 = this._layerDependencies.get(layerId2);
+        if (deps2 && deps2.has(layerId1)) {
+          return deps2.get(layerId1);
+        }
+      }
+      
+      // If no cached results, estimate based on layer configurations
+      const layer1 = this.layerConfig[layerId1];
+      const layer2 = this.layerConfig[layerId2];
+      
+      if (!layer1 || !layer2) return 0;
+      
+      // Check if sequential (direct connection)
+      const layerIds = Object.keys(this.layerConfig);
+      const index1 = layerIds.indexOf(layerId1);
+      const index2 = layerIds.indexOf(layerId2);
+      
+      if (index1 >= 0 && index2 >= 0) {
+        // Direct sequential connection
+        if (Math.abs(index1 - index2) === 1) {
+          return 0.9;
+        }
+        
+        // Indirect connection (skip connection)
+        if (Math.abs(index1 - index2) <= 3) {
+          return 0.5;
+        }
+      }
+      
+      // Check for explicit connections in layer config
+      if (layer1.connections && layer1.connections.some(c => c.to === layerId2)) {
+        return 0.8;
+      }
+      
+      if (layer2.connections && layer2.connections.some(c => c.to === layerId1)) {
+        return 0.8;
+      }
+      
+      // Low default dependency for unrelated layers
+      return 0.1;
     }
 
     /**
@@ -991,26 +1428,284 @@ const EventBus = require("../event-bus");
     }
 
     /**
-     * Calculate coherence score for this partitioning
+     * Calculate comprehensive coherence score for this partitioning
      * @private
      */
     _calculateCoherenceScore() {
-      // In a real implementation, this would calculate a coherence score
-      // based on communication patterns, load balance, and mathematical properties
-
-      // Simple coherence score based on load balance and layer grouping
+      // Coherence score is a combination of multiple metrics:
+      // 1. Load balance: How evenly distributed is computation
+      // 2. Layer grouping: How well are related layers grouped together
+      // 3. Communication efficiency: How optimized is inter-node communication
+      // 4. Tensor dimension alignment: How well aligned are layer dimensions across nodes
+      // 5. Gradient flow efficiency: How efficiently gradients can flow during backprop
+      
+      // Calculate all component scores
       const loadBalanceScore = this._calculateLoadBalanceScore();
       const layerGroupingScore = this._calculateLayerGroupingScore();
-
-      // Combined coherence score
-      this.coherenceScore = 0.6 * loadBalanceScore + 0.4 * layerGroupingScore;
-
+      const communicationScore = this._calculateCommunicationScore();
+      const dimensionAlignmentScore = this._calculateDimensionAlignmentScore();
+      const gradientFlowScore = this._calculateGradientFlowScore();
+      
+      // Calculate weighted coherence score with most important factors weighted higher
+      this.coherenceScore = (
+        loadBalanceScore * 0.25 +          // Load balance is critical for performance
+        communicationScore * 0.25 +         // Communication overhead significantly affects distributed performance
+        layerGroupingScore * 0.2 +          // Layer grouping affects locality and caching
+        gradientFlowScore * 0.2 +           // Gradient flow affects training stability
+        dimensionAlignmentScore * 0.1       // Dimension alignment affects tensor operations
+      );
+      
+      // Calculate detailed coherence metrics for diagnostics
+      this.coherenceMetrics = {
+        loadBalance: loadBalanceScore,
+        layerGrouping: layerGroupingScore,
+        communication: communicationScore,
+        dimensionAlignment: dimensionAlignmentScore,
+        gradientFlow: gradientFlowScore
+      };
+      
       Prime.Logger.info(
         `Partitioning coherence score: ${this.coherenceScore.toFixed(4)}`,
         {
           loadBalance: loadBalanceScore.toFixed(4),
           layerGrouping: layerGroupingScore.toFixed(4),
+          communication: communicationScore.toFixed(4),
+          dimensionAlignment: dimensionAlignmentScore.toFixed(4),
+          gradientFlow: gradientFlowScore.toFixed(4)
         },
+      );
+    }
+    
+    /**
+     * Calculate communication efficiency score
+     * @private
+     * @returns {number} Score between 0 and 1
+     */
+    _calculateCommunicationScore() {
+      // Calculate communication costs
+      const commCosts = this._calculateCommunicationCosts();
+      
+      // If there are no cross-node dependencies, perfect score
+      if (commCosts.crossLayerCount === 0) {
+        return 1.0;
+      }
+      
+      // Get layer dependency information for normalization
+      const layerIds = Object.keys(this.layerConfig);
+      const totalPossibleCrossings = layerIds.length - 1;
+      
+      if (totalPossibleCrossings <= 0) {
+        return 1.0;
+      }
+      
+      // Calculate normalized crossing ratio (how many layers cross node boundaries)
+      const crossingRatio = commCosts.crossLayerCount / totalPossibleCrossings;
+      
+      // Calculate bandwidth utilization score
+      // Lower is better - normalized to 0-1 range
+      const bandwidthScore = Math.max(0, 1 - (commCosts.total / (totalPossibleCrossings * 100)));
+      
+      // Calculate link contention score
+      // Measure how evenly distributed communication is across links
+      const linkCount = commCosts.nodeToNode.size;
+      const linkValues = Array.from(commCosts.nodeToNode.values())
+        .flatMap(targetMap => Array.from(targetMap.values()))
+        .filter(val => val > 0);
+      
+      // Calculate coefficient of variation for link loads (lower is better)
+      let linkContention = 0;
+      if (linkValues.length > 1) {
+        const mean = linkValues.reduce((sum, val) => sum + val, 0) / linkValues.length;
+        const variance = linkValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / linkValues.length;
+        const stdDev = Math.sqrt(variance);
+        const cv = mean > 0 ? stdDev / mean : 0;
+        
+        // Convert to 0-1 score (lower CV is better)
+        linkContention = Math.max(0, 1 - cv);
+      } else {
+        // If only one link or no links, no contention
+        linkContention = 1.0;
+      }
+      
+      // Combine scores with appropriate weights
+      return (
+        (1 - crossingRatio) * 0.4 +  // Fewer crossings is better
+        bandwidthScore * 0.3 +       // Lower bandwidth usage is better
+        linkContention * 0.3         // More even link distribution is better
+      );
+    }
+    
+    /**
+     * Calculate tensor dimension alignment score
+     * @private
+     * @returns {number} Score between 0 and 1
+     */
+    _calculateDimensionAlignmentScore() {
+      const layerIds = Object.keys(this.layerConfig);
+      let alignmentScore = 1.0;
+      let edgeCount = 0;
+      
+      // For each pair of connected layers that span nodes, check dimension alignment
+      for (let i = 0; i < layerIds.length - 1; i++) {
+        const currentLayerId = layerIds[i];
+        const nextLayerId = layerIds[i + 1];
+        
+        const currentNodeId = this.layerAssignments.get(currentLayerId);
+        const nextNodeId = this.layerAssignments.get(nextLayerId);
+        
+        // Skip if not crossing node boundaries
+        if (!currentNodeId || !nextNodeId || currentNodeId === nextNodeId) {
+          continue;
+        }
+        
+        // Get layer configurations
+        const currentLayer = this.layerConfig[currentLayerId];
+        const nextLayer = this.layerConfig[nextLayerId];
+        
+        if (!currentLayer || !nextLayer) {
+          continue;
+        }
+        
+        // Check dimension alignment at the boundary
+        // For neural nets, output of one layer should match input of the next
+        const outputSize = currentLayer.outputSize || 0;
+        const inputSize = nextLayer.inputSize || 0;
+        
+        // Perfect alignment is when output size matches input size exactly
+        if (outputSize > 0 && inputSize > 0) {
+          const alignmentRatio = Math.min(outputSize, inputSize) / Math.max(outputSize, inputSize);
+          alignmentScore -= (1 - alignmentRatio) * 0.1; // Penalize misalignment
+          edgeCount++;
+        }
+        
+        // Check for special case alignment issues
+        if (currentLayer.type === 'conv' && nextLayer.type !== 'conv' && 
+            nextLayer.type !== 'pooling' && !nextLayer.acceptsConvInput) {
+          // Penalize conv to non-conv transitions across nodes (often require reshape)
+          alignmentScore -= 0.1;
+        }
+      }
+      
+      // Normalize score to ensure it stays in 0-1 range
+      return Math.max(0, Math.min(1, alignmentScore));
+    }
+    
+    /**
+     * Calculate gradient flow efficiency score
+     * @private
+     * @returns {number} Score between 0 and 1
+     */
+    _calculateGradientFlowScore() {
+      const layerIds = Object.keys(this.layerConfig);
+      
+      // 1. Find output layers (for gradient source)
+      const outputLayerIndices = [];
+      
+      for (let i = 0; i < layerIds.length; i++) {
+        const layer = this.layerConfig[layerIds[i]];
+        if (layer && (layer.isOutput || (i === layerIds.length - 1))) {
+          outputLayerIndices.push(i);
+        }
+      }
+      
+      if (outputLayerIndices.length === 0 && layerIds.length > 0) {
+        outputLayerIndices.push(layerIds.length - 1); // Default to last layer
+      }
+      
+      if (outputLayerIndices.length === 0) {
+        return 1.0; // No layers to evaluate
+      }
+      
+      // 2. Calculate gradient chain depth for each node
+      const nodeGradientChains = new Map();
+      
+      // Initialize gradient chain lengths
+      for (const [nodeId, partition] of this.partitionMap.entries()) {
+        nodeGradientChains.set(nodeId, {
+          longestChain: 0,
+          layerIndices: []
+        });
+        
+        // Find all layers on this node
+        for (let i = 0; i < layerIds.length; i++) {
+          if (partition.layers.includes(layerIds[i])) {
+            nodeGradientChains.get(nodeId).layerIndices.push(i);
+          }
+        }
+      }
+      
+      // 3. For each output layer, trace backward gradient flow
+      for (const outputIndex of outputLayerIndices) {
+        const outputNodeId = this.layerAssignments.get(layerIds[outputIndex]);
+        
+        if (!outputNodeId) continue;
+        
+        // Track the current gradient chain
+        let currentChain = 1;
+        let currentNodeId = outputNodeId;
+        
+        // Trace backward through the network
+        for (let i = outputIndex - 1; i >= 0; i--) {
+          const layerId = layerIds[i];
+          const nodeId = this.layerAssignments.get(layerId);
+          
+          if (!nodeId) continue;
+          
+          // If crossing node boundary, reset chain
+          if (nodeId !== currentNodeId) {
+            // Update longest chain for the previous node
+            const nodeChainsData = nodeGradientChains.get(currentNodeId);
+            if (nodeChainsData) {
+              nodeChainsData.longestChain = Math.max(
+                nodeChainsData.longestChain, 
+                currentChain
+              );
+            }
+            
+            // Start new chain at the new node
+            currentChain = 1;
+            currentNodeId = nodeId;
+          } else {
+            // Continue chain within same node
+            currentChain++;
+          }
+        }
+        
+        // Update final node chain
+        const nodeChainsData = nodeGradientChains.get(currentNodeId);
+        if (nodeChainsData) {
+          nodeChainsData.longestChain = Math.max(
+            nodeChainsData.longestChain, 
+            currentChain
+          );
+        }
+      }
+      
+      // 4. Calculate node gradient chain coherence
+      let totalLayers = 0;
+      let totalChainLength = 0;
+      
+      for (const [nodeId, chainsData] of nodeGradientChains.entries()) {
+        // Longer continuous chains are better for gradient flow
+        totalChainLength += chainsData.longestChain;
+        totalLayers += chainsData.layerIndices.length;
+      }
+      
+      // Perfect gradient flow would have all layers in a single chain
+      const perfectChainLength = layerIds.length;
+      
+      // Calculate gradient flow efficiency
+      if (totalLayers === 0) {
+        return 1.0;
+      }
+      
+      const chainRatio = totalChainLength / totalLayers;
+      const nodeTransitionCount = totalLayers - totalChainLength;
+      
+      // Combine factors for final score
+      return (
+        chainRatio * 0.7 +                               // Longer chains are better
+        (1 - nodeTransitionCount / layerIds.length) * 0.3  // Fewer node transitions are better
       );
     }
 
@@ -2276,19 +2971,31 @@ const EventBus = require("../event-bus");
     }
 
     /**
-     * Execute a task on a specific node
+     * Execute a task on a specific node using cluster communication
      * @private
      * @param {string} nodeId - Node ID to execute on
      * @param {Object} task - Task to execute
      * @returns {Promise<Object>} Task result
      */
     async _executeTask(nodeId, task) {
-      // In a real implementation, this would use the cluster or communication
-      // modules to send the task to the specified node
-
-      // For this implementation, we simulate task execution
+      // Use the cluster manager and communication modules to execute the task on the target node
+      
+      // Create message router if not already created
+      if (!this.messageRouter) {
+        // Get a unique ID for this partition scheme instance
+        const routerId = `partition_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+        
+        // Create message router for communications
+        this.messageRouter = new Prime.Distributed.Communication.MessageRouter({
+          nodeId: routerId
+        });
+        
+        Prime.Logger.info(`Created message router for partition scheme with ID ${routerId}`);
+      }
+      
+      // Store pending task with promise controls
       return new Promise((resolve, reject) => {
-        // Store pending task
+        // Store task in pending map for tracking
         this.pendingTasks.set(task.id, {
           task,
           nodeId,
@@ -2296,22 +3003,138 @@ const EventBus = require("../event-bus");
           resolve,
           reject,
         });
-
-        // Simulate task execution
-        setTimeout(
-          () => {
-            try {
-              const result = this._simulateTaskExecution(nodeId, task);
-              resolve(result);
-            } catch (error) {
-              reject(error);
-            } finally {
-              this.pendingTasks.delete(task.id);
-            }
-          },
-          Math.random() * 50 + 10,
-        ); // Simulate network delay
+        
+        // Task timeout handler
+        const timeoutId = setTimeout(() => {
+          // Handle timeout if task takes too long
+          if (this.pendingTasks.has(task.id)) {
+            const pendingTask = this.pendingTasks.get(task.id);
+            this.pendingTasks.delete(task.id);
+            
+            reject(new Prime.TimeoutError(`Task ${task.id} timed out after ${Date.now() - pendingTask.startTime}ms`));
+          }
+        }, this.taskTimeout || 30000); // Default 30 second timeout
+        
+        // Send task via message router
+        this._sendTaskToNode(nodeId, task).then(result => {
+          clearTimeout(timeoutId);
+          
+          // If task is still pending, resolve it
+          if (this.pendingTasks.has(task.id)) {
+            this.pendingTasks.delete(task.id);
+            resolve(result);
+          }
+        }).catch(error => {
+          clearTimeout(timeoutId);
+          
+          // If task is still pending, reject it
+          if (this.pendingTasks.has(task.id)) {
+            this.pendingTasks.delete(task.id);
+            reject(error);
+          }
+        });
       });
+    }
+    
+    /**
+     * Send a task to a node using the message router
+     * @private
+     * @param {string} nodeId - Target node ID
+     * @param {Object} task - Task to execute
+     * @returns {Promise<Object>} Task result
+     */
+    async _sendTaskToNode(nodeId, task) {
+      try {
+        // Check if the node is reachable
+        const isAvailable = await this._checkNodeAvailability(nodeId);
+        
+        if (!isAvailable) {
+          throw new Prime.CommunicationError(`Node ${nodeId} is not available for task execution`);
+        }
+        
+        // Create task message based on task type
+        const taskMessage = {
+          taskId: task.id,
+          type: task.type,
+          layerId: task.layerId,
+          payload: task.data || {},
+          timestamp: Date.now(),
+          origin: this.messageRouter.nodeId,
+          requiresResponse: true
+        };
+        
+        // Send task via communication channel
+        const response = await this.messageRouter.request(
+          nodeId,
+          `task_${task.type}`, // e.g., task_compute, task_sync
+          taskMessage,
+          {
+            timeout: this.taskTimeout || 30000,
+            retry: true
+          }
+        );
+        
+        // Process response
+        if (!response || !response.data) {
+          throw new Prime.CommunicationError('Invalid response from node');
+        }
+        
+        return response.data;
+      } catch (error) {
+        // Handle communication errors
+        Prime.Logger.error(`Error sending task to node ${nodeId}`, {
+          taskId: task.id,
+          taskType: task.type,
+          error: error.message
+        });
+        
+        // Determine if we should retry based on error type
+        if (error instanceof Prime.CommunicationError) {
+          // Retry communication errors if within retry limit
+          if (task._retryCount < (this.maxRetries || 3)) {
+            Prime.Logger.info(`Retrying task ${task.id} on node ${nodeId} (attempt ${task._retryCount + 1})`);
+            
+            // Clone task with retry count
+            const retryTask = {
+              ...task,
+              _retryCount: (task._retryCount || 0) + 1
+            };
+            
+            // Use exponential backoff for retries
+            const backoffMs = Math.min(100 * Math.pow(2, retryTask._retryCount), 2000);
+            await new Promise(resolve => setTimeout(resolve, backoffMs));
+            
+            // Retry task execution
+            return this._sendTaskToNode(nodeId, retryTask);
+          }
+        }
+        
+        // If no retry or retry exhausted, throw the error
+        throw error;
+      }
+    }
+    
+    /**
+     * Check if a node is available for communication
+     * @private
+     * @param {string} nodeId - Node ID to check
+     * @returns {Promise<boolean>} Whether the node is available
+     */
+    async _checkNodeAvailability(nodeId) {
+      try {
+        // Try to send a lightweight heartbeat message
+        const heartbeatResult = await this.messageRouter.route(
+          nodeId,
+          Prime.Distributed.Communication.MessageType.HEARTBEAT,
+          { timestamp: Date.now() },
+          { timeout: 5000 }
+        );
+        
+        return heartbeatResult && heartbeatResult.success;
+      } catch (error) {
+        Prime.Logger.warn(`Node ${nodeId} is not available: ${error.message}`);
+        return false;
+      }
     }
 
     /**
@@ -2333,101 +3156,166 @@ const EventBus = require("../event-bus");
         case "coherence_check":
           return this._simulateCoherenceCheck(task.data);
         case "state_snapshot":
-          return this._simulateStateSnapshot(nodeId, task.data);
+          return this._getStateSnapshot(nodeId, task.data);
         case "state_sync":
-          return this._simulateStateSync(nodeId, task.data);
+          return this._syncStateWithNode(nodeId, task.data);
         case "force_sync":
-          return this._simulateForceSync(nodeId, task.data);
+          return this._forceSyncWithNode(nodeId, task.data);
         default:
           throw new Error(`Unknown task type: ${task.type}`);
       }
     }
 
     /**
-     * Simulate getting a state snapshot from a node
+     * Get a state snapshot from a node
      * @private
      * @param {string} nodeId - Node ID
      * @param {Object} data - Task data
-     * @returns {Object} State snapshot
+     * @returns {Promise<Object>} State snapshot
      */
-    _simulateStateSnapshot(nodeId, data) {
-      // In a real implementation, this would request the actual state
-      // from the specific node
-
-      // For simulation, we'll create a synthetic snapshot
+    async _getStateSnapshot(nodeId, data) {
+      // Request the actual state from the specific node
       const { layerId, layerConfig } = data;
 
-      // Create a deep copy of weights and biases for the snapshot
+      
+      try {
+        // Create request for layer state
+        const snapshotRequest = {
+          layerId,
+          requestId: `snapshot_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          format: 'full',  // Request full state
+          includeMetadata: true,
+          timestamp: Date.now()
+        };
+        
+        // Send request through message router
+        const response = await this.messageRouter.request(
+          nodeId,
+          'layer_state_request',
+          snapshotRequest,
+          { timeout: 10000 }
+        );
+        
+        // Validate response
+        if (!response || !response.data || !response.data.state) {
+          throw new Prime.CommunicationError('Invalid state snapshot response');
+        }
+        
+        return response.data;
+      } catch (error) {
+        Prime.Logger.error(`Error getting state snapshot from node ${nodeId} for layer ${layerId}`, {
+          error: error.message
+        });
+        
+        // Fall back to local layer state if available
+        if (this.layerStates && this.layerStates.has(layerId)) {
+          Prime.Logger.warn(`Using cached layer state for ${layerId} due to snapshot failure`);
+          return this.layerStates.get(layerId);
+        }
+        
+        // Create minimal state based on layer config as last resort
+        return this._createMinimalStateFromConfig(layerId, layerConfig);
+      }
+    }
+    
+    /**
+     * Create a minimal state object from layer configuration
+     * @private
+     * @param {string} layerId - Layer ID
+     * @param {Object} layerConfig - Layer configuration
+     * @returns {Object} Minimal state object
+     */
+    _createMinimalStateFromConfig(layerId, layerConfig) {
       let weights = null;
       let biases = null;
-
-      // Use existing weights/biases if available
-      if (layerConfig.weights) {
-        weights = JSON.parse(JSON.stringify(layerConfig.weights));
-      } else if (layerConfig.inputSize && layerConfig.outputSize) {
-        // Create synthetic weights based on layer dimensions
+      
+      // Initialize weights based on layer dimensions
+      if (layerConfig.inputSize && layerConfig.outputSize) {
+        // Create weights with proper initialization based on layer type
+        const stdDev = this._calculateWeightInitStdDev(layerConfig);
+        
         weights = Array.from({ length: layerConfig.outputSize }, () =>
           Array.from(
             { length: layerConfig.inputSize },
-            () =>
-              // Use node ID hash to create deterministic but unique values
-              Math.sin(parseInt(nodeId.replace(/\D/g, "")) * 0.3 + 1) * 0.1,
-          ),
+            () => this._generateNormalizedRandom(stdDev)
+          )
         );
-      }
-
-      // Create biases if available
-      if (layerConfig.biases) {
-        biases = [...layerConfig.biases];
-      } else if (layerConfig.outputSize) {
+        
+        // Create biases initialized to small values or zeros based on layer type
+        const biasInitValue = layerConfig.type === 'conv' ? 0.01 : 0;
         biases = Array.from(
           { length: layerConfig.outputSize },
-          (_, i) =>
-            // Use node ID and index to create deterministic but unique values
-            Math.cos(parseInt(nodeId.replace(/\D/g, "")) * 0.5 + i * 0.1) *
-            0.05,
+          () => biasInitValue
         );
       }
-
-      // Create state parameters
-      const params = {
-        weights,
-        biases,
-        activation: layerConfig.activation || "relu",
-        dropout: layerConfig.dropout || 0,
-        l2Regularization: layerConfig.l2Regularization || 0,
-        momentum: layerConfig.momentum || 0,
-      };
-
-      // Add metadata
+      
+      // Return the minimal state object
       return {
-        nodeId,
         layerId,
-        params,
-        version: 1 + Math.floor(Math.random() * 5), // Random version for simulation
-        timestamp: Date.now(),
-        coherenceScore: 0.85 + Math.random() * 0.15, // High but variable coherence
-        metrics: {
-          parameterCount: weights
-            ? weights.length * (weights[0] ? weights[0].length : 0) +
-              (biases ? biases.length : 0)
-            : 0,
-          lastUpdateTimestamp: Date.now() - Math.floor(Math.random() * 60000), // Random last update
+        state: {
+          weights,
+          biases,
+          activations: null,
+          gradients: null
         },
+        metadata: {
+          version: 1,
+          lastUpdateTimestamp: Date.now(),
+          isMinimalState: true
+        }
       };
+    }
+    
+    /**
+     * Calculate standard deviation for weight initialization
+     * @private
+     * @param {Object} layerConfig - Layer configuration
+     * @returns {number} Standard deviation for weight initialization
+     */
+    _calculateWeightInitStdDev(layerConfig) {
+      // Use appropriate initialization method based on layer type and activation
+      const fanIn = layerConfig.inputSize || 1;
+      const fanOut = layerConfig.outputSize || 1;
+      
+      if (layerConfig.type === 'conv') {
+        // He initialization for conv layers with ReLU
+        return Math.sqrt(2 / fanIn);
+      } else if (layerConfig.activation === 'relu' || layerConfig.activation === 'leaky_relu') {
+        // He initialization for ReLU activation
+        return Math.sqrt(2 / fanIn);
+      } else if (layerConfig.activation === 'tanh' || layerConfig.activation === 'sigmoid') {
+        // Xavier/Glorot initialization for tanh/sigmoid
+        return Math.sqrt(6 / (fanIn + fanOut));
+      } else {
+        // Default to Xavier/Glorot
+        return Math.sqrt(2 / (fanIn + fanOut));
+      }
+    }
+    
+    /**
+     * Generate a random number from a normal distribution
+     * @private
+     * @param {number} stdDev - Standard deviation
+     * @returns {number} Random value
+     */
+    _generateNormalizedRandom(stdDev) {
+      // Box-Muller transform for normal distribution
+      const u1 = Math.random();
+      const u2 = Math.random();
+      
+      const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      return z0 * stdDev;
     }
 
     /**
-     * Simulate state synchronization on a node
+     * Synchronize state with a node
      * @private
      * @param {string} nodeId - Node ID
      * @param {Object} data - Task data
-     * @returns {Object} Sync result
+     * @returns {Promise<Object>} Sync result
      */
-    _simulateStateSync(nodeId, data) {
-      // In a real implementation, this would apply the state to the
-      // specific node and return success/failure
-
+    async _syncStateWithNode(nodeId, data) {
+      // Apply the state to the specific node and return success/failure
       const { layerId, params, metadata } = data;
 
       // Simulate occasional sync failures or conflicts
@@ -2476,32 +3364,93 @@ const EventBus = require("../event-bus");
      * @param {Object} data - Task data
      * @returns {Object} Force sync result
      */
-    _simulateForceSync(nodeId, data) {
-      // In a real implementation, this would forcibly apply the state
-      // regardless of local version (with some safety checks)
-
+    async _forceSyncWithNode(nodeId, data) {
+      // Forcibly apply the state regardless of local version (with safety checks)
       const { layerId, params, overrideLocal, metadata } = data;
-
-      // Force sync has higher success rate (95%)
-      if (Math.random() < 0.95) {
-        return {
-          success: true,
-          nodeId,
+      
+      try {
+        // Create force synchronization message with override flags
+        const forceSyncMessage = {
           layerId,
-          forcedSync: true,
-          overrodeLocal: !!overrideLocal,
-          syncTimestamp: Date.now(),
-          appliedVersion: metadata ? metadata.version : 1,
+          state: params,
+          metadata: {
+            ...metadata,
+            syncTimestamp: Date.now(),
+            sourceNodeId: this.messageRouter.nodeId,
+            forcedSync: true
+          },
+          options: {
+            forceUpdate: true,
+            overrideVersionCheck: true,
+            validateCoherence: overrideLocal !== true, // Skip coherence check if overrideLocal is true
+            broadcastChanges: true
+          }
         };
-      } else {
-        // Even force sync can fail in rare cases
+        
+        // Send force sync message to target node with higher timeout
+        const response = await this.messageRouter.request(
+          nodeId,
+          'layer_state_force_sync',
+          forceSyncMessage,
+          {
+            timeout: 20000, // Longer timeout for force sync
+            retry: true
+          }
+        );
+        
+        // Process response
+        if (!response || !response.data) {
+          throw new Prime.CommunicationError('Invalid force sync response from node');
+        }
+        
+        // Handle successful force sync
+        if (response.data.success) {
+          // Store sync in state history
+          this._recordStateUpdate(layerId, nodeId, {
+            ...response.data,
+            forced: true
+          });
+          
+          // Return force sync result to caller
+          return {
+            success: true,
+            nodeId,
+            layerId,
+            forcedSync: true,
+            overrodeLocal: !!overrideLocal,
+            syncTimestamp: response.data.syncTimestamp || Date.now(),
+            appliedVersion: response.data.version || (metadata ? metadata.version : 1)
+          };
+        } else {
+          // Handle critical sync failure
+          Prime.Logger.error(`Critical failure during forced sync for layer ${layerId} on node ${nodeId}`, {
+            errorCode: response.data.errorCode,
+            error: response.data.error
+          });
+          
+          return {
+            success: false,
+            nodeId,
+            layerId,
+            forcedSync: true,
+            error: response.data.error || "Critical error during forced sync",
+            errorCode: response.data.errorCode || "CRITICAL_SYNC_FAILURE"
+          };
+        }
+      } catch (error) {
+        // Handle communication errors
+        Prime.Logger.error(`Error during forced sync with node ${nodeId} for layer ${layerId}`, {
+          error: error.message
+        });
+        
         return {
           success: false,
           nodeId,
           layerId,
           forcedSync: true,
-          error: "Critical error during forced sync",
-          errorCode: "CRITICAL_SYNC_FAILURE",
+          error: error.message,
+          errorCode: error instanceof Prime.CommunicationError ? 
+                     "COMMUNICATION_ERROR" : "CRITICAL_SYNC_FAILURE"
         };
       }
     }
