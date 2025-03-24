@@ -19,8 +19,8 @@ const FrameworkMath = require("../../../src/framework/math");
 const { createPerformanceReport } = require("../../utils/performance");
 
 describe("Framework Performance", function () {
-  // Set timeout for performance tests
-  this.timeout(60000); // 60 seconds
+  // Set timeout for performance tests - use Jest's timeout for compatibility
+  jest.setTimeout(60000); // 60 seconds
 
   // Test data
   const smallDataSize = 100;
@@ -30,7 +30,7 @@ describe("Framework Performance", function () {
   let smallData, mediumData, largeData;
   let base0, base1, base2, base3;
 
-  before(function () {
+  beforeAll(function () {
     // Initialize test data
     smallData = generateTestData(smallDataSize);
     mediumData = generateTestData(mediumDataSize);
