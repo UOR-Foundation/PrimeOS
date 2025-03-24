@@ -14,8 +14,12 @@ require("./coherence-recovery");
 require("./coherence-metrics");
 
 // Ensure namespaces are properly defined
+Prime.Distributed = Prime.Distributed || {};
+Prime.Distributed.Coherence = Prime.Distributed.Coherence || {};
+
+// Keep backwards compatibility 
 Prime.distributed = Prime.distributed || {};
-Prime.distributed.coherence = Prime.distributed.coherence || {};
+Prime.distributed.coherence = Prime.Distributed.Coherence;
 
 /**
  * Distributed coherence manager
@@ -87,9 +91,7 @@ class DistributedCoherenceManager {
    */
   checkLayerCoherence(layer, context = {}) {
     if (!layer) {
-      // Use ValidationError if available, otherwise fallback to Error
-      const ErrorClass = Prime.ValidationError || Error;
-      throw new ErrorClass("Layer is required for coherence check");
+      throw new Prime.ValidationError("Layer is required for coherence check");
     }
 
     // Start with basic coherence checks
@@ -1999,48 +2001,20 @@ class DistributedCoherenceManager {
   }
 }
 
-// Add to Prime namespace with proper circular dependency handling
-Prime.distributed = Prime.distributed || {};
-Prime.distributed.coherence = Prime.distributed.coherence || {};
-
 // Create CoherenceCore export object
 const CoherenceCore = {
   Manager: DistributedCoherenceManager,
 };
 
-// Add the Manager class to the namespace with circular dependency protection
-if (
-  Object.getOwnPropertyDescriptor(
-    Prime.distributed.coherence,
-    "CoherenceCore",
-  ) &&
-  Object.getOwnPropertyDescriptor(Prime.distributed.coherence, "CoherenceCore")
-    .get
-) {
-  // Use a more careful approach to update properties that already have getters
-  const descriptor = Object.getOwnPropertyDescriptor(
-    Prime.distributed.coherence,
-    "CoherenceCore",
-  );
-  const originalGetter = descriptor.get;
+// Add to Prime namespace with standardized naming
+Prime.Distributed = Prime.Distributed || {};
+Prime.Distributed.Coherence = Prime.Distributed.Coherence || {};
+Prime.Distributed.Coherence.Core = CoherenceCore;
 
-  Object.defineProperty(Prime.distributed.coherence, "CoherenceCore", {
-    get: function () {
-      const result = originalGetter.call(this);
-      if (!result || Object.keys(result).length === 0) {
-        return CoherenceCore;
-      }
-      return result;
-    },
-    configurable: true,
-  });
-} else {
-  // Direct assignment if no getter exists
-  Prime.distributed.coherence.CoherenceCore = CoherenceCore;
-}
+// Maintain backward compatibility 
+Prime.distributed = Prime.distributed || {};
+Prime.distributed.coherence = Prime.distributed.coherence || {};
+Prime.distributed.coherence.CoherenceCore = CoherenceCore;
 
-// Export both the CoherenceCore and the enhanced Prime object
-module.exports = {
-  CoherenceCore,
-  Prime,
-};
+// Export the enhanced Prime object
+module.exports = Prime;

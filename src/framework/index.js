@@ -11,7 +11,7 @@ require("../mathematics.js");
 require("../coherence.js");
 
 // Import framework components
-const Base0 = require("./base0");
+require("./base0"); // This sets up Prime.Base0
 const Base1 = require("./base1");
 const Base2 = require("./base2");
 const Base3 = require("./base3");
@@ -31,11 +31,11 @@ const createPrimeFramework = function (config = {}) {
   // Create and connect all components
 
   // Base 0: Neural Network Specification
-  const base0 = Base0.createBase0Components(config.base0 || {});
+  const base0 = Prime.Base0.createBase0Components(config.base0 || {});
 
   // Connect Base 0 to coherence
   if (Prime.coherence && Prime.coherence.systemCoherence) {
-    Base0.connectToCoherence(base0);
+    Prime.Base0.connectToCoherence(base0);
   }
 
   // Base 1: Resource - Connect to Base 0
@@ -159,7 +159,7 @@ const createPrimeFramework = function (config = {}) {
 };
 
 // Extend Prime with framework capabilities
-Prime.Base0 = Base0;
+// Base0 is already assigned by require('./base0')
 Prime.Base1 = Base1;
 Prime.Base2 = Base2;
 Prime.Base3 = Base3;

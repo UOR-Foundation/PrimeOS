@@ -129,11 +129,24 @@ describe("PrimeOS Framework - Integration", () => {
       rules: [(data) => ({ ...data, processed: true })],
     });
 
-    const framework = Prime.createPrimeFramework({
-      base0: {
-        embedding: embeddingModel,
-        logic: logicModel,
+    // Create configs for base0 components
+    const base0Config = {
+      embedding: {
+        dimensions: 3,
+        embedFunction: (data) => {
+          if (typeof data === "number") {
+            return [data, data * 2, data * 3];
+          }
+          return [0, 0, 0];
+        }
       },
+      logic: {
+        rules: [(data) => ({ ...data, processed: true })]
+      }
+    };
+
+    const framework = Prime.createPrimeFramework({
+      base0: base0Config
     });
 
     // Create a test model

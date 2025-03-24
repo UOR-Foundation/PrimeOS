@@ -25,7 +25,12 @@ function createApplication(options = {}) {
   }
 
   // Default values with proper type checking
-  const initialState = Prime.Utils.isObject(options.initialState)
+  const isObject = (val) => val !== null && typeof val === "object" && !Array.isArray(val);
+  
+  // Use inline isObject if Prime.Utils is not available
+  const initialState = (Prime.Utils && Prime.Utils.isObject ? 
+    Prime.Utils.isObject(options.initialState) : 
+    isObject(options.initialState))
     ? options.initialState
     : {};
   const componentRegistry = new Map();
@@ -42,7 +47,9 @@ function createApplication(options = {}) {
     type: "application",
     name: options.name || options.id,
     version: options.version || "1.0.0",
-    state: Prime.Utils.deepClone(initialState),
+    state: Prime.Utils && Prime.Utils.deepClone ? 
+      Prime.Utils.deepClone(initialState) : 
+      JSON.parse(JSON.stringify(initialState)),
     _isRunning: false,
 
     /**
@@ -62,11 +69,21 @@ function createApplication(options = {}) {
       }
 
       // Publish start event
-      Prime.EventBus.publish("application:start", {
-        id: this.id,
-        name: this.name,
-        timestamp: Date.now(),
-      });
+      if (Prime.EventBus) {
+        Prime.EventBus.publish("application:start", {
+          id: this.id,
+          name: this.name,
+          timestamp: Date.now(),
+        });
+      }
+      
+      // Log instead if EventBus not available
+      if (Prime.Logger) {
+        Prime.Logger.info("Application started", {
+          name: this.name,
+          appId: this.id
+        });
+      }
 
       return this;
     },
@@ -88,11 +105,21 @@ function createApplication(options = {}) {
       }
 
       // Publish stop event
-      Prime.EventBus.publish("application:stop", {
-        id: this.id,
-        name: this.name,
-        timestamp: Date.now(),
-      });
+      if (Prime.EventBus) {
+        Prime.EventBus.publish("application:stop", {
+          id: this.id,
+          name: this.name,
+          timestamp: Date.now(),
+        });
+      }
+      
+      // Log instead if EventBus not available
+      if (Prime.Logger) {
+        Prime.Logger.info("Application stopped", {
+          name: this.name,
+          appId: this.id
+        });
+      }
 
       return this;
     },
