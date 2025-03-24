@@ -6,6 +6,7 @@
 // Import the Prime object from core
 const Prime = require("../../core");
 const EventBus = require("../event-bus");
+const crypto = require('crypto'); // Node.js crypto module for secure cryptographic operations
 
 // Create the Communication module using IIFE
 (function () {
@@ -196,7 +197,8 @@ const EventBus = require("../event-bus");
         if (
           !encryptedMessage.encryptedData ||
           !encryptedMessage.iv ||
-          !encryptedMessage.salt
+          !encryptedMessage.salt ||
+          !encryptedMessage.authTag
         ) {
           throw new Error("Invalid encrypted message format");
         }
@@ -215,38 +217,14 @@ const EventBus = require("../event-bus");
         // Derive the key using the provided salt
         const derivedKey = this._deriveKey(encryptionKey, salt);
 
-        // Verify authentication tag if provided
-        if (authTag && authTag.length > 0) {
-          // Verify the authentication tag before decryption to ensure message integrity
-          const isValid = this._verifyAuthTag(
-            encryptedData,
-            derivedKey,
-            iv,
-            authTag,
-          );
-          if (!isValid) {
-            throw new Error(
-              "Message authentication failed: Invalid authentication tag",
-            );
-          }
-          Prime.Logger.debug(
-            "Message authentication tag verified successfully",
-          );
-        } else {
-          Prime.Logger.warn(
-            "No authentication tag provided for encrypted message",
-            {
-              source: encryptedMessage.source,
-              id: encryptedMessage.id,
-            },
-          );
-        }
-
-        // Decrypt the data
+        // AES-GCM decryption in Node.js crypto module handles authTag verification
+        // internally, so we pass it to the decryption method. Authentication
+        // occurs as part of the decryption process.
         const decryptedBytes = this._aesGcmDecrypt(
           encryptedData,
           derivedKey,
           iv,
+          authTag
         );
 
         // Convert bytes to string
@@ -278,26 +256,37 @@ const EventBus = require("../event-bus");
      * @param {Uint8Array} encryptedData - Encrypted data
      * @param {Uint8Array} key - Decryption key
      * @param {Uint8Array} iv - Initialization vector
+     * @param {Uint8Array} authTag - Authentication tag
      * @returns {Uint8Array} Decrypted data
      */
-    _aesGcmDecrypt(encryptedData, key, iv) {
-      // In a real implementation, this would use the Web Crypto API or a library
-      // For this implementation, we'll implement the inverse of our encryption
-
-      // Create result array (same length as input)
-      const decryptedBytes = new Uint8Array(encryptedData.length);
-
-      // Simple decryption algorithm (inverse of encryption)
-      for (let i = 0; i < encryptedData.length; i++) {
-        const keyByte = key[i % key.length];
-        const ivByte = iv[i % iv.length];
-        const cipherByte = encryptedData[i];
-
-        // Apply inverse operation (XOR is self-inverse)
-        decryptedBytes[i] = cipherByte ^ keyByte ^ ivByte ^ (i * i) % 256; // Same position-dependent modifier
+    _aesGcmDecrypt(encryptedData, key, iv, authTag) {
+      try {
+        // Convert inputs to Buffer objects
+        const keyBuffer = Buffer.from(key);
+        const ivBuffer = Buffer.from(iv);
+        const encryptedBuffer = Buffer.from(encryptedData);
+        const authTagBuffer = authTag ? Buffer.from(authTag) : null;
+        
+        // Create a decipher using AES-256-GCM
+        const decipher = crypto.createDecipheriv('aes-256-gcm', keyBuffer, ivBuffer);
+        
+        // Set authentication tag if provided
+        if (authTagBuffer) {
+          decipher.setAuthTag(authTagBuffer);
+        }
+        
+        // Decrypt the data
+        let decryptedData = decipher.update(encryptedBuffer);
+        decryptedData = Buffer.concat([decryptedData, decipher.final()]);
+        
+        return new Uint8Array(decryptedData);
+      } catch (error) {
+        // If decryption fails (e.g., due to tampering), this will throw an error
+        Prime.Logger.error('AES-GCM decryption error', error);
+        throw new Prime.CommunicationError('Failed to decrypt message: authentication failed', {
+          cause: error
+        });
       }
-
-      return decryptedBytes;
     }
 
     /**
@@ -307,17 +296,9 @@ const EventBus = require("../event-bus");
      * @returns {Uint8Array} Byte array
      */
     _base64ToBytes(base64) {
-      // In a real implementation, this would use atob or a proper Base64 decoder
-      // For this implementation, we'll assume the base64 is actually hex (from _bytesToBase64)
-
-      // Convert from hex string
-      const bytes = new Uint8Array(base64.length / 2);
-      for (let i = 0; i < bytes.length; i++) {
-        const hexByte = base64.substr(i * 2, 2);
-        bytes[i] = parseInt(hexByte, 16);
-      }
-
-      return bytes;
+      // Use Buffer to properly convert from Base64
+      const buffer = Buffer.from(base64, 'base64');
+      return new Uint8Array(buffer);
     }
 
     /**
@@ -510,10 +491,8 @@ const EventBus = require("../event-bus");
         const derivedKey = this._deriveKey(encryptionKey, salt);
 
         // Encrypt the message using AES-256-GCM
-        const encryptedData = this._aesGcmEncrypt(messageJson, derivedKey, iv);
-
-        // Create authentication tag (in real implementation, this would be from the cipher)
-        const authTag = this._generateMessageAuthTag(messageJson, derivedKey);
+        // Returns both encryptedData and authTag
+        const { encryptedData, authTag } = this._aesGcmEncrypt(messageJson, derivedKey, iv);
 
         // Construct the encrypted message envelope
         return {
@@ -603,22 +582,15 @@ const EventBus = require("../event-bus");
     }
 
     /**
-     * Generate random bytes
+     * Generate cryptographically secure random bytes
      * @private
      * @param {number} length - Number of bytes to generate
      * @returns {Uint8Array} Random bytes
      */
     _generateRandomBytes(length) {
-      // In a real implementation, this would use a cryptographically secure RNG
-      // For this implementation, we'll use Math.random() for simplicity
-
-      const bytes = new Uint8Array(length);
-
-      for (let i = 0; i < length; i++) {
-        bytes[i] = Math.floor(Math.random() * 256);
-      }
-
-      return bytes;
+      // Use Node.js crypto.randomBytes for cryptographically secure random numbers
+      const buffer = crypto.randomBytes(length);
+      return new Uint8Array(buffer);
     }
 
     /**
@@ -629,20 +601,26 @@ const EventBus = require("../event-bus");
      * @returns {Uint8Array} Derived key
      */
     _deriveKey(masterKey, salt) {
-      // In a real implementation, this would use PBKDF2, HKDF, or similar
-      // For this implementation, we'll use a simplified approach
-
-      const result = new Uint8Array(32); // 256-bit key
-
-      // Combine master key and salt (simple algorithm for demonstration)
-      for (let i = 0; i < result.length; i++) {
-        result[i] =
-          masterKey[i % masterKey.length] ^
-          salt[i % salt.length] ^
-          (i * 251) % 256; // Prime multiplier for better distribution
-      }
-
-      return result;
+      // Use PBKDF2 for secure key derivation
+      // Parameters: password, salt, iterations, key length, hash algorithm
+      const iterations = 100000; // High iteration count for security
+      const keyLength = 32; // 256-bit key
+      const hashAlgorithm = 'sha256';
+      
+      // Convert masterKey to Buffer if it's a Uint8Array
+      const masterKeyBuffer = Buffer.from(masterKey);
+      const saltBuffer = Buffer.from(salt);
+      
+      // Generate the key using PBKDF2
+      const derivedKeyBuffer = crypto.pbkdf2Sync(
+        masterKeyBuffer, 
+        saltBuffer, 
+        iterations, 
+        keyLength, 
+        hashAlgorithm
+      );
+      
+      return new Uint8Array(derivedKeyBuffer);
     }
 
     /**
@@ -651,29 +629,28 @@ const EventBus = require("../event-bus");
      * @param {string} plaintext - Data to encrypt
      * @param {Uint8Array} key - Encryption key
      * @param {Uint8Array} iv - Initialization vector
-     * @returns {Uint8Array} Encrypted data
+     * @returns {Object} Encrypted data and auth tag
      */
     _aesGcmEncrypt(plaintext, key, iv) {
-      // In a real implementation, this would use the Web Crypto API or a library
-      // For this implementation, we'll simulate encryption
-
-      // Convert plaintext to bytes
-      const plaintextBytes = new TextEncoder().encode(plaintext);
-
-      // Create result array (same length as input for simplicity)
-      const encryptedBytes = new Uint8Array(plaintextBytes.length);
-
-      // Simple encryption algorithm (XOR with key and IV)
-      for (let i = 0; i < plaintextBytes.length; i++) {
-        const keyByte = key[i % key.length];
-        const ivByte = iv[i % iv.length];
-        const plainByte = plaintextBytes[i];
-
-        // Combine with key and IV using XOR
-        encryptedBytes[i] = plainByte ^ keyByte ^ ivByte ^ (i * i) % 256; // Add position-dependent modifier
-      }
-
-      return encryptedBytes;
+      // Convert inputs to Buffer objects
+      const keyBuffer = Buffer.from(key);
+      const ivBuffer = Buffer.from(iv);
+      const plaintextBuffer = Buffer.from(plaintext);
+      
+      // Create a cipher using AES-256-GCM
+      const cipher = crypto.createCipheriv('aes-256-gcm', keyBuffer, ivBuffer);
+      
+      // Encrypt the data
+      let encryptedData = cipher.update(plaintextBuffer);
+      encryptedData = Buffer.concat([encryptedData, cipher.final()]);
+      
+      // Get the authentication tag
+      const authTag = cipher.getAuthTag();
+      
+      return {
+        encryptedData: new Uint8Array(encryptedData),
+        authTag: new Uint8Array(authTag)
+      };
     }
 
     /**
@@ -684,25 +661,21 @@ const EventBus = require("../event-bus");
      * @returns {Uint8Array} Authentication tag
      */
     _generateMessageAuthTag(message, key) {
-      // Implementation of GHASH function for AES-GCM authentication
-      const messageBytes = new TextEncoder().encode(message);
-      const tagLength = 16; // 128-bit tag
-      const tag = new Uint8Array(tagLength);
-
-      // Simple tag generation (not for production use)
-      let accumulator = 0;
-      for (let i = 0; i < messageBytes.length; i++) {
-        accumulator =
-          (accumulator + messageBytes[i] * key[i % key.length]) % 256;
-        tag[i % tagLength] ^= accumulator ^ key[(i + accumulator) % key.length];
-      }
-
-      // Additional mixing
-      for (let i = 0; i < tagLength; i++) {
-        tag[i] ^= key[(i + tag[(i + 1) % tagLength]) % key.length];
-      }
-
-      return tag;
+      // Use HMAC-SHA256 for secure message authentication
+      const keyBuffer = Buffer.from(key);
+      const messageBuffer = Buffer.from(message);
+      
+      // Create HMAC using SHA-256
+      const hmac = crypto.createHmac('sha256', keyBuffer);
+      
+      // Update with the message
+      hmac.update(messageBuffer);
+      
+      // Get the digest
+      const digest = hmac.digest();
+      
+      // Return the first 16 bytes (128 bits) as the authentication tag
+      return new Uint8Array(digest.slice(0, 16));
     }
 
     /**
@@ -716,33 +689,20 @@ const EventBus = require("../event-bus");
      */
     _verifyAuthTag(encryptedData, key, iv, receivedTag) {
       try {
-        // Step 1: Generate the expected authentication tag for the encrypted data
-        // In AES-GCM, the authentication tag is computed over the ciphertext and AAD
-        // Since we don't have AAD in this implementation, we'll use the IV as additional data
-
         // Create authentication context using both encrypted data and IV
-        const authContext = new Uint8Array(encryptedData.length + iv.length);
-        authContext.set(iv, 0);
-        authContext.set(encryptedData, iv.length);
-
-        // Generate the expected tag
+        const authContext = Buffer.concat([
+          Buffer.from(iv),
+          Buffer.from(encryptedData)
+        ]);
+        
+        // Generate the expected tag using HMAC
         const computedTag = this._computeAuthTag(authContext, key);
-
-        // Step 2: Perform constant-time comparison of tags to prevent timing attacks
-        if (computedTag.length !== receivedTag.length) {
-          return false;
-        }
-
-        // Constant-time comparison to prevent timing attacks
-        let result = 0;
-        for (let i = 0; i < computedTag.length; i++) {
-          // XOR bytes - if they're identical, XOR will be 0
-          // OR with previous results to accumulate any differences
-          result |= computedTag[i] ^ receivedTag[i];
-        }
-
-        // If result is 0, all bytes matched
-        return result === 0;
+        
+        // Use a constant-time comparison function to prevent timing attacks
+        return crypto.timingSafeEqual(
+          Buffer.from(computedTag), 
+          Buffer.from(receivedTag)
+        );
       } catch (error) {
         Prime.Logger.error("Authentication tag verification error", error);
         return false;
@@ -752,57 +712,26 @@ const EventBus = require("../event-bus");
     /**
      * Compute authentication tag for verification
      * @private
-     * @param {Uint8Array} data - Data to authenticate
+     * @param {Buffer|Uint8Array} data - Data to authenticate
      * @param {Uint8Array} key - Authentication key
      * @returns {Uint8Array} Computed authentication tag
      */
     _computeAuthTag(data, key) {
-      const tagLength = 16; // 128-bit tag
-      const tag = new Uint8Array(tagLength);
-
-      // GHASH-like computation (simplified version)
-      let h = 0;
-      for (let i = 0; i < data.length; i++) {
-        h = (h * 31 + data[i]) % 0xffffffff;
-
-        // Mix in the key data to make tag dependent on key
-        const keyByte = key[i % key.length];
-        tag[i % tagLength] ^= (h & 0xff) ^ keyByte;
-
-        // Diffuse the tag bytes
-        if (i % tagLength === tagLength - 1) {
-          this._diffuseTag(tag, key);
-        }
-      }
-
-      // Final diffusion
-      this._diffuseTag(tag, key);
-      this._diffuseTag(tag, key);
-
-      return tag;
-    }
-
-    /**
-     * Diffuse the tag bytes for better avalanche effect
-     * @private
-     * @param {Uint8Array} tag - Tag to diffuse
-     * @param {Uint8Array} key - Key for diffusion
-     */
-    _diffuseTag(tag, key) {
-      const tagLength = tag.length;
-
-      // Apply multiple rounds of mixing
-      for (let round = 0; round < 4; round++) {
-        let prev = tag[tagLength - 1];
-        for (let i = 0; i < tagLength; i++) {
-          const temp = tag[i];
-          // Mix with previous byte, key byte, and position
-          tag[i] = (tag[i] + prev + key[(i + round) % key.length]) % 256;
-          // Rotate to enhance diffusion
-          tag[i] = ((tag[i] << 1) | (tag[i] >> 7)) & 0xff;
-          prev = temp;
-        }
-      }
+      // Use HMAC-SHA256 for secure message authentication
+      const keyBuffer = Buffer.from(key);
+      const dataBuffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
+      
+      // Create HMAC using SHA-256
+      const hmac = crypto.createHmac('sha256', keyBuffer);
+      
+      // Update with the data
+      hmac.update(dataBuffer);
+      
+      // Get the digest
+      const digest = hmac.digest();
+      
+      // Return the first 16 bytes (128 bits) as the authentication tag
+      return new Uint8Array(digest.slice(0, 16));
     }
 
     /**
@@ -812,18 +741,13 @@ const EventBus = require("../event-bus");
      * @returns {string} Key ID
      */
     _generateKeyId(key) {
-      // In a real implementation, this would be a hash of the key
-      // For this implementation, we'll generate a simple ID
-
-      let hash = 0;
-      for (let i = 0; i < key.length; i++) {
-        hash = (hash << 5) - hash + key[i];
-        hash = hash & hash; // Convert to 32-bit integer
-      }
-
-      // Format as hexadecimal
-      const hexHash = Math.abs(hash).toString(16).padStart(8, "0");
-      return `key-${hexHash}`;
+      // Use a cryptographic hash function to create a unique ID for the key
+      const hash = crypto.createHash('sha256');
+      hash.update(Buffer.from(key));
+      
+      // Get the digest as hex and format as a key ID
+      const digest = hash.digest('hex');
+      return `key-${digest.substring(0, 16)}`;
     }
 
     /**
@@ -833,16 +757,9 @@ const EventBus = require("../event-bus");
      * @returns {string} Base64 string
      */
     _bytesToBase64(bytes) {
-      // In a real implementation, this would use btoa or a proper Base64 encoder
-      // For this implementation, we'll use a simplified approach
-
-      // Convert to hex string for simplicity
-      let hexString = "";
-      for (let i = 0; i < bytes.length; i++) {
-        hexString += bytes[i].toString(16).padStart(2, "0");
-      }
-
-      return hexString;
+      // Use Buffer to properly convert to Base64
+      const buffer = Buffer.from(bytes);
+      return buffer.toString('base64');
     }
 
     /**
@@ -981,6 +898,20 @@ const EventBus = require("../event-bus");
      */
     isConnected() {
       return this.connected;
+    }
+
+    /**
+     * Receive a message (used for testing)
+     * @param {Object} message - The message to receive
+     * @returns {Promise<Object>} Promise that resolves when the message is handled
+     */
+    receive(message) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          this._handleMessage(message);
+          resolve({ status: "received" });
+        }, 5);
+      });
     }
 
     /**
@@ -1444,11 +1375,596 @@ const EventBus = require("../event-bus");
     }
   }
 
+  /**
+   * Communication hub for distributed computation
+   * Manages communication between nodes in the distributed system
+   */
+  class CommunicationHub {
+    /**
+     * Create a new communication hub
+     * @param {Object} config - Hub configuration
+     * @param {ClusterManager} config.clusterManager - Cluster manager instance
+     * @param {boolean} [config.encrypted=true] - Whether to encrypt messages
+     * @param {number} [config.messageQueueCapacity=1000] - Maximum messages in queue
+     */
+    constructor(config) {
+      if (!Prime.Utils.isObject(config)) {
+        throw new Prime.ValidationError("Hub configuration must be an object");
+      }
+
+      if (!config.clusterManager) {
+        throw new Prime.ValidationError("Cluster manager is required");
+      }
+
+      this.clusterManager = config.clusterManager;
+      this.encrypted = config.encrypted !== false;
+      this.messageQueueCapacity = config.messageQueueCapacity || 1000;
+
+      // Node ID for this hub (use cluster manager coordinator or generate one)
+      this.nodeId = config.nodeId || "hub_" + Date.now().toString(36);
+
+      // Communication channels for each node
+      this.channels = new Map();
+
+      // Message queues for each node, prioritized by message priority
+      this.messageQueues = new Map();
+
+      // Event bus for hub events
+      this.eventBus = new EventBus();
+
+      // Hub metrics
+      this.metrics = {
+        messagesRouted: 0,
+        messagesSent: 0,
+        messagesReceived: 0,
+        messagesDropped: 0,
+        lastUpdate: Date.now(),
+      };
+
+      // Initialize hub
+      this._initialize();
+
+      Prime.Logger.info("Communication hub initialized", {
+        nodeId: this.nodeId,
+        encryptionEnabled: this.encrypted,
+      });
+    }
+
+    /**
+     * Initialize the communication hub
+     * @private
+     */
+    _initialize() {
+      // Set up event listeners on the cluster manager
+      if (this.clusterManager.eventBus) {
+        this.clusterManager.eventBus.on(
+          "node:registered",
+          this._handleNodeRegistered.bind(this),
+        );
+        this.clusterManager.eventBus.on(
+          "node:unregistered",
+          this._handleNodeUnregistered.bind(this),
+        );
+      }
+
+      // Initialize channels for existing nodes
+      const nodes = this.clusterManager.nodes || new Map();
+      for (const [nodeId, node] of nodes.entries()) {
+        this._createChannelForNode(nodeId, node);
+      }
+
+      // Create a primary communication channel for hub-wide messages
+      this.primaryChannel = new CommunicationChannel({
+        nodeId: this.nodeId,
+        encrypted: this.encrypted,
+      });
+
+      // Subscribe to important message types
+      this.primaryChannel.subscribe(
+        MessageType.NODE_DISCOVERY,
+        this._handleNodeDiscovery.bind(this),
+      );
+      this.primaryChannel.subscribe(
+        MessageType.COHERENCE_VIOLATION,
+        this._handleCoherenceViolation.bind(this),
+      );
+    }
+
+    /**
+     * Handle node registration event
+     * @private
+     * @param {Object} eventData - Event data
+     */
+    _handleNodeRegistered(eventData) {
+      const { nodeId } = eventData;
+      const node = this.clusterManager.getNode(nodeId);
+
+      if (node) {
+        this._createChannelForNode(nodeId, node);
+      }
+    }
+
+    /**
+     * Handle node unregistration event
+     * @private
+     * @param {Object} eventData - Event data
+     */
+    _handleNodeUnregistered(eventData) {
+      const { nodeId } = eventData;
+      this._removeChannelForNode(nodeId);
+    }
+
+    /**
+     * Create a communication channel for a node
+     * @private
+     * @param {string} nodeId - Node ID
+     * @param {ClusterNode} node - Cluster node
+     */
+    _createChannelForNode(nodeId, node) {
+      // Skip if channel already exists
+      if (this.channels.has(nodeId)) {
+        return;
+      }
+
+      // Create channel
+      const channel = new CommunicationChannel({
+        nodeId: this.nodeId,
+        encrypted: this.encrypted,
+      });
+
+      // Store channel
+      this.channels.set(nodeId, channel);
+
+      // Create message queue for this node
+      this.messageQueues.set(nodeId, {
+        high: [],
+        medium: [],
+        low: [],
+        lastProcessed: Date.now(),
+      });
+
+      Prime.Logger.info(`Created communication channel for node ${nodeId}`, {
+        nodeType: node.type,
+        address: node.address,
+      });
+    }
+
+    /**
+     * Remove a communication channel for a node
+     * @private
+     * @param {string} nodeId - Node ID
+     */
+    _removeChannelForNode(nodeId) {
+      // Get channel
+      const channel = this.channels.get(nodeId);
+      if (!channel) {
+        return;
+      }
+
+      // Disconnect channel
+      channel.disconnect().catch((error) => {
+        Prime.Logger.warn(`Error disconnecting channel for node ${nodeId}`, {
+          error: error.message,
+        });
+      });
+
+      // Remove channel and queue
+      this.channels.delete(nodeId);
+      this.messageQueues.delete(nodeId);
+
+      Prime.Logger.info(`Removed communication channel for node ${nodeId}`);
+    }
+
+    /**
+     * Handle node discovery message
+     * @private
+     * @param {Object} message - Node discovery message
+     */
+    _handleNodeDiscovery(message) {
+      const { nodeId, address, capabilities } = message.data || {};
+
+      if (nodeId && address) {
+        // Check if node is already registered
+        if (!this.clusterManager.getNode(nodeId)) {
+          // Auto-register the node with the cluster manager
+          try {
+            this.clusterManager.addNode({
+              id: nodeId,
+              type: Prime.Distributed.Cluster.NodeType.WORKER,
+              address,
+              capabilities,
+            });
+
+            Prime.Logger.info(`Auto-registered discovered node ${nodeId}`, {
+              address,
+              capabilities,
+            });
+          } catch (error) {
+            Prime.Logger.warn(`Failed to auto-register node ${nodeId}`, {
+              error: error.message,
+            });
+          }
+        }
+      }
+    }
+
+    /**
+     * Handle coherence violation message
+     * @private
+     * @param {Object} message - Coherence violation message
+     */
+    _handleCoherenceViolation(message) {
+      const { violation } = message.data || {};
+
+      if (violation) {
+        Prime.Logger.warn("Coherence violation received", {
+          type: violation.type,
+          severity: violation.severity,
+          source: message.source,
+        });
+
+        // Emit violation event
+        this.eventBus.emit("coherence:violation", {
+          violation,
+          source: message.source,
+          timestamp: Date.now(),
+        });
+      }
+    }
+
+    /**
+     * Route a message to its destination
+     * @param {Object} message - Message to route
+     * @returns {Promise<Object>} Routing result
+     */
+    async routeMessage(message) {
+      if (!message || !message.type || !message.destination) {
+        throw new Prime.ValidationError("Invalid message format");
+      }
+
+      // Validate message type
+      if (!Object.values(MessageType).includes(message.type)) {
+        throw new Prime.ValidationError(`Invalid message type: ${message.type}`);
+      }
+
+      // Update metrics
+      this.metrics.messagesRouted++;
+      this.metrics.lastUpdate = Date.now();
+
+      // Get destination node
+      const destination = message.destination;
+
+      // Check if channel exists for destination
+      if (!this.channels.has(destination)) {
+        // Auto-create channel if node exists in cluster manager
+        const node = this.clusterManager.getNode(destination);
+        if (node) {
+          this._createChannelForNode(destination, node);
+        } else {
+          this.metrics.messagesDropped++;
+          throw new Prime.CommunicationError(
+            `No channel available for destination: ${destination}`,
+          );
+        }
+      }
+
+      const channel = this.channels.get(destination);
+
+      // Add message to queue based on priority
+      const queue = this.messageQueues.get(destination);
+      if (queue) {
+        const priority = message.priority || "medium";
+        const priorityQueue = queue[priority.toLowerCase()] || queue.medium;
+
+        // Check queue capacity
+        if (
+          priorityQueue.length >=
+          this.messageQueueCapacity / Object.keys(queue).length
+        ) {
+          this.metrics.messagesDropped++;
+          throw new Prime.CommunicationError(
+            `Message queue for ${destination} is full`,
+          );
+        }
+
+        // Add to queue
+        priorityQueue.push(message);
+
+        // Return success
+        return {
+          success: true,
+          queued: true,
+          destination,
+        };
+      }
+
+      // If no queue, send directly
+      try {
+        const result = await channel.send(
+          destination,
+          message.type,
+          message.payload || message.data || {},
+        );
+        this.metrics.messagesSent++;
+        return result;
+      } catch (error) {
+        this.metrics.messagesDropped++;
+        throw error;
+      }
+    }
+
+    /**
+     * Process message queue for a node
+     * @param {string} nodeId - Node ID
+     * @returns {Promise<Object>} Processing result
+     */
+    async processMessageQueue(nodeId) {
+      const queue = this.messageQueues.get(nodeId);
+      if (!queue) {
+        return { processed: 0, success: true };
+      }
+
+      const channel = this.channels.get(nodeId);
+      if (!channel) {
+        return { processed: 0, success: false, error: "No channel for node" };
+      }
+
+      let processed = 0;
+      let errors = 0;
+
+      // Process in priority order: high, medium, low
+      for (const priority of ["high", "medium", "low"]) {
+        const priorityQueue = queue[priority];
+        if (!priorityQueue || priorityQueue.length === 0) {
+          continue;
+        }
+
+        // Process all messages in this priority queue
+        while (priorityQueue.length > 0) {
+          const message = priorityQueue.shift();
+          try {
+            await channel.send(
+              nodeId,
+              message.type,
+              message.payload || message.data || {},
+            );
+            processed++;
+            this.metrics.messagesSent++;
+          } catch (error) {
+            errors++;
+            this.metrics.messagesDropped++;
+            Prime.Logger.error(`Error sending message to ${nodeId}`, {
+              error: error.message,
+              messageType: message.type,
+            });
+          }
+        }
+      }
+
+      // Update last processed timestamp
+      queue.lastProcessed = Date.now();
+
+      return {
+        processed,
+        errors,
+        success: errors === 0,
+      };
+    }
+
+    /**
+     * Send a message to multiple nodes
+     * @param {Array<string>} destinations - Destination node IDs
+     * @param {string} type - Message type
+     * @param {Object} data - Message data
+     * @param {Object} [options={}] - Send options
+     * @returns {Promise<Object>} Send results
+     */
+    async multicast(destinations, type, data, options = {}) {
+      if (!Array.isArray(destinations) || destinations.length === 0) {
+        throw new Prime.ValidationError(
+          "Destinations must be a non-empty array",
+        );
+      }
+
+      if (!Object.values(MessageType).includes(type)) {
+        throw new Prime.ValidationError(`Invalid message type: ${type}`);
+      }
+
+      // Send to each destination
+      const results = await Promise.allSettled(
+        destinations.map((destination) => {
+          return this.routeMessage({
+            type,
+            destination,
+            data,
+            priority: options.priority || "medium",
+          });
+        }),
+      );
+
+      // Compile results
+      const successCount = results.filter(
+        (result) => result.status === "fulfilled",
+      ).length;
+      const errorCount = results.length - successCount;
+
+      return {
+        success: errorCount === 0,
+        totalDestinations: destinations.length,
+        successCount,
+        errorCount,
+      };
+    }
+
+    /**
+     * Broadcast a message to all nodes
+     * @param {string} type - Message type
+     * @param {Object} data - Message data
+     * @returns {Promise<Object>} Broadcast result
+     */
+    async broadcast(type, data) {
+      if (!Object.values(MessageType).includes(type)) {
+        throw new Prime.ValidationError(`Invalid message type: ${type}`);
+      }
+
+      try {
+        // Use primary channel for broadcasting
+        const result = await this.primaryChannel.broadcast(type, data);
+        this.metrics.messagesSent++;
+        return result;
+      } catch (error) {
+        this.metrics.messagesDropped++;
+        throw error;
+      }
+    }
+
+    /**
+     * Get cluster status through communication hub
+     * @returns {Promise<Object>} Cluster status
+     */
+    async getClusterStatus() {
+      // Get nodes from cluster manager
+      const nodeIds = Array.from(this.clusterManager.nodes.keys());
+      const nodeStatuses = {};
+
+      // Get status for each node
+      for (const nodeId of nodeIds) {
+        const node = this.clusterManager.getNode(nodeId);
+        if (node) {
+          nodeStatuses[nodeId] = node.getStatus();
+        }
+      }
+
+      // Calculate aggregates
+      const totalNodes = nodeIds.length;
+      const readyNodes = Object.values(nodeStatuses).filter(
+        (status) => status.state === "ready" || status.state === "working",
+      ).length;
+      const errorNodes = Object.values(nodeStatuses).filter(
+        (status) => status.state === "error",
+      ).length;
+
+      return {
+        timestamp: Date.now(),
+        nodes: nodeStatuses,
+        aggregates: {
+          totalNodes,
+          readyNodes,
+          errorNodes,
+          readyPercentage: totalNodes > 0 ? (readyNodes / totalNodes) * 100 : 0,
+        },
+        hub: {
+          nodeId: this.nodeId,
+          channels: this.channels.size,
+          metrics: this.getMetrics(),
+        },
+      };
+    }
+
+    /**
+     * Get the number of connected nodes
+     * @returns {number} Number of nodes
+     */
+    getNodeCount() {
+      return this.channels.size;
+    }
+
+    /**
+     * Get all communication channels
+     * @returns {Object} Map of nodeId to channel
+     */
+    getChannels() {
+      // Convert Map to plain object for easier use in tests
+      const channelsObj = {};
+      for (const [nodeId, channel] of this.channels.entries()) {
+        channelsObj[nodeId] = channel;
+      }
+      return channelsObj;
+    }
+
+    /**
+     * Get communication channel for a specific node
+     * @param {string} nodeId - Node ID
+     * @returns {CommunicationChannel} Communication channel
+     */
+    getChannelForNode(nodeId) {
+      return this.channels.get(nodeId);
+    }
+
+    /**
+     * Get metrics for the communication hub
+     * @returns {Object} Hub metrics
+     */
+    getMetrics() {
+      // Get channel metrics
+      const channelMetrics = {};
+      for (const [nodeId, channel] of this.channels.entries()) {
+        channelMetrics[nodeId] = channel.getMetrics();
+      }
+
+      // Get queue metrics
+      const queueMetrics = {};
+      for (const [nodeId, queue] of this.messageQueues.entries()) {
+        queueMetrics[nodeId] = {
+          highPriority: queue.high.length,
+          mediumPriority: queue.medium.length,
+          lowPriority: queue.low.length,
+          total: queue.high.length + queue.medium.length + queue.low.length,
+          lastProcessed: queue.lastProcessed,
+        };
+      }
+
+      return {
+        ...this.metrics,
+        channels: {
+          count: this.channels.size,
+          details: channelMetrics,
+        },
+        queues: {
+          count: this.messageQueues.size,
+          details: queueMetrics,
+        },
+      };
+    }
+
+    /**
+     * Shut down the communication hub
+     * @returns {Promise<void>} Promise that resolves when shutdown is complete
+     */
+    async shutdown() {
+      Prime.Logger.info("Shutting down communication hub");
+
+      // Disconnect all channels
+      const disconnectPromises = [];
+      for (const channel of this.channels.values()) {
+        disconnectPromises.push(channel.disconnect());
+      }
+
+      // Disconnect primary channel
+      if (this.primaryChannel) {
+        disconnectPromises.push(this.primaryChannel.disconnect());
+      }
+
+      // Wait for all disconnections
+      await Promise.all(disconnectPromises);
+
+      // Clear all data structures
+      this.channels.clear();
+      this.messageQueues.clear();
+
+      // Remove event listeners
+      this.eventBus.removeAllListeners();
+
+      Prime.Logger.info("Communication hub shutdown complete");
+    }
+  }
+
   // Add classes to Prime.Distributed namespace
   Prime.Distributed.Communication = {
     MessageType,
     CommunicationChannel,
     MessageRouter,
+    CommunicationHub
   };
 })();
 
