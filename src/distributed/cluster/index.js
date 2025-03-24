@@ -216,8 +216,7 @@ class ClusterManager {
   registerNode(nodeConfig) {
     // Check max nodes limit
     if (this.nodeRegistry.getAllNodes().length >= this.config.maxNodes) {
-      const ErrorClass = Prime.InvalidOperationError || Error;
-      throw new ErrorClass("Maximum number of nodes reached");
+      throw new Prime.InvalidOperationError("Maximum number of nodes reached");
     }
 
     // Register with node registry
@@ -273,8 +272,7 @@ class ClusterManager {
   submitTask(taskConfig) {
     // Check if cluster is running
     if (!this.status.running) {
-      const ErrorClass = Prime.InvalidOperationError || Error;
-      throw new ErrorClass("Cluster manager is not running");
+      throw new Prime.InvalidOperationError("Cluster manager is not running");
     }
 
     // Submit task to scheduler
@@ -293,22 +291,94 @@ class ClusterManager {
       console.log(`Task submitted: ${task.id}`);
     }
 
-    // Return a promise for async task processing
-    return Promise.resolve({
-      taskId: task.id,
-      result: {
-        success: true,
-        data: {
-          // Mock result data based on task type
-          output:
-            taskConfig.type === "forward_pass"
-              ? { prediction: [0.2, 0.8] }
-              : null,
-          processingTime: 10,
-          processingNode: "compute_node",
-          completed: true,
-        },
-      },
+    // Return a promise that resolves when the task is completed
+    return new Promise((resolve, reject) => {
+      // Create a timeout to prevent indefinite waiting
+      const timeout = taskConfig.timeout || 30000; // Default timeout: 30 seconds
+      let timeoutId = null;
+      
+      // Set up the timeout
+      timeoutId = setTimeout(() => {
+        // Remove task listener to prevent memory leaks
+        this.taskScheduler.taskQueue.eventBus.off(`task:completed:${task.id}`, handleCompletion);
+        this.taskScheduler.taskQueue.eventBus.off(`task:failed:${task.id}`, handleFailure);
+        
+        // Reject the promise with timeout error
+        reject(new Prime.CommunicationError(`Task ${task.id} timed out after ${timeout}ms`));
+      }, timeout);
+      
+      // Handle task completion
+      const handleCompletion = (eventData) => {
+        // Clear timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        
+        // Update cluster stats
+        this.status.tasksProcessed++;
+        
+        // Resolve with task result
+        resolve({
+          taskId: task.id,
+          result: {
+            success: true,
+            data: eventData.result || {
+              output: null,
+              processingTime: Date.now() - task.createdAt,
+              processingNode: eventData.nodeId || task.assignedNodeId,
+              completed: true
+            }
+          }
+        });
+      };
+      
+      // Handle task failure
+      const handleFailure = (eventData) => {
+        // Clear timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        
+        // Resolve with error result (we still resolve, not reject, to maintain API compatibility)
+        resolve({
+          taskId: task.id,
+          result: {
+            success: false,
+            error: eventData.error || "Task execution failed",
+            data: {
+              processingTime: Date.now() - task.createdAt,
+              processingNode: eventData.nodeId || task.assignedNodeId,
+              completed: false
+            }
+          }
+        });
+      };
+      
+      // If task is already completed, resolve immediately
+      if (task.state === Prime.Distributed.Cluster.Tasks.TaskState.COMPLETED) {
+        handleCompletion({
+          taskId: task.id,
+          result: task.result,
+          nodeId: task.assignedNodeId
+        });
+        return;
+      }
+      
+      // If task has already failed, resolve with error immediately
+      if (task.state === Prime.Distributed.Cluster.Tasks.TaskState.FAILED) {
+        handleFailure({
+          taskId: task.id,
+          error: task.error ? task.error.message : "Task execution failed",
+          nodeId: task.assignedNodeId
+        });
+        return;
+      }
+      
+      // Register event listeners for task completion and failure
+      this.taskScheduler.taskQueue.eventBus.on(`task:completed:${task.id}`, handleCompletion);
+      this.taskScheduler.taskQueue.eventBus.on(`task:failed:${task.id}`, handleFailure);
     });
   }
 
@@ -346,14 +416,16 @@ class ClusterManager {
   addNode(nodeConfig) {
     // Check if we've reached the max nodes limit
     if (this.nodes.size >= this.config.maxNodes) {
-      const ErrorClass = Prime.InvalidOperationError || Error;
-      throw new ErrorClass(
-        `Maximum number of nodes reached (${this.config.maxNodes})`,
+      throw new Prime.InvalidOperationError(
+        `Maximum number of nodes reached (${this.config.maxNodes})`
       );
     }
 
-    // Create the node
-    const node = new Prime.Distributed.Cluster.ClusterNode(nodeConfig);
+    // Create the node with reference to this cluster manager
+    const node = new Prime.Distributed.Cluster.ClusterNode({
+      ...nodeConfig,
+      clusterManager: this
+    });
 
     // Add to the nodes map
     this.nodes.set(node.id, node);
@@ -408,34 +480,16 @@ class ClusterManager {
   }
 }
 
-// Add to Prime namespace with proper circular dependency handling
-if (
-  Object.getOwnPropertyDescriptor(Prime.Distributed.Cluster, "Manager") &&
-  Object.getOwnPropertyDescriptor(Prime.Distributed.Cluster, "Manager").get
-) {
-  // Use a more careful approach to update properties that already have getters
-  const descriptor = Object.getOwnPropertyDescriptor(
-    Prime.Distributed.Cluster,
-    "Manager",
-  );
-  const originalGetter = descriptor.get;
+// Add ClusterManager to the Prime namespace directly
+Prime.Distributed.Cluster.Manager = ClusterManager;
 
-  Object.defineProperty(Prime.Distributed.Cluster, "Manager", {
-    get: function () {
-      const result = originalGetter.call(this);
-      if (!result || Object.keys(result).length === 0) {
-        return ClusterManager;
-      }
-      return result;
-    },
-    configurable: true,
-  });
-} else {
-  // Direct assignment if no getter exists
-  Prime.Distributed.Cluster.Manager = ClusterManager;
-}
-
-// Also add ClusterManager as ClusterManager for backward compatibility
+// Also add as ClusterManager for backward compatibility and clear naming
 Prime.Distributed.Cluster.ClusterManager = ClusterManager;
+
+// Ensure backward compatibility through the legacy namespace
+if (Prime.distributed && Prime.distributed.cluster) {
+  Prime.distributed.cluster.Manager = ClusterManager;
+  Prime.distributed.cluster.ClusterManager = ClusterManager;
+}
 
 module.exports = Prime;

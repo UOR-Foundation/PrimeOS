@@ -71,6 +71,7 @@ class ClusterNode {
     this.port = config.port || 0;
     this.capabilities = config.capabilities || {};
     this.maxConcurrency = config.maxConcurrency || 1;
+    this.clusterManager = config.clusterManager || null;
 
     // Current state
     this.state = NodeState.INITIALIZING;
@@ -213,13 +214,19 @@ class ClusterNode {
       this.state = NodeState.READY;
     }
 
-    // Emit completion event
+    // Emit completion event on the node
     this.eventBus.emit("task:completed", {
       taskId,
       nodeId: this.id,
       result,
       processingTime,
     });
+    
+    // Emit event back to the task queue if possible
+    if (this.clusterManager && this.clusterManager.taskScheduler && 
+        this.clusterManager.taskScheduler.taskQueue) {
+      this.clusterManager.taskScheduler.taskQueue.completeTask(taskId, result);
+    }
 
     return true;
   }
@@ -249,13 +256,19 @@ class ClusterNode {
       this.state = NodeState.READY;
     }
 
-    // Emit error event
+    // Emit error event on the node
     this.eventBus.emit("task:error", {
       taskId,
       nodeId: this.id,
       error: error.message,
       stack: error.stack,
     });
+    
+    // Emit failure event back to the task queue if possible
+    if (this.clusterManager && this.clusterManager.taskScheduler && 
+        this.clusterManager.taskScheduler.taskQueue) {
+      this.clusterManager.taskScheduler.taskQueue.failTask(taskId, error);
+    }
 
     return true;
   }

@@ -427,8 +427,16 @@ class TaskQueue {
     const success = task.complete(result);
 
     if (success) {
-      // Emit event
+      // Emit events - both general and task-specific
       this.eventBus.emit("task:completed", {
+        taskId,
+        nodeId: task.assignedNodeId,
+        result,
+        timestamp: Date.now(),
+      });
+      
+      // Emit specific event for this task ID for direct subscribers
+      this.eventBus.emit(`task:completed:${taskId}`, {
         taskId,
         nodeId: task.assignedNodeId,
         result,
@@ -468,8 +476,17 @@ class TaskQueue {
           timestamp: Date.now(),
         });
       } else {
-        // Emit failure event
+        // Emit failure events - both general and task-specific
         this.eventBus.emit("task:failed", {
+          taskId,
+          nodeId: task.assignedNodeId,
+          error: error.message,
+          retries: task.retryCount,
+          timestamp: Date.now(),
+        });
+        
+        // Emit specific event for this task ID for direct subscribers
+        this.eventBus.emit(`task:failed:${taskId}`, {
           taskId,
           nodeId: task.assignedNodeId,
           error: error.message,
