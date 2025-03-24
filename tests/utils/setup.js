@@ -475,8 +475,32 @@ const initializePrimeForTesting = () => {
     // Load math next as it's needed by many modules
     require('../../src/math');
     
-    // Load neural using our consolidated module
-    require('../../src/neural');
+    // Load modules in the proper order to avoid circular dependencies
+    
+    // First load core modules
+    require('../../src/core');
+    
+    // Then load neural error definitions before other neural modules
+    require('../../src/neural/error.js');
+    
+    // Then load neural layer base
+    require('../../src/neural/layer/index.js');
+    
+    // Then load specialized neural modules
+    require('../../src/neural/activation/index.js');
+    require('../../src/neural/optimization/index.js');
+    
+    // Then load layer implementations
+    require('../../src/neural/layer/dense-unified.js');
+    require('../../src/neural/layer/convolutional.js');
+    require('../../src/neural/layer/recurrent.js');
+    
+    // Then load model implementations
+    require('../../src/neural/model.js');
+    require('../../src/neural/model-simple.js');
+    
+    // Then load the consolidated neural module
+    require('../../src/neural/index.js');
     
     // Finally load all other top-level modules
     require('../../src/consciousness');

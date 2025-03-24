@@ -18,89 +18,43 @@ const recovery = require("./coherence-recovery");
 const metrics = require("./coherence-metrics");
 const core = require("./coherence-core");
 
-// Set up component references with proper circular dependency handling
-const components = [
-  {
-    name: "Violations",
-    module:
-      violations.Distributed && violations.Distributed.Coherence
-        ? violations.Distributed.Coherence.Violations
-        : {},
-  },
-  {
-    name: "Recovery",
-    module:
-      recovery.Distributed && recovery.Distributed.Coherence
-        ? recovery.Distributed.Coherence.Recovery
-        : {},
-  },
-  {
-    name: "Metrics",
-    module:
-      metrics.Distributed && metrics.Distributed.Coherence
-        ? metrics.Distributed.Coherence.Metrics
-        : {},
-  },
-  { name: "Core", module: core.CoherenceCore || {} },
-];
+// Directly assign components to avoid circular references
+// Use direct property assignments instead of descriptors and getters
+Prime.Distributed.Coherence.Violations = violations.Distributed && 
+  violations.Distributed.Coherence && 
+  violations.Distributed.Coherence.Violations || {};
 
-// Add each component to the namespace with circular dependency protection
-components.forEach((component) => {
-  if (
-    Object.getOwnPropertyDescriptor(
-      Prime.Distributed.Coherence,
-      component.name,
-    ) &&
-    Object.getOwnPropertyDescriptor(Prime.Distributed.Coherence, component.name)
-      .get
-  ) {
-    // Use a more careful approach to update properties that already have getters
-    const descriptor = Object.getOwnPropertyDescriptor(
-      Prime.Distributed.Coherence,
-      component.name,
-    );
-    const originalGetter = descriptor.get;
+Prime.Distributed.Coherence.Recovery = recovery.Distributed && 
+  recovery.Distributed.Coherence && 
+  recovery.Distributed.Coherence.Recovery || {};
 
-    Object.defineProperty(Prime.Distributed.Coherence, component.name, {
-      get: function () {
-        const result = originalGetter.call(this);
-        if (!result || Object.keys(result).length === 0) {
-          return component.module;
-        }
-        return result;
-      },
-      configurable: true,
-    });
-  } else {
-    // Direct assignment if no getter exists
-    Prime.Distributed.Coherence[component.name] = component.module;
-  }
-});
+Prime.Distributed.Coherence.Metrics = metrics.Distributed && 
+  metrics.Distributed.Coherence && 
+  metrics.Distributed.Coherence.Metrics || {};
+
+Prime.Distributed.Coherence.Core = core.CoherenceCore || 
+  (core.Distributed && core.Distributed.Coherence && core.Distributed.Coherence.Core) || {};
 
 // Use the proper CoherenceManager from the core module
 if (core.CoherenceCore && core.CoherenceCore.Manager) {
-  Prime.Distributed.Coherence.DistributedCoherenceManager =
-    core.CoherenceCore.Manager;
+  Prime.Distributed.Coherence.DistributedCoherenceManager = core.CoherenceCore.Manager;
+} else if (core.Distributed && core.Distributed.Coherence && 
+           core.Distributed.Coherence.Core && core.Distributed.Coherence.Core.Manager) {
+  Prime.Distributed.Coherence.DistributedCoherenceManager = core.Distributed.Coherence.Core.Manager;
 }
 
 // Re-export violation types and severity from the violations module
-if (
-  violations.Distributed &&
-  violations.Distributed.Coherence &&
-  violations.Distributed.Coherence.Violations
-) {
-  Prime.Distributed.Coherence.ViolationType =
+if (violations.Distributed && violations.Distributed.Coherence && 
+    violations.Distributed.Coherence.Violations) {
+  Prime.Distributed.Coherence.ViolationType = 
     violations.Distributed.Coherence.Violations.Types || {};
-  Prime.Distributed.Coherence.ViolationSeverity =
+  Prime.Distributed.Coherence.ViolationSeverity = 
     violations.Distributed.Coherence.Violations.Severity || {};
 }
 
-if (
-  recovery.Distributed &&
-  recovery.Distributed.Coherence &&
-  recovery.Distributed.Coherence.Recovery
-) {
-  Prime.Distributed.Coherence.RecoveryStrategy =
+if (recovery.Distributed && recovery.Distributed.Coherence && 
+    recovery.Distributed.Coherence.Recovery) {
+  Prime.Distributed.Coherence.RecoveryStrategy = 
     recovery.Distributed.Coherence.Recovery.Strategies || {};
 }
 

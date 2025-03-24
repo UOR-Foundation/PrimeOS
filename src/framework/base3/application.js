@@ -339,20 +339,31 @@ function createApplication(options = {}) {
 
       // Update the state with coherence validation
       if (nextState !== prevState) {
-        // Check coherence if specified in options
+        // Check coherence if specified in options and coherence checking is available
         if (options.checkCoherence !== false) {
-          const coherenceResult = Prime.checkCoherence(prevState, nextState);
+          try {
+            if (Prime.checkCoherence && typeof Prime.checkCoherence === 'function') {
+              const coherenceResult = Prime.checkCoherence(prevState, nextState);
 
-          if (!coherenceResult.isCoherent) {
-            throw new Prime.CoherenceError(
-              "State update failed coherence check",
-              {
-                context: {
-                  action: processedAction,
-                  issues: coherenceResult.issues,
-                },
-              },
-            );
+              if (coherenceResult && !coherenceResult.isCoherent) {
+                throw new (Prime.CoherenceError || Error)(
+                  "State update failed coherence check",
+                  {
+                    context: {
+                      action: processedAction,
+                      issues: coherenceResult.issues,
+                    },
+                  },
+                );
+              }
+            }
+          } catch (error) {
+            // If error is not a CoherenceError, it's likely due to the coherence system not being available
+            if (error.name !== 'CoherenceError') {
+              console.warn("Coherence check failed:", error.message);
+            } else {
+              throw error; // Re-throw actual coherence errors
+            }
           }
         }
 

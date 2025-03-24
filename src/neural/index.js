@@ -1,6 +1,7 @@
 /**
  * PrimeOS JavaScript Library - Neural Network Module
  * Main entry point for the neural network functionality
+ * Version 1.1.0
  */
 
 // Import the Prime object from core
@@ -11,22 +12,38 @@ if (!Prime) {
   throw new Error("Core Prime module not loaded properly");
 }
 
-// Create the Neural namespace if it doesn't exist
-Prime.Neural = Prime.Neural || {};
+// Initialize Neural namespace
+(function(Prime) {
+  // Create the Neural namespace if it doesn't exist
+  Prime.Neural = Prime.Neural || {};
+  
+  // Create necessary sub-namespaces
+  Prime.Neural.Layer = Prime.Neural.Layer || {};
+  Prime.Neural.Activation = Prime.Neural.Activation || {};
+  Prime.Neural.Optimization = Prime.Neural.Optimization || {};
+  Prime.Neural.Model = Prime.Neural.Model || {};
+  Prime.Neural.Errors = Prime.Neural.Errors || {};
+  
+  // Create the Neural Distributed namespace
+  Prime.Neural.Distributed = Prime.Neural.Distributed || {};
+  
+  // Core initialization complete
+  if (Prime.Logger && Prime.Logger.debug) {
+    Prime.Logger.debug("Neural namespace initialized successfully");
+  }
+})(Prime);
 
-// Create the Layer namespace if it doesn't exist
-Prime.Neural.Layer = Prime.Neural.Layer || {};
+// Import neural error definitions first to ensure error types exist
+require("./error");
 
-// DO NOT export Prime here - will be exported at the end
-
-// Import layer base first (important for testing)
+// Import layer base (important for module loading order)
 require("./layer/index");
 
-// Import specialized modules
+// Import specialized modules in proper dependency order
 require("./activation/index");
 require("./optimization/index");
 
-// Import unified layer implementation (replacing the separate implementations)
+// Import unified layer implementations
 require("./layer/dense-unified"); // Unified implementation that handles both DenseLayer and Dense
 require("./layer/convolutional");
 require("./layer/recurrent");
@@ -40,7 +57,7 @@ require("./model/index");
 require("./model-simple"); // Simple model for tests
 
 // Create the Neural module using IIFE
-(function () {
+(function (Prime) {
   /**
    * Neural - Main facade for neural network functionality
    * Provides a unified interface to access neural network components
@@ -93,7 +110,11 @@ require("./model-simple"); // Simple model for tests
           return new Prime.Neural.Layer[`${type}Layer`](config);
         }
         
-        throw new Error(`Unknown layer type: ${type}. Available types: ${Object.keys(layerRegistry).join(', ')}`);
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          `Unknown layer type: ${type}. Available types: ${Object.keys(layerRegistry).join(', ')}`,
+          { providedType: type, availableTypes: Object.keys(layerRegistry) },
+          "UNKNOWN_LAYER_TYPE"
+        );
       }
       
       // Special handling for aliases
@@ -148,11 +169,19 @@ require("./model-simple"); // Simple model for tests
      */
     static registerLayerType(typeName, constructor, options = {}) {
       if (!typeName || typeof typeName !== 'string') {
-        throw new Prime.ValidationError('Layer type name must be a non-empty string');
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          'Layer type name must be a non-empty string',
+          { providedType: typeof typeName, providedValue: typeName },
+          "INVALID_LAYER_TYPE_NAME"
+        );
       }
       
       if (!constructor || typeof constructor !== 'function') {
-        throw new Prime.ValidationError('Layer constructor must be a function');
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          'Layer constructor must be a function',
+          { providedType: typeof constructor },
+          "INVALID_LAYER_CONSTRUCTOR"
+        );
       }
       
       // Register in the namespace
@@ -188,7 +217,25 @@ require("./model-simple"); // Simple model for tests
      * @returns {Object} Created optimizer
      */
     static createOptimizer(type, config) {
-      return Prime.Neural.Optimization.OptimizerFactory.create(type, config);
+      try {
+        // Ensure namespace exists to prevent errors
+        Prime.Neural.Optimization = Prime.Neural.Optimization || {};
+        Prime.Neural.Optimization.OptimizerFactory = Prime.Neural.Optimization.OptimizerFactory || {
+          create: function() {
+            throw new Error("OptimizerFactory not properly initialized");
+          }
+        };
+        
+        return Prime.Neural.Optimization.OptimizerFactory.create(type, config);
+      } catch (error) {
+        // Wrap error with context
+        throw new (Prime.Neural.Errors.OptimizerError || Prime.ValidationError)(
+          `Error creating optimizer: ${error.message}`,
+          { type, config, originalError: error.message },
+          "OPTIMIZER_CREATION_ERROR",
+          error
+        );
+      }
     }
 
     /**
@@ -197,7 +244,24 @@ require("./model-simple"); // Simple model for tests
      * @returns {Object} Activation function interface
      */
     static getActivation(name) {
-      return Prime.Neural.Activation.get(name);
+      try {
+        // Ensure namespace exists
+        Prime.Neural.Activation = Prime.Neural.Activation || { 
+          get: function() {
+            throw new Error("Activation module not properly initialized");
+          }
+        };
+        
+        return Prime.Neural.Activation.get(name);
+      } catch (error) {
+        // Wrap error with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          `Error getting activation function: ${error.message}`,
+          { name, originalError: error.message },
+          "ACTIVATION_ACCESS_ERROR",
+          error
+        );
+      }
     }
 
     /**
@@ -208,10 +272,29 @@ require("./model-simple"); // Simple model for tests
      * @returns {Array|TypedArray} Activated values
      */
     static activate(input, activationType, inPlace = false) {
-      const activation = Prime.Neural.Activation.get(activationType);
-      return inPlace && activation.inPlace
-        ? (activation.inPlace(input), input)
-        : activation.forward(input);
+      try {
+        const activation = this.getActivation(activationType);
+        
+        if (inPlace && activation.inPlace) {
+          activation.inPlace(input);
+          return input;
+        } else {
+          return activation.forward(input);
+        }
+      } catch (error) {
+        // Wrap error with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          `Error applying activation: ${error.message}`,
+          { 
+            activationType, 
+            inPlace,
+            inputShape: input ? input.length : null,
+            originalError: error.message 
+          },
+          "ACTIVATION_APPLICATION_ERROR",
+          error
+        );
+      }
     }
 
     /**
@@ -220,14 +303,39 @@ require("./model-simple"); // Simple model for tests
      * @returns {Object} Coherence information
      */
     static checkCoherence(component) {
-      if (typeof component.calculateCoherence === "function") {
+      try {
+        if (!component) {
+          throw new (Prime.Neural.Errors.NeuralCoherenceError || Prime.ValidationError)(
+            "Cannot check coherence of null or undefined component",
+            { providedValue: component },
+            "NULL_COMPONENT"
+          );
+        }
+        
+        if (typeof component.calculateCoherence === "function") {
+          const score = component.calculateCoherence();
+          return {
+            score,
+            component: component.constructor ? component.constructor.name : "Unknown",
+            isCoherent: score > 0.8 // Default threshold
+          };
+        }
+
+        // If no coherence function, assume coherent
+        return { 
+          score: 1.0, 
+          component: component.constructor ? component.constructor.name : "Unknown",
+          isCoherent: true
+        };
+      } catch (error) {
+        // For coherence checks, we don't throw but return a coherence failure
         return {
-          score: component.calculateCoherence(),
-          component: component.constructor.name || "Unknown",
+          score: 0.0,
+          component: component ? (component.constructor ? component.constructor.name : "Unknown") : "Null",
+          isCoherent: false,
+          error: error.message
         };
       }
-
-      return { score: 1.0, component: "Unknown" };
     }
 
     /**
@@ -238,7 +346,11 @@ require("./model-simple"); // Simple model for tests
      */
     static toTypedArray(array, type = "float32") {
       if (!Array.isArray(array)) {
-        throw new Error("Input must be an array");
+        throw new (Prime.Neural.Errors.NeuralError || Prime.ValidationError)(
+          "Input must be an array",
+          { providedType: typeof array, isArray: Array.isArray(array) },
+          "INVALID_ARRAY_TYPE"
+        );
       }
 
       if (array.length === 0) {
@@ -253,7 +365,16 @@ require("./model-simple"); // Simple model for tests
         // Check if all rows have the same length
         for (let i = 1; i < rows; i++) {
           if (!Array.isArray(array[i]) || array[i].length !== cols) {
-            throw new Error("All rows must have the same length for 2D arrays");
+            throw new (Prime.Neural.Errors.NeuralError || Prime.ValidationError)(
+              "All rows must have the same length for 2D arrays",
+              { 
+                rowIndex: i, 
+                expectedLength: cols, 
+                actualLength: array[i] ? array[i].length : null,
+                isArray: array[i] ? Array.isArray(array[i]) : false
+              },
+              "INCONSISTENT_ARRAY_DIMENSIONS"
+            );
           }
         }
 
@@ -316,6 +437,50 @@ require("./model-simple"); // Simple model for tests
       // Convert TypedArray to standard array
       return Array.from(typedArray);
     }
+    
+    /**
+     * Creates a neural model with specified configuration
+     * @param {Object} config - Model configuration
+     * @returns {Object} Neural model instance
+     */
+    static createModel(config = {}) {
+      try {
+        // Ensure namespace exists
+        Prime.Neural.Model = Prime.Neural.Model || {};
+        
+        // Default to basic model if no type specified
+        const modelType = (config.type || "sequential").toLowerCase();
+        let ModelClass;
+        
+        switch (modelType) {
+          case "sequential":
+            ModelClass = Prime.Neural.Model.Sequential || Prime.Neural.SequentialModel;
+            break;
+          case "functional":
+            ModelClass = Prime.Neural.Model.Functional || Prime.Neural.FunctionalModel;
+            break;
+          case "distributed":
+            ModelClass = Prime.Neural.Distributed.Model || Prime.Neural.DistributedModel;
+            break;
+          default:
+            throw new Error(`Unknown model type: ${modelType}`);
+        }
+        
+        if (!ModelClass) {
+          throw new Error(`Model class for type '${modelType}' not found`);
+        }
+        
+        return new ModelClass(config);
+      } catch (error) {
+        // Wrap error with context
+        throw new (Prime.Neural.Errors.ModelError || Prime.ValidationError)(
+          `Error creating neural model: ${error.message}`,
+          { config, modelType: config.type, originalError: error.message },
+          "MODEL_CREATION_ERROR",
+          error
+        );
+      }
+    }
   }
 
   // Add Neural class to Prime namespace
@@ -326,25 +491,71 @@ require("./model-simple"); // Simple model for tests
    * This helps test environments clear and rebuild the state
    */
   Prime.Neural.resetForTesting = function() {
-    // Re-require all the core modules to ensure proper initialization
-    require("./layer/index");
-    require("./activation/index");
-    require("./optimization/index");
-    require("./layer/dense-unified");
-    require("./layer/convolutional");
-    require("./layer/recurrent"); 
+    console.log("[Testing] Resetting Neural module state...");
     
-    console.log("[Testing] Neural module reset complete");
+    // Re-initialize namespaces
+    Prime.Neural.Layer = Prime.Neural.Layer || {};
+    Prime.Neural.Activation = Prime.Neural.Activation || {};
+    Prime.Neural.Optimization = Prime.Neural.Optimization || {};
+    Prime.Neural.Model = Prime.Neural.Model || {};
+    Prime.Neural.Errors = Prime.Neural.Errors || {};
+    Prime.Neural.Distributed = Prime.Neural.Distributed || {};
+    
+    // Re-require all the core modules to ensure proper initialization
+    try {
+      // Clear require cache for neural modules to force reload
+      Object.keys(require.cache).forEach(key => {
+        if (key.includes('/neural/')) {
+          delete require.cache[key];
+        }
+      });
+      
+      // Re-import in proper order
+      require("./error");
+      require("./layer/index");
+      require("./activation/index");
+      require("./optimization/index");
+      require("./layer/dense-unified");
+      require("./layer/convolutional");
+      require("./layer/recurrent"); 
+      require("./model");
+      
+      console.log("[Testing] Neural module reset complete");
+    } catch (error) {
+      console.error("[Testing] Error during neural module reset:", error.message);
+    }
   };
-})();
+  
+  // Utility methods for namespace management
+  Prime.Neural._ensureNamespace = function(path) {
+    // Takes a string like "Neural.Layer.Dense" and ensures all objects in the path exist
+    const parts = path.split('.');
+    let current = Prime;
+    
+    for (const part of parts) {
+      current[part] = current[part] || {};
+      current = current[part];
+    }
+    
+    return current;
+  };
+})(Prime);
 
 // Ensure modules are ready at test time
 if (process.env.NODE_ENV === 'test') {
-  // Force eager module loading
+  console.log("[Testing] Eagerly loading neural modules...");
+  
+  // Force eager module loading in correct order
+  require("./error");
   require("./layer/index");
+  require("./activation/index");
+  require("./optimization/index");
   require("./layer/dense-unified");
   require("./layer/convolutional");
   require("./layer/recurrent");
+  require("./model");
+  
+  console.log("[Testing] Neural eager loading complete");
 }
 
 // Export the Prime object with all neural modules initialized

@@ -29,8 +29,10 @@ Prime.Neural.Layer = Prime.Neural.Layer || {};
      */
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
-        throw new Prime.ValidationError(
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
           "Layer configuration must be an object",
+          { providedConfig: config },
+          "INVALID_LAYER_CONFIG"
         );
       }
 
@@ -580,7 +582,11 @@ Prime.Neural.Layer = Prime.Neural.Layer || {};
 
       // Validate input shape
       if (!Array.isArray(input)) {
-        throw new Prime.ValidationError("Input must be an array");
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          "Input must be an array",
+          { inputType: typeof input },
+          "INVALID_INPUT_TYPE"
+        );
       }
 
       // Handle both single sample and sequence inputs

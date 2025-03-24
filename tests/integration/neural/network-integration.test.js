@@ -205,13 +205,9 @@ describe("Neural Network Integration", () => {
 
   describe("Advanced Layer Integration", () => {
     test("should integrate convolutional layers if available", () => {
-      if (
-        !Prime.Neural.Layer.ConvolutionalLayer ||
-        !Prime.Neural.Model.NeuralModel
-      ) {
-        console.log("⚠ Skipping: Convolutional layer integration not tested");
-        return;
-      }
+      // Ensure ConvolutionalLayer and NeuralModel are available
+      expect(Prime.Neural.Layer.ConvolutionalLayer).toBeDefined();
+      expect(Prime.Neural.Model.NeuralModel).toBeDefined();
 
       // Create a model with convolutional layers
       const model = new Prime.Neural.Model.NeuralModel();
@@ -264,13 +260,9 @@ describe("Neural Network Integration", () => {
     });
 
     test("should integrate recurrent layers if available", () => {
-      if (
-        !Prime.Neural.Layer.RecurrentLayer ||
-        !Prime.Neural.Model.NeuralModel
-      ) {
-        console.log("⚠ Skipping: Recurrent layer integration not tested");
-        return;
-      }
+      // Ensure RecurrentLayer and NeuralModel are available
+      expect(Prime.Neural.Layer.RecurrentLayer).toBeDefined();
+      expect(Prime.Neural.Model.NeuralModel).toBeDefined();
 
       // Create a model with recurrent layers
       const model = new Prime.Neural.Model.NeuralModel();

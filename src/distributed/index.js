@@ -6,6 +6,9 @@
 // Import the Prime object from core
 const Prime = require("../core");
 
+// Ensure mathematics module is loaded first as it's a dependency
+require("../mathematics");
+
 // Create the Distributed namespace with proper structure
 Prime.Distributed = Prime.Distributed || {};
 
@@ -24,35 +27,16 @@ require("./coherence");
 // Finally, import cluster module (which depends on the others)
 require("./cluster");
 
-// Ensure backward compatibility
+// Ensure backward compatibility using direct assignment instead of getters
 if (!Prime.distributed) {
   Prime.distributed = {};
-  
-  // Create redirection for backward compatibility
-  Object.defineProperty(Prime.distributed, 'coherence', {
-    get: function() { return Prime.Distributed.Coherence; },
-    enumerable: true,
-    configurable: true
-  });
-  
-  Object.defineProperty(Prime.distributed, 'cluster', {
-    get: function() { return Prime.Distributed.Cluster; },
-    enumerable: true,
-    configurable: true
-  });
-  
-  Object.defineProperty(Prime.distributed, 'communication', {
-    get: function() { return Prime.Distributed.Communication; },
-    enumerable: true,
-    configurable: true
-  });
-  
-  Object.defineProperty(Prime.distributed, 'partition', {
-    get: function() { return Prime.Distributed.Partition; },
-    enumerable: true,
-    configurable: true
-  });
 }
+
+// Define properties for distributed immediately to prevent circular reference issues
+Prime.distributed.coherence = Prime.Distributed.Coherence;
+Prime.distributed.cluster = Prime.Distributed.Cluster;
+Prime.distributed.communication = Prime.Distributed.Communication;
+Prime.distributed.partition = Prime.Distributed.Partition;
 
 // Export the enhanced Prime object
 module.exports = Prime;

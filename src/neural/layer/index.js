@@ -1,18 +1,33 @@
 /**
  * PrimeOS JavaScript Library - Neural Layer Module
  * Core neural layer functionality
+ * Version 1.1.0
  */
 
 // Import the Prime object from core
 const Prime = require("../../core");
+
+// Import from math module
 const Vector = Prime.Math.Vector;
 const Matrix = Prime.Math.Matrix;
 
-// Import from other modules if needed
-// These will be implemented later
+// Initialize Layer namespace if it doesn't exist
+(function(Prime) {
+  // Ensure namespaces exist to prevent "cannot read property of undefined" errors
+  Prime.Neural = Prime.Neural || {};
+  Prime.Neural.Layer = Prime.Neural.Layer || {};
+  Prime.Neural.Errors = Prime.Neural.Errors || {};
+  
+  // Initialize namespace initialization trackers
+  Prime.Neural._namespaceInitialized = Prime.Neural._namespaceInitialized || {};
+  Prime.Neural._namespaceInitialized["Layer"] = true;
+  
+  if (Prime.Logger && Prime.Logger.debug) {
+    Prime.Logger.debug("Neural Layer namespace initialized");
+  }
+})(Prime);
 
 // Create the Layer module using IIFE
-
 (function () {
   /**
    * Base Neural Layer class
@@ -29,8 +44,10 @@ const Matrix = Prime.Math.Matrix;
      */
     constructor(config) {
       if (!Prime.Utils.isObject(config)) {
-        throw new Prime.ValidationError(
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
           "Layer configuration must be an object",
+          { providedType: typeof config },
+          "INVALID_LAYER_CONFIG"
         );
       }
 
@@ -73,52 +90,72 @@ const Matrix = Prime.Math.Matrix;
     _initializeWeights(params) {
       // Validate dimensions before creating the weight matrix
       if (!Number.isInteger(this.outputSize) || this.outputSize <= 0) {
-        throw new Prime.ValidationError(
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
           `Invalid output size ${this.outputSize} for weight initialization. Must be a positive integer.`,
+          { outputSize: this.outputSize },
+          "INVALID_OUTPUT_SIZE"
         );
       }
 
       if (!Number.isInteger(this.inputSize) || this.inputSize <= 0) {
-        throw new Prime.ValidationError(
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
           `Invalid input size ${this.inputSize} for weight initialization. Must be a positive integer.`,
+          { inputSize: this.inputSize },
+          "INVALID_INPUT_SIZE"
         );
       }
 
       const scale = params.scale || Math.sqrt(2 / this.inputSize);
       const distribution = params.distribution || "xavier";
 
-      // Use Matrix.create which has dimension validation
-      const weights = Matrix.create(this.outputSize, this.inputSize);
+      try {
+        // Use Matrix.create which has dimension validation
+        const weights = Matrix.create(this.outputSize, this.inputSize);
 
-      for (let i = 0; i < this.outputSize; i++) {
-        for (let j = 0; j < this.inputSize; j++) {
-          let value;
+        for (let i = 0; i < this.outputSize; i++) {
+          for (let j = 0; j < this.inputSize; j++) {
+            let value;
 
-          if (distribution === "xavier") {
-            // Xavier/Glorot initialization
-            value = (Math.random() * 2 - 1) * scale;
-          } else if (distribution === "he") {
-            // He initialization
-            value = Math.random() * Math.sqrt(2 / this.inputSize);
-          } else if (distribution === "zeros") {
-            value = 0;
-          } else {
-            // Default to small random values
-            value = Math.random() * 0.2 - 0.1;
+            if (distribution === "xavier") {
+              // Xavier/Glorot initialization
+              value = (Math.random() * 2 - 1) * scale;
+            } else if (distribution === "he") {
+              // He initialization
+              value = Math.random() * Math.sqrt(2 / this.inputSize);
+            } else if (distribution === "zeros") {
+              value = 0;
+            } else {
+              // Default to small random values
+              value = Math.random() * 0.2 - 0.1;
+            }
+
+            weights[i][j] = value;
           }
-
-          weights[i][j] = value;
         }
-      }
 
-      // Log dimensions for debugging if logger is available
-      if (Prime.Logger && Prime.Logger.debug) {
-        Prime.Logger.debug(
-          `Initialized weight matrix: [${this.outputSize}x${this.inputSize}]`,
+        // Log dimensions for debugging if logger is available
+        if (Prime.Logger && Prime.Logger.debug) {
+          Prime.Logger.debug(
+            `Initialized weight matrix: [${this.outputSize}x${this.inputSize}]`,
+          );
+        }
+
+        return weights;
+      } catch (error) {
+        // Wrap all errors with proper context
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          `Error initializing weights: ${error.message}`,
+          { 
+            inputSize: this.inputSize, 
+            outputSize: this.outputSize,
+            distribution,
+            scale,
+            originalError: error.message
+          },
+          "WEIGHT_INITIALIZATION_ERROR",
+          error
         );
       }
-
-      return weights;
     }
 
     /**
@@ -130,18 +167,34 @@ const Matrix = Prime.Math.Matrix;
     _initializeBiases(params) {
       // Validate dimensions before creating the bias vector
       if (!Number.isInteger(this.outputSize) || this.outputSize <= 0) {
-        throw new Prime.ValidationError(
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
           `Invalid output size ${this.outputSize} for bias initialization. Must be a positive integer.`,
+          { outputSize: this.outputSize },
+          "INVALID_OUTPUT_SIZE"
         );
       }
 
       const biasValue = params.bias || 0;
 
-      // Use Vector.create if available, otherwise fallback to regular array
-      if (Vector && Vector.create) {
-        return Vector.create(this.outputSize, biasValue);
-      } else {
-        return new Array(this.outputSize).fill(biasValue);
+      try {
+        // Use Vector.create if available, otherwise fallback to regular array
+        if (Vector && Vector.create) {
+          return Vector.create(this.outputSize, biasValue);
+        } else {
+          return new Array(this.outputSize).fill(biasValue);
+        }
+      } catch (error) {
+        // Wrap all errors with proper context
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          `Error initializing biases: ${error.message}`,
+          { 
+            outputSize: this.outputSize,
+            biasValue,
+            originalError: error.message
+          },
+          "BIAS_INITIALIZATION_ERROR",
+          error
+        );
       }
     }
 
@@ -151,17 +204,36 @@ const Matrix = Prime.Math.Matrix;
      * @returns {number} Activated value
      */
     _activate(x) {
-      switch (this.activation) {
-        case "sigmoid":
-          return 1 / (1 + Math.exp(-x));
-        case "relu":
-          return Math.max(0, x);
-        case "tanh":
-          return Math.tanh(x);
-        case "linear":
-          return x;
-        default:
-          return 1 / (1 + Math.exp(-x)); // Default to sigmoid
+      try {
+        // If Neural.Activation is available, use it
+        if (Prime.Neural.Activation && typeof Prime.Neural.Activation.get === 'function') {
+          const activation = Prime.Neural.Activation.get(this.activation);
+          if (activation && typeof activation.forward === 'function') {
+            return activation.forward([x])[0];
+          }
+        }
+        
+        // Otherwise, use built-in implementations
+        switch (this.activation) {
+          case "sigmoid":
+            return 1 / (1 + Math.exp(-x));
+          case "relu":
+            return Math.max(0, x);
+          case "tanh":
+            return Math.tanh(x);
+          case "linear":
+            return x;
+          default:
+            return 1 / (1 + Math.exp(-x)); // Default to sigmoid
+        }
+      } catch (error) {
+        // Handle activation errors gracefully - use sigmoid as fallback
+        if (Prime.Logger && Prime.Logger.warn) {
+          Prime.Logger.warn(
+            `Error applying activation function ${this.activation}: ${error.message}. Using sigmoid as fallback.`
+          );
+        }
+        return 1 / (1 + Math.exp(-x)); // Sigmoid fallback
       }
     }
 
@@ -171,23 +243,44 @@ const Matrix = Prime.Math.Matrix;
      * @returns {number} Derivative of activation
      */
     _activationDerivative(x) {
-      switch (this.activation) {
-        case "sigmoid": {
-          const sigX = 1 / (1 + Math.exp(-x));
-          return sigX * (1 - sigX);
+      try {
+        // If Neural.Activation is available, use it for gradient calculation
+        if (Prime.Neural.Activation && typeof Prime.Neural.Activation.get === 'function') {
+          const activation = Prime.Neural.Activation.get(this.activation);
+          if (activation && typeof activation.backward === 'function') {
+            const y = this._activate(x);
+            return activation.backward([x], [y])[0];
+          }
         }
-        case "relu":
-          return x > 0 ? 1 : 0;
-        case "tanh": {
-          const tanhX = Math.tanh(x);
-          return 1 - tanhX * tanhX;
+        
+        // Otherwise, use built-in implementations
+        switch (this.activation) {
+          case "sigmoid": {
+            const sigX = 1 / (1 + Math.exp(-x));
+            return sigX * (1 - sigX);
+          }
+          case "relu":
+            return x > 0 ? 1 : 0;
+          case "tanh": {
+            const tanhX = Math.tanh(x);
+            return 1 - tanhX * tanhX;
+          }
+          case "linear":
+            return 1;
+          default: {
+            const sigX = 1 / (1 + Math.exp(-x));
+            return sigX * (1 - sigX);
+          }
         }
-        case "linear":
-          return 1;
-        default: {
-          const sigX = 1 / (1 + Math.exp(-x));
-          return sigX * (1 - sigX);
+      } catch (error) {
+        // Handle activation errors gracefully - use sigmoid derivative as fallback
+        if (Prime.Logger && Prime.Logger.warn) {
+          Prime.Logger.warn(
+            `Error calculating activation derivative for ${this.activation}: ${error.message}. Using sigmoid derivative as fallback.`
+          );
         }
+        const sigX = 1 / (1 + Math.exp(-x));
+        return sigX * (1 - sigX); // Sigmoid derivative fallback
       }
     }
 
@@ -197,42 +290,67 @@ const Matrix = Prime.Math.Matrix;
      * @returns {Object} Output with activation and cache for backprop
      */
     forward(input) {
-      if (!Array.isArray(input) || input.length !== this.inputSize) {
-        throw new Prime.ValidationError(
-          `Input must be an array of length ${this.inputSize}`,
+      try {
+        if (!Array.isArray(input) || input.length !== this.inputSize) {
+          throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+            `Input must be an array of length ${this.inputSize}`,
+            { 
+              inputLength: input ? input.length : null, 
+              expectedLength: this.inputSize,
+              isArray: Array.isArray(input)
+            },
+            "INVALID_INPUT_DIMENSIONS"
+          );
+        }
+
+        const startTime = performance.now();
+
+        // Update usage pattern tracking
+        this._updateInputDistribution(input);
+
+        // Compute linear combination (z = Wx + b)
+        const z = new Array(this.outputSize).fill(0);
+
+        for (let i = 0; i < this.outputSize; i++) {
+          for (let j = 0; j < this.inputSize; j++) {
+            z[i] += this.weights[i][j] * input[j];
+          }
+          z[i] += this.biases[i];
+        }
+
+        // Apply activation function
+        const activation = z.map(this._activate.bind(this));
+
+        // Update activation distribution
+        this._updateActivationDistribution(activation);
+
+        // Update performance metrics
+        const endTime = performance.now();
+        this._updateForwardMetrics(endTime - startTime);
+
+        // Return both activation and cache for backprop
+        return {
+          activation,
+          cache: { input, z },
+        };
+      } catch (error) {
+        // Re-throw LayerError instances
+        if (error instanceof Prime.Neural.Errors.LayerError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          `Error during layer forward pass: ${error.message}`,
+          { 
+            inputSize: input ? input.length : null,
+            layerType: this.constructor.name,
+            originalError: error.message 
+          },
+          "FORWARD_PASS_ERROR",
+          error
         );
       }
-
-      const startTime = performance.now();
-
-      // Update usage pattern tracking
-      this._updateInputDistribution(input);
-
-      // Compute linear combination (z = Wx + b)
-      const z = new Array(this.outputSize).fill(0);
-
-      for (let i = 0; i < this.outputSize; i++) {
-        for (let j = 0; j < this.inputSize; j++) {
-          z[i] += this.weights[i][j] * input[j];
-        }
-        z[i] += this.biases[i];
-      }
-
-      // Apply activation function
-      const activation = z.map(this._activate.bind(this));
-
-      // Update activation distribution
-      this._updateActivationDistribution(activation);
-
-      // Update performance metrics
-      const endTime = performance.now();
-      this._updateForwardMetrics(endTime - startTime);
-
-      // Return both activation and cache for backprop
-      return {
-        activation,
-        cache: { input, z },
-      };
     }
 
     /**
@@ -242,42 +360,67 @@ const Matrix = Prime.Math.Matrix;
      * @returns {Object} Gradients for weights, biases, and inputs
      */
     backward(dY, cache) {
-      if (!Array.isArray(dY) || dY.length !== this.outputSize) {
-        throw new Prime.ValidationError(
-          `Output gradient must be an array of length ${this.outputSize}`,
+      try {
+        if (!Array.isArray(dY) || dY.length !== this.outputSize) {
+          throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+            `Output gradient must be an array of length ${this.outputSize}`,
+            { 
+              gradientLength: dY ? dY.length : null, 
+              expectedLength: this.outputSize,
+              isArray: Array.isArray(dY)
+            },
+            "INVALID_GRADIENT_DIMENSIONS"
+          );
+        }
+
+        const startTime = performance.now();
+        const { input, z } = cache;
+
+        // Compute gradient of activation function
+        const dZ = dY.map((dy, i) => dy * this._activationDerivative(z[i]));
+
+        // Compute gradients for weights
+        const dW = Matrix.create(this.outputSize, this.inputSize);
+        for (let i = 0; i < this.outputSize; i++) {
+          for (let j = 0; j < this.inputSize; j++) {
+            dW[i][j] = dZ[i] * input[j];
+          }
+        }
+
+        // Compute gradients for biases
+        const dB = [...dZ]; // Clone dZ array
+
+        // Compute gradients for inputs (for backprop to previous layer)
+        const dX = new Array(this.inputSize).fill(0);
+        for (let j = 0; j < this.inputSize; j++) {
+          for (let i = 0; i < this.outputSize; i++) {
+            dX[j] += dZ[i] * this.weights[i][j];
+          }
+        }
+
+        // Update performance metrics
+        const endTime = performance.now();
+        this._updateBackwardMetrics(endTime - startTime);
+
+        return { dW, dB, dX };
+      } catch (error) {
+        // Re-throw LayerError instances
+        if (error instanceof Prime.Neural.Errors.LayerError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          `Error during layer backward pass: ${error.message}`,
+          { 
+            outputSize: this.outputSize,
+            layerType: this.constructor.name,
+            originalError: error.message 
+          },
+          "BACKWARD_PASS_ERROR",
+          error
         );
       }
-
-      const startTime = performance.now();
-      const { input, z } = cache;
-
-      // Compute gradient of activation function
-      const dZ = dY.map((dy, i) => dy * this._activationDerivative(z[i]));
-
-      // Compute gradients for weights
-      const dW = Matrix.create(this.outputSize, this.inputSize);
-      for (let i = 0; i < this.outputSize; i++) {
-        for (let j = 0; j < this.inputSize; j++) {
-          dW[i][j] = dZ[i] * input[j];
-        }
-      }
-
-      // Compute gradients for biases
-      const dB = [...dZ]; // Clone dZ array
-
-      // Compute gradients for inputs (for backprop to previous layer)
-      const dX = new Array(this.inputSize).fill(0);
-      for (let j = 0; j < this.inputSize; j++) {
-        for (let i = 0; i < this.outputSize; i++) {
-          dX[j] += dZ[i] * this.weights[i][j];
-        }
-      }
-
-      // Update performance metrics
-      const endTime = performance.now();
-      this._updateBackwardMetrics(endTime - startTime);
-
-      return { dW, dB, dX };
     }
 
     /**
@@ -360,21 +503,131 @@ const Matrix = Prime.Math.Matrix;
      * @param {number} learningRate - Learning rate for update
      */
     update(gradients, learningRate) {
-      const { dW, dB } = gradients;
+      try {
+        const { dW, dB } = gradients;
 
-      // Update weights
-      for (let i = 0; i < this.outputSize; i++) {
-        for (let j = 0; j < this.inputSize; j++) {
-          this.weights[i][j] -= learningRate * dW[i][j];
+        // Validate gradients
+        if (!dW || !dB) {
+          throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+            "Gradients object must contain dW and dB properties",
+            { 
+              hasWeightGradients: !!dW, 
+              hasBiasGradients: !!dB 
+            },
+            "INVALID_GRADIENTS"
+          );
         }
-      }
 
-      // Update biases
-      for (let i = 0; i < this.outputSize; i++) {
-        this.biases[i] -= learningRate * dB[i];
-      }
+        // Update weights
+        for (let i = 0; i < this.outputSize; i++) {
+          for (let j = 0; j < this.inputSize; j++) {
+            this.weights[i][j] -= learningRate * dW[i][j];
+          }
+        }
 
-      this.iteration++;
+        // Update biases
+        for (let i = 0; i < this.outputSize; i++) {
+          this.biases[i] -= learningRate * dB[i];
+        }
+
+        this.iteration++;
+      } catch (error) {
+        // Re-throw LayerError instances
+        if (error instanceof Prime.Neural.Errors.LayerError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          `Error updating layer parameters: ${error.message}`,
+          { 
+            learningRate,
+            iteration: this.iteration,
+            layerType: this.constructor.name,
+            originalError: error.message 
+          },
+          "PARAMETER_UPDATE_ERROR",
+          error
+        );
+      }
+    }
+    
+    /**
+     * Calculate layer coherence score
+     * Higher values indicate better numerical properties
+     * @returns {number} Coherence score between 0 and 1
+     */
+    calculateCoherence() {
+      try {
+        // Component 1: Check for NaN/Infinity in weights and biases
+        let nonFiniteCount = 0;
+        const totalParams = this.outputSize * this.inputSize + this.outputSize;
+        
+        // Check weights
+        for (let i = 0; i < this.outputSize; i++) {
+          for (let j = 0; j < this.inputSize; j++) {
+            if (!Number.isFinite(this.weights[i][j])) {
+              nonFiniteCount++;
+            }
+          }
+        }
+        
+        // Check biases
+        for (let i = 0; i < this.outputSize; i++) {
+          if (!Number.isFinite(this.biases[i])) {
+            nonFiniteCount++;
+          }
+        }
+        
+        // Component 2: Weight magnitude distribution
+        let weightMagnitude = 0;
+        for (let i = 0; i < this.outputSize; i++) {
+          for (let j = 0; j < this.inputSize; j++) {
+            weightMagnitude += Math.pow(this.weights[i][j], 2);
+          }
+        }
+        weightMagnitude = Math.sqrt(weightMagnitude);
+        
+        const idealMagnitude = Math.sqrt(this.inputSize * this.outputSize) * 0.5;
+        const weightCoherence = Math.exp(
+          -Math.abs(weightMagnitude - idealMagnitude) / idealMagnitude
+        );
+        
+        // Component 3: Activation distribution
+        const activationDist = this.usagePatterns.activationDistribution;
+        const mean = activationDist.reduce((a, b) => a + b, 0) / this.outputSize;
+        
+        let deadNeurons = 0;
+        let saturatedNeurons = 0;
+        
+        for (let i = 0; i < activationDist.length; i++) {
+          if (activationDist[i] < 0.01) deadNeurons++;
+          if (activationDist[i] > 0.9) saturatedNeurons++;
+        }
+        
+        const deadRatio = deadNeurons / this.outputSize;
+        const saturatedRatio = saturatedNeurons / this.outputSize;
+        const activationBalance = 1 - Math.max(deadRatio, saturatedRatio);
+        
+        // Calculate final coherence score
+        // Non-finite parameters instantly reduce coherence
+        const finitePenalty = nonFiniteCount > 0 ? 
+          Math.max(0, 1 - nonFiniteCount / totalParams) : 1;
+        
+        return finitePenalty * (
+          0.4 * activationBalance + 
+          0.3 * weightCoherence + 
+          0.3 * (1 - Math.min(deadRatio + saturatedRatio, 1))
+        );
+      } catch (error) {
+        // For coherence calculation, we return a low score on error rather than throwing
+        if (Prime.Logger && Prime.Logger.warn) {
+          Prime.Logger.warn(
+            `Error calculating layer coherence: ${error.message}. Returning minimum score.`
+          );
+        }
+        return 0;
+      }
     }
   }
 
@@ -418,24 +671,45 @@ const Matrix = Prime.Math.Matrix;
      * @returns {Object} Output activation and cache
      */
     forward(input) {
-      // Apply standard forward pass
-      const result = super.forward(input);
+      try {
+        // Apply standard forward pass
+        const result = super.forward(input);
 
-      // Apply dropout during training if enabled
-      if (this.optimization.dropoutRate > 0) {
-        this._applyDropout(result.activation);
+        // Apply dropout during training if enabled
+        if (this.optimization.dropoutRate > 0) {
+          this._applyDropout(result.activation);
+        }
+
+        // Check if adaptation is needed
+        if (
+          this.optimization.enabled &&
+          this.metrics.forwardCount % this.optimization.adaptThreshold === 0 &&
+          this.metrics.forwardCount > 0
+        ) {
+          this._adaptLayer();
+        }
+
+        return result;
+      } catch (error) {
+        // Re-throw LayerError instances
+        if (error instanceof Prime.Neural.Errors.LayerError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          `Error during self-optimizing layer forward pass: ${error.message}`,
+          { 
+            dropoutRate: this.optimization.dropoutRate,
+            adaptEnabled: this.optimization.enabled,
+            forwardCount: this.metrics.forwardCount,
+            layerType: "SelfOptimizingLayer",
+            originalError: error.message 
+          },
+          "SELF_OPTIMIZING_FORWARD_ERROR",
+          error
+        );
       }
-
-      // Check if adaptation is needed
-      if (
-        this.optimization.enabled &&
-        this.metrics.forwardCount % this.optimization.adaptThreshold === 0 &&
-        this.metrics.forwardCount > 0
-      ) {
-        this._adaptLayer();
-      }
-
-      return result;
     }
 
     /**
@@ -468,34 +742,50 @@ const Matrix = Prime.Math.Matrix;
      * @private
      */
     _adaptLayer() {
-      Prime.Logger.info("Adapting self-optimizing neural layer", {
-        inputSize: this.inputSize,
-        outputSize: this.outputSize,
-        iteration: this.iteration,
-      });
+      try {
+        if (Prime.Logger && Prime.Logger.info) {
+          Prime.Logger.info("Adapting self-optimizing neural layer", {
+            inputSize: this.inputSize,
+            outputSize: this.outputSize,
+            iteration: this.iteration,
+          });
+        }
 
-      // Calculate current coherence score
-      const coherenceScore = this._calculateCoherenceScore();
-      this.metrics.coherence = coherenceScore;
+        // Calculate current coherence score
+        const coherenceScore = this._calculateCoherenceScore();
+        this.metrics.coherence = coherenceScore;
 
-      // Record adaptation attempt
-      this.adaptationState.lastOptimized = this.metrics.forwardCount;
+        // Record adaptation attempt
+        this.adaptationState.lastOptimized = this.metrics.forwardCount;
 
-      // Only adapt if coherence is below threshold
-      if (coherenceScore < this.optimization.coherenceThreshold) {
-        this._optimizeWeightDistribution();
-        this._pruneInactiveConnections();
-        this._adjustActivationFunction();
+        // Only adapt if coherence is below threshold
+        if (coherenceScore < this.optimization.coherenceThreshold) {
+          this._optimizeWeightDistribution();
+          this._pruneInactiveConnections();
+          this._adjustActivationFunction();
+        }
+
+        // Record adaptation in history (even if no changes were made)
+        this.adaptationState.adaptationHistory.push({
+          iteration: this.iteration,
+          coherenceBefore: coherenceScore,
+          coherenceAfter: this._calculateCoherenceScore(),
+          timestamp: new Date().toISOString(),
+          adapted: coherenceScore < this.optimization.coherenceThreshold,
+        });
+      } catch (error) {
+        // For adaptation errors, log but don't throw (allow training to continue)
+        if (Prime.Logger && Prime.Logger.warn) {
+          Prime.Logger.warn(
+            `Error during layer adaptation: ${error.message}. Skipping adaptation.`,
+            {
+              layerType: "SelfOptimizingLayer",
+              iteration: this.iteration,
+              forwardCount: this.metrics.forwardCount
+            }
+          );
+        }
       }
-
-      // Record adaptation in history (even if no changes were made)
-      this.adaptationState.adaptationHistory.push({
-        iteration: this.iteration,
-        coherenceBefore: coherenceScore,
-        coherenceAfter: this._calculateCoherenceScore(),
-        timestamp: new Date().toISOString(),
-        adapted: coherenceScore < this.optimization.coherenceThreshold,
-      });
     }
 
     /**
@@ -504,6 +794,11 @@ const Matrix = Prime.Math.Matrix;
      * @returns {number} Coherence score between 0 and 1
      */
     _calculateCoherenceScore() {
+      // Use standard coherence calculation from the base class if available
+      if (typeof super.calculateCoherence === 'function') {
+        return super.calculateCoherence();
+      }
+      
       // Component 1: Activation distribution uniformity (0-1)
       // Higher is better - we want balanced neuron activations
       const activationDistribution = this.usagePatterns.activationDistribution;
@@ -743,33 +1038,54 @@ const Matrix = Prime.Math.Matrix;
      * @param {number} learningRate - Learning rate for update
      */
     update(gradients, learningRate) {
-      const { dW, dB } = gradients;
+      try {
+        const { dW, dB } = gradients;
 
-      // Apply regularization to gradients
-      if (
-        this.optimization.l1Regularization > 0 ||
-        this.optimization.l2Regularization > 0
-      ) {
-        for (let i = 0; i < this.outputSize; i++) {
-          for (let j = 0; j < this.inputSize; j++) {
-            // L1 regularization (LASSO) - promotes sparsity
-            if (this.optimization.l1Regularization > 0) {
-              dW[i][j] +=
-                this.optimization.l1Regularization *
-                Math.sign(this.weights[i][j]);
-            }
+        // Apply regularization to gradients
+        if (
+          this.optimization.l1Regularization > 0 ||
+          this.optimization.l2Regularization > 0
+        ) {
+          for (let i = 0; i < this.outputSize; i++) {
+            for (let j = 0; j < this.inputSize; j++) {
+              // L1 regularization (LASSO) - promotes sparsity
+              if (this.optimization.l1Regularization > 0) {
+                dW[i][j] +=
+                  this.optimization.l1Regularization *
+                  Math.sign(this.weights[i][j]);
+              }
 
-            // L2 regularization (Ridge) - prevents large weights
-            if (this.optimization.l2Regularization > 0) {
-              dW[i][j] +=
-                this.optimization.l2Regularization * this.weights[i][j];
+              // L2 regularization (Ridge) - prevents large weights
+              if (this.optimization.l2Regularization > 0) {
+                dW[i][j] +=
+                  this.optimization.l2Regularization * this.weights[i][j];
+              }
             }
           }
         }
-      }
 
-      // Call parent update method with modified gradients
-      super.update({ dW, dB }, learningRate);
+        // Call parent update method with modified gradients
+        super.update({ dW, dB }, learningRate);
+      } catch (error) {
+        // Re-throw LayerError instances
+        if (error instanceof Prime.Neural.Errors.LayerError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.LayerError || Prime.ValidationError)(
+          `Error updating self-optimizing layer parameters: ${error.message}`,
+          { 
+            l1Regularization: this.optimization.l1Regularization,
+            l2Regularization: this.optimization.l2Regularization,
+            learningRate,
+            layerType: "SelfOptimizingLayer",
+            originalError: error.message 
+          },
+          "SELF_OPTIMIZING_UPDATE_ERROR",
+          error
+        );
+      }
     }
 
     /**
@@ -785,51 +1101,71 @@ const Matrix = Prime.Math.Matrix;
      * @returns {Object} Recommendations for layer optimization
      */
     analyzeLayer() {
-      const metrics = this.getMetrics();
-      const patterns = this.getUsagePatterns();
+      try {
+        const metrics = this.getMetrics();
+        const patterns = this.getUsagePatterns();
 
-      // Calculate neuron activity
-      const activeNeurons = patterns.activationDistribution.filter(
-        (a) => a > 0.01,
-      ).length;
+        // Calculate neuron activity
+        const activeNeurons = patterns.activationDistribution.filter(
+          (a) => a > 0.01,
+        ).length;
 
-      const unusedNeurons = patterns.activationDistribution.filter(
-        (a) => a < 0.001,
-      ).length;
+        const unusedNeurons = patterns.activationDistribution.filter(
+          (a) => a < 0.001,
+        ).length;
 
-      // Calculate sparsity
-      let nonZeroWeights = 0;
-      const totalWeights = this.inputSize * this.outputSize;
+        // Calculate sparsity
+        let nonZeroWeights = 0;
+        const totalWeights = this.inputSize * this.outputSize;
 
-      for (let i = 0; i < this.outputSize; i++) {
-        for (let j = 0; j < this.inputSize; j++) {
-          if (Math.abs(this.weights[i][j]) > 1e-6) {
-            nonZeroWeights++;
+        for (let i = 0; i < this.outputSize; i++) {
+          for (let j = 0; j < this.inputSize; j++) {
+            if (Math.abs(this.weights[i][j]) > 1e-6) {
+              nonZeroWeights++;
+            }
           }
         }
+
+        const weightSparsity = 1 - nonZeroWeights / totalWeights;
+
+        // Generate recommendations
+        return {
+          coherence: metrics.coherence,
+          activeNeurons,
+          unusedNeurons,
+          utilizationRate: activeNeurons / this.outputSize,
+          weightSparsity,
+          recommendations: [
+            unusedNeurons > this.outputSize * 0.3
+              ? "Consider reducing layer size"
+              : null,
+            weightSparsity < 0.2
+              ? "Increase L1 regularization to promote sparsity"
+              : null,
+            metrics.coherence < 0.5
+              ? "Layer may benefit from more frequent adaptation"
+              : null,
+          ].filter(Boolean),
+        };
+      } catch (error) {
+        // For analysis errors, return simplified diagnostic info without throwing
+        if (Prime.Logger && Prime.Logger.warn) {
+          Prime.Logger.warn(
+            `Error analyzing self-optimizing layer: ${error.message}. Returning basic diagnostics.`,
+            {
+              layerType: "SelfOptimizingLayer",
+              inputSize: this.inputSize,
+              outputSize: this.outputSize
+            }
+          );
+        }
+        
+        return {
+          coherence: this.metrics.coherence || 0,
+          activeNeurons: "Error during analysis",
+          recommendations: ["Analysis failed due to error: " + error.message]
+        };
       }
-
-      const weightSparsity = 1 - nonZeroWeights / totalWeights;
-
-      // Generate recommendations
-      return {
-        coherence: metrics.coherence,
-        activeNeurons,
-        unusedNeurons,
-        utilizationRate: activeNeurons / this.outputSize,
-        weightSparsity,
-        recommendations: [
-          unusedNeurons > this.outputSize * 0.3
-            ? "Consider reducing layer size"
-            : null,
-          weightSparsity < 0.2
-            ? "Increase L1 regularization to promote sparsity"
-            : null,
-          metrics.coherence < 0.5
-            ? "Layer may benefit from more frequent adaptation"
-            : null,
-        ].filter(Boolean),
-      };
     }
   }
 
@@ -858,4 +1194,5 @@ const Matrix = Prime.Math.Matrix;
   }
 })();
 
-// This module does not export anything directly
+// This module exports the Prime object with the Neural namespace
+module.exports = Prime;

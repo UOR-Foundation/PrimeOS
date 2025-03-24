@@ -6,6 +6,22 @@
 // Import the Prime object from core
 const Prime = require("../core");
 
+// Initialize namespaces before creating classes
+(function(Prime) {
+  // Ensure namespaces exist to prevent "cannot read property of undefined" errors
+  Prime.Neural = Prime.Neural || {};
+  Prime.Neural.Model = Prime.Neural.Model || {};
+  Prime.Neural.Errors = Prime.Neural.Errors || {};
+  
+  // Initialize namespace initialization trackers
+  Prime.Neural._namespaceInitialized = Prime.Neural._namespaceInitialized || {};
+  Prime.Neural._namespaceInitialized["Model"] = true;
+  
+  if (Prime.Logger && Prime.Logger.debug) {
+    Prime.Logger.debug("Neural Model namespace initialized");
+  }
+})(Prime);
+
 // Create the Neural Model module using IIFE
 (function () {
   /**
@@ -101,37 +117,60 @@ const Prime = require("../core");
         // Otherwise, create a layer from the configuration
         const type = (updatedConfig.type || "dense").toLowerCase();
 
-        // Create layer based on type
-        switch (type) {
-          case "dense":
-            layer = Prime.Neural.Neural.createLayer("dense", {
-              ...updatedConfig,
-              useTypedArrays: this.useTypedArrays,
-            });
-            break;
-          case "conv":
-          case "convolutional":
-            layer = Prime.Neural.Neural.createLayer("conv", {
-              ...updatedConfig,
-              useTypedArrays: this.useTypedArrays,
-            });
-            break;
-          case "rnn":
-          case "recurrent":
-            layer = Prime.Neural.Neural.createLayer("recurrent", {
-              ...updatedConfig,
-              useTypedArrays: this.useTypedArrays,
-            });
-            break;
-          case "self_optimizing":
-          case "selfoptimizing":
-            layer = new Prime.Neural.Layer.SelfOptimizingLayer({
-              ...updatedConfig,
-              useTypedArrays: this.useTypedArrays,
-            });
-            break;
-          default:
-            throw new Error(`Unknown layer type: ${type}`);
+        try {
+          // Create layer based on type
+          switch (type) {
+            case "dense":
+              layer = Prime.Neural.Neural.createLayer("dense", {
+                ...updatedConfig,
+                useTypedArrays: this.useTypedArrays,
+              });
+              break;
+            case "conv":
+            case "convolutional":
+              layer = Prime.Neural.Neural.createLayer("conv", {
+                ...updatedConfig,
+                useTypedArrays: this.useTypedArrays,
+              });
+              break;
+            case "rnn":
+            case "recurrent":
+              layer = Prime.Neural.Neural.createLayer("recurrent", {
+                ...updatedConfig,
+                useTypedArrays: this.useTypedArrays,
+              });
+              break;
+            case "self_optimizing":
+            case "selfoptimizing":
+              if (!Prime.Neural.Layer.SelfOptimizingLayer) {
+                throw new (Prime.Neural.Errors.LayerError || Error)(
+                  "SelfOptimizingLayer implementation not available",
+                  { requestedType: type }
+                );
+              }
+              
+              layer = new Prime.Neural.Layer.SelfOptimizingLayer({
+                ...updatedConfig,
+                useTypedArrays: this.useTypedArrays,
+              });
+              break;
+            default:
+              throw new (Prime.Neural.Errors.LayerError || Error)(
+                `Unknown layer type: ${type}`,
+                { requestedType: type }
+              );
+          }
+        } catch (error) {
+          // Wrap errors in a ModelError for better context
+          if (!(error instanceof (Prime.Neural.Errors.NeuralError || Error))) {
+            throw new (Prime.Neural.Errors.ModelError || Error)(
+              `Failed to create layer of type ${type}: ${error.message}`,
+              { originalError: error, layerConfig: updatedConfig, layerType: type },
+              "LAYER_CREATION_ERROR",
+              error
+            );
+          }
+          throw error;
         }
       }
 
@@ -139,9 +178,21 @@ const Prime = require("../core");
       if (this.layers.length > 0) {
         const prevLayer = this.layers[this.layers.length - 1];
         if (prevLayer.outputSize !== layer.inputSize) {
-          throw new Error(
+          throw new (Prime.Neural.Errors.IncompatibleLayersError || Error)(
             `Layer input size mismatch: previous layer output size is ${prevLayer.outputSize}, ` +
               `but new layer input size is ${layer.inputSize}`,
+            {
+              previousLayer: {
+                type: prevLayer.constructor.name,
+                outputSize: prevLayer.outputSize
+              },
+              newLayer: {
+                type: layer.constructor.name,
+                inputSize: layer.inputSize
+              },
+              layerIndex: this.layers.length
+            },
+            "LAYER_SIZE_MISMATCH"
           );
         }
       }
@@ -181,7 +232,11 @@ const Prime = require("../core");
       }
       // Otherwise, throw error
       else {
-        throw new Error("Invalid optimizer configuration");
+        throw new (Prime.Neural.Errors.ModelError || Error)(
+          "Invalid optimizer configuration",
+          { optimizerConfig: optimizer },
+          "INVALID_OPTIMIZER_CONFIG"
+        );
       }
 
       return this;
@@ -197,7 +252,11 @@ const Prime = require("../core");
     compile(config) {
       // Validate model has layers
       if (this.layers.length === 0) {
-        throw new Error("Model must have at least one layer");
+        throw new (Prime.Neural.Errors.ModelError || Error)(
+          "Model must have at least one layer",
+          {},
+          "EMPTY_MODEL"
+        );
       }
 
       // Validate optimizer is set
@@ -214,7 +273,11 @@ const Prime = require("../core");
         this.lossFunction = config.loss;
         this.lossName = "custom"; // Custom function name
       } else {
-        throw new Error("Loss function must be a string or function");
+        throw new (Prime.Neural.Errors.ModelError || Error)(
+          "Loss function must be a string or function",
+          { providedLoss: config.loss, type: typeof config.loss },
+          "INVALID_LOSS_FUNCTION"
+        );
       }
 
       // Set metric (optional)
@@ -252,7 +315,11 @@ const Prime = require("../core");
      */
     forward(input, options = {}) {
       if (!this.layers.length) {
-        throw new Error("Model has no layers");
+        throw new (Prime.Neural.Errors.ModelError || Error)(
+          "Model has no layers",
+          {},
+          "EMPTY_MODEL"
+        );
       }
 
       const startTime = performance.now();
@@ -310,7 +377,11 @@ const Prime = require("../core");
      */
     backward(expected, predicted, cache) {
       if (!this.compiled) {
-        throw new Error("Model must be compiled before training");
+        throw new (Prime.Neural.Errors.ModelError || Error)(
+          "Model must be compiled before training",
+          {},
+          "MODEL_NOT_COMPILED"
+        );
       }
 
       const startTime = performance.now();
@@ -350,7 +421,11 @@ const Prime = require("../core");
      */
     async update(gradients) {
       if (!this.optimizer) {
-        throw new Error("Model must have an optimizer");
+        throw new (Prime.Neural.Errors.ModelError || Error)(
+          "Model must have an optimizer",
+          {},
+          "NO_OPTIMIZER"
+        );
       }
 
       // Calculate model coherence before update if needed
@@ -409,6 +484,43 @@ const Prime = require("../core");
           delta: postUpdateCoherence - preUpdateCoherence,
           stable: postUpdateCoherence >= this.coherenceConfig.minThreshold,
         };
+        
+        // Validate overall coherence to detect potential numerical issues
+        if (postUpdateCoherence < this.coherenceConfig.minThreshold) {
+          // Coherence is below threshold, log a warning
+          if (Prime.Logger && Prime.Logger.warn) {
+            Prime.Logger.warn("Model coherence below threshold", {
+              coherence: postUpdateCoherence,
+              threshold: this.coherenceConfig.minThreshold,
+              iteration: this.performance.iterationCount
+            });
+          } else {
+            console.warn(
+              `Model coherence below threshold: ${postUpdateCoherence.toFixed(4)} < ${this.coherenceConfig.minThreshold}`,
+            );
+          }
+          
+          // If it's severely below threshold, throw a coherence error
+          if (postUpdateCoherence < this.coherenceConfig.minThreshold * 0.5) {
+            throw new (Prime.Neural.Errors.NeuralCoherenceError || Error)(
+              "Severe model coherence violation detected",
+              this.coherenceConfig.minThreshold,
+              postUpdateCoherence,
+              {
+                iteration: this.performance.iterationCount,
+                layerCoherences: this.layers.map((layer, idx) => {
+                  return {
+                    layer: idx,
+                    type: layer.constructor.name,
+                    coherence: typeof layer.calculateCoherence === 'function' ? 
+                      layer.calculateCoherence() : 'unknown'
+                  };
+                })
+              },
+              "MODEL_COHERENCE_VIOLATION"
+            );
+          }
+        }
 
         // If coherence dropped below threshold and auto-correct is enabled,
         // attempt to restore coherence
@@ -434,7 +546,11 @@ const Prime = require("../core");
      */
     trainOnBatch(inputs, targets, options = {}) {
       if (!this.compiled) {
-        throw new Error("Model must be compiled before training");
+        throw new (Prime.Neural.Errors.ModelError || Error)(
+          "Model must be compiled before training",
+          {},
+          "MODEL_NOT_COMPILED"
+        );
       }
 
       // Forward pass
@@ -810,7 +926,14 @@ const Prime = require("../core");
             return loss;
           };
         default:
-          throw new Error(`Unknown metric: ${name}`);
+          throw new (Prime.Neural.Errors.ModelError || Error)(
+            `Unknown metric: ${name}`,
+            { 
+              requestedMetric: name, 
+              availableMetrics: ["accuracy", "mae", "mse", "meanabsoluteerror", "meansquarederror"] 
+            },
+            "UNKNOWN_METRIC"
+          );
       }
     }
 
@@ -1143,7 +1266,10 @@ const Prime = require("../core");
   // Add to Prime.Neural namespace
   Prime.Neural = Prime.Neural || {};
   Prime.Neural.Model = Prime.Neural.Model || {};
+  
+  // Register the model class in multiple namespaces for backward compatibility
   Prime.Neural.Model.NeuralModel = NeuralModel;
+  Prime.Neural.NeuralModel = NeuralModel; // Also register at top level for backward compatibility
 })();
 
 // Export the enhanced Prime object
