@@ -1936,33 +1936,153 @@ const Prime = require("../../core");
      * Note: This function can't be applied element-wise
      * @param {Array|TypedArray} x - Input values
      * @returns {Array|TypedArray} - Softmax values
+     * @throws {ActivationError} - If input is invalid or operation fails
      */
     static softmax(x) {
-      const result = ActivationFunctions._createMatchingArray(x);
-
-      // Find max for numerical stability
-      let maxVal = x[0];
-      for (let i = 1; i < x.length; i++) {
-        if (x[i] > maxVal) {
-          maxVal = x[i];
+      try {
+        // Validate input
+        if (!x) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input to softmax cannot be null or undefined",
+            { providedValue: x },
+            "NULL_INPUT"
+          );
         }
-      }
 
-      // Calculate exp(x - max) and sum
-      let sum = 0;
-      for (let i = 0; i < x.length; i++) {
-        result[i] = Math.exp(x[i] - maxVal);
-        sum += result[i];
-      }
+        if (x.length === 0) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input to softmax must not be empty",
+            { providedLength: 0 },
+            "EMPTY_INPUT"
+          );
+        }
 
-      // Normalize
-      if (sum !== 0) {
+        // Create result array with matching type
+        const result = ActivationFunctions._createMatchingArray(x);
+
+        // Check for non-finite values
+        let hasNaN = false;
+        let hasInf = false;
+
+        // Find max for numerical stability
+        let maxVal = Number.NEGATIVE_INFINITY;
         for (let i = 0; i < x.length; i++) {
-          result[i] /= sum;
+          if (!Number.isFinite(x[i])) {
+            if (Number.isNaN(x[i])) {
+              hasNaN = true;
+            } else {
+              hasInf = true;
+            }
+          } else if (x[i] > maxVal) {
+            maxVal = x[i];
+          }
         }
-      }
 
-      return result;
+        // Handle case where all values are non-finite
+        if (maxVal === Number.NEGATIVE_INFINITY) {
+          // Return uniform distribution as fallback
+          const uniformValue = 1.0 / x.length;
+          for (let i = 0; i < x.length; i++) {
+            result[i] = uniformValue;
+          }
+          
+          if (hasNaN || hasInf) {
+            console.warn(
+              `Softmax received all ${hasNaN ? 'NaN' : ''}${hasNaN && hasInf ? ' and ' : ''}${hasInf ? 'infinite' : ''} values. Returning uniform distribution.`
+            );
+          }
+          
+          return result;
+        }
+
+        // Calculate exp(x - max) and sum
+        let sum = 0;
+        for (let i = 0; i < x.length; i++) {
+          if (!Number.isFinite(x[i])) {
+            if (Number.isNaN(x[i])) {
+              // NaN inputs get 0 probability
+              result[i] = 0;
+            } else if (x[i] === Number.POSITIVE_INFINITY) {
+              // If we have positive infinity input(s), they should get all probability mass
+              // We'll handle this after the loop to ensure we catch all such cases
+              result[i] = 1; // Temporary value
+            } else {
+              // Negative infinity gets 0 probability
+              result[i] = 0;
+            }
+          } else {
+            // Numerical stability: avoid overflow by subtracting max
+            const expVal = Math.exp(x[i] - maxVal);
+            result[i] = expVal;
+            sum += expVal;
+          }
+        }
+
+        // Handle special case with positive infinity values
+        if (hasInf) {
+          // Count positive infinities
+          let posInfCount = 0;
+          for (let i = 0; i < x.length; i++) {
+            if (x[i] === Number.POSITIVE_INFINITY) {
+              posInfCount++;
+            }
+          }
+
+          if (posInfCount > 0) {
+            // Positive infinities share probability equally
+            const infProb = 1.0 / posInfCount;
+            for (let i = 0; i < x.length; i++) {
+              result[i] = x[i] === Number.POSITIVE_INFINITY ? infProb : 0;
+            }
+            
+            console.warn(
+              `Softmax received positive infinite values. Assigning equal probability (${infProb.toFixed(6)}) to each.`
+            );
+            
+            return result;
+          }
+        }
+
+        // Normalize by sum for valid inputs
+        if (sum > 0) {
+          for (let i = 0; i < x.length; i++) {
+            result[i] /= sum;
+          }
+        } else {
+          // If sum is 0 or negative (extremely rare but possible due to numerical issues),
+          // return uniform distribution as fallback
+          const uniformValue = 1.0 / x.length;
+          for (let i = 0; i < x.length; i++) {
+            result[i] = uniformValue;
+          }
+          
+          console.warn(
+            "Softmax calculation resulted in zero sum. Returning uniform distribution."
+          );
+        }
+
+        // Warn about non-finite inputs if found
+        if (hasNaN || hasInf) {
+          console.warn(
+            `Softmax activation received ${hasNaN ? 'NaN' : ''}${hasNaN && hasInf ? ' and ' : ''}${hasInf ? 'infinite' : ''} input values. Results may be unreliable.`
+          );
+        }
+
+        return result;
+      } catch (error) {
+        // Re-throw ActivationError instances
+        if (error instanceof Prime.Neural.Errors.ActivationError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          "Error applying softmax activation",
+          { originalError: error.message },
+          "SOFTMAX_ACTIVATION_ERROR",
+          error
+        );
+      }
     }
 
     /**
@@ -1973,111 +2093,473 @@ const Prime = require("../../core");
      * @param {Array|TypedArray} y - Output of softmax(x)
      * @param {Array|TypedArray} dy - Upstream gradient
      * @returns {Array|TypedArray} - Gradient values
+     * @throws {ActivationError} - If inputs are invalid or operation fails
      */
     static softmaxGradient(x, y, dy) {
-      const result = ActivationFunctions._createMatchingArray(x);
-
-      // For cross-entropy loss with softmax, gradient is (y - targets)
-      // which is usually passed directly in dy, so we just return dy
-
-      // In the more general case, the Jacobian for softmax is complex
-      // This is a simplified implementation for common use cases
-      if (dy) {
-        for (let i = 0; i < result.length; i++) {
-          result[i] = dy[i];
+      try {
+        // Validate inputs
+        if (!x) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input to softmaxGradient cannot be null or undefined",
+            { providedValue: x },
+            "NULL_INPUT"
+          );
         }
-      } else {
-        // If no gradient is provided, just return ones (identity gradient)
-        for (let i = 0; i < result.length; i++) {
-          result[i] = 1;
+
+        if (!y) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Output (y) for softmaxGradient cannot be null or undefined",
+            { providedValue: y },
+            "NULL_OUTPUT"
+          );
         }
+
+        if (x.length !== y.length) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input and output arrays must have the same length",
+            { inputLength: x.length, outputLength: y.length },
+            "LENGTH_MISMATCH"
+          );
+        }
+
+        // Create result array
+        const result = ActivationFunctions._createMatchingArray(x);
+        let hasNaN = false;
+
+        // For cross-entropy loss with softmax, gradient is typically (y - targets)
+        // which is usually passed directly in dy, so we just copy dy if provided
+        if (dy) {
+          if (dy.length !== x.length) {
+            throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+              "Upstream gradient (dy) length must match input length",
+              { dyLength: dy.length, inputLength: x.length },
+              "GRADIENT_LENGTH_MISMATCH"
+            );
+          }
+
+          for (let i = 0; i < result.length; i++) {
+            // Handle non-finite values
+            if (!Number.isFinite(dy[i])) {
+              hasNaN = true;
+              result[i] = 0; // Avoid propagating NaN/Infinity
+            } else {
+              result[i] = dy[i];
+            }
+          }
+        } else {
+          // If no gradient is provided, just return ones (identity gradient)
+          // This is a simplification but works for most common use cases
+          for (let i = 0; i < result.length; i++) {
+            result[i] = 1;
+          }
+        }
+
+        // Warn about non-finite values if found
+        if (hasNaN) {
+          console.warn("SoftmaxGradient received non-finite values. Results may be unreliable.");
+        }
+
+        return result;
+      } catch (error) {
+        // Re-throw ActivationError instances
+        if (error instanceof Prime.Neural.Errors.ActivationError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          "Error computing softmax gradient",
+          { originalError: error.message },
+          "SOFTMAX_GRADIENT_ERROR",
+          error
+        );
       }
-
-      return result;
     }
 
     /**
      * Linear/Identity activation function
      * @param {Array|TypedArray} x - Input values
      * @returns {Array|TypedArray} - Same values (copy)
+     * @throws {ActivationError} - If input is invalid or operation fails
      */
     static linear(x) {
-      return ActivationFunctions._createMatchingArray(x).map((_, i) => x[i]);
+      try {
+        // Validate input
+        if (!x) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input to linear activation cannot be null or undefined",
+            { providedValue: x },
+            "NULL_INPUT"
+          );
+        }
+
+        // Create result array with matching type
+        const result = ActivationFunctions._createMatchingArray(x);
+        
+        // Process each element
+        let hasNaN = false;
+        let hasInf = false;
+        
+        for (let i = 0; i < x.length; i++) {
+          // Check for non-finite values
+          if (!Number.isFinite(x[i])) {
+            if (Number.isNaN(x[i])) {
+              hasNaN = true;
+            } else {
+              hasInf = true;
+            }
+          }
+          
+          // Copy value (identity function)
+          result[i] = x[i];
+        }
+        
+        // Warn about non-finite inputs if found
+        if (hasNaN || hasInf) {
+          console.warn(
+            `Linear activation received ${hasNaN ? 'NaN' : ''}${hasNaN && hasInf ? ' and ' : ''}${hasInf ? 'infinite' : ''} input values. These will be passed through unchanged.`
+          );
+        }
+
+        return result;
+      } catch (error) {
+        // Re-throw ActivationError instances
+        if (error instanceof Prime.Neural.Errors.ActivationError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          "Error applying linear activation",
+          { originalError: error.message },
+          "LINEAR_ACTIVATION_ERROR",
+          error
+        );
+      }
     }
 
     /**
      * In-place linear activation (no-op, but included for API consistency)
      * @param {Array|TypedArray} x - Input/output values
+     * @throws {ActivationError} - If input is invalid
      */
     static linearInPlace(x) {
-      // No operation needed - identity function
+      try {
+        // Validate input
+        if (!x) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input to linearInPlace cannot be null or undefined",
+            { providedValue: x },
+            "NULL_INPUT"
+          );
+        }
+
+        if (!Array.isArray(x) && 
+            !(x instanceof Float32Array) && 
+            !(x instanceof Float64Array)) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input must be an array or typed array",
+            { 
+              providedType: typeof x,
+              isArray: Array.isArray(x)
+            },
+            "INVALID_INPUT_TYPE"
+          );
+        }
+        
+        // No operation needed - values remain unchanged
+        // Just check for non-finite values to issue warning
+        let hasNaN = false;
+        let hasInf = false;
+        
+        for (let i = 0; i < x.length; i++) {
+          if (!Number.isFinite(x[i])) {
+            if (Number.isNaN(x[i])) {
+              hasNaN = true;
+            } else {
+              hasInf = true;
+            }
+            
+            if (hasNaN && hasInf) {
+              break; // Found both types, no need to keep checking
+            }
+          }
+        }
+        
+        // Warn about non-finite inputs if found
+        if (hasNaN || hasInf) {
+          console.warn(
+            `LinearInPlace received ${hasNaN ? 'NaN' : ''}${hasNaN && hasInf ? ' and ' : ''}${hasInf ? 'infinite' : ''} input values. These will remain unchanged.`
+          );
+        }
+      } catch (error) {
+        // Re-throw ActivationError instances
+        if (error instanceof Prime.Neural.Errors.ActivationError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          "Error applying in-place linear activation",
+          { originalError: error.message },
+          "LINEAR_INPLACE_ERROR",
+          error
+        );
+      }
     }
 
     /**
      * Linear/Identity gradient (always 1)
      * @param {Array|TypedArray} x - Input values
      * @returns {Array|TypedArray} - Gradient values (all 1)
+     * @throws {ActivationError} - If input is invalid or operation fails
      */
     static linearGradient(x) {
-      const result = ActivationFunctions._createMatchingArray(x);
+      try {
+        // Validate input
+        if (!x) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input to linearGradient cannot be null or undefined",
+            { providedValue: x },
+            "NULL_INPUT"
+          );
+        }
 
-      for (let i = 0; i < x.length; i++) {
-        result[i] = 1;
+        // Create result array with matching type
+        const result = ActivationFunctions._createMatchingArray(x);
+
+        // Fill with 1s (identity function derivative)
+        for (let i = 0; i < x.length; i++) {
+          result[i] = 1;
+        }
+
+        return result;
+      } catch (error) {
+        // Re-throw ActivationError instances
+        if (error instanceof Prime.Neural.Errors.ActivationError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          "Error computing linear gradient",
+          { originalError: error.message },
+          "LINEAR_GRADIENT_ERROR",
+          error
+        );
       }
-
-      return result;
     }
 
     /**
      * In-place linear gradient computation (no change to gradient values)
      * @param {Array|TypedArray} grad - Gradient values (unmodified)
+     * @throws {ActivationError} - If input is invalid
      */
     static linearGradientInPlace(grad) {
-      // No operation needed - gradient is unchanged
+      try {
+        // Validate input
+        if (!grad) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Gradient array for linearGradientInPlace cannot be null or undefined",
+            { providedValue: grad },
+            "NULL_GRADIENT"
+          );
+        }
+
+        if (!Array.isArray(grad) && 
+            !(grad instanceof Float32Array) && 
+            !(grad instanceof Float64Array)) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Gradient must be an array or typed array",
+            { 
+              providedType: typeof grad,
+              isArray: Array.isArray(grad)
+            },
+            "INVALID_GRADIENT_TYPE"
+          );
+        }
+        
+        // No operation needed - gradient is unchanged
+        // Linear function's derivative is 1, so we keep gradient as is
+      } catch (error) {
+        // Re-throw ActivationError instances
+        if (error instanceof Prime.Neural.Errors.ActivationError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          "Error computing in-place linear gradient",
+          { originalError: error.message },
+          "LINEAR_GRADIENT_INPLACE_ERROR",
+          error
+        );
+      }
     }
 
     /**
      * Swish activation function: x * sigmoid(x)
      * @param {Array|TypedArray} x - Input values
      * @returns {Array|TypedArray} - Activated values
+     * @throws {ActivationError} - If input is invalid or operation fails
      */
     static swish(x) {
-      const result = ActivationFunctions._createMatchingArray(x);
-
-      for (let i = 0; i < x.length; i++) {
-        // Calculate sigmoid with numerical stability
-        let sigX;
-        if (x[i] < -709) {
-          sigX = 0;
-        } else if (x[i] > 709) {
-          sigX = 1;
-        } else {
-          sigX = 1 / (1 + Math.exp(-x[i]));
+      try {
+        // Validate input
+        if (!x) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input to swish cannot be null or undefined",
+            { providedValue: x },
+            "NULL_INPUT"
+          );
         }
 
-        result[i] = x[i] * sigX;
-      }
+        // Create result array with matching type
+        const result = ActivationFunctions._createMatchingArray(x);
 
-      return result;
+        // Process each element
+        let hasNaN = false;
+        let hasInf = false;
+        
+        for (let i = 0; i < x.length; i++) {
+          // Check for non-finite values
+          if (!Number.isFinite(x[i])) {
+            if (Number.isNaN(x[i])) {
+              hasNaN = true;
+              result[i] = 0; // swish(NaN) = 0 as a fallback
+              continue;
+            } else if (x[i] === Number.POSITIVE_INFINITY) {
+              hasInf = true;
+              result[i] = Number.POSITIVE_INFINITY; // swish(+∞) = +∞
+              continue;
+            } else if (x[i] === Number.NEGATIVE_INFINITY) {
+              hasInf = true;
+              result[i] = 0; // swish(-∞) = -∞ * 0 = 0
+              continue;
+            }
+          }
+
+          // Calculate sigmoid with numerical stability
+          let sigX;
+          if (x[i] < -709) {
+            sigX = 0;
+          } else if (x[i] > 709) {
+            sigX = 1;
+          } else {
+            sigX = 1 / (1 + Math.exp(-x[i]));
+          }
+
+          // Apply swish: x * sigmoid(x)
+          result[i] = x[i] * sigX;
+        }
+
+        // Warn about non-finite inputs if found
+        if (hasNaN || hasInf) {
+          console.warn(
+            `Swish activation received ${hasNaN ? 'NaN' : ''}${hasNaN && hasInf ? ' and ' : ''}${hasInf ? 'infinite' : ''} input values. Results may be unreliable.`
+          );
+        }
+
+        return result;
+      } catch (error) {
+        // Re-throw ActivationError instances
+        if (error instanceof Prime.Neural.Errors.ActivationError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          "Error applying swish activation",
+          { originalError: error.message },
+          "SWISH_ACTIVATION_ERROR",
+          error
+        );
+      }
     }
 
     /**
      * In-place Swish computation (modifies input array)
      * @param {Array|TypedArray} x - Input/output values
+     * @throws {ActivationError} - If input is invalid or operation fails
      */
     static swishInPlace(x) {
-      for (let i = 0; i < x.length; i++) {
-        // Calculate sigmoid with numerical stability
-        let sigX;
-        if (x[i] < -709) {
-          sigX = 0;
-        } else if (x[i] > 709) {
-          sigX = 1;
-        } else {
-          sigX = 1 / (1 + Math.exp(-x[i]));
+      try {
+        // Validate input
+        if (!x) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input to swishInPlace cannot be null or undefined",
+            { providedValue: x },
+            "NULL_INPUT"
+          );
         }
 
-        x[i] = x[i] * sigX;
+        if (!Array.isArray(x) && 
+            !(x instanceof Float32Array) && 
+            !(x instanceof Float64Array)) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input must be an array or typed array",
+            { 
+              providedType: typeof x,
+              isArray: Array.isArray(x)
+            },
+            "INVALID_INPUT_TYPE"
+          );
+        }
+
+        let hasNaN = false;
+        let hasInf = false;
+
+        for (let i = 0; i < x.length; i++) {
+          // Handle non-finite inputs
+          if (!Number.isFinite(x[i])) {
+            if (Number.isNaN(x[i])) {
+              hasNaN = true;
+              x[i] = 0; // swish(NaN) = 0
+              continue;
+            } else if (x[i] === Number.POSITIVE_INFINITY) {
+              hasInf = true;
+              // Leave positive infinity as is - swish(+∞) = +∞
+              continue;
+            } else if (x[i] === Number.NEGATIVE_INFINITY) {
+              hasInf = true;
+              x[i] = 0; // swish(-∞) = -∞ * 0 = 0
+              continue;
+            }
+          }
+          
+          // Calculate sigmoid with numerical stability
+          let sigX;
+          if (x[i] < -709) {
+            sigX = 0;
+          } else if (x[i] > 709) {
+            sigX = 1;
+          } else {
+            sigX = 1 / (1 + Math.exp(-x[i]));
+          }
+
+          // Apply swish in-place: x = x * sigmoid(x)
+          x[i] = x[i] * sigX;
+        }
+
+        // Warn about non-finite inputs if found
+        if (hasNaN || hasInf) {
+          console.warn(
+            `SwishInPlace received ${hasNaN ? 'NaN' : ''}${hasNaN && hasInf ? ' and ' : ''}${hasInf ? 'infinite' : ''} input values. Results may be unreliable.`
+          );
+        }
+      } catch (error) {
+        // Re-throw ActivationError instances
+        if (error instanceof Prime.Neural.Errors.ActivationError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          "Error applying in-place swish activation",
+          { originalError: error.message },
+          "SWISH_INPLACE_ERROR",
+          error
+        );
       }
     }
 
@@ -2086,26 +2568,80 @@ const Prime = require("../../core");
      * @param {Array|TypedArray} x - Input values
      * @param {Array|TypedArray} y - Output of swish(x)
      * @returns {Array|TypedArray} - Gradient values
+     * @throws {ActivationError} - If inputs are invalid or operation fails
      */
     static swishGradient(x, y) {
-      const result = ActivationFunctions._createMatchingArray(x);
-
-      for (let i = 0; i < x.length; i++) {
-        // Calculate sigmoid with numerical stability
-        let sigX;
-        if (x[i] < -709) {
-          sigX = 0;
-        } else if (x[i] > 709) {
-          sigX = 1;
-        } else {
-          sigX = 1 / (1 + Math.exp(-x[i]));
+      try {
+        // Validate inputs
+        if (!x) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input to swishGradient cannot be null or undefined",
+            { providedValue: x },
+            "NULL_INPUT"
+          );
         }
 
-        // Gradient of swish: sigmoid(x) + x * sigmoid(x) * (1 - sigmoid(x))
-        result[i] = sigX + x[i] * sigX * (1 - sigX);
-      }
+        if (!y) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Output (y) for swishGradient cannot be null or undefined",
+            { providedValue: y },
+            "NULL_OUTPUT"
+          );
+        }
 
-      return result;
+        if (x.length !== y.length) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input and output arrays must have the same length",
+            { inputLength: x.length, outputLength: y.length },
+            "LENGTH_MISMATCH"
+          );
+        }
+
+        const result = ActivationFunctions._createMatchingArray(x);
+        let hasNaN = false;
+
+        for (let i = 0; i < x.length; i++) {
+          // Handle non-finite inputs
+          if (!Number.isFinite(x[i]) || !Number.isFinite(y[i])) {
+            hasNaN = true;
+            result[i] = 0; // Avoid propagating NaN/Infinity
+            continue;
+          }
+
+          // Calculate sigmoid with numerical stability
+          let sigX;
+          if (x[i] < -709) {
+            sigX = 0;
+          } else if (x[i] > 709) {
+            sigX = 1;
+          } else {
+            sigX = 1 / (1 + Math.exp(-x[i]));
+          }
+
+          // Gradient of swish: sigmoid(x) + x * sigmoid(x) * (1 - sigmoid(x))
+          result[i] = sigX + x[i] * sigX * (1 - sigX);
+        }
+
+        // Warn about non-finite values if found
+        if (hasNaN) {
+          console.warn("SwishGradient received non-finite values. Results may be unreliable.");
+        }
+
+        return result;
+      } catch (error) {
+        // Re-throw ActivationError instances
+        if (error instanceof Prime.Neural.Errors.ActivationError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          "Error computing swish gradient",
+          { originalError: error.message },
+          "SWISH_GRADIENT_ERROR",
+          error
+        );
+      }
     }
 
     /**
@@ -2113,21 +2649,88 @@ const Prime = require("../../core");
      * @param {Array|TypedArray} grad - Gradient values (modified in-place)
      * @param {Array|TypedArray} x - Original input values
      * @param {Array|TypedArray} y - Output of swish(x)
+     * @throws {ActivationError} - If inputs are invalid or operation fails
      */
     static swishGradientInPlace(grad, x, y) {
-      for (let i = 0; i < grad.length; i++) {
-        // Calculate sigmoid with numerical stability
-        let sigX;
-        if (x[i] < -709) {
-          sigX = 0;
-        } else if (x[i] > 709) {
-          sigX = 1;
-        } else {
-          sigX = 1 / (1 + Math.exp(-x[i]));
+      try {
+        // Validate inputs
+        if (!grad) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Gradient array for swishGradientInPlace cannot be null or undefined",
+            { providedValue: grad },
+            "NULL_GRADIENT"
+          );
         }
 
-        // Gradient of swish: sigmoid(x) + x * sigmoid(x) * (1 - sigmoid(x))
-        grad[i] *= sigX + x[i] * sigX * (1 - sigX);
+        if (!x) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Input (x) for swishGradientInPlace cannot be null or undefined",
+            { providedValue: x },
+            "NULL_INPUT"
+          );
+        }
+
+        if (!y) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Output (y) for swishGradientInPlace cannot be null or undefined",
+            { providedValue: y },
+            "NULL_OUTPUT"
+          );
+        }
+
+        if (grad.length !== x.length || grad.length !== y.length) {
+          throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+            "Gradient, input, and output arrays must have the same length",
+            { 
+              gradientLength: grad.length, 
+              inputLength: x.length,
+              outputLength: y.length
+            },
+            "LENGTH_MISMATCH"
+          );
+        }
+
+        let hasNaN = false;
+
+        for (let i = 0; i < grad.length; i++) {
+          // Handle non-finite values
+          if (!Number.isFinite(x[i]) || !Number.isFinite(y[i]) || !Number.isFinite(grad[i])) {
+            hasNaN = true;
+            grad[i] = 0; // Avoid propagating NaN/Infinity
+            continue;
+          }
+
+          // Calculate sigmoid with numerical stability
+          let sigX;
+          if (x[i] < -709) {
+            sigX = 0;
+          } else if (x[i] > 709) {
+            sigX = 1;
+          } else {
+            sigX = 1 / (1 + Math.exp(-x[i]));
+          }
+
+          // Gradient of swish: sigmoid(x) + x * sigmoid(x) * (1 - sigmoid(x))
+          grad[i] *= sigX + x[i] * sigX * (1 - sigX);
+        }
+
+        // Warn about non-finite values if found
+        if (hasNaN) {
+          console.warn("SwishGradientInPlace received non-finite values. Results may be unreliable.");
+        }
+      } catch (error) {
+        // Re-throw ActivationError instances
+        if (error instanceof Prime.Neural.Errors.ActivationError) {
+          throw error;
+        }
+        
+        // Wrap other errors with context
+        throw new (Prime.Neural.Errors.ActivationError || Prime.ValidationError)(
+          "Error computing in-place swish gradient",
+          { originalError: error.message },
+          "SWISH_GRADIENT_INPLACE_ERROR",
+          error
+        );
       }
     }
 
