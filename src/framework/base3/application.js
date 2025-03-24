@@ -360,17 +360,11 @@ function createApplication(options = {}) {
             } 
             // Then try distributed coherence checking if available
             else if (Prime.Distributed && Prime.Distributed.Coherence) {
-              // Adapt to distributed coherence system
-              let distributedCoherence;
-              
-              if (Prime.Distributed.Coherence.Core && 
-                  Prime.Distributed.Coherence.Core.Manager) {
-                // Try to use the manager
-                const manager = new Prime.Distributed.Coherence.Core.Manager();
-                const coherenceResult = manager.checkLayerCoherence(
-                  { config: { inputSize: 1, outputSize: 1 }, state: nextState },
-                  { prevState: prevState }
-                );
+              // First attempt to use standard coherence API
+              if (Prime.Distributed.Coherence.checkCoherence && 
+                  typeof Prime.Distributed.Coherence.checkCoherence === 'function') {
+                
+                const coherenceResult = Prime.Distributed.Coherence.checkCoherence(prevState, nextState);
                 if (coherenceResult && !coherenceResult.isCoherent) {
                   throw new (Prime.ValidationError || Error)(
                     "State update failed distributed coherence check",
@@ -381,6 +375,36 @@ function createApplication(options = {}) {
                       },
                     }
                   );
+                }
+              }
+              // Fall back to Core Manager if standard API not available
+              else if (Prime.Distributed.Coherence.Core && 
+                      Prime.Distributed.Coherence.Core.Manager) {
+                try {
+                  // Try to use the manager
+                  const manager = new Prime.Distributed.Coherence.Core.Manager();
+                  const coherenceResult = manager.checkLayerCoherence(
+                    { config: { inputSize: 1, outputSize: 1 }, state: nextState },
+                    { prevState: prevState }
+                  );
+                  if (coherenceResult && !coherenceResult.isCoherent) {
+                    throw new (Prime.ValidationError || Error)(
+                      "State update failed distributed coherence check",
+                      {
+                        context: {
+                          action: processedAction,
+                          violations: coherenceResult.violations,
+                        },
+                      }
+                    );
+                  }
+                } catch (coreError) {
+                  // Only re-throw if it's a genuine coherence validation error
+                  if (coreError.name === 'ValidationError') {
+                    throw coreError;
+                  }
+                  // Otherwise just log the error and continue
+                  console.warn("Error using distributed core coherence manager:", coreError.message);
                 }
               }
             }

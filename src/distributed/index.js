@@ -28,19 +28,39 @@ function safeRequire(modulePath) {
   }
 }
 
-// First, import base modules
-safeRequire("./communication");
-safeRequire("./partition");
+// Define the loading order with dependencies managed properly
+const modules = [
+  // First, import base modules with fewer dependencies
+  "./communication",
+  "./partition",
+  
+  // Then import coherence modules in specific order to manage dependencies
+  "./coherence-violations",
+  "./coherence-recovery",
+  "./coherence-metrics",
+  "./coherence-core",
+  "./coherence",
+  
+  // Finally, import cluster module (which depends on the others)
+  "./cluster"
+];
 
-// Then import coherence modules in specific order to manage dependencies
-safeRequire("./coherence-violations");
-safeRequire("./coherence-recovery");
-safeRequire("./coherence-metrics");
-safeRequire("./coherence-core");
-safeRequire("./coherence");
-
-// Finally, import cluster module (which depends on the others)
-safeRequire("./cluster");
+// Load all modules in order, handling any circular dependencies
+modules.forEach(modulePath => {
+  try {
+    safeRequire(modulePath);
+  } catch (circularError) {
+    console.warn(`Possible circular dependency detected in '${modulePath}':`, circularError.message);
+    // For circular dependencies, try loading in a setTimeout to break the cycle
+    setTimeout(() => {
+      try {
+        safeRequire(modulePath);
+      } catch (error) {
+        console.warn(`Failed to load module '${modulePath}' after circular dependency resolution:`, error.message);
+      }
+    }, 0);
+  }
+});
 
 // Ensure backward compatibility using direct assignment instead of getters
 if (!Prime.distributed) {

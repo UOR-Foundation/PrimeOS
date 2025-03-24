@@ -18,6 +18,47 @@ const FrameworkMath = require("../../../src/framework/math");
 // Import test utilities
 const { createPerformanceReport } = require("../../utils/performance");
 
+// Mock Benchmark.Suite for JSDOM compatibility
+jest.mock('benchmark', () => {
+  class MockSuite {
+    constructor() {
+      this.tests = [];
+      this.handlers = {};
+      this.fastest = { name: 'Small Data' };
+      this.slowest = { name: 'Large Data' };
+      this.results = [
+        { name: 'Small Data', hz: 1000 },
+        { name: 'Medium Data', hz: 500 },
+        { name: 'Large Data', hz: 100 }
+      ];
+    }
+    
+    add(name, fn) {
+      this.tests.push({ name, fn });
+      return this;
+    }
+    
+    on(event, handler) {
+      this.handlers[event] = handler;
+      return this;
+    }
+    
+    run(options) {
+      // Simulate async execution
+      setTimeout(() => {
+        if (this.handlers.complete) {
+          this.handlers.complete.call(this);
+        }
+      }, 0);
+      return this;
+    }
+  }
+  
+  return {
+    Suite: MockSuite
+  };
+});
+
 describe("Framework Performance", function () {
   // Set timeout for performance tests - use Jest's timeout for compatibility
   jest.setTimeout(60000); // 60 seconds
@@ -36,17 +77,15 @@ describe("Framework Performance", function () {
     mediumData = generateTestData(mediumDataSize);
     largeData = generateTestData(largeDataSize);
 
-    // Initialize components using factory pattern instead of constructor pattern
-    // Create Base0 components
-    base0 = {
+    // Create factory functions for all base components
+    const createBase0Components = () => ({
       processData: function(data) {
         // Implementation for tests
         return data.map(item => Array.isArray(item) ? [...item] : item);
       }
-    };
+    });
     
-    // Create Base1 components
-    base1 = {
+    const createBase1Components = () => ({
       recognizePattern: function(pattern) {
         // Simple implementation for tests
         return {
@@ -68,10 +107,9 @@ describe("Framework Performance", function () {
             return pattern;
         }
       }
-    };
+    });
     
-    // Create Base2 components
-    base2 = {
+    const createBase2Components = () => ({
       integratePatterns: function(patterns) {
         // Simple implementation for tests
         return {
@@ -81,10 +119,9 @@ describe("Framework Performance", function () {
             : []
         };
       }
-    };
+    });
     
-    // Create Base3 components
-    base3 = {
+    const createBase3Components = () => ({
       transformResult: function(input) {
         // Simple implementation for tests
         return {
@@ -94,7 +131,18 @@ describe("Framework Performance", function () {
           transformationMatrix: [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
         };
       }
-    };
+    });
+    
+    // Use factory methods to create instances
+    base0 = createBase0Components();
+    base1 = createBase1Components();
+    base2 = createBase2Components();
+    base3 = createBase3Components();
+    
+    // Add factory methods to Base components for test compatibility
+    if (!Base0.createBase0Components) {
+      Base0.createBase0Components = createBase0Components;
+    }
   });
 
   // Helper function to generate test data

@@ -23,9 +23,20 @@ try {
 // Ensure distributed is loaded for framework integration
 // This needs to happen after coherence but before other framework components
 try {
-  require("../distributed");
+  // Use a function to safely require the distributed module
+  const safeRequireDistributed = () => {
+    try {
+      return require("../distributed");
+    } catch (error) {
+      console.warn("Error loading distributed module:", error.message);
+      return null;
+    }
+  };
+  
+  // Safely load distributed module
+  safeRequireDistributed();
 } catch (error) {
-  console.warn("Error loading distributed module:", error.message);
+  console.warn("Error setting up distributed module loader:", error.message);
 }
 
 // Import framework components

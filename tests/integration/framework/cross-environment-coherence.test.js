@@ -46,16 +46,15 @@ describe("Framework Cross-Environment Coherence", () => {
     environmentBridge = createEnvironmentBridge();
 
     // Initialize framework components using factory pattern
-    // Create Base0 components with test implementations
-    base0 = {
+    // Create factory functions for all base components
+    const createBase0Components = () => ({
       processData: function(data) {
         // Implementation for tests
         return data.map(item => Array.isArray(item) ? [...item] : item);
       }
-    };
+    });
     
-    // Create Base1 components
-    base1 = {
+    const createBase1Components = () => ({
       recognizePattern: function(pattern) {
         // Simple implementation for tests
         return {
@@ -64,10 +63,9 @@ describe("Framework Cross-Environment Coherence", () => {
           data: pattern
         };
       }
-    };
+    });
     
-    // Create Base2 components
-    base2 = {
+    const createBase2Components = () => ({
       integratePatterns: function(patterns) {
         // Simple implementation for tests
         return {
@@ -77,10 +75,9 @@ describe("Framework Cross-Environment Coherence", () => {
             : []
         };
       }
-    };
+    });
     
-    // Create Base3 components
-    base3 = {
+    const createBase3Components = () => ({
       transformResult: function(input) {
         // Simple implementation for tests
         return {
@@ -90,7 +87,18 @@ describe("Framework Cross-Environment Coherence", () => {
           transformationMatrix: [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
         };
       }
-    };
+    });
+    
+    // Use factory methods to create instances
+    base0 = createBase0Components();
+    base1 = createBase1Components();
+    base2 = createBase2Components();
+    base3 = createBase3Components();
+    
+    // Add factory methods to Base components for Jest compatibility
+    if (!Base0.createBase0Components) {
+      Base0.createBase0Components = createBase0Components;
+    }
 
     // Skip tests if bridge creation failed
     if (!environmentBridge) {
