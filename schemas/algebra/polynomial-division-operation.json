@@ -1,0 +1,525 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/polynomial-division-operation.json",
+  "title": "Polynomial Division Operation Schema",
+  "description": "Schema defining division operation within the polynomial ring domain using the UOR prime factorization framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "operationType", "domain", "operationRules", "homomorphismProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "const": "urn:uor:algebra:operation:polynomial-division",
+      "description": "Unique identifier for polynomial division operation"
+    },
+    "operationType": {
+      "type": "string",
+      "const": "division",
+      "description": "Type of operation"
+    },
+    "name": {
+      "type": "string",
+      "const": "Polynomial Division",
+      "description": "Human-readable name for the operation"
+    },
+    "description": {
+      "type": "string",
+      "const": "Division operation in the domain of polynomials, including both exact division and division with remainder",
+      "description": "Description of the operation"
+    },
+    "symbol": {
+      "type": "string",
+      "const": "÷",
+      "description": "Mathematical symbol for division"
+    },
+    "domain": {
+      "type": "object",
+      "description": "The domain in which this operation is defined",
+      "required": ["id", "name", "elements"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "const": "urn:uor:domain:algebra:polynomial-ring",
+          "description": "Identifier for the polynomial ring domain"
+        },
+        "name": {
+          "type": "string",
+          "const": "Polynomial Ring Domain",
+          "description": "Name of the domain"
+        },
+        "elements": {
+          "type": "string",
+          "const": "polynomials",
+          "description": "Type of elements this operation works with"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Constraints on the operation's domain"
+          },
+          "default": [
+            "Division is defined only when the divisor is non-zero",
+            "For exact division, the dividend must be divisible by the divisor",
+            "For division with remainder, coefficients must be from a field to ensure a unique representation"
+          ]
+        }
+      }
+    },
+    "operationRules": {
+      "type": "object",
+      "description": "Rules defining how polynomial division works",
+      "required": ["divisionWithRemainder", "exactDivision"],
+      "properties": {
+        "divisionWithRemainder": {
+          "type": "object",
+          "description": "Definition of division with remainder (Euclidean division)",
+          "required": ["definition", "algorithm", "uniqueness"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "For polynomials f(x) and g(x) ≠ 0, there exist unique polynomials q(x) (quotient) and r(x) (remainder) such that f(x) = g(x)·q(x) + r(x) where either r(x) = 0 or degree(r(x)) < degree(g(x))",
+              "description": "Definition of division with remainder"
+            },
+            "algorithm": {
+              "type": "string",
+              "const": "Division is performed by repeatedly subtracting multiples of the divisor from the dividend, each time eliminating the highest-degree term",
+              "description": "Algorithm for division with remainder"
+            },
+            "uniqueness": {
+              "type": "string",
+              "const": "The quotient and remainder are uniquely determined when the coefficient ring is a field",
+              "description": "Uniqueness of the representation"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "dividend": {
+                    "type": "string",
+                    "description": "Dividend polynomial"
+                  },
+                  "divisor": {
+                    "type": "string",
+                    "description": "Divisor polynomial"
+                  },
+                  "quotient": {
+                    "type": "string",
+                    "description": "Quotient polynomial"
+                  },
+                  "remainder": {
+                    "type": "string",
+                    "description": "Remainder polynomial"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the division"
+                  }
+                }
+              },
+              "default": [
+                {
+                  "dividend": "x³ + 2x² + 3x + 4",
+                  "divisor": "x² + 1",
+                  "quotient": "x + 2",
+                  "remainder": "2x + 2",
+                  "explanation": "Divide x³ + 2x² + 3x + 4 by x² + 1: First, divide x³ by x² to get x·(x² + 1) = x³ + x. Subtract from dividend: x³ + 2x² + 3x + 4 - (x³ + x) = 2x² + 2x + 4. Next, divide 2x² by x² to get 2·(x² + 1) = 2x² + 2. Subtract: 2x² + 2x + 4 - (2x² + 2) = 2x + 2. Since degree(2x + 2) < degree(x² + 1), this is the remainder. So quotient = x + 2, remainder = 2x + 2."
+                }
+              ]
+            }
+          }
+        },
+        "exactDivision": {
+          "type": "object",
+          "description": "Definition of exact division (without remainder)",
+          "required": ["definition", "factorizationView"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "A polynomial f(x) is exactly divisible by g(x) if there exists a polynomial q(x) such that f(x) = g(x)·q(x)",
+              "description": "Definition of exact division"
+            },
+            "factorizationView": {
+              "type": "string",
+              "const": "In terms of irreducible factorization, exact division corresponds to removing factors: if f(x) = c₁·∏ pᵢ(x)^aᵢ and g(x) = c₂·∏ pᵢ(x)^bᵢ, then f(x)/g(x) = (c₁/c₂)·∏ pᵢ(x)^(aᵢ-bᵢ) where the exponents aᵢ-bᵢ are non-negative",
+              "description": "View of exact division through factorization"
+            },
+            "divisibilityCondition": {
+              "type": "string",
+              "const": "A polynomial f(x) is divisible by g(x) if and only if every irreducible factor of g(x) is also a factor of f(x) with at least the same multiplicity",
+              "description": "Condition for divisibility"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "polynomial": {
+                          "type": "string",
+                          "description": "Standard expression"
+                        },
+                        "factorization": {
+                          "type": "string",
+                          "description": "Irreducible factorization"
+                        }
+                      }
+                    }
+                  },
+                  "result": {
+                    "type": "object",
+                    "properties": {
+                      "polynomial": {
+                        "type": "string",
+                        "description": "Standard expression of result"
+                      },
+                      "factorization": {
+                        "type": "string",
+                        "description": "Irreducible factorization of result"
+                      }
+                    }
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the division using factorization"
+                  }
+                }
+              },
+              "default": [
+                {
+                  "operands": [
+                    {
+                      "polynomial": "x³ - 1",
+                      "factorization": "(x - 1)(x² + x + 1)"
+                    },
+                    {
+                      "polynomial": "x - 1",
+                      "factorization": "(x - 1)"
+                    }
+                  ],
+                  "result": {
+                    "polynomial": "x² + x + 1",
+                    "factorization": "(x² + x + 1)"
+                  },
+                  "explanation": "Dividing (x - 1)(x² + x + 1) by (x - 1) using factorization: remove the factor (x - 1) from the dividend to get (x² + x + 1)."
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "homomorphismProperties": {
+      "type": "object",
+      "description": "How polynomial division demonstrates homomorphism properties in the UOR framework",
+      "required": ["exactDivisionHomomorphism", "remainderRelationship"],
+      "properties": {
+        "exactDivisionHomomorphism": {
+          "type": "object",
+          "properties": {
+            "sourceOperation": {
+              "type": "string",
+              "const": "Exact division in polynomial ring",
+              "description": "Operation in the source domain (standard representation)"
+            },
+            "targetOperation": {
+              "type": "string",
+              "const": "Subtraction of exponent vectors in irreducible factorization",
+              "description": "Corresponding operation in the target domain (prime factorization)"
+            },
+            "mappingFunction": {
+              "type": "string",
+              "const": "For factorizations φ(f) = {(p₁, a₁), (p₂, a₂), ...} and φ(g) = {(p₁, b₁), (p₂, b₂), ...}, the exact division mapping is φ(f)/φ(g) = {(p₁, a₁-b₁), (p₂, a₂-b₂), ...} where each a_i ≥ b_i",
+              "description": "Function that maps between domains"
+            }
+          }
+        },
+        "remainderRelationship": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "const": "Division with remainder does not have a direct representation in the prime factorization space. The remainder term represents the part of the dividend that cannot be expressed as a multiple of the divisor.",
+              "description": "Relationship with remainder in UOR"
+            },
+            "interpretation": {
+              "type": "string",
+              "const": "In UOR terms, the remainder represents the 'incompatible' part of the dividend's structure relative to the divisor, which must be expressed in the standard (coefficient) representation.",
+              "description": "Interpretation of remainder in UOR"
+            }
+          }
+        },
+        "structurePreservation": {
+          "type": "object",
+          "properties": {
+            "isomorphism": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether the mapping for exact division is an isomorphism"
+            },
+            "preservedStructure": {
+              "type": "string",
+              "const": "Divisibility lattice structure",
+              "description": "Mathematical structure preserved by the mapping"
+            },
+            "explanation": {
+              "type": "string",
+              "const": "The exact division operation in polynomial rings maps directly to the componentwise subtraction operation in the factorization space, provided all resulting exponents are non-negative. This reflects the fact that a polynomial is divisible by another if and only if its factorization contains all the irreducible factors of the divisor with at least the same multiplicities.",
+              "description": "Explanation of how structure is preserved"
+            }
+          }
+        },
+        "mathematicalFormulation": {
+          "type": "string",
+          "const": "For exact division, φ(f(x) / g(x)) = φ(f(x)) - φ(g(x)), where φ is the irreducible factorization mapping and subtraction requires all resulting exponents to be non-negative",
+          "description": "Formal mathematical formulation of the homomorphism"
+        }
+      }
+    },
+    "algebraicProperties": {
+      "type": "object",
+      "description": "Algebraic properties of polynomial division",
+      "properties": {
+        "nonCommutativity": {
+          "type": "object",
+          "properties": {
+            "isCommutative": {
+              "type": "boolean",
+              "const": false,
+              "description": "Whether division is commutative"
+            },
+            "counterexample": {
+              "type": "string",
+              "const": "(x² + x) ÷ x = x + 1, but x ÷ (x² + x) is not even a polynomial",
+              "description": "Counterexample to commutativity"
+            }
+          }
+        },
+        "nonAssociativity": {
+          "type": "object",
+          "properties": {
+            "isAssociative": {
+              "type": "boolean",
+              "const": false,
+              "description": "Whether division is associative"
+            },
+            "counterexample": {
+              "type": "string",
+              "const": "((x³) ÷ x) ÷ x = x² ÷ x = x, but (x³) ÷ (x ÷ x) is undefined since x ÷ x = 1",
+              "description": "Counterexample to associativity"
+            }
+          }
+        },
+        "identityElement": {
+          "type": "object",
+          "properties": {
+            "rightIdentity": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether a right identity element exists"
+            },
+            "rightIdentityValue": {
+              "type": "string",
+              "const": "1 (constant polynomial)",
+              "description": "Value of the right identity"
+            },
+            "rightIdentityProperty": {
+              "type": "string",
+              "const": "f(x) ÷ 1 = f(x) for all polynomials f(x)",
+              "description": "Property of the right identity"
+            },
+            "leftIdentityExists": {
+              "type": "boolean",
+              "const": false,
+              "description": "Whether a left identity element exists"
+            },
+            "note": {
+              "type": "string",
+              "const": "Division in polynomial rings is a right operation, not a binary operation on the full ring",
+              "description": "Note about the identity element"
+            }
+          }
+        },
+        "divisionAlgebra": {
+          "type": "string",
+          "const": "Polynomial rings are not division algebras: not every non-zero polynomial has a multiplicative inverse",
+          "description": "Property related to division algebra"
+        },
+        "fieldOfFractions": {
+          "type": "string",
+          "const": "The field of fractions of F[x] is the field of rational functions F(x), where full division is possible for any non-zero divisor",
+          "description": "Relationship to field of fractions"
+        },
+        "degreeProperty": {
+          "type": "string",
+          "const": "For polynomials f(x) and g(x) with g(x) ≠ 0, when f(x) = g(x)·q(x) + r(x) with r(x) = 0 or degree(r(x)) < degree(g(x)), then degree(q(x)) = degree(f(x)) - degree(g(x)) when f(x) is divisible by g(x)",
+          "description": "Property relating to polynomial degrees"
+        }
+      }
+    },
+    "algorithmImplementation": {
+      "type": "object",
+      "description": "Implementation of polynomial division as algorithms",
+      "properties": {
+        "polynomialDivisionAlgorithm": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Polynomial Long Division",
+              "description": "Name of the algorithm"
+            },
+            "pseudocode": {
+              "type": "string",
+              "const": "function polynomial_division(f, g):\n  // f and g are arrays of coefficients [a₀, a₁, ..., aₙ]\n  // Returns quotient and remainder as coefficient arrays\n  \n  if g is zero polynomial:\n    error \"Division by zero\"\n  \n  // Initialize quotient and remainder\n  dividend = copy(f)\n  divisor = copy(g)\n  \n  // Normalize divisor to make leading coefficient 1 if working in a field\n  if working in a field:\n    lc = divisor[degree(divisor)]\n    for i = 0 to degree(divisor):\n      divisor[i] /= lc\n  \n  quotient = array of zeros of length (degree(dividend) - degree(divisor) + 1)\n  \n  // Perform division\n  while degree(dividend) >= degree(divisor):\n    // Calculate the leading term of the quotient\n    d = degree(dividend) - degree(divisor)\n    c = dividend[degree(dividend)] / divisor[degree(divisor)]\n    quotient[d] = c\n    \n    // Subtract c * x^d * divisor from the dividend\n    for i = 0 to degree(divisor):\n      dividend[i + d] -= c * divisor[i]\n    \n    // Trim leading zeros in dividend\n    while degree(dividend) > 0 and dividend[degree(dividend)] == 0:\n      dividend.pop()\n  \n  remainder = dividend\n  \n  return {quotient, remainder}",
+              "description": "Pseudocode for polynomial long division"
+            },
+            "complexity": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "type": "string",
+                  "const": "O(n·m) where n is the degree of the dividend and m is the degree of the divisor",
+                  "description": "Time complexity"
+                },
+                "space": {
+                  "type": "string",
+                  "const": "O(n) for storing the quotient and remainder",
+                  "description": "Space complexity"
+                }
+              }
+            }
+          }
+        },
+        "factorizationAlgorithm": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Factorization-based Division",
+              "description": "Name of the algorithm"
+            },
+            "applicability": {
+              "type": "string",
+              "const": "Only applicable for exact division (when dividend is divisible by divisor)",
+              "description": "When this algorithm is applicable"
+            },
+            "pseudocode": {
+              "type": "string",
+              "const": "function divide_by_factorization(f, g):\n  // Get factorizations\n  f_factors = factorize(f)\n  g_factors = factorize(g)\n  \n  // Check divisibility\n  for each factor p in g_factors:\n    if p not in f_factors or f_factors[p] < g_factors[p]:\n      error \"Not divisible\"\n  \n  // Compute result factors by subtracting exponents\n  result_factors = {}\n  result_constant = f.constant / g.constant\n  \n  for each factor p in f_factors:\n    if p in g_factors:\n      exp = f_factors[p] - g_factors[p]\n      if exp > 0:\n        result_factors[p] = exp\n    else:\n      result_factors[p] = f_factors[p]\n  \n  // Reconstruct polynomial from factorization\n  return reconstruct_from_factors(result_constant, result_factors)",
+              "description": "Pseudocode for factorization-based division"
+            },
+            "advantages": {
+              "type": "string",
+              "const": "Very efficient when factorizations are already known; directly uses the UOR representation",
+              "description": "Advantages of this approach"
+            },
+            "limitations": {
+              "type": "string",
+              "const": "Cannot handle division with remainder; requires complete factorizations of both polynomials",
+              "description": "Limitations of this approach"
+            }
+          }
+        },
+        "fastDivisionAlgorithms": {
+          "type": "array",
+          "description": "Advanced algorithms for polynomial division",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the algorithm"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the algorithm"
+              },
+              "complexity": {
+                "type": "string",
+                "description": "Complexity of the algorithm"
+              }
+            }
+          },
+          "default": [
+            {
+              "name": "Newton Iteration Method",
+              "description": "Uses Newton iteration to compute the reciprocal of the divisor, then multiplies",
+              "complexity": "O(n log n) for polynomials of similar degrees using fast multiplication algorithms"
+            },
+            {
+              "name": "FFT-based Division",
+              "description": "Uses Fast Fourier Transform for efficient division of large polynomials",
+              "complexity": "O(n log n) where n is the maximum degree"
+            }
+          ]
+        }
+      }
+    },
+    "observerFrameViews": {
+      "type": "array",
+      "description": "Views of polynomial division from different observer frames",
+      "items": {
+        "type": "object",
+        "required": ["frameName", "interpretation"],
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of division in this frame"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Examples of division in this frame"
+            }
+          }
+        }
+      },
+      "default": [
+        {
+          "frameName": "Coefficient-List",
+          "interpretation": "Division as sequential elimination of leading terms through the polynomial long division algorithm",
+          "examples": [
+            "Dividing x³ + 2x² + 3x + 4 by x² + 1 involves eliminating leading terms in sequence"
+          ]
+        },
+        {
+          "frameName": "Factorization",
+          "interpretation": "Exact division as removal of irreducible factors, subtracting their exponents in the prime factorization",
+          "examples": [
+            "Dividing (x-1)²(x+1) by (x-1) results in (x-1)(x+1) through exponent subtraction"
+          ]
+        },
+        {
+          "frameName": "Algebraic",
+          "interpretation": "Division as the inverse of multiplication in the ring of polynomials, with remainder handling the non-invertible nature of the ring",
+          "examples": [
+            "Division with remainder as expressing any polynomial in terms of a given polynomial and a remainder"
+          ]
+        },
+        {
+          "frameName": "Functional",
+          "interpretation": "Division as constructing a function q such that f(x) = g(x)·q(x) + r(x) with degree constraints on r",
+          "examples": [
+            "Division as finding the function q(x) that best approximates f(x)/g(x) with a polynomial"
+          ]
+        }
+      ]
+    }
+  }
+}

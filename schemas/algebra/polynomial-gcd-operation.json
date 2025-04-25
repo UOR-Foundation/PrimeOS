@@ -1,0 +1,532 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/polynomial-gcd-operation.json",
+  "title": "Polynomial GCD Operation Schema",
+  "description": "Schema defining the greatest common divisor operation for polynomials within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "operationType", "domain", "operationRules", "homomorphismProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "const": "urn:uor:algebra:operation:polynomial-gcd",
+      "description": "Unique identifier for polynomial GCD operation"
+    },
+    "operationType": {
+      "type": "string",
+      "const": "gcd",
+      "description": "Type of operation"
+    },
+    "name": {
+      "type": "string",
+      "const": "Polynomial Greatest Common Divisor",
+      "description": "Human-readable name for the operation"
+    },
+    "description": {
+      "type": "string",
+      "const": "Greatest common divisor operation in the domain of polynomials, defined using both division algorithm and irreducible factorization approaches",
+      "description": "Description of the operation"
+    },
+    "symbol": {
+      "type": "string",
+      "const": "gcd",
+      "description": "Mathematical symbol for GCD"
+    },
+    "domain": {
+      "type": "object",
+      "description": "The domain in which this operation is defined",
+      "required": ["id", "name", "elements"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "const": "urn:uor:domain:algebra:polynomial-ring",
+          "description": "Identifier for the polynomial ring domain"
+        },
+        "name": {
+          "type": "string",
+          "const": "Polynomial Ring Domain",
+          "description": "Name of the domain"
+        },
+        "elements": {
+          "type": "string",
+          "const": "polynomials",
+          "description": "Type of elements this operation works with"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Constraints on the operation's domain"
+          },
+          "default": [
+            "Coefficients must be from a field for the Euclidean algorithm to work properly",
+            "At least one of the input polynomials must be non-zero"
+          ]
+        }
+      }
+    },
+    "operationRules": {
+      "type": "object",
+      "description": "Rules defining how polynomial GCD works",
+      "required": ["formalDefinition", "euclideanAlgorithm", "factorizationApproach"],
+      "properties": {
+        "formalDefinition": {
+          "type": "string",
+          "const": "For non-zero polynomials f(x) and g(x), their GCD is the highest degree monic polynomial d(x) such that d(x) divides both f(x) and g(x)",
+          "description": "Formal mathematical definition of polynomial GCD"
+        },
+        "euclideanAlgorithm": {
+          "type": "object",
+          "description": "Definition via Euclidean algorithm",
+          "required": ["definition", "algorithm"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "The GCD can be computed using the Euclidean algorithm, which recursively applies polynomial division with remainder to obtain successive remainders until a zero remainder is reached",
+              "description": "Definition in terms of Euclidean algorithm"
+            },
+            "algorithm": {
+              "type": "string",
+              "const": "To compute gcd(f,g), apply the division algorithm: f = q·g + r, then gcd(f,g) = gcd(g,r). Repeat until r = 0, at which point the last non-zero remainder is the GCD (made monic)",
+              "description": "Steps of the Euclidean algorithm"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "Operand expressions"
+                    }
+                  },
+                  "result": {
+                    "type": "string",
+                    "description": "Result of the GCD operation"
+                  },
+                  "steps": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "Steps in the Euclidean algorithm"
+                    }
+                  }
+                }
+              },
+              "default": [
+                {
+                  "operands": ["x³ - 1", "x² - 1"],
+                  "result": "x - 1",
+                  "steps": [
+                    "x³ - 1 = (x)(x² - 1) + (x - 1)",
+                    "x² - 1 = (x + 1)(x - 1) + 0",
+                    "Last non-zero remainder is (x - 1), which is already monic"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "factorizationApproach": {
+          "type": "object",
+          "description": "Definition via factorization",
+          "required": ["definition", "method"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "When the irreducible factorizations of f(x) and g(x) are known, their GCD can be computed directly as the product of their common irreducible factors, each raised to the minimum of its exponents in f and g",
+              "description": "Definition in terms of factorization"
+            },
+            "method": {
+              "type": "string",
+              "const": "For f(x) = c₁·∏ pᵢ(x)^aᵢ and g(x) = c₂·∏ pⱼ(x)^bⱼ, the GCD is ∏ pₖ(x)^min(aₖ,bₖ) where pₖ ranges over all common irreducible factors",
+              "description": "Method for computing GCD using factorization"
+            },
+            "normalization": {
+              "type": "string",
+              "const": "The result is typically normalized to be monic (leading coefficient 1). In a UFD like F[x], this ensures a unique representative for the GCD up to multiplication by units",
+              "description": "Normalization of the GCD result"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "polynomial": {
+                          "type": "string",
+                          "description": "Standard expression"
+                        },
+                        "factorization": {
+                          "type": "string",
+                          "description": "Irreducible factorization"
+                        }
+                      }
+                    }
+                  },
+                  "result": {
+                    "type": "object",
+                    "properties": {
+                      "polynomial": {
+                        "type": "string",
+                        "description": "Standard expression of result"
+                      },
+                      "factorization": {
+                        "type": "string",
+                        "description": "Irreducible factorization of result"
+                      }
+                    }
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the GCD computation using factorization"
+                  }
+                }
+              },
+              "default": [
+                {
+                  "operands": [
+                    {
+                      "polynomial": "x⁴ - 1",
+                      "factorization": "(x - 1)(x + 1)(x² + 1)"
+                    },
+                    {
+                      "polynomial": "x² - 1",
+                      "factorization": "(x - 1)(x + 1)"
+                    }
+                  ],
+                  "result": {
+                    "polynomial": "x² - 1",
+                    "factorization": "(x - 1)(x + 1)"
+                  },
+                  "explanation": "The common factors of (x - 1)(x + 1)(x² + 1) and (x - 1)(x + 1) are (x - 1) and (x + 1), each with minimum exponent 1. The GCD is therefore (x - 1)(x + 1) = x² - 1."
+                },
+                {
+                  "operands": [
+                    {
+                      "polynomial": "x³ - x",
+                      "factorization": "x(x - 1)(x + 1)"
+                    },
+                    {
+                      "polynomial": "x² - 1",
+                      "factorization": "(x - 1)(x + 1)"
+                    }
+                  ],
+                  "result": {
+                    "polynomial": "x² - 1",
+                    "factorization": "(x - 1)(x + 1)"
+                  },
+                  "explanation": "The common factors of x(x - 1)(x + 1) and (x - 1)(x + 1) are (x - 1) and (x + 1), each with minimum exponent 1. The GCD is therefore (x - 1)(x + 1) = x² - 1."
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "homomorphismProperties": {
+      "type": "object",
+      "description": "How polynomial GCD demonstrates homomorphism properties in the UOR framework",
+      "required": ["operationMapping", "structurePreservation"],
+      "properties": {
+        "operationMapping": {
+          "type": "object",
+          "properties": {
+            "sourceOperation": {
+              "type": "string",
+              "const": "GCD in polynomial ring",
+              "description": "Operation in the source domain (standard representation)"
+            },
+            "targetOperation": {
+              "type": "string",
+              "const": "Elementwise minimum of exponent vectors in irreducible factorization",
+              "description": "Corresponding operation in the target domain (prime factorization)"
+            },
+            "mappingFunction": {
+              "type": "string",
+              "const": "For factorizations φ(f) = {(p₁, a₁), (p₂, a₂), ...} and φ(g) = {(p₁, b₁), (p₂, b₂), ...}, the GCD mapping is min(φ(f), φ(g)) = {(p₁, min(a₁, b₁)), (p₂, min(a₂, b₂)), ...}",
+              "description": "Function that maps between domains"
+            }
+          }
+        },
+        "structurePreservation": {
+          "type": "object",
+          "properties": {
+            "isomorphism": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether the mapping is an isomorphism"
+            },
+            "preservedStructure": {
+              "type": "string",
+              "const": "Lattice structure of polynomial divisibility",
+              "description": "Mathematical structure preserved by the mapping"
+            },
+            "explanation": {
+              "type": "string",
+              "const": "The GCD operation in polynomial rings maps directly to the componentwise minimum operation in the factorization space. This reflects the fact that GCD captures the common irreducible factors with their minimum multiplicities.",
+              "description": "Explanation of how structure is preserved"
+            }
+          }
+        },
+        "mathematicalFormulation": {
+          "type": "string",
+          "const": "φ(gcd(f(x), g(x))) = min(φ(f(x)), φ(g(x))), where φ is the irreducible factorization mapping and min operates componentwise on exponent vectors",
+          "description": "Formal mathematical formulation of the homomorphism"
+        }
+      }
+    },
+    "algebraicProperties": {
+      "type": "object",
+      "description": "Algebraic properties of polynomial GCD",
+      "properties": {
+        "commutativity": {
+          "type": "object",
+          "properties": {
+            "isCommutative": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether GCD is commutative"
+            },
+            "formula": {
+              "type": "string",
+              "const": "gcd(f(x), g(x)) = gcd(g(x), f(x))",
+              "description": "Formula demonstrating commutativity"
+            }
+          }
+        },
+        "associativity": {
+          "type": "object",
+          "properties": {
+            "isAssociative": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether GCD is associative"
+            },
+            "formula": {
+              "type": "string",
+              "const": "gcd(gcd(f(x), g(x)), h(x)) = gcd(f(x), gcd(g(x), h(x)))",
+              "description": "Formula demonstrating associativity"
+            }
+          }
+        },
+        "idempotence": {
+          "type": "object",
+          "properties": {
+            "isIdempotent": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether GCD is idempotent"
+            },
+            "formula": {
+              "type": "string",
+              "const": "gcd(f(x), f(x)) = f(x)",
+              "description": "Formula demonstrating idempotence"
+            }
+          }
+        },
+        "identityElement": {
+          "type": "object",
+          "properties": {
+            "exists": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether an identity element exists"
+            },
+            "value": {
+              "type": "string",
+              "const": "0 polynomial (with special handling)",
+              "description": "Value of the identity element"
+            },
+            "note": {
+              "type": "string",
+              "const": "By convention, gcd(f(x), 0) = f(x) (made monic). The 0 polynomial acts as an absorbing element in the context of GCD.",
+              "description": "Note about the identity element"
+            }
+          }
+        },
+        "degreeProperty": {
+          "type": "string",
+          "const": "degree(gcd(f(x), g(x))) ≤ min(degree(f(x)), degree(g(x)))",
+          "description": "Property relating to polynomial degrees"
+        },
+        "bézoutIdentity": {
+          "type": "string",
+          "const": "For any polynomials f(x) and g(x) with gcd d(x), there exist polynomials s(x) and t(x) such that s(x)·f(x) + t(x)·g(x) = d(x)",
+          "description": "Bézout's identity for polynomials"
+        },
+        "latticeProperty": {
+          "type": "string",
+          "const": "The GCD operation, together with the least common multiple (LCM) operation, forms a lattice structure on the set of monic polynomials ordered by divisibility",
+          "description": "Lattice property of polynomial GCD"
+        }
+      }
+    },
+    "algorithmImplementation": {
+      "type": "object",
+      "description": "Implementation of polynomial GCD as an algorithm",
+      "properties": {
+        "euclideanAlgorithm": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Polynomial Euclidean Algorithm",
+              "description": "Name of the algorithm"
+            },
+            "pseudocode": {
+              "type": "string",
+              "const": "function polynomial_gcd(f, g):\n  // Make sure neither polynomial is zero\n  if f is zero polynomial:\n    return make_monic(g)\n  if g is zero polynomial:\n    return make_monic(f)\n  \n  // Ensure degree(f) >= degree(g)\n  if degree(f) < degree(g):\n    swap(f, g)\n  \n  // Apply Euclidean algorithm\n  while g is not zero polynomial:\n    r = remainder of f divided by g\n    f = g\n    g = r\n  \n  // The last non-zero remainder is the GCD (make it monic)\n  return make_monic(f)",
+              "description": "Pseudocode for the Euclidean algorithm"
+            },
+            "complexity": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "type": "string",
+                  "const": "O(n²) where n is the maximum degree of the input polynomials",
+                  "description": "Time complexity"
+                },
+                "space": {
+                  "type": "string",
+                  "const": "O(n) for storing intermediate polynomials",
+                  "description": "Space complexity"
+                }
+              }
+            }
+          }
+        },
+        "factorizationAlgorithm": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Factorization-based GCD",
+              "description": "Name of the algorithm"
+            },
+            "pseudocode": {
+              "type": "string",
+              "const": "function gcd_by_factorization(f, g):\n  // Get factorizations\n  f_factors = factorize(f)\n  g_factors = factorize(g)\n  \n  // Initialize result\n  result_factors = {}\n  \n  // Find common factors with minimum exponents\n  for each factor p in (f_factors ∪ g_factors):\n    if p in f_factors and p in g_factors:\n      result_factors[p] = min(f_factors[p], g_factors[p])\n  \n  // Reconstruct polynomial from factorization\n  result = reconstruct_from_factors(result_factors)\n  \n  // Make the result monic\n  return make_monic(result)",
+              "description": "Pseudocode for the factorization-based algorithm"
+            },
+            "complexity": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "type": "string",
+                  "const": "Dominated by the factorization step, which can be exponential in the degree for worst-case inputs over ℚ",
+                  "description": "Time complexity"
+                },
+                "advantages": {
+                  "type": "string",
+                  "const": "Very efficient when factorizations are already known or easy to compute",
+                  "description": "Advantages of this approach"
+                }
+              }
+            }
+          }
+        },
+        "subresultantAlgorithm": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Subresultant Algorithm",
+              "description": "Name of the algorithm"
+            },
+            "description": {
+              "type": "string",
+              "const": "Uses subresultant polynomials to avoid coefficient growth when working over rings that are not fields",
+              "description": "Description of the algorithm"
+            },
+            "applicability": {
+              "type": "string",
+              "const": "Particularly useful for polynomials with integer coefficients",
+              "description": "When this algorithm is particularly useful"
+            }
+          }
+        },
+        "applications": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Applications of polynomial GCD"
+          },
+          "default": [
+            "Simplifying rational expressions involving polynomials",
+            "Computing polynomial LCM using the identity lcm(f,g) = (f·g)/gcd(f,g)",
+            "Determining if polynomials are coprime (gcd is a constant)",
+            "Finding Bézout coefficients for solving polynomial Diophantine equations",
+            "Square-free decomposition of polynomials"
+          ]
+        }
+      }
+    },
+    "observerFrameViews": {
+      "type": "array",
+      "description": "Views of polynomial GCD from different observer frames",
+      "items": {
+        "type": "object",
+        "required": ["frameName", "interpretation"],
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of GCD in this frame"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Examples of GCD in this frame"
+            }
+          }
+        }
+      },
+      "default": [
+        {
+          "frameName": "Factorization",
+          "interpretation": "GCD as the product of common irreducible factors with minimum exponents",
+          "examples": [
+            "gcd((x-1)²(x+1), (x-1)(x+2)) = (x-1) using common factor with minimum exponent"
+          ]
+        },
+        {
+          "frameName": "Divisibility",
+          "interpretation": "GCD as the monic polynomial of highest degree that divides both inputs",
+          "examples": [
+            "gcd(x² - 1, x³ - 1) = x - 1 is the highest degree monic polynomial dividing both"
+          ]
+        },
+        {
+          "frameName": "Root-Based",
+          "interpretation": "GCD as the monic polynomial whose roots are the common roots of the inputs, with minimum multiplicity",
+          "examples": [
+            "If f has roots {1,1,2} and g has roots {1,3}, their GCD has roots {1} with multiplicity 1"
+          ]
+        },
+        {
+          "frameName": "Algebraic",
+          "interpretation": "GCD as the generator of the ideal sum (f) + (g) in the polynomial ring",
+          "examples": [
+            "In F[x], the ideal generated by the GCD equals the sum of the ideals generated by f and g"
+          ]
+        }
+      ]
+    }
+  }
+}

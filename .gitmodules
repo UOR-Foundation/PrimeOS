@@ -1,0 +1,6 @@
+[submodule "schema-org"]
+	path = schema-org
+	url = https://github.com/schemaorg/schemaorg.git
+[submodule "json-schema-meta"]
+	path = json-schema-meta
+	url = https://github.com/json-schema-org/json-schema-spec.git

@@ -1,0 +1,389 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/transformations/logarithmic-bridge.json",
+  "title": "Logarithmic Bridge Schema",
+  "description": "Schema defining the logarithmic-exponential transformations between additive and multiplicative structures",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "type", "sourceStructure", "targetStructure", "transformationDirection"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the logarithmic bridge"
+    },
+    "type": {
+      "type": "string",
+      "const": "LogarithmicBridge",
+      "description": "Type of the UOR object"
+    },
+    "sourceStructure": {
+      "type": "object",
+      "required": ["domain", "structureType"],
+      "properties": {
+        "domain": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the source domain"
+        },
+        "structureType": {
+          "type": "string",
+          "enum": ["additive", "multiplicative"],
+          "description": "Type of mathematical structure in the source domain"
+        },
+        "operationSymbol": {
+          "type": "string",
+          "description": "Symbol for the operation in this structure"
+        },
+        "identityElement": {
+          "type": ["string", "number"],
+          "description": "Identity element for the operation"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Constraints on elements in this structure"
+        }
+      },
+      "description": "Source mathematical structure for the transformation"
+    },
+    "targetStructure": {
+      "type": "object",
+      "required": ["domain", "structureType"],
+      "properties": {
+        "domain": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the target domain"
+        },
+        "structureType": {
+          "type": "string",
+          "enum": ["additive", "multiplicative"],
+          "description": "Type of mathematical structure in the target domain"
+        },
+        "operationSymbol": {
+          "type": "string",
+          "description": "Symbol for the operation in this structure"
+        },
+        "identityElement": {
+          "type": ["string", "number"],
+          "description": "Identity element for the operation"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Constraints on elements in this structure"
+        }
+      },
+      "description": "Target mathematical structure for the transformation"
+    },
+    "transformationDirection": {
+      "type": "string",
+      "enum": ["logarithmic", "exponential", "bidirectional"],
+      "description": "Direction of the transformation between structures"
+    },
+    "transformationFunctions": {
+      "type": "object",
+      "properties": {
+        "logarithmic": {
+          "type": "object",
+          "properties": {
+            "function": {
+              "type": "string",
+              "description": "Mathematical function for the logarithmic transformation"
+            },
+            "domain": {
+              "type": "string",
+              "description": "Domain of the logarithmic function"
+            },
+            "codomain": {
+              "type": "string",
+              "description": "Codomain of the logarithmic function"
+            },
+            "baseParameter": {
+              "type": ["string", "number"],
+              "description": "Base parameter for the logarithmic function"
+            }
+          },
+          "description": "Logarithmic transformation function (multiplicative to additive)"
+        },
+        "exponential": {
+          "type": "object",
+          "properties": {
+            "function": {
+              "type": "string",
+              "description": "Mathematical function for the exponential transformation"
+            },
+            "domain": {
+              "type": "string",
+              "description": "Domain of the exponential function"
+            },
+            "codomain": {
+              "type": "string",
+              "description": "Codomain of the exponential function"
+            },
+            "baseParameter": {
+              "type": ["string", "number"],
+              "description": "Base parameter for the exponential function"
+            }
+          },
+          "description": "Exponential transformation function (additive to multiplicative)"
+        }
+      },
+      "description": "Mathematical functions implementing the transformations"
+    },
+    "homomorphismProperties": {
+      "type": "object",
+      "properties": {
+        "logarithmicIsHomomorphism": {
+          "type": "boolean",
+          "description": "Whether the logarithmic function is a homomorphism"
+        },
+        "exponentialIsHomomorphism": {
+          "type": "boolean",
+          "description": "Whether the exponential function is a homomorphism"
+        },
+        "homomorphismEquations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Equations demonstrating the homomorphism properties"
+        }
+      },
+      "description": "Properties related to the homomorphism nature of the transformations"
+    },
+    "baseTransformations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceBase", "targetBase", "transformationRule"],
+        "properties": {
+          "sourceBase": {
+            "type": ["string", "number"],
+            "description": "Source base for the transformation"
+          },
+          "targetBase": {
+            "type": ["string", "number"],
+            "description": "Target base for the transformation"
+          },
+          "transformationRule": {
+            "type": "string",
+            "description": "Rule for transforming between bases"
+          }
+        }
+      },
+      "description": "Rules for transforming between different bases"
+    },
+    "domainSpecificImplementations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["domain", "implementation"],
+        "properties": {
+          "domain": {
+            "type": "string",
+            "format": "uri",
+            "description": "Domain for this specific implementation"
+          },
+          "implementation": {
+            "type": "string",
+            "description": "Details of the implementation in this domain"
+          },
+          "specialConstraints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Special constraints for this domain implementation"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": ["string", "number", "object"],
+                  "description": "Example input"
+                },
+                "output": {
+                  "type": ["string", "number", "object"],
+                  "description": "Corresponding output"
+                },
+                "explanation": {
+                  "type": "string",
+                  "description": "Explanation of the transformation"
+                }
+              }
+            },
+            "description": "Examples of the transformation in this domain"
+          }
+        }
+      },
+      "description": "Domain-specific implementations of the logarithmic bridge"
+    },
+    "invariantProperties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["property", "description"],
+        "properties": {
+          "property": {
+            "type": "string",
+            "description": "An invariant property under the transformation"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of how the property remains invariant"
+          },
+          "mathematicalFormulation": {
+            "type": "string",
+            "description": "Mathematical formulation of the invariance"
+          }
+        }
+      },
+      "description": "Properties that remain invariant under the transformation"
+    },
+    "operationalMappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceOperation", "targetOperation", "mappingRule"],
+        "properties": {
+          "sourceOperation": {
+            "type": "string",
+            "description": "Operation in the source structure"
+          },
+          "targetOperation": {
+            "type": "string",
+            "description": "Corresponding operation in the target structure"
+          },
+          "mappingRule": {
+            "type": "string",
+            "description": "Rule for mapping between operations"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples demonstrating the operation mapping"
+          }
+        }
+      },
+      "description": "Mappings between operations in the source and target structures"
+    },
+    "applicationDomains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["domain", "application"],
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "A domain where this transformation is applicable"
+          },
+          "application": {
+            "type": "string",
+            "description": "Description of the application in this domain"
+          },
+          "benefits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Benefits of using this transformation in this domain"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of the application in this domain"
+          }
+        }
+      },
+      "description": "Domains where this logarithmic bridge is applicable"
+    },
+    "theoreticalFoundations": {
+      "type": "object",
+      "properties": {
+        "mathBranch": {
+          "type": "string",
+          "description": "Branch of mathematics providing the foundation"
+        },
+        "keyTheorems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the theorem"
+              },
+              "statement": {
+                "type": "string",
+                "description": "Statement of the theorem"
+              },
+              "relevance": {
+                "type": "string",
+                "description": "Relevance to the logarithmic bridge"
+              }
+            }
+          },
+          "description": "Key theorems supporting the logarithmic bridge"
+        }
+      },
+      "description": "Theoretical mathematical foundations for the logarithmic bridge"
+    },
+    "computationalAspects": {
+      "type": "object",
+      "properties": {
+        "timeComplexity": {
+          "type": "string",
+          "description": "Time complexity of the transformation"
+        },
+        "spaceComplexity": {
+          "type": "string",
+          "description": "Space complexity of the transformation"
+        },
+        "numericalConsiderations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Numerical considerations for implementation"
+        },
+        "approximationMethods": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "description": "Approximation method"
+              },
+              "error": {
+                "type": "string",
+                "description": "Error characteristics"
+              },
+              "applicability": {
+                "type": "string",
+                "description": "When to use this approximation"
+              }
+            }
+          },
+          "description": "Methods for approximate computation"
+        }
+      },
+      "description": "Computational aspects of the logarithmic bridge"
+    }
+  }
+}

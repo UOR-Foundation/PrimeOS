@@ -1,0 +1,312 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/coherence/coherence-measure.json",
+  "title": "Coherence Measure Schema",
+  "description": "Schema defining the structure and properties of coherence measures in the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "type", "measureDefinition", "mathematicalProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the coherence measure"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["Norm", "InnerProduct", "Metric", "RelationalMeasure", "TrilateralMeasure"],
+      "description": "The type of coherence measure"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the coherence measure"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the coherence measure and its purpose"
+    },
+    "measureDefinition": {
+      "type": "object",
+      "description": "Definition of the coherence measure",
+      "required": ["formula", "domain", "range"],
+      "properties": {
+        "formula": {
+          "type": "string",
+          "description": "Mathematical formula defining the measure"
+        },
+        "domain": {
+          "type": "object",
+          "description": "Domain of the measure function",
+          "properties": {
+            "spaceType": {
+              "type": "string",
+              "description": "Type of space the measure operates on"
+            },
+            "elements": {
+              "type": "string",
+              "description": "Description of the elements in the domain"
+            },
+            "structure": {
+              "type": "string",
+              "description": "Mathematical structure of the domain"
+            }
+          }
+        },
+        "range": {
+          "type": "object",
+          "description": "Range of the measure function",
+          "properties": {
+            "spaceType": {
+              "type": "string",
+              "description": "Type of space the measure maps to"
+            },
+            "valueType": {
+              "type": "string",
+              "enum": ["Real", "Complex", "NonNegativeReal", "Interval", "DiscreteSet"],
+              "description": "Type of values the measure produces"
+            },
+            "bounds": {
+              "type": "object",
+              "properties": {
+                "minimum": {
+                  "type": "string",
+                  "description": "Minimum possible value of the measure"
+                },
+                "maximum": {
+                  "type": "string",
+                  "description": "Maximum possible value of the measure"
+                }
+              }
+            }
+          }
+        },
+        "interpretation": {
+          "type": "string",
+          "description": "Conceptual interpretation of what the measure quantifies"
+        },
+        "computationMethod": {
+          "type": "string",
+          "description": "Method for computing the measure in practice"
+        }
+      }
+    },
+    "mathematicalProperties": {
+      "type": "object",
+      "description": "Mathematical properties of the coherence measure",
+      "required": ["spaceProperties", "functionalProperties"],
+      "properties": {
+        "spaceProperties": {
+          "type": "object",
+          "description": "Properties related to the space induced by the measure",
+          "properties": {
+            "inducesMetric": {
+              "type": "boolean",
+              "description": "Whether the measure induces a metric"
+            },
+            "completeness": {
+              "type": "boolean",
+              "description": "Whether the space is complete under this measure"
+            },
+            "separability": {
+              "type": "boolean",
+              "description": "Whether the space is separable under this measure"
+            },
+            "topologicalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Topological properties of the space under this measure"
+              }
+            }
+          }
+        },
+        "functionalProperties": {
+          "type": "object",
+          "description": "Properties of the measure as a function",
+          "properties": {
+            "isPositiveDefinite": {
+              "type": "boolean",
+              "description": "Whether the measure is positive definite"
+            },
+            "satisfiesTriangleInequality": {
+              "type": "boolean",
+              "description": "Whether the measure satisfies the triangle inequality"
+            },
+            "isSymmetric": {
+              "type": "boolean",
+              "description": "Whether the measure is symmetric"
+            },
+            "isHomogeneous": {
+              "type": "boolean",
+              "description": "Whether the measure is homogeneous"
+            },
+            "continuity": {
+              "type": "string",
+              "description": "Continuity properties of the measure"
+            },
+            "differentiability": {
+              "type": "string",
+              "description": "Differentiability properties of the measure"
+            }
+          }
+        },
+        "algebraicProperties": {
+          "type": "object",
+          "description": "Algebraic properties of the measure",
+          "properties": {
+            "satisfiesParallelogram": {
+              "type": "boolean",
+              "description": "Whether the measure satisfies the parallelogram law"
+            },
+            "submultiplicative": {
+              "type": "boolean",
+              "description": "Whether the measure is submultiplicative"
+            },
+            "subadditive": {
+              "type": "boolean",
+              "description": "Whether the measure is subadditive"
+            },
+            "dualityProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Properties related to duality"
+              }
+            }
+          }
+        }
+      }
+    },
+    "relationToInnerProduct": {
+      "type": "object",
+      "description": "Relationship to an inner product, if applicable",
+      "properties": {
+        "derivedFromInnerProduct": {
+          "type": "boolean",
+          "description": "Whether this measure is derived from an inner product"
+        },
+        "innerProductFormula": {
+          "type": "string",
+          "description": "Formula for the inner product, if applicable"
+        },
+        "innerProductId": {
+          "type": "string",
+          "description": "Identifier for the related inner product"
+        }
+      }
+    },
+    "relationToNorm": {
+      "type": "object",
+      "description": "Relationship to a norm, if applicable",
+      "properties": {
+        "derivedFromNorm": {
+          "type": "boolean",
+          "description": "Whether this measure is derived from a norm"
+        },
+        "normFormula": {
+          "type": "string",
+          "description": "Formula for the norm, if applicable"
+        },
+        "normId": {
+          "type": "string",
+          "description": "Identifier for the related norm"
+        }
+      }
+    },
+    "canonicalityProperties": {
+      "type": "object",
+      "description": "Properties related to canonicity and minimality",
+      "properties": {
+        "detectsCanonicalRepresentations": {
+          "type": "boolean",
+          "description": "Whether the measure can detect canonical representations"
+        },
+        "minimizationPrinciple": {
+          "type": "string",
+          "description": "Description of the minimization principle, if applicable"
+        },
+        "uniquenessOfMinimizers": {
+          "type": "string",
+          "description": "Description of the uniqueness of minimizers under this measure"
+        }
+      }
+    },
+    "observerDependence": {
+      "type": "object",
+      "description": "Dependencies on observer frames",
+      "properties": {
+        "isObserverInvariant": {
+          "type": "boolean",
+          "description": "Whether the measure is invariant across observer frames"
+        },
+        "transformationRules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "transformation": {
+                "type": "string",
+                "description": "Type of observer frame transformation"
+              },
+              "measureTransformationFormula": {
+                "type": "string",
+                "description": "How the measure transforms under this transformation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of this coherence measure",
+      "items": {
+        "type": "object",
+        "properties": {
+          "applicationDomain": {
+            "type": "string",
+            "description": "Domain of application"
+          },
+          "applicationDescription": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "benefits": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Benefits of using this measure in this application"
+            }
+          }
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "Examples demonstrating the coherence measure",
+      "items": {
+        "type": "object",
+        "properties": {
+          "objects": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Objects being measured"
+            }
+          },
+          "measurementValue": {
+            "type": "string",
+            "description": "Value of the coherence measure"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of the measurement"
+          }
+        }
+      }
+    }
+  }
+}

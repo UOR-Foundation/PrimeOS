@@ -1,0 +1,493 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/number-theory/addition-operation.json",
+  "title": "Addition Operation Schema",
+  "description": "Schema defining addition operation within the number theory domain using the UOR prime factorization framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "operationType", "domain", "operationRules", "homomorphismProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "const": "urn:uor:number-theory:operation:addition",
+      "description": "Unique identifier for addition operation"
+    },
+    "operationType": {
+      "type": "string",
+      "const": "addition",
+      "description": "Type of arithmetic operation"
+    },
+    "name": {
+      "type": "string",
+      "const": "Addition",
+      "description": "Human-readable name for the operation"
+    },
+    "description": {
+      "type": "string",
+      "const": "Addition operation in the domain of natural numbers, defined using prime factorization and a logarithmic-exponential bridge",
+      "description": "Description of the operation"
+    },
+    "symbol": {
+      "type": "string",
+      "const": "+",
+      "description": "Mathematical symbol for addition"
+    },
+    "domain": {
+      "type": "object",
+      "description": "The domain in which this operation is defined",
+      "required": ["id", "name", "elements"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "const": "urn:uor:domain:number-theory",
+          "description": "Identifier for the number theory domain"
+        },
+        "name": {
+          "type": "string",
+          "const": "Number Theory Domain",
+          "description": "Name of the domain"
+        },
+        "elements": {
+          "type": "string",
+          "const": "natural-numbers",
+          "description": "Type of elements this operation works with"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Constraints on the operation's domain"
+          },
+          "default": []
+        }
+      }
+    },
+    "operationRules": {
+      "type": "object",
+      "description": "Rules defining how addition works",
+      "required": ["formalDefinition", "standardRepresentation", "canonicalRepresentation"],
+      "properties": {
+        "formalDefinition": {
+          "type": "string",
+          "const": "For natural numbers a and b, a + b = c where c is the natural number whose value is the sum of a and b",
+          "description": "Formal mathematical definition of addition"
+        },
+        "standardRepresentation": {
+          "type": "object",
+          "description": "Standard decimal representation of addition",
+          "required": ["definition", "method"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "For natural numbers a and b in their decimal representations, a + b is computed according to the standard addition algorithm",
+              "description": "Definition in terms of standard decimal representation"
+            },
+            "method": {
+              "type": "string",
+              "const": "Standard addition algorithm involving digit-by-digit addition and carrying",
+              "description": "Method for computing addition in standard form"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "description": "Operand values"
+                    }
+                  },
+                  "result": {
+                    "type": "integer",
+                    "description": "Result of the addition"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the calculation"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "operands": [12, 15],
+                  "result": 27,
+                  "explanation": "12 + 15 = (10 + 2) + (10 + 5) = 20 + 7 = 27"
+                }
+              ]
+            }
+          }
+        },
+        "canonicalRepresentation": {
+          "type": "object",
+          "description": "Canonical representation using prime factorization",
+          "required": ["definition", "method", "transformationRules"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "For natural numbers a and b with prime factorizations, their sum a + b is defined by applying a logarithmic-exponential bridge: φ(a + b) = log(exp(φ(a)) + exp(φ(b)))",
+              "description": "Definition in terms of prime factorization"
+            },
+            "method": {
+              "type": "string",
+              "const": "Convert from prime factorization to standard form, perform addition, then convert back to prime factorization. In UOR terms, this uses the logarithmic-exponential bridge.",
+              "description": "Method for computing addition using prime factorization"
+            },
+            "transformationRules": {
+              "type": "array",
+              "description": "Rules for transforming prime factorizations under addition",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "rule": {
+                    "type": "string",
+                    "description": "A transformation rule for prime factorizations"
+                  },
+                  "formula": {
+                    "type": "string",
+                    "description": "Mathematical formula for the rule"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the rule"
+                  }
+                }
+              },
+              "default": [
+                {
+                  "rule": "Logarithmic-Exponential Bridge",
+                  "formula": "φ(a + b) = log(exp(φ(a)) + exp(φ(b)))",
+                  "explanation": "Addition requires transforming between the multiplicative structure of prime factorization and the additive structure of natural numbers"
+                },
+                {
+                  "rule": "Direct Computation",
+                  "formula": "a + b = c, where c has its own prime factorization",
+                  "explanation": "In practice, addition typically requires temporarily leaving the prime factorization domain"
+                }
+              ]
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "integer",
+                          "description": "Standard value"
+                        },
+                        "primeFactorization": {
+                          "type": "string",
+                          "description": "Prime factorization representation"
+                        }
+                      }
+                    }
+                  },
+                  "result": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "integer",
+                        "description": "Standard value of result"
+                      },
+                      "primeFactorization": {
+                        "type": "string",
+                        "description": "Prime factorization of result"
+                      }
+                    }
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the calculation using prime factorization"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "operands": [
+                    {
+                      "value": 12,
+                      "primeFactorization": "2^2 × 3^1"
+                    },
+                    {
+                      "value": 15,
+                      "primeFactorization": "3^1 × 5^1"
+                    }
+                  ],
+                  "result": {
+                    "value": 27,
+                    "primeFactorization": "3^3"
+                  },
+                  "explanation": "To add 12 + 15 using prime factorizations, we convert to standard form: (2^2 × 3^1) + (3^1 × 5^1) = 12 + 15 = 27. Then we find the prime factorization of 27, which is 3^3."
+                }
+              ]
+            }
+          }
+        },
+        "logarithmicBridge": {
+          "type": "object",
+          "description": "The logarithmic-exponential bridge used for addition",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "The logarithmic-exponential bridge maps between the additive structure of natural numbers and the multiplicative structure of prime factorizations",
+              "description": "Definition of the logarithmic bridge"
+            },
+            "transformation": {
+              "type": "string",
+              "const": "φ(a + b) = log(exp(φ(a)) + exp(φ(b))), where φ is the prime factorization mapping, and log and exp are the componentwise logarithm and exponential functions",
+              "description": "How the logarithmic transformation works"
+            },
+            "explanation": {
+              "type": "string",
+              "const": "Since addition is not a natural operation in the prime factorization domain (which is multiplicative), we use the logarithmic-exponential bridge to temporarily convert to a domain where addition is natural, perform the addition, and then convert back.",
+              "description": "Explanation of the bridge's purpose"
+            }
+          }
+        }
+      }
+    },
+    "homomorphismProperties": {
+      "type": "object",
+      "description": "How addition relates to homomorphism properties",
+      "required": ["operationMapping", "structurePreservation"],
+      "properties": {
+        "operationMapping": {
+          "type": "object",
+          "properties": {
+            "sourceOperation": {
+              "type": "string",
+              "const": "Addition in natural numbers",
+              "description": "Operation in the source domain (standard representation)"
+            },
+            "targetOperation": {
+              "type": "string",
+              "const": "log(exp(φ(a)) + exp(φ(b))) in prime factorization",
+              "description": "Corresponding operation in the target domain (prime factorization)"
+            },
+            "mappingFunction": {
+              "type": "string",
+              "const": "φ: ℕ⁺ → ℕ⁰^∞, where φ maps a natural number to its vector of prime exponents",
+              "description": "Function that maps between domains"
+            }
+          }
+        },
+        "structurePreservation": {
+          "type": "object",
+          "properties": {
+            "isomorphism": {
+              "type": "boolean",
+              "const": false,
+              "description": "Whether the mapping is an isomorphism for addition"
+            },
+            "preservedStructure": {
+              "type": "string",
+              "const": "Addition requires the logarithmic-exponential bridge and is not directly preserved",
+              "description": "Mathematical structure preserved by the mapping"
+            },
+            "explanation": {
+              "type": "string",
+              "const": "The prime factorization mapping φ does not directly preserve addition. This is because prime factorization naturally aligns with the multiplicative structure, not the additive structure. Addition requires the logarithmic-exponential bridge to transform between the additive and multiplicative domains.",
+              "description": "Explanation of how structure is preserved or not"
+            }
+          }
+        },
+        "mathematicalFormulation": {
+          "type": "string",
+          "const": "φ(a + b) = log(exp(φ(a)) + exp(φ(b))), where φ is the prime factorization mapping",
+          "description": "Formal mathematical formulation of the relationship"
+        }
+      }
+    },
+    "algebraicProperties": {
+      "type": "object",
+      "description": "Algebraic properties of addition",
+      "properties": {
+        "associativity": {
+          "type": "object",
+          "properties": {
+            "isAssociative": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether addition is associative"
+            },
+            "proof": {
+              "type": "string",
+              "const": "Addition is associative: (a + b) + c = a + (b + c)",
+              "description": "Reference to proof of associativity"
+            }
+          }
+        },
+        "commutativity": {
+          "type": "object",
+          "properties": {
+            "isCommutative": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether addition is commutative"
+            },
+            "proof": {
+              "type": "string",
+              "const": "Addition is commutative: a + b = b + a",
+              "description": "Reference to proof of commutativity"
+            }
+          }
+        },
+        "identityElement": {
+          "type": "object",
+          "properties": {
+            "exists": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether an identity element exists"
+            },
+            "value": {
+              "type": "integer",
+              "const": 0,
+              "description": "Value of the identity element"
+            },
+            "primeFactorization": {
+              "type": "string",
+              "const": "Not defined (0 has no prime factorization in the natural numbers)",
+              "description": "Prime factorization of the identity element"
+            },
+            "note": {
+              "type": "string",
+              "const": "The additive identity 0 is not within the natural numbers (ℕ⁺) domain as defined, but is included in the broader context",
+              "description": "Note about the identity element"
+            }
+          }
+        },
+        "inverseElements": {
+          "type": "object",
+          "properties": {
+            "exist": {
+              "type": "boolean",
+              "const": false,
+              "description": "Whether inverse elements exist"
+            },
+            "domain": {
+              "type": "string",
+              "const": "Not applicable in natural numbers; inverses exist in integers",
+              "description": "Domain where inverses exist"
+            },
+            "computation": {
+              "type": "string",
+              "const": "Not applicable in the natural number domain",
+              "description": "How inverses are computed"
+            }
+          }
+        },
+        "distributivity": {
+          "type": "object",
+          "properties": {
+            "distributesWith": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Operations addition distributes with"
+              },
+              "default": []
+            }
+          }
+        }
+      }
+    },
+    "algorithmImplementation": {
+      "type": "object",
+      "description": "Implementation of addition as an algorithm",
+      "properties": {
+        "pseudocode": {
+          "type": "string",
+          "const": "Function Add(a, b):\n  1. Convert a and b from their prime factorization representation to standard form\n     a_std = ConvertToStandard(φ(a))\n     b_std = ConvertToStandard(φ(b))\n  2. Perform standard addition\n     c_std = a_std + b_std\n  3. Compute the prime factorization of the result\n     φ(c) = ComputePrimeFactorization(c_std)\n  4. Return c with its prime factorization φ(c)",
+          "description": "Pseudocode for addition using prime factorization"
+        },
+        "computationalComplexity": {
+          "type": "object",
+          "properties": {
+            "timeComplexity": {
+              "type": "string",
+              "const": "O(max(log a, log b) + factorization complexity) where factorization complexity depends on the specific algorithm used",
+              "description": "Time complexity of the algorithm"
+            },
+            "spaceComplexity": {
+              "type": "string",
+              "const": "O(max(log a, log b)) for storing the prime factorizations and intermediate results",
+              "description": "Space complexity of the algorithm"
+            }
+          }
+        },
+        "optimizations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Optimizations for the algorithm"
+          },
+          "default": [
+            "Pre-compute and cache prime factorizations of frequently used numbers",
+            "Use lookup tables for small numbers",
+            "Implement special handling for powers of 2 and other common cases"
+          ]
+        }
+      }
+    },
+    "observerFrameViews": {
+      "type": "array",
+      "description": "Views of addition from different observer frames",
+      "items": {
+        "type": "object",
+        "required": ["frameName", "interpretation"],
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of addition in this frame"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Examples of addition in this frame"
+            }
+          }
+        }
+      },
+      "default": [
+        {
+          "frameName": "Standard-Decimal",
+          "interpretation": "Addition as combining quantities or measuring total length",
+          "examples": [
+            "12 + 15 = 27, interpreted as combining 12 objects with 15 objects"
+          ]
+        },
+        {
+          "frameName": "Prime-Factorization",
+          "interpretation": "Addition requires transformation as it's not natural in the prime factorization domain",
+          "examples": [
+            "Adding 12 (2² × 3¹) and 15 (3¹ × 5¹) requires leaving the prime domain, computing 27, then determining its factorization 3³"
+          ]
+        },
+        {
+          "frameName": "Logarithmic",
+          "interpretation": "Addition as logarithm of product of exponentiated values",
+          "examples": [
+            "log(exp(log(12)) + exp(log(15))) = log(exp(2.4849) + exp(2.7081)) = log(12 + 15) = log(27) = 3.2958"
+          ]
+        }
+      ]
+    }
+  }
+}

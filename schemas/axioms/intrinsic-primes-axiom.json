@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/axioms/intrinsic-primes-axiom.json",
+  "title": "Intrinsic Primes Axiom Schema",
+  "description": "Schema representing the Intrinsic Primes Axiom: A set P of atomic elements exists such that no element in P factors further under composition in the domain",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["axiomName", "axiomStatement", "domain", "intrinsicPrimes"],
+  "properties": {
+    "axiomName": {
+      "type": "string",
+      "const": "Intrinsic Primes Axiom",
+      "description": "The name of the axiom"
+    },
+    "axiomStatement": {
+      "type": "string",
+      "description": "The formal statement of the axiom",
+      "default": "A set P of atomic elements exists such that no element in P factors further under composition in the domain."
+    },
+    "formalStatement": {
+      "type": "string",
+      "description": "Mathematical formalization of the axiom",
+      "default": "∃ P ⊂ D such that ∀ p ∈ P, if p = a ∘ b then a = e or b = e"
+    },
+    "domain": {
+      "type": "object",
+      "description": "The domain in which the intrinsic primes exist",
+      "required": ["id", "name", "compositionOperation"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifier for the domain"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the domain"
+        },
+        "compositionOperation": {
+          "type": "object",
+          "description": "The operation used for composition within this domain",
+          "required": ["name", "symbol", "properties"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the composition operation"
+            },
+            "symbol": {
+              "type": "string",
+              "description": "Symbol representing the operation"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["associative", "commutative", "identity", "inverse", "distributive"],
+                "description": "Algebraic properties of the operation"
+              }
+            },
+            "identityElement": {
+              "type": "string",
+              "description": "The identity element for this operation, if it exists"
+            }
+          }
+        },
+        "structure": {
+          "type": "string",
+          "description": "The algebraic structure of the domain (e.g., ring, field, monoid)"
+        }
+      }
+    },
+    "intrinsicPrimes": {
+      "type": "array",
+      "description": "The set of intrinsic primes in the domain",
+      "items": {
+        "type": "object",
+        "required": ["id", "irreducibilityProof"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier for the prime element"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the prime element"
+          },
+          "irreducibilityProof": {
+            "type": "string",
+            "description": "Reference to proof that this element cannot be factored further"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Special properties of this prime element"
+            }
+          }
+        }
+      }
+    },
+    "primeDetectionAlgorithm": {
+      "type": "object",
+      "description": "Algorithm used to detect prime elements in the domain",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the algorithm"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of how the algorithm works"
+        },
+        "complexity": {
+          "type": "string",
+          "description": "Computational complexity of the algorithm"
+        },
+        "pseudocode": {
+          "type": "string",
+          "description": "Pseudocode representation of the algorithm"
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "Examples demonstrating the axiom",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "The domain of the example"
+          },
+          "primeElements": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Prime elements in this example"
+            }
+          },
+          "compositeExample": {
+            "type": "string",
+            "description": "Example of a composite element and its factorization"
+          }
+        }
+      }
+    },
+    "connections": {
+      "type": "array",
+      "description": "Connections to other axioms or concepts",
+      "items": {
+        "type": "object",
+        "properties": {
+          "concept": {
+            "type": "string",
+            "description": "Related concept or axiom"
+          },
+          "relationship": {
+            "type": "string",
+            "description": "Description of the relationship"
+          }
+        }
+      }
+    }
+  }
+}

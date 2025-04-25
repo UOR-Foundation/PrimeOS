@@ -1,0 +1,675 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/polynomial-ring-domain.json",
+  "title": "Polynomial Ring Domain Schema",
+  "description": "A precise schema defining the polynomial ring domain within the UOR framework, focusing on polynomials and their factorization properties",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "name", "elements", "primeElements", "compositionOperation", "uniqueFactorizationProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "const": "urn:uor:domain:algebra:polynomial-ring",
+      "description": "Unique identifier for the polynomial ring domain"
+    },
+    "name": {
+      "type": "string",
+      "const": "Polynomial Ring Domain",
+      "description": "Name of the domain"
+    },
+    "description": {
+      "type": "string",
+      "const": "Domain of polynomials with coefficients from a field, with focus on their algebraic structure and factorization properties",
+      "description": "Description of the polynomial ring domain"
+    },
+    "elements": {
+      "type": "object",
+      "description": "Specification of the elements in this domain",
+      "required": ["type", "set", "properties"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "Polynomials",
+          "description": "Type of elements in this domain"
+        },
+        "set": {
+          "type": "string",
+          "const": "F[x] (polynomials over a field F)",
+          "description": "The set of elements in this domain"
+        },
+        "notation": {
+          "type": "string",
+          "const": "f(x) = a₀ + a₁x + a₂x² + ... + aₙxⁿ, where aᵢ are elements of the coefficient field F",
+          "description": "The standard notation for polynomials"
+        },
+        "properties": {
+          "type": "array",
+          "description": "Properties of the elements",
+          "items": {
+            "type": "string",
+            "enum": [
+              "countable-infinity",
+              "ordered-by-degree",
+              "algebraic-independence",
+              "coefficient-dependent"
+            ]
+          }
+        },
+        "specialElements": {
+          "type": "object",
+          "description": "Special elements in the domain",
+          "properties": {
+            "constant": {
+              "type": "string",
+              "const": "Polynomials of degree 0",
+              "description": "Constant polynomials"
+            },
+            "identity": {
+              "type": "string",
+              "const": "1 (the constant polynomial with value 1)",
+              "description": "The multiplicative identity element"
+            },
+            "zeroPolynomial": {
+              "type": "string",
+              "const": "0 (the constant polynomial with value 0)",
+              "description": "The additive identity element"
+            },
+            "monomials": {
+              "type": "string",
+              "const": "Polynomials with exactly one term: axⁿ",
+              "description": "Monomial polynomials"
+            }
+          }
+        }
+      }
+    },
+    "coefficientField": {
+      "type": "object",
+      "description": "The field from which coefficients are drawn",
+      "required": ["type", "properties"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of field for coefficients",
+          "enum": ["ℚ", "ℝ", "ℂ", "finite-field"]
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["ℚ", "ℝ", "ℂ", "F₂", "F₃", "F₅", "F₇", "F₁₃"]
+          },
+          "description": "Examples of possible coefficient fields"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "commutative",
+              "has-no-zero-divisors",
+              "has-identity",
+              "has-multiplicative-inverses"
+            ]
+          },
+          "description": "Properties of the coefficient field"
+        },
+        "impact": {
+          "type": "string",
+          "const": "The properties of the coefficient field significantly impact the irreducibility and factorization properties of polynomials",
+          "description": "Impact of coefficient field on polynomial properties"
+        }
+      }
+    },
+    "primeElements": {
+      "type": "object",
+      "description": "Specification of the irreducible polynomials in this domain",
+      "required": ["definition", "characterization", "examples", "properties"],
+      "properties": {
+        "definition": {
+          "type": "string",
+          "const": "A non-constant polynomial that cannot be expressed as a product of two polynomials of lower degree",
+          "description": "Definition of irreducible polynomials"
+        },
+        "characterization": {
+          "type": "string",
+          "const": "A non-constant polynomial p(x) such that if p(x) divides a product a(x)b(x), then p(x) divides a(x) or p(x) divides b(x)",
+          "description": "Mathematical characterization of irreducible polynomials"
+        },
+        "examples": {
+          "type": "array",
+          "description": "Examples of irreducible polynomials",
+          "items": {
+            "type": "object",
+            "properties": {
+              "polynomial": {
+                "type": "string",
+                "description": "An irreducible polynomial"
+              },
+              "domain": {
+                "type": "string",
+                "description": "The coefficient domain in which it is irreducible"
+              }
+            }
+          },
+          "examples": [
+            {
+              "polynomial": "x² + 1",
+              "domain": "ℝ[x]"
+            },
+            {
+              "polynomial": "x² - 2",
+              "domain": "ℚ[x]"
+            },
+            {
+              "polynomial": "x² + x + 1",
+              "domain": "F₂[x]"
+            }
+          ]
+        },
+        "properties": {
+          "type": "array",
+          "description": "Properties of irreducible polynomials",
+          "items": {
+            "type": "string",
+            "enum": [
+              "infinite-in-quantity",
+              "degree-dependent",
+              "coefficient-field-dependent",
+              "basis-for-factorization"
+            ]
+          }
+        },
+        "detection": {
+          "type": "object",
+          "description": "Methods for detecting/verifying irreducible polynomials",
+          "properties": {
+            "methods": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "eisenstein-criterion",
+                  "irreducibility-tests",
+                  "rational-root-theorem",
+                  "mod-p-factorization"
+                ]
+              }
+            },
+            "complexity": {
+              "type": "string",
+              "const": "Generally difficult, with complexity increasing with degree and field size",
+              "description": "Computational complexity of irreducibility testing"
+            }
+          }
+        }
+      }
+    },
+    "reducibleElements": {
+      "type": "object",
+      "description": "Specification of reducible polynomials",
+      "properties": {
+        "definition": {
+          "type": "string",
+          "const": "A polynomial that can be expressed as a product of polynomials of lower degree",
+          "description": "Definition of reducible polynomials"
+        },
+        "examples": {
+          "type": "array",
+          "description": "Examples of reducible polynomials",
+          "items": {
+            "type": "object",
+            "properties": {
+              "polynomial": {
+                "type": "string",
+                "description": "A reducible polynomial"
+              },
+              "factorization": {
+                "type": "string",
+                "description": "Its factorization"
+              },
+              "domain": {
+                "type": "string",
+                "description": "The coefficient domain in which it is reducible"
+              }
+            }
+          },
+          "examples": [
+            {
+              "polynomial": "x² - 1",
+              "factorization": "(x + 1)(x - 1)",
+              "domain": "ℚ[x]"
+            },
+            {
+              "polynomial": "x³ - x",
+              "factorization": "x(x + 1)(x - 1)",
+              "domain": "ℚ[x]"
+            },
+            {
+              "polynomial": "x⁴ - 1",
+              "factorization": "(x² + 1)(x + 1)(x - 1)",
+              "domain": "ℝ[x]"
+            }
+          ]
+        }
+      }
+    },
+    "compositionOperation": {
+      "type": "object",
+      "description": "The operations used for composition in this domain",
+      "required": ["primaryOperation", "secondaryOperation"],
+      "properties": {
+        "primaryOperation": {
+          "type": "object",
+          "required": ["name", "symbol", "properties", "definition"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Multiplication",
+              "description": "Name of the primary operation"
+            },
+            "symbol": {
+              "type": "string",
+              "const": "×",
+              "description": "Symbol for the operation"
+            },
+            "definition": {
+              "type": "string",
+              "const": "Standard multiplication of polynomials based on distributive property and coefficient field operations",
+              "description": "Definition of the operation"
+            },
+            "properties": {
+              "type": "array",
+              "description": "Properties of the operation",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "associative",
+                  "commutative",
+                  "identity",
+                  "distributive-over-addition",
+                  "degree-additive"
+                ]
+              }
+            },
+            "identityElement": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "const": "1 (constant polynomial)"
+                },
+                "property": {
+                  "type": "string",
+                  "const": "f(x) × 1 = 1 × f(x) = f(x) for all polynomials f(x)"
+                }
+              }
+            }
+          }
+        },
+        "secondaryOperation": {
+          "type": "object",
+          "required": ["name", "symbol", "properties", "definition"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Addition",
+              "description": "Name of the secondary operation"
+            },
+            "symbol": {
+              "type": "string",
+              "const": "+",
+              "description": "Symbol for the operation"
+            },
+            "definition": {
+              "type": "string",
+              "const": "Coefficient-wise addition of polynomials",
+              "description": "Definition of the operation"
+            },
+            "properties": {
+              "type": "array",
+              "description": "Properties of the operation",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "associative",
+                  "commutative",
+                  "identity",
+                  "inverse-elements",
+                  "degree-preserving"
+                ]
+              }
+            },
+            "identityElement": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "const": "0 (zero polynomial)"
+                },
+                "property": {
+                  "type": "string",
+                  "const": "f(x) + 0 = 0 + f(x) = f(x) for all polynomials f(x)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "uniqueFactorizationProperties": {
+      "type": "object",
+      "description": "Properties related to unique factorization in this domain",
+      "required": ["theorem", "uniquenessType", "factorizationForm"],
+      "properties": {
+        "theorem": {
+          "type": "string",
+          "const": "When the coefficient ring is a field, the polynomial ring F[x] is a unique factorization domain (UFD). Every non-constant polynomial can be uniquely factorized as a product of irreducible polynomials, up to multiplication by units and reordering of factors.",
+          "description": "The theorem ensuring unique factorization"
+        },
+        "uniquenessType": {
+          "type": "string",
+          "const": "unique-up-to-units-and-ordering",
+          "description": "The type of uniqueness for factorizations"
+        },
+        "factorizationForm": {
+          "type": "string",
+          "const": "f(x) = c·p₁(x)^e₁ × p₂(x)^e₂ × ... × pₘ(x)^eₘ, where c is a non-zero constant from the coefficient field, pᵢ(x) are irreducible monic polynomials, and eᵢ are positive integers",
+          "description": "Standard form of factorization"
+        },
+        "factorizationAlgorithm": {
+          "type": "object",
+          "description": "Algorithms for factoring polynomials",
+          "properties": {
+            "methods": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "kronecker-method",
+                  "berlekamp-algorithm",
+                  "zassenhaus-algorithm",
+                  "lenstra-lenstra-lovasz",
+                  "cantor-zassenhaus"
+                ]
+              }
+            },
+            "complexity": {
+              "type": "string",
+              "const": "Varies by method; generally polynomial time for finite fields, but potentially exponential for polynomials over ℚ",
+              "description": "Computational complexity of factorization"
+            },
+            "pseudocode": {
+              "type": "string",
+              "description": "Basic pseudocode for polynomial factorization",
+              "const": "function factorize_polynomial(f):\n  // Step 1: Make f primitive and find content\n  c = content(f)  // constant part\n  f = f/c          // make f primitive\n  \n  // Step 2: Find square-free factorization\n  g = gcd(f, f')\n  h = f/g   // h is square-free\n  \n  // Step 3: Apply irreducibility tests or Berlekamp algorithm\n  factors = []\n  for each irreducible factor p of h:\n    factors.append(p)\n  \n  // Step 4: Combine with content and multiplicities\n  return c * product(p^e for p, e in factors)"
+            }
+          }
+        },
+        "canonicalForm": {
+          "type": "object",
+          "description": "Canonical form for representing polynomial factorizations",
+          "properties": {
+            "representation": {
+              "type": "string",
+              "const": "Ordered factorization with monic irreducible factors and a single leading coefficient",
+              "description": "Standard representation format"
+            },
+            "example": {
+              "type": "string",
+              "const": "3x⁴ + 6x³ - 12x² = 3x²(x + 2)(x - 2)",
+              "description": "Example of canonical representation"
+            },
+            "uniqueness": {
+              "type": "string",
+              "const": "The representation is unique when irreducible factors are monic and ordered (e.g., by degree then lexicographically)",
+              "description": "Uniqueness property of the representation"
+            }
+          }
+        }
+      }
+    },
+    "domainStructure": {
+      "type": "object",
+      "description": "Algebraic structure of the domain",
+      "properties": {
+        "structureType": {
+          "type": "string",
+          "const": "Euclidean domain (when coefficients form a field)",
+          "description": "The algebraic structure type"
+        },
+        "substructures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the substructure"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the substructure"
+              }
+            }
+          },
+          "examples": [
+            {
+              "name": "Monic polynomials",
+              "description": "Polynomials with leading coefficient 1"
+            },
+            {
+              "name": "Irreducible polynomials",
+              "description": "The non-factorizable elements of the domain"
+            },
+            {
+              "name": "Linear polynomials",
+              "description": "Polynomials of degree 1, form ax + b where a ≠ 0"
+            }
+          ]
+        },
+        "extensions": {
+          "type": "array",
+          "description": "Mathematical extensions of this domain",
+          "items": {
+            "type": "string",
+            "enum": [
+              "multivariate-polynomials",
+              "rational-functions",
+              "power-series",
+              "laurent-polynomials",
+              "polynomial-rings-over-rings"
+            ]
+          }
+        }
+      }
+    },
+    "theorems": {
+      "type": "array",
+      "description": "Key theorems in this domain",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance of the theorem to this domain"
+          }
+        }
+      },
+      "examples": [
+        {
+          "name": "Gauss's Lemma",
+          "statement": "If a polynomial with integer coefficients factors over the rationals, then it also factors over the integers.",
+          "significance": "Provides a bridge between factorization over different coefficient domains"
+        },
+        {
+          "name": "Fundamental Theorem of Algebra",
+          "statement": "Every non-constant polynomial in ℂ[x] has at least one root in ℂ, and can be completely factored into linear factors.",
+          "significance": "Guarantees complete factorization of polynomials over the complex numbers"
+        },
+        {
+          "name": "Eisenstein's Criterion",
+          "statement": "Provides sufficient conditions for a polynomial to be irreducible over ℚ based on its coefficients modulo a prime.",
+          "significance": "Powerful tool for proving irreducibility of polynomials"
+        }
+      ]
+    },
+    "observerFrames": {
+      "type": "array",
+      "description": "Observer reference frames relevant to this domain",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "frameDescription": {
+            "type": "string",
+            "description": "Description of the frame perspective"
+          },
+          "frameTransformations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Transformations in this frame"
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "frameName": "Coefficient-List",
+          "frameDescription": "Observation of polynomials as ordered lists of coefficients",
+          "frameTransformations": [
+            "Coefficient manipulation",
+            "Degree determination",
+            "Term extraction"
+          ]
+        },
+        {
+          "frameName": "Factorization",
+          "frameDescription": "Observation of polynomials through their irreducible factorization",
+          "frameTransformations": [
+            "Multiplication",
+            "Division",
+            "GCD calculation",
+            "Factorization algorithms"
+          ]
+        },
+        {
+          "frameName": "Root-Based",
+          "frameDescription": "Observation of polynomials through their roots in an algebraic closure",
+          "frameTransformations": [
+            "Root finding",
+            "Vieta's formulas",
+            "Polynomial reconstruction from roots"
+          ]
+        },
+        {
+          "frameName": "Evaluation",
+          "frameDescription": "Observation of polynomials as functions that map values to values",
+          "frameTransformations": [
+            "Evaluation at points",
+            "Interpolation",
+            "Functional composition"
+          ]
+        }
+      ]
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "description": "Measures of coherence applicable to this domain",
+      "items": {
+        "type": "object",
+        "properties": {
+          "measureName": {
+            "type": "string",
+            "description": "Name of the coherence measure"
+          },
+          "measureDescription": {
+            "type": "string",
+            "description": "Description of what the measure quantifies"
+          },
+          "formula": {
+            "type": "string",
+            "description": "Formula for calculating the measure"
+          }
+        }
+      },
+      "examples": [
+        {
+          "measureName": "Degree",
+          "measureDescription": "The highest power of the indeterminate in the polynomial",
+          "formula": "deg(f) = n where f(x) = a₀ + a₁x + ... + aₙxⁿ with aₙ ≠ 0"
+        },
+        {
+          "measureName": "Factor-Count",
+          "measureDescription": "The number of irreducible factors (with multiplicity) in the factorization",
+          "formula": "FactorCount(f) = ∑ eᵢ where f(x) = c·∏ pᵢ(x)^eᵢ"
+        },
+        {
+          "measureName": "Distinct-Factor-Count",
+          "measureDescription": "The number of distinct irreducible factors in the factorization",
+          "formula": "DistinctFactors(f) = count of distinct pᵢ where f(x) = c·∏ pᵢ(x)^eᵢ"
+        },
+        {
+          "measureName": "Factorization-Complexity",
+          "measureDescription": "Sum of degrees of irreducible factors, weighted by their multiplicity",
+          "formula": "FactComplexity(f) = ∑ eᵢ·deg(pᵢ) where f(x) = c·∏ pᵢ(x)^eᵢ"
+        }
+      ]
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of polynomial ring principles",
+      "items": {
+        "type": "object",
+        "properties": {
+          "applicationName": {
+            "type": "string",
+            "description": "Name of the application"
+          },
+          "applicationDescription": {
+            "type": "string",
+            "description": "Description of the application"
+          }
+        }
+      },
+      "examples": [
+        {
+          "applicationName": "Coding Theory",
+          "applicationDescription": "Polynomials over finite fields are used in error-correcting codes like Reed-Solomon codes"
+        },
+        {
+          "applicationName": "Cryptography",
+          "applicationDescription": "Polynomial-based cryptosystems like NTRU rely on the difficulty of certain problems in polynomial rings"
+        },
+        {
+          "applicationName": "Signal Processing",
+          "applicationDescription": "Polynomials represent filters and signals in z-transform representations"
+        },
+        {
+          "applicationName": "Field Extensions",
+          "applicationDescription": "Polynomial factorization is used to construct and study field extensions"
+        },
+        {
+          "applicationName": "Computer Algebra Systems",
+          "applicationDescription": "Polynomial operations form the foundation of symbolic computation"
+        }
+      ]
+    }
+  }
+}

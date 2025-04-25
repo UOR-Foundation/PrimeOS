@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/representations/canonical-representation.json",
+  "title": "Canonical Representation Schema",
+  "description": "Schema defining the structure and properties of canonical representations in the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "representationType", "objectReference", "primeDecomposition", "canonicalProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the canonical representation"
+    },
+    "representationType": {
+      "type": "string",
+      "enum": ["PrimeCoordinate", "SpectralDecomposition", "CoherentStructure", "MinimalEncoding", "InvariantForm"],
+      "description": "The type of canonical representation"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the representation"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the representation and its purpose"
+    },
+    "objectReference": {
+      "type": "object",
+      "description": "Reference to the object being represented",
+      "required": ["id", "domain"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifier for the object"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Domain the object belongs to"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the object"
+        }
+      }
+    },
+    "primeDecomposition": {
+      "type": "object",
+      "description": "The prime decomposition underlying this representation",
+      "required": ["primeFactors", "decompositionMethod"],
+      "properties": {
+        "primeFactors": {
+          "type": "array",
+          "description": "The prime factors in the decomposition",
+          "items": {
+            "type": "object",
+            "required": ["id", "value", "multiplicity"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Identifier for the prime factor"
+              },
+              "value": {
+                "type": "object",
+                "description": "Value of the prime factor"
+              },
+              "multiplicity": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Multiplicity of this prime factor"
+              },
+              "significance": {
+                "type": "number",
+                "description": "Significance or weight of this factor in the representation"
+              }
+            }
+          }
+        },
+        "decompositionMethod": {
+          "type": "string",
+          "description": "Method used for the prime decomposition"
+        },
+        "decompositionCompleteness": {
+          "type": "string",
+          "description": "Assessment of the completeness of the decomposition"
+        },
+        "factorizationProof": {
+          "type": "string",
+          "description": "Reference to proof of the factorization"
+        }
+      }
+    },
+    "canonicalProperties": {
+      "type": "object",
+      "description": "Properties establishing this as a canonical representation",
+      "required": ["uniqueness", "minimality", "invariance"],
+      "properties": {
+        "uniqueness": {
+          "type": "object",
+          "description": "Properties related to uniqueness",
+          "properties": {
+            "isUnique": {
+              "type": "boolean",
+              "description": "Whether the representation is unique"
+            },
+            "uniquenessProof": {
+              "type": "string",
+              "description": "Reference to proof of uniqueness"
+            },
+            "uniquenessCriteria": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Criteria establishing uniqueness"
+              }
+            }
+          }
+        },
+        "minimality": {
+          "type": "object",
+          "description": "Properties related to minimality",
+          "properties": {
+            "isMinimal": {
+              "type": "boolean",
+              "description": "Whether the representation is minimal"
+            },
+            "coherenceNorm": {
+              "type": "number",
+              "description": "Value of the coherence norm for this representation"
+            },
+            "minimalityProof": {
+              "type": "string",
+              "description": "Reference to proof of minimality"
+            },
+            "comparisonToAlternatives": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "alternativeRepresentation": {
+                    "type": "string",
+                    "description": "Description of an alternative representation"
+                  },
+                  "alternativeNorm": {
+                    "type": "number",
+                    "description": "Coherence norm of the alternative"
+                  },
+                  "comparisonAnalysis": {
+                    "type": "string",
+                    "description": "Analysis of the comparison"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "invariance": {
+          "type": "object",
+          "description": "Properties related to observer invariance",
+          "properties": {
+            "isObserverInvariant": {
+              "type": "boolean",
+              "description": "Whether the representation is invariant across observer frames"
+            },
+            "invariantFeatures": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Features that remain invariant"
+              }
+            },
+            "transformationProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "transformation": {
+                    "type": "string",
+                    "description": "Type of transformation"
+                  },
+                  "invarianceProperty": {
+                    "type": "string",
+                    "description": "How invariance is maintained under this transformation"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "completeness": {
+          "type": "object",
+          "description": "Properties related to completeness",
+          "properties": {
+            "isComplete": {
+              "type": "boolean",
+              "description": "Whether the representation is complete"
+            },
+            "completenessProof": {
+              "type": "string",
+              "description": "Reference to proof of completeness"
+            },
+            "informationContent": {
+              "type": "string",
+              "description": "Description of the information content"
+            }
+          }
+        }
+      }
+    },
+    "canonicalizationProcess": {
+      "type": "object",
+      "description": "The process used to derive this canonical representation",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Algorithm used for canonicalization"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Steps in the canonicalization process"
+          }
+        },
+        "convergenceCriteria": {
+          "type": "string",
+          "description": "Criteria used to determine convergence to the canonical form"
+        },
+        "complexity": {
+          "type": "string",
+          "description": "Computational complexity of the canonicalization process"
+        }
+      }
+    },
+    "observerFrameInterpretations": {
+      "type": "array",
+      "description": "How this representation is interpreted in different observer frames",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameId": {
+            "type": "string",
+            "description": "Identifier for the observer frame"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation in this frame"
+          },
+          "preservedFeatures": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Features preserved in this frame's interpretation"
+            }
+          }
+        }
+      }
+    },
+    "encodingProperties": {
+      "type": "object",
+      "description": "Properties related to the encoding of the representation",
+      "properties": {
+        "encodingFormat": {
+          "type": "string",
+          "description": "Format used for encoding the representation"
+        },
+        "compressionRatio": {
+          "type": "number",
+          "description": "Ratio of compression achieved by this representation"
+        },
+        "informationDensity": {
+          "type": "number",
+          "description": "Measure of information density in the representation"
+        },
+        "errorResiliency": {
+          "type": "string",
+          "description": "Resilience to errors or perturbations"
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of this canonical representation",
+      "items": {
+        "type": "object",
+        "properties": {
+          "applicationDomain": {
+            "type": "string",
+            "description": "Domain of application"
+          },
+          "applicationDescription": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "benefits": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Benefits of using this representation in this application"
+            }
+          }
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "Examples demonstrating the canonical representation",
+      "items": {
+        "type": "object",
+        "properties": {
+          "objectDescription": {
+            "type": "string",
+            "description": "Description of the object being represented"
+          },
+          "canonicalForm": {
+            "type": "string",
+            "description": "The canonical representation"
+          },
+          "alternativeForms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Alternative non-canonical representations"
+            }
+          },
+          "analysisComparison": {
+            "type": "string",
+            "description": "Analysis comparing the canonical and alternative forms"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,359 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/integration/moduli-stack.json",
+  "title": "Moduli Stack Schema",
+  "description": "Schema defining the organization of all domain manifolds within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "type", "manifolds", "manifoldStructure"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the moduli stack"
+    },
+    "type": {
+      "type": "string",
+      "const": "ModuliStack",
+      "description": "Type of the UOR object"
+    },
+    "manifolds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "level", "category"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Unique identifier for the manifold"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the manifold"
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Hierarchical level in the stack (0 = foundational)"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["meta", "axiom", "component", "domain", "operation", "integration", "transformation"],
+            "description": "Category of the manifold"
+          },
+          "dimension": {
+            "type": "string",
+            "description": "Description of the manifold's dimensionality"
+          },
+          "function": {
+            "type": "string",
+            "description": "Function of the manifold within the stack"
+          },
+          "boundary": {
+            "type": "string",
+            "description": "Description of the manifold's boundary"
+          }
+        }
+      },
+      "description": "The collection of manifolds organized in the stack"
+    },
+    "manifoldStructure": {
+      "type": "object",
+      "required": ["hierarchyType", "relationships"],
+      "properties": {
+        "hierarchyType": {
+          "type": "string",
+          "enum": ["nested", "stratified", "networked", "hybrid"],
+          "description": "The type of hierarchical structure used in the stack"
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["sourceManifold", "targetManifold", "relationshipType"],
+            "properties": {
+              "sourceManifold": {
+                "type": "string",
+                "format": "uri",
+                "description": "The source manifold in the relationship"
+              },
+              "targetManifold": {
+                "type": "string",
+                "format": "uri",
+                "description": "The target manifold in the relationship"
+              },
+              "relationshipType": {
+                "type": "string",
+                "enum": ["implementation", "extension", "specialization", "generalization", "bridge", "fibration", "meta-organization"],
+                "description": "The type of relationship between manifolds"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "value"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Name of the relationship property"
+                    },
+                    "value": {
+                      "type": ["string", "number", "boolean", "object"],
+                      "description": "Value of the relationship property"
+                    }
+                  }
+                },
+                "description": "Properties describing aspects of the relationship"
+              }
+            }
+          },
+          "description": "Relationships between manifolds in the stack"
+        }
+      },
+      "description": "The structural organization of manifolds in the stack"
+    },
+    "fibrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "baseManifold", "fiberManifolds", "structure"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the fibration"
+          },
+          "baseManifold": {
+            "type": "string",
+            "format": "uri",
+            "description": "The base manifold of the fibration"
+          },
+          "fiberManifolds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "The fiber manifolds in the fibration"
+          },
+          "structure": {
+            "type": "string",
+            "description": "Description of the fibration structure"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Additional properties of the fibration"
+          }
+        }
+      },
+      "description": "Fibrations between manifolds in the stack"
+    },
+    "structuralPrinciples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the structural principle"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the structural principle"
+          },
+          "formalDefinition": {
+            "type": "string",
+            "description": "Formal mathematical definition of the principle"
+          },
+          "applications": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Applications of this principle within the stack"
+            }
+          }
+        }
+      },
+      "description": "Structural principles governing the moduli stack"
+    },
+    "manifestationPath": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "focus", "manifolds", "function"],
+        "properties": {
+          "stage": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "The stage in the manifestation sequence"
+          },
+          "focus": {
+            "type": "string",
+            "description": "The focus of this manifestation stage"
+          },
+          "manifolds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "The manifolds involved in this stage"
+          },
+          "function": {
+            "type": "string",
+            "description": "The function of this manifestation stage"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["required", "optional", "completed"],
+            "description": "The status of this manifestation stage"
+          }
+        }
+      },
+      "description": "The ordered manifestation sequence of the discrete manifolds"
+    },
+    "dimensionalSpanning": {
+      "type": "object",
+      "required": ["dimensionality", "spanningElements"],
+      "properties": {
+        "dimensionality": {
+          "type": "string",
+          "description": "Description of the overall dimensionality of the stack"
+        },
+        "spanningElements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["dimension", "basis"],
+            "properties": {
+              "dimension": {
+                "type": "string",
+                "description": "A dimension in the stack"
+              },
+              "basis": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "description": "Basis elements that span this dimension"
+              },
+              "properties": {
+                "type": "object",
+                "description": "Properties of this dimensional spanning"
+              }
+            }
+          },
+          "description": "Elements that span the dimensions of the stack"
+        }
+      },
+      "description": "Information about the dimensional spanning of the stack"
+    },
+    "observerFrameTransformations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceFrame", "targetFrame", "transformation"],
+        "properties": {
+          "sourceFrame": {
+            "type": "string",
+            "format": "uri",
+            "description": "The source observer frame"
+          },
+          "targetFrame": {
+            "type": "string",
+            "format": "uri",
+            "description": "The target observer frame"
+          },
+          "transformation": {
+            "type": "object",
+            "description": "The transformation between frames"
+          }
+        }
+      },
+      "description": "Transformations between observer frames in the stack"
+    },
+    "coherenceProperties": {
+      "type": "object",
+      "properties": {
+        "globalCoherence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Measure of global coherence across the stack (1.0 = perfect)"
+        },
+        "localCoherenceMeasures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["domain", "value"],
+            "properties": {
+              "domain": {
+                "type": "string",
+                "format": "uri",
+                "description": "The domain for which coherence is measured"
+              },
+              "value": {
+                "type": "number",
+                "description": "The coherence value for this domain"
+              }
+            }
+          },
+          "description": "Measures of local coherence in different domains"
+        },
+        "coherencePreservingTransformations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["sourceManifold", "targetManifold", "transformationType"],
+            "properties": {
+              "sourceManifold": {
+                "type": "string",
+                "format": "uri",
+                "description": "Source manifold in the transformation"
+              },
+              "targetManifold": {
+                "type": "string",
+                "format": "uri",
+                "description": "Target manifold in the transformation"
+              },
+              "transformationType": {
+                "type": "string",
+                "description": "Type of coherence-preserving transformation"
+              }
+            }
+          },
+          "description": "Transformations that preserve coherence across manifolds"
+        }
+      },
+      "description": "Properties related to coherence measures across the stack"
+    },
+    "validationCriteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["criterion", "description"],
+        "properties": {
+          "criterion": {
+            "type": "string",
+            "description": "A criterion for validating the stack"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the validation criterion"
+          },
+          "validationMethod": {
+            "type": "string",
+            "description": "Method for validating this criterion"
+          }
+        }
+      },
+      "description": "Criteria for validating the moduli stack"
+    }
+  }
+}

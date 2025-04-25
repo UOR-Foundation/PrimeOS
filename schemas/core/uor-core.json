@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/core/uor-core.json",
+  "title": "UOR Core Schema",
+  "description": "Core schema defining the fundamental Universal Object Reference (UOR) model components",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "definitions": {
+    "UORObject": {
+      "type": "object",
+      "description": "The base object type for all UOR entities",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Unique identifier for the UOR object"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of UOR object"
+        },
+        "primeDecomposition": {
+          "type": "object",
+          "description": "The prime decomposition representation of the object",
+          "$ref": "#/definitions/PrimeDecomposition"
+        },
+        "canonicalRepresentation": {
+          "type": "object",
+          "description": "The canonical representation of the object",
+          "$ref": "#/definitions/CanonicalRepresentation"
+        },
+        "observerFrame": {
+          "type": "object",
+          "description": "The observer reference frame for this object",
+          "$ref": "#/definitions/ObserverFrame" 
+        }
+      }
+    },
+    "PrimeDecomposition": {
+      "type": "object",
+      "description": "The factorization of an object into its irreducible components",
+      "required": ["primeFactors"],
+      "properties": {
+        "primeFactors": {
+          "type": "array",
+          "description": "The set of prime factors in the decomposition",
+          "items": {
+            "$ref": "#/definitions/PrimeFactor"
+          }
+        },
+        "decompositionMethod": {
+          "type": "string",
+          "description": "The method used for prime decomposition"
+        },
+        "uniquenessProof": {
+          "type": "string",
+          "description": "Reference to proof of uniqueness for this decomposition"
+        }
+      }
+    },
+    "PrimeFactor": {
+      "type": "object",
+      "description": "An irreducible component in a prime decomposition",
+      "required": ["id", "value"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifier for the prime factor"
+        },
+        "value": {
+          "type": "object",
+          "description": "The value of the prime factor"
+        },
+        "multiplicity": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "The number of times this prime factor appears in the decomposition"
+        },
+        "domain": {
+          "type": "string",
+          "description": "The domain this prime factor belongs to"
+        }
+      }
+    },
+    "CanonicalRepresentation": {
+      "type": "object",
+      "description": "The unique, basis-independent representation of an object",
+      "required": ["representationType", "value"],
+      "properties": {
+        "representationType": {
+          "type": "string",
+          "description": "The type of canonical representation"
+        },
+        "value": {
+          "type": "object",
+          "description": "The value of the canonical representation"
+        },
+        "coherenceNorm": {
+          "type": "number",
+          "description": "The coherence norm value for this representation"
+        },
+        "minimalityProof": {
+          "type": "string",
+          "description": "Reference to proof that this representation is minimal"
+        }
+      }
+    },
+    "ObserverFrame": {
+      "type": "object",
+      "description": "A perspective from which universal objects are observed",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifier for the observer frame"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of observer frame"
+        },
+        "transformationRules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "Rules for transforming between observer frames"
+          }
+        },
+        "invariantProperties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Properties that remain invariant across frame transformations"
+          }
+        }
+      }
+    },
+    "CoherenceMeasure": {
+      "type": "object",
+      "description": "A measure of representational integrity and consistency",
+      "required": ["type", "value"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of coherence measure"
+        },
+        "value": {
+          "type": "number",
+          "description": "The value of the coherence measure"
+        },
+        "normalization": {
+          "type": "string",
+          "description": "The normalization method used"
+        },
+        "referenceFrame": {
+          "type": "string",
+          "description": "The reference frame for which this coherence is measured"
+        }
+      }
+    },
+    "UORDomain": {
+      "type": "object",
+      "description": "A domain within which UOR principles apply",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifier for the domain"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the domain"
+        },
+        "compositionOperation": {
+          "type": "string",
+          "description": "The operation used for composition within this domain"
+        },
+        "intrinsicPrimes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PrimeFactor"
+          },
+          "description": "The set of intrinsic primes for this domain"
+        }
+      }
+    }
+  },
+  "properties": {
+    "uorType": {
+      "type": "string",
+      "enum": ["UORObject", "PrimeDecomposition", "CanonicalRepresentation", "ObserverFrame", "CoherenceMeasure", "UORDomain"],
+      "description": "The type of UOR component"
+    }
+  }
+}

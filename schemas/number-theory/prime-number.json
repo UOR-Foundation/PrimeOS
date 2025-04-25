@@ -1,0 +1,456 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/number-theory/prime-number.json",
+  "title": "Prime Number Schema",
+  "description": "Schema defining the structure and properties of prime numbers as irreducible elements in the number theory domain",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "value", "primeDecomposition", "canonicalRepresentation", "primeProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for this prime number"
+    },
+    "type": {
+      "type": "string",
+      "const": "PrimeNumber",
+      "description": "Type identifier for prime numbers"
+    },
+    "value": {
+      "type": "integer",
+      "minimum": 2,
+      "description": "The value of the prime number"
+    },
+    "primeDecomposition": {
+      "type": "object",
+      "description": "The prime factorization of the prime number (trivial for primes)",
+      "required": ["primeFactors", "isComplete", "isPrime"],
+      "properties": {
+        "primeFactors": {
+          "type": "array",
+          "description": "The prime factors (just the number itself for primes)",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["prime", "multiplicity"],
+            "properties": {
+              "prime": {
+                "type": "integer",
+                "description": "The prime number itself"
+              },
+              "multiplicity": {
+                "type": "integer",
+                "const": 1,
+                "description": "The multiplicity (always 1 for a prime)"
+              }
+            }
+          }
+        },
+        "isComplete": {
+          "type": "boolean",
+          "const": true,
+          "description": "Whether the prime factorization is complete (always true for primes)"
+        },
+        "isPrime": {
+          "type": "boolean",
+          "const": true,
+          "description": "Whether the number itself is prime (always true)"
+        },
+        "factorizationMethod": {
+          "type": "string",
+          "const": "trivial",
+          "description": "Method used to obtain the factorization (trivial for primes)"
+        }
+      }
+    },
+    "canonicalRepresentation": {
+      "type": "object",
+      "description": "The canonical representation of the prime number",
+      "required": ["format", "expression"],
+      "properties": {
+        "format": {
+          "type": "string",
+          "const": "prime-power-product",
+          "description": "Format of the canonical representation"
+        },
+        "expression": {
+          "type": "string",
+          "description": "String representation of the canonical form",
+          "examples": [
+            "2^1",
+            "7^1"
+          ]
+        },
+        "minimality": {
+          "type": "object",
+          "description": "Minimality properties of this representation",
+          "properties": {
+            "isMinimal": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether this representation is minimal (always true for primes)"
+            },
+            "justification": {
+              "type": "string",
+              "const": "Prime numbers are irreducible elements and have minimal representation",
+              "description": "Justification for minimality"
+            }
+          }
+        },
+        "uniqueness": {
+          "type": "object",
+          "description": "Uniqueness properties of this representation",
+          "properties": {
+            "isUnique": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether this representation is unique (always true for primes)"
+            },
+            "justification": {
+              "type": "string",
+              "const": "Prime numbers have a unique trivial factorization",
+              "description": "Justification for uniqueness"
+            }
+          }
+        }
+      }
+    },
+    "primeProperties": {
+      "type": "object",
+      "description": "Properties specific to prime numbers",
+      "required": ["primeIndex", "irreducibilityProof", "primeType"],
+      "properties": {
+        "primeIndex": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The index of this prime in the sequence of primes (e.g., 2 is the 1st prime, 3 is the 2nd, etc.)"
+        },
+        "irreducibilityProof": {
+          "type": "object",
+          "description": "Proof that this number is irreducible",
+          "properties": {
+            "method": {
+              "type": "string",
+              "enum": [
+                "trial-division",
+                "miller-rabin-test",
+                "aks-primality-test",
+                "lucas-lehmer-test",
+                "elliptic-curve-primality-proving"
+              ],
+              "description": "Method used to prove primality"
+            },
+            "certainty": {
+              "type": "string",
+              "enum": [
+                "deterministic",
+                "probabilistic"
+              ],
+              "description": "Whether the proof is deterministic or probabilistic"
+            },
+            "details": {
+              "type": "string",
+              "description": "Details of the primality proof"
+            }
+          }
+        },
+        "primeType": {
+          "type": "object",
+          "description": "Categorization of prime type",
+          "properties": {
+            "congruenceClasses": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "modulus": {
+                    "type": "integer",
+                    "description": "Modulus for congruence classification"
+                  },
+                  "remainder": {
+                    "type": "integer",
+                    "description": "Remainder when divided by modulus"
+                  }
+                }
+              },
+              "description": "Congruence classes this prime belongs to"
+            },
+            "specialForms": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "mersenne-prime",
+                  "fermat-prime",
+                  "sophie-germain-prime",
+                  "safe-prime",
+                  "twin-prime",
+                  "chen-prime",
+                  "regular-prime",
+                  "gaussian-prime",
+                  "eisenstein-prime"
+                ]
+              },
+              "description": "Special forms this prime belongs to"
+            }
+          }
+        },
+        "primeTwins": {
+          "type": "object",
+          "description": "Relationship to twin primes",
+          "properties": {
+            "isPartOfTwinPair": {
+              "type": "boolean",
+              "description": "Whether this prime is part of a twin prime pair"
+            },
+            "twinPair": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer"
+              },
+              "description": "The twin prime pair if applicable"
+            }
+          }
+        },
+        "primorialRelationship": {
+          "type": "object",
+          "description": "Relationship to primorials",
+          "properties": {
+            "primorialValue": {
+              "type": "integer",
+              "description": "The value of the primorial of this prime (product of all primes up to this prime)"
+            },
+            "nextPrimorialPrime": {
+              "type": "integer",
+              "description": "The next prime after the primorial of this prime"
+            }
+          }
+        }
+      }
+    },
+    "mathematicalProperties": {
+      "type": "object",
+      "description": "Mathematical properties of the prime number",
+      "properties": {
+        "parity": {
+          "type": "string",
+          "enum": ["even", "odd"],
+          "description": "Whether the prime is even or odd (only 2 is even)"
+        },
+        "divisors": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "enum": [1]
+          },
+          "description": "All positive divisors of the prime (always 1 and itself)"
+        },
+        "primitiveRoot": {
+          "type": "integer",
+          "description": "Smallest primitive root modulo this prime, if it exists"
+        },
+        "quadraticResidue": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "Quadratic residues modulo this prime"
+        },
+        "legendreSymbols": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "integer",
+                "description": "The number a in the Legendre symbol (a|p)"
+              },
+              "value": {
+                "type": "integer",
+                "enum": [-1, 0, 1],
+                "description": "Value of the Legendre symbol"
+              }
+            }
+          },
+          "description": "Notable Legendre symbols for this prime"
+        }
+      }
+    },
+    "observerFrameViews": {
+      "type": "array",
+      "description": "Views of this prime from different observer frames",
+      "items": {
+        "type": "object",
+        "required": ["frameName", "representation"],
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "representation": {
+            "type": "string",
+            "description": "Representation in this frame"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Properties visible in this frame"
+            }
+          }
+        }
+      }
+    },
+    "cryptographicProperties": {
+      "type": "object",
+      "description": "Properties relevant to cryptographic applications",
+      "properties": {
+        "suitableForRSA": {
+          "type": "boolean",
+          "description": "Whether the prime is suitable for RSA cryptography"
+        },
+        "suitableForDSA": {
+          "type": "boolean",
+          "description": "Whether the prime is suitable for DSA"
+        },
+        "suitableForECC": {
+          "type": "boolean",
+          "description": "Whether the prime is suitable for elliptic curve cryptography"
+        },
+        "securityStrength": {
+          "type": "integer",
+          "description": "Estimated security strength in bits when used in cryptography"
+        }
+      }
+    },
+    "computationalProperties": {
+      "type": "object",
+      "description": "Computational aspects of this prime",
+      "properties": {
+        "bitLength": {
+          "type": "integer",
+          "description": "Number of bits required to represent the prime in binary"
+        },
+        "digitSum": {
+          "type": "integer",
+          "description": "Sum of the digits in the decimal representation"
+        },
+        "digitalRoot": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9,
+          "description": "Digital root (repeated sum of digits until single digit)"
+        },
+        "decimalExpansion": {
+          "type": "object",
+          "properties": {
+            "reciprocalPeriod": {
+              "type": "integer",
+              "description": "Period length of the decimal expansion of 1/p"
+            },
+            "reciprocalPattern": {
+              "type": "string",
+              "description": "Pattern of the repeating decimal expansion of 1/p"
+            }
+          }
+        }
+      }
+    },
+    "historicalContext": {
+      "type": "object",
+      "description": "Historical context and significance of this prime",
+      "properties": {
+        "discoveryDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when this prime was discovered (for very large primes)"
+        },
+        "discoverer": {
+          "type": "string",
+          "description": "Person or project that discovered this prime (for very large primes)"
+        },
+        "historicalSignificance": {
+          "type": "string",
+          "description": "Historical significance of this specific prime"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:number-theory:prime-number:7",
+      "type": "PrimeNumber",
+      "value": 7,
+      "primeDecomposition": {
+        "primeFactors": [
+          {
+            "prime": 7,
+            "multiplicity": 1
+          }
+        ],
+        "isComplete": true,
+        "isPrime": true,
+        "factorizationMethod": "trivial"
+      },
+      "canonicalRepresentation": {
+        "format": "prime-power-product",
+        "expression": "7^1",
+        "minimality": {
+          "isMinimal": true,
+          "justification": "Prime numbers are irreducible elements and have minimal representation"
+        },
+        "uniqueness": {
+          "isUnique": true,
+          "justification": "Prime numbers have a unique trivial factorization"
+        }
+      },
+      "primeProperties": {
+        "primeIndex": 4,
+        "irreducibilityProof": {
+          "method": "trial-division",
+          "certainty": "deterministic",
+          "details": "No integer between 2 and √7 divides 7"
+        },
+        "primeType": {
+          "congruenceClasses": [
+            {
+              "modulus": 4,
+              "remainder": 3
+            },
+            {
+              "modulus": 3,
+              "remainder": 1
+            }
+          ],
+          "specialForms": []
+        },
+        "primeTwins": {
+          "isPartOfTwinPair": true,
+          "twinPair": [5, 7]
+        }
+      },
+      "mathematicalProperties": {
+        "parity": "odd",
+        "divisors": [1, 7],
+        "primitiveRoot": 3,
+        "quadraticResidue": [1, 2, 4]
+      },
+      "computationalProperties": {
+        "bitLength": 3,
+        "digitSum": 7,
+        "digitalRoot": 7,
+        "decimalExpansion": {
+          "reciprocalPeriod": 6,
+          "reciprocalPattern": "142857"
+        }
+      }
+    }
+  ]
+}

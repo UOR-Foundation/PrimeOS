@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/observer-frames/observer-frame.json",
+  "title": "Observer Reference Frame Schema",
+  "description": "Schema defining the structure and properties of observer reference frames in the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "type", "observerProperties", "transformationRules"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the observer frame"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["StandardFrame", "InertialFrame", "CoherentFrame", "QuantumFrame", "RelativeFrame", "AbsoluteFrame"],
+      "description": "The type of observer reference frame"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the observer frame"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the observer frame and its purpose"
+    },
+    "observerProperties": {
+      "type": "object",
+      "description": "Properties specific to this observer frame",
+      "required": ["dimensionality", "basis"],
+      "properties": {
+        "dimensionality": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of dimensions in the observer frame"
+        },
+        "basis": {
+          "type": "object",
+          "description": "Basis vectors or elements of the frame",
+          "properties": {
+            "basisType": {
+              "type": "string",
+              "enum": ["Orthogonal", "Orthonormal", "Oblique", "Natural", "Computational"],
+              "description": "Type of basis used in this frame"
+            },
+            "basisElements": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Identifier for the basis element"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Description of what this basis element represents"
+                  },
+                  "domain": {
+                    "type": "string",
+                    "description": "Domain this basis element belongs to"
+                  }
+                }
+              }
+            },
+            "basisTransformations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "fromBasis": {
+                    "type": "string",
+                    "description": "Source basis"
+                  },
+                  "toBasis": {
+                    "type": "string",
+                    "description": "Target basis"
+                  },
+                  "transformationMatrix": {
+                    "type": "string",
+                    "description": "Matrix or formula for the transformation"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "domain": {
+          "type": "string",
+          "description": "The domain in which this observer frame operates"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Constraints on the observer frame"
+          }
+        },
+        "precision": {
+          "type": "object",
+          "description": "Precision characteristics of the frame",
+          "properties": {
+            "resolution": {
+              "type": "string",
+              "description": "Resolution of measurements in this frame"
+            },
+            "uncertaintyPrinciple": {
+              "type": "string",
+              "description": "Description of any uncertainty principles applicable to this frame"
+            }
+          }
+        }
+      }
+    },
+    "transformationRules": {
+      "type": "object",
+      "description": "Rules for transforming between observer frames",
+      "required": ["transformationType", "transformationProperties"],
+      "properties": {
+        "transformationType": {
+          "type": "string",
+          "enum": ["Linear", "Nonlinear", "Diffeomorphism", "Isomorphism", "Homomorphism"],
+          "description": "Type of transformation between frames"
+        },
+        "transformationProperties": {
+          "type": "object",
+          "properties": {
+            "isInvertible": {
+              "type": "boolean",
+              "description": "Whether the transformation is invertible"
+            },
+            "preservesStructure": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Structures preserved by the transformation"
+              }
+            },
+            "group": {
+              "type": "string",
+              "description": "The mathematical group to which the transformation belongs, if applicable"
+            }
+          }
+        },
+        "transformationFormulas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "toFrame": {
+                "type": "string",
+                "description": "Target frame for the transformation"
+              },
+              "formula": {
+                "type": "string",
+                "description": "Formula or description of the transformation"
+              },
+              "constraints": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "Constraints on the transformation"
+                }
+              }
+            }
+          }
+        },
+        "compositionRules": {
+          "type": "string",
+          "description": "Rules for composing multiple frame transformations"
+        }
+      }
+    },
+    "invariantProperties": {
+      "type": "array",
+      "description": "Properties that remain invariant under transformations of this frame",
+      "items": {
+        "type": "object",
+        "properties": {
+          "propertyName": {
+            "type": "string",
+            "description": "Name of the invariant property"
+          },
+          "propertyDescription": {
+            "type": "string",
+            "description": "Description of the property"
+          },
+          "invarianceProof": {
+            "type": "string",
+            "description": "Reference to proof of invariance"
+          }
+        }
+      }
+    },
+    "observationOperations": {
+      "type": "array",
+      "description": "Operations that can be performed by the observer in this frame",
+      "items": {
+        "type": "object",
+        "properties": {
+          "operationName": {
+            "type": "string",
+            "description": "Name of the operation"
+          },
+          "operationDescription": {
+            "type": "string",
+            "description": "Description of what the operation does"
+          },
+          "inputTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Types of inputs the operation accepts"
+            }
+          },
+          "outputTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Types of outputs the operation produces"
+            }
+          }
+        }
+      }
+    },
+    "compatibleFrames": {
+      "type": "array",
+      "description": "Other frames that are compatible with this one",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameId": {
+            "type": "string",
+            "description": "Identifier for a compatible frame"
+          },
+          "compatibilityType": {
+            "type": "string",
+            "description": "Type of compatibility relationship"
+          },
+          "transformationId": {
+            "type": "string",
+            "description": "Identifier for the transformation between frames"
+          }
+        }
+      }
+    }
+  }
+}

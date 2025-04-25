@@ -1,0 +1,312 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/integration/domain-bridge.json",
+  "title": "Domain Bridge Schema",
+  "description": "Schema defining the structure of inter-domain connections within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "type", "sourceDomain", "targetDomain", "mappingStructure"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the domain bridge"
+    },
+    "type": {
+      "type": "string",
+      "const": "DomainBridge",
+      "description": "Type of the UOR object"
+    },
+    "sourceDomain": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the source domain being bridged"
+    },
+    "targetDomain": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the target domain being bridged"
+    },
+    "mappingStructure": {
+      "type": "object",
+      "required": ["type", "components"],
+      "description": "The structural mapping between domains",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["direct", "logarithmic", "homomorphic", "categorical", "hybrid"],
+          "description": "The type of mapping structure"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["sourceElement", "targetElement", "transformationRule"],
+            "properties": {
+              "sourceElement": {
+                "type": "string",
+                "description": "Identifier for the source domain element"
+              },
+              "targetElement": {
+                "type": "string",
+                "description": "Identifier for the target domain element"
+              },
+              "transformationRule": {
+                "type": "object",
+                "description": "Rule defining the transformation between elements",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["identity", "recomposition", "coordinateTransform", "semanticMapping"],
+                    "description": "Type of transformation rule"
+                  },
+                  "function": {
+                    "type": "string",
+                    "description": "Function or formula that defines the transformation"
+                  },
+                  "preservedProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Properties that are preserved through the transformation"
+                  },
+                  "complexityChange": {
+                    "type": "object",
+                    "properties": {
+                      "sourceComplexity": {
+                        "type": "number",
+                        "description": "Complexity measure in source domain"
+                      },
+                      "targetComplexity": {
+                        "type": "number",
+                        "description": "Complexity measure in target domain"
+                      },
+                      "ratio": {
+                        "type": "number",
+                        "description": "Ratio of complexity change through transformation"
+                      }
+                    }
+                  }
+                }
+              },
+              "bidirectional": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether the transformation is bidirectional"
+              }
+            }
+          }
+        }
+      }
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["property", "description"],
+        "properties": {
+          "property": {
+            "type": "string",
+            "description": "The invariant property across domains"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of how the property remains invariant"
+          },
+          "formalDefinition": {
+            "type": "string",
+            "description": "Formal mathematical definition of the invariant"
+          }
+        }
+      },
+      "description": "Properties that remain invariant across the domain bridge"
+    },
+    "compatibilityConditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["condition", "description"],
+        "properties": {
+          "condition": {
+            "type": "string",
+            "description": "A condition that must be satisfied for domains to be compatible"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the compatibility condition"
+          },
+          "validationMethod": {
+            "type": "string",
+            "description": "Method to validate the condition is met"
+          }
+        }
+      },
+      "description": "Conditions that must be satisfied for domains to be compatible"
+    },
+    "informationPreservation": {
+      "type": "object",
+      "required": ["measure", "value"],
+      "properties": {
+        "measure": {
+          "type": "string",
+          "enum": ["lossless", "lossy", "augmented"],
+          "description": "Type of information preservation through the bridge"
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Quantification of information preservation (1.0 = perfect)"
+        },
+        "criticalElements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Elements that are critical for information preservation"
+        }
+      },
+      "description": "Characteristics of information preservation across the bridge"
+    },
+    "translationProtocol": {
+      "type": "object",
+      "required": ["steps"],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["order", "description", "action"],
+            "properties": {
+              "order": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Order of step in the protocol"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the protocol step"
+              },
+              "action": {
+                "type": "string",
+                "description": "Action to be performed in this step"
+              },
+              "validationCriteria": {
+                "type": "string",
+                "description": "Criteria to validate this step has been correctly performed"
+              }
+            }
+          }
+        },
+        "fallbackMechanisms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["condition", "action"],
+            "properties": {
+              "condition": {
+                "type": "string",
+                "description": "Condition that triggers the fallback"
+              },
+              "action": {
+                "type": "string",
+                "description": "Fallback action to take"
+              }
+            }
+          },
+          "description": "Mechanisms to handle translation failures or edge cases"
+        }
+      },
+      "description": "Protocol for translating between domains using this bridge"
+    },
+    "observerFrameDependence": {
+      "type": "object",
+      "properties": {
+        "isSensitive": {
+          "type": "boolean",
+          "description": "Whether the bridge is sensitive to observer frame changes"
+        },
+        "invariantFrames": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "Observer frames under which the bridge remains invariant"
+        },
+        "transformationRules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "sourceFrame": {
+                "type": "string",
+                "format": "uri"
+              },
+              "targetFrame": {
+                "type": "string",
+                "format": "uri"
+              },
+              "adjustmentFormula": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "Rules for adjusting the bridge under observer frame transformations"
+        }
+      },
+      "description": "Information about how the bridge behaves under changes in observer frames"
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "value"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of coherence measure"
+          },
+          "value": {
+            "type": "number",
+            "description": "Value of the coherence measure"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of the coherence measure value"
+          }
+        }
+      },
+      "description": "Measures of coherence across the domain bridge"
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the application"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of how the domain bridge enables this application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of the application in use"
+          }
+        }
+      },
+      "description": "Applications enabled by this domain bridge"
+    }
+  }
+}

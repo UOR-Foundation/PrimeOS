@@ -1,0 +1,536 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/number-theory/gcd-operation.json",
+  "title": "Greatest Common Divisor Operation Schema",
+  "description": "Schema defining the GCD operation within the number theory domain using the UOR prime factorization framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "operationType", "domain", "operationRules", "homomorphismProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "const": "urn:uor:number-theory:operation:gcd",
+      "description": "Unique identifier for the GCD operation"
+    },
+    "operationType": {
+      "type": "string",
+      "const": "gcd",
+      "description": "Type of operation"
+    },
+    "name": {
+      "type": "string",
+      "const": "Greatest Common Divisor",
+      "description": "Human-readable name for the operation"
+    },
+    "description": {
+      "type": "string",
+      "const": "Greatest Common Divisor operation in the domain of natural numbers, elegantly defined using prime factorization",
+      "description": "Description of the operation"
+    },
+    "symbol": {
+      "type": "string",
+      "const": "gcd",
+      "description": "Mathematical symbol/notation for GCD"
+    },
+    "domain": {
+      "type": "object",
+      "description": "The domain in which this operation is defined",
+      "required": ["id", "name", "elements"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "const": "urn:uor:domain:number-theory",
+          "description": "Identifier for the number theory domain"
+        },
+        "name": {
+          "type": "string",
+          "const": "Number Theory Domain",
+          "description": "Name of the domain"
+        },
+        "elements": {
+          "type": "string",
+          "const": "natural-numbers",
+          "description": "Type of elements this operation works with"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Constraints on the operation's domain"
+          },
+          "default": []
+        }
+      }
+    },
+    "operationRules": {
+      "type": "object",
+      "description": "Rules defining how the GCD operation works",
+      "required": ["formalDefinition", "standardRepresentation", "canonicalRepresentation"],
+      "properties": {
+        "formalDefinition": {
+          "type": "string",
+          "const": "For natural numbers a and b, gcd(a, b) is the largest natural number that divides both a and b",
+          "description": "Formal mathematical definition of GCD"
+        },
+        "standardRepresentation": {
+          "type": "object",
+          "description": "Standard approach to GCD calculation",
+          "required": ["definition", "method"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "GCD is the largest positive integer that divides both numbers without a remainder",
+              "description": "Standard definition of GCD"
+            },
+            "method": {
+              "type": "string",
+              "const": "Euclidean algorithm, which repeatedly applies the division algorithm",
+              "description": "Standard method for computing GCD"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "description": "Operand values"
+                    }
+                  },
+                  "result": {
+                    "type": "integer",
+                    "description": "Result of the GCD operation"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the calculation"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "operands": [12, 18],
+                  "result": 6,
+                  "explanation": "Using the Euclidean algorithm: 18 = 12 × 1 + 6, 12 = 6 × 2 + 0, so gcd(12, 18) = 6"
+                }
+              ]
+            }
+          }
+        },
+        "canonicalRepresentation": {
+          "type": "object",
+          "description": "Canonical representation using prime factorization",
+          "required": ["definition", "method", "transformationRules"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "For natural numbers a and b with prime factorizations a = p₁^a₁ × p₂^a₂ × ... × pₙ^aₙ and b = p₁^b₁ × p₂^b₂ × ... × pₙ^bₙ, their GCD is gcd(a, b) = p₁^min(a₁,b₁) × p₂^min(a₂,b₂) × ... × pₙ^min(aₙ,bₙ)",
+              "description": "Definition in terms of prime factorization"
+            },
+            "method": {
+              "type": "string",
+              "const": "Take the minimum of the exponents for each prime factor that appears in either factorization",
+              "description": "Method for computing GCD using prime factorization"
+            },
+            "transformationRules": {
+              "type": "array",
+              "description": "Rules for transforming prime factorizations to compute GCD",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "rule": {
+                    "type": "string",
+                    "description": "A transformation rule for prime factorizations"
+                  },
+                  "formula": {
+                    "type": "string",
+                    "description": "Mathematical formula for the rule"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the rule"
+                  }
+                }
+              },
+              "default": [
+                {
+                  "rule": "Minimum Exponent Rule",
+                  "formula": "gcd(p^a, p^b) = p^min(a,b)",
+                  "explanation": "The GCD of powers of the same prime is the prime raised to the minimum of the exponents"
+                },
+                {
+                  "rule": "Component-wise Minimum Rule",
+                  "formula": "φ(gcd(a,b)) = min(φ(a), φ(b))",
+                  "explanation": "The prime factorization of the GCD is obtained by taking the component-wise minimum of the exponent vectors"
+                }
+              ]
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "integer",
+                          "description": "Standard value"
+                        },
+                        "primeFactorization": {
+                          "type": "string",
+                          "description": "Prime factorization representation"
+                        }
+                      }
+                    }
+                  },
+                  "result": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "integer",
+                        "description": "Standard value of result"
+                      },
+                      "primeFactorization": {
+                        "type": "string",
+                        "description": "Prime factorization of result"
+                      }
+                    }
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the calculation using prime factorization"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "operands": [
+                    {
+                      "value": 12,
+                      "primeFactorization": "2^2 × 3^1"
+                    },
+                    {
+                      "value": 18,
+                      "primeFactorization": "2^1 × 3^2"
+                    }
+                  ],
+                  "result": {
+                    "value": 6,
+                    "primeFactorization": "2^1 × 3^1"
+                  },
+                  "explanation": "To find gcd(12, 18) using prime factorizations, we take the minimum exponent for each prime: min(2^2, 2^1) × min(3^1, 3^2) = 2^1 × 3^1 = 6"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "homomorphismProperties": {
+      "type": "object",
+      "description": "How the GCD operation demonstrates homomorphism properties",
+      "required": ["operationMapping", "structurePreservation"],
+      "properties": {
+        "operationMapping": {
+          "type": "object",
+          "properties": {
+            "sourceOperation": {
+              "type": "string",
+              "const": "GCD operation in natural numbers",
+              "description": "Operation in the source domain (standard representation)"
+            },
+            "targetOperation": {
+              "type": "string",
+              "const": "Component-wise minimum of exponent vectors in prime factorization",
+              "description": "Corresponding operation in the target domain (prime factorization)"
+            },
+            "mappingFunction": {
+              "type": "string",
+              "const": "φ: ℕ⁺ → ℕ⁰^∞, where φ maps a natural number to its vector of prime exponents",
+              "description": "Function that maps between domains"
+            }
+          }
+        },
+        "structurePreservation": {
+          "type": "object",
+          "properties": {
+            "isomorphism": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether the mapping is an isomorphism for the GCD operation"
+            },
+            "preservedStructure": {
+              "type": "string",
+              "const": "GCD operation structure",
+              "description": "Mathematical structure preserved by the mapping"
+            },
+            "explanation": {
+              "type": "string",
+              "const": "The prime factorization mapping φ transforms the GCD operation in natural numbers into the component-wise minimum operation in the space of prime exponents. This elegantly preserves the GCD structure and demonstrates a key advantage of the prime factorization representation in the UOR framework.",
+              "description": "Explanation of how structure is preserved"
+            }
+          }
+        },
+        "mathematicalFormulation": {
+          "type": "string",
+          "const": "φ(gcd(a, b)) = min(φ(a), φ(b)), where φ is the prime factorization mapping and min is the component-wise minimum",
+          "description": "Formal mathematical formulation of the homomorphism"
+        }
+      }
+    },
+    "algebraicProperties": {
+      "type": "object",
+      "description": "Algebraic properties of the GCD operation",
+      "properties": {
+        "associativity": {
+          "type": "object",
+          "properties": {
+            "isAssociative": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether the GCD operation is associative"
+            },
+            "proof": {
+              "type": "string",
+              "const": "GCD is associative: gcd(gcd(a, b), c) = gcd(a, gcd(b, c))",
+              "description": "Reference to proof of associativity"
+            }
+          }
+        },
+        "commutativity": {
+          "type": "object",
+          "properties": {
+            "isCommutative": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether the GCD operation is commutative"
+            },
+            "proof": {
+              "type": "string",
+              "const": "GCD is commutative: gcd(a, b) = gcd(b, a)",
+              "description": "Reference to proof of commutativity"
+            }
+          }
+        },
+        "identityElement": {
+          "type": "object",
+          "properties": {
+            "exists": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether an identity element exists"
+            },
+            "value": {
+              "type": "integer",
+              "const": 0,
+              "description": "Value of the identity element"
+            },
+            "explanation": {
+              "type": "string",
+              "const": "gcd(a, 0) = a for all a, but this is a mild extension of the natural numbers to include 0",
+              "description": "Explanation of the identity element"
+            }
+          }
+        },
+        "inverseElements": {
+          "type": "object",
+          "properties": {
+            "exist": {
+              "type": "boolean",
+              "const": false,
+              "description": "Whether inverse elements exist"
+            },
+            "domain": {
+              "type": "string",
+              "const": "Not applicable for GCD operation",
+              "description": "Domain where inverses exist"
+            }
+          }
+        },
+        "distributivity": {
+          "type": "object",
+          "properties": {
+            "distributesWith": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Operations GCD distributes with"
+              },
+              "default": ["lcm (least common multiple)"]
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Examples of distributivity"
+              },
+              "default": [
+                "gcd(a, lcm(b, c)) = lcm(gcd(a, b), gcd(a, c))"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "algorithmImplementation": {
+      "type": "object",
+      "description": "Implementation of the GCD operation as an algorithm",
+      "properties": {
+        "pseudocode": {
+          "type": "string",
+          "const": "Function GCD(a, b):\n  1. Retrieve the prime factorizations of a and b\n     φ(a) = {(p₁, a₁), (p₂, a₂), ..., (pₙ, aₙ)}\n     φ(b) = {(p₁, b₁), (p₂, b₂), ..., (pₙ, bₙ)}\n  2. Initialize an empty result factorization φ(c)\n  3. For each unique prime p that appears in either factorization:\n     a. Find the exponent a_p in φ(a) (0 if not present)\n     b. Find the exponent b_p in φ(b) (0 if not present)\n     c. Set c_p = min(a_p, b_p)\n     d. If c_p > 0, add (p, c_p) to φ(c)\n  4. Convert φ(c) back to the standard representation\n  5. Return c",
+          "description": "Pseudocode for the GCD operation using prime factorization"
+        },
+        "computationalComplexity": {
+          "type": "object",
+          "properties": {
+            "timeComplexity": {
+              "type": "string",
+              "const": "O(max(log a, log b)) assuming efficient prime factorization is available",
+              "description": "Time complexity of the algorithm"
+            },
+            "spaceComplexity": {
+              "type": "string",
+              "const": "O(max(log a, log b)) for storing the prime factorizations",
+              "description": "Space complexity of the algorithm"
+            }
+          }
+        },
+        "comparisonWithStandardAlgorithm": {
+          "type": "object",
+          "properties": {
+            "standardAlgorithm": {
+              "type": "string",
+              "const": "Euclidean algorithm",
+              "description": "The standard algorithm for GCD"
+            },
+            "standardComplexity": {
+              "type": "string",
+              "const": "O(log(max(a, b)))",
+              "description": "Complexity of the standard algorithm"
+            },
+            "advantagesOfPrimeFactorization": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Advantages of using prime factorization"
+              },
+              "default": [
+                "Conceptual clarity of the relationship between GCD and prime factors",
+                "Elegant representation of the GCD operation as a component-wise minimum",
+                "Easy extension to multiple numbers (more than two)"
+              ]
+            },
+            "disadvantagesOfPrimeFactorization": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Disadvantages of using prime factorization"
+              },
+              "default": [
+                "Requires knowing prime factorizations, which are computationally expensive to compute for large numbers",
+                "The Euclidean algorithm is more efficient when factorizations are not pre-computed"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "observerFrameViews": {
+      "type": "array",
+      "description": "Views of the GCD operation from different observer frames",
+      "items": {
+        "type": "object",
+        "required": ["frameName", "interpretation"],
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of the GCD operation in this frame"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Examples of the GCD operation in this frame"
+            }
+          }
+        }
+      },
+      "default": [
+        {
+          "frameName": "Standard-Number-Theory",
+          "interpretation": "GCD as the largest common divisor of two numbers",
+          "examples": [
+            "gcd(12, 18) = 6, interpreted as the largest number that divides both 12 and 18"
+          ]
+        },
+        {
+          "frameName": "Prime-Factorization",
+          "interpretation": "GCD as the product of common prime factors with the minimum exponents",
+          "examples": [
+            "gcd(12, 18) = gcd(2² × 3¹, 2¹ × 3²) = 2^min(2,1) × 3^min(1,2) = 2¹ × 3¹ = 6"
+          ]
+        },
+        {
+          "frameName": "Linear-Combination",
+          "interpretation": "GCD as the smallest positive linear combination of the two numbers",
+          "examples": [
+            "gcd(12, 18) = 6, which can be expressed as 6 = 18 × 1 - 12 × 1"
+          ]
+        }
+      ]
+    },
+    "relatedOperations": {
+      "type": "array",
+      "description": "Operations closely related to GCD",
+      "items": {
+        "type": "object",
+        "properties": {
+          "operationName": {
+            "type": "string",
+            "description": "Name of the related operation"
+          },
+          "relationship": {
+            "type": "string",
+            "description": "Description of the relationship"
+          },
+          "primeFactorizationConnection": {
+            "type": "string",
+            "description": "How the operation connects to prime factorization"
+          }
+        }
+      },
+      "default": [
+        {
+          "operationName": "LCM (Least Common Multiple)",
+          "relationship": "LCM is the dual of GCD: gcd(a, b) × lcm(a, b) = a × b",
+          "primeFactorizationConnection": "lcm(a, b) takes the maximum exponent for each prime factor: φ(lcm(a, b)) = max(φ(a), φ(b))"
+        },
+        {
+          "operationName": "Coprime Testing",
+          "relationship": "Two numbers are coprime if their GCD is 1",
+          "primeFactorizationConnection": "Numbers are coprime if they have no common prime factors"
+        },
+        {
+          "operationName": "Bézout's Identity",
+          "relationship": "For any integers a and b, there exist integers x and y such that ax + by = gcd(a, b)",
+          "primeFactorizationConnection": "Does not have a simple expression in terms of prime factorization, highlighting a limitation of the prime factorization approach"
+        }
+      ]
+    }
+  }
+}

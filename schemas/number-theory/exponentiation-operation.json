@@ -1,0 +1,498 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/number-theory/exponentiation-operation.json",
+  "title": "Exponentiation Operation Schema",
+  "description": "Schema defining exponentiation operation within the number theory domain using the UOR prime factorization framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "operationType", "domain", "operationRules", "homomorphismProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "const": "urn:uor:number-theory:operation:exponentiation",
+      "description": "Unique identifier for exponentiation operation"
+    },
+    "operationType": {
+      "type": "string",
+      "const": "exponentiation",
+      "description": "Type of arithmetic operation"
+    },
+    "name": {
+      "type": "string",
+      "const": "Exponentiation",
+      "description": "Human-readable name for the operation"
+    },
+    "description": {
+      "type": "string",
+      "const": "Exponentiation operation in the domain of natural numbers, defined using prime factorization",
+      "description": "Description of the operation"
+    },
+    "symbol": {
+      "type": "string",
+      "const": "^",
+      "description": "Mathematical symbol for exponentiation"
+    },
+    "domain": {
+      "type": "object",
+      "description": "The domain in which this operation is defined",
+      "required": ["id", "name", "elements"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "const": "urn:uor:domain:number-theory",
+          "description": "Identifier for the number theory domain"
+        },
+        "name": {
+          "type": "string",
+          "const": "Number Theory Domain",
+          "description": "Name of the domain"
+        },
+        "elements": {
+          "type": "string",
+          "const": "natural-numbers",
+          "description": "Type of elements this operation works with"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Constraints on the operation's domain"
+          },
+          "default": ["The base is a natural number", "The exponent is a natural number"]
+        }
+      }
+    },
+    "operationRules": {
+      "type": "object",
+      "description": "Rules defining how exponentiation works",
+      "required": ["formalDefinition", "standardRepresentation", "canonicalRepresentation"],
+      "properties": {
+        "formalDefinition": {
+          "type": "string",
+          "const": "For natural numbers a and n, a^n = a × a × ... × a (n times)",
+          "description": "Formal mathematical definition of exponentiation"
+        },
+        "standardRepresentation": {
+          "type": "object",
+          "description": "Standard decimal representation of exponentiation",
+          "required": ["definition", "method"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "For natural numbers a and n in their decimal representations, a^n is computed as the product of n copies of a",
+              "description": "Definition in terms of standard decimal representation"
+            },
+            "method": {
+              "type": "string",
+              "const": "Repeated multiplication or using fast exponentiation algorithms",
+              "description": "Method for computing exponentiation in standard form"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "description": "Operand values"
+                    }
+                  },
+                  "result": {
+                    "type": "integer",
+                    "description": "Result of the exponentiation"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the calculation"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "operands": [2, 3],
+                  "result": 8,
+                  "explanation": "2^3 = 2 × 2 × 2 = 8"
+                }
+              ]
+            }
+          }
+        },
+        "canonicalRepresentation": {
+          "type": "object",
+          "description": "Canonical representation using prime factorization",
+          "required": ["definition", "method", "transformationRules"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "For a natural number a with prime factorization a = p₁^a₁ × p₂^a₂ × ... × pₙ^aₙ and a natural number n, the exponentiation a^n = p₁^(a₁×n) × p₂^(a₂×n) × ... × pₙ^(aₙ×n)",
+              "description": "Definition in terms of prime factorization"
+            },
+            "method": {
+              "type": "string",
+              "const": "Multiply each exponent in the prime factorization by the power n",
+              "description": "Method for computing exponentiation using prime factorization"
+            },
+            "transformationRules": {
+              "type": "array",
+              "description": "Rules for transforming prime factorizations under exponentiation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "rule": {
+                    "type": "string",
+                    "description": "A transformation rule for prime factorizations"
+                  },
+                  "formula": {
+                    "type": "string",
+                    "description": "Mathematical formula for the rule"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the rule"
+                  }
+                }
+              },
+              "default": [
+                {
+                  "rule": "Exponent Multiplication Rule",
+                  "formula": "(p^a)^n = p^(a×n)",
+                  "explanation": "When raising a power to another power, multiply the exponents"
+                },
+                {
+                  "rule": "Scalar Multiplication Rule",
+                  "formula": "φ(a^n) = n × φ(a)",
+                  "explanation": "In prime factorization space, exponentiation corresponds to scalar multiplication of the exponent vector by n"
+                }
+              ]
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "integer",
+                          "description": "Standard value"
+                        },
+                        "primeFactorization": {
+                          "type": "string",
+                          "description": "Prime factorization representation"
+                        }
+                      }
+                    }
+                  },
+                  "result": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "integer",
+                        "description": "Standard value of result"
+                      },
+                      "primeFactorization": {
+                        "type": "string",
+                        "description": "Prime factorization of result"
+                      }
+                    }
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the calculation using prime factorization"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "operands": [
+                    {
+                      "value": 12,
+                      "primeFactorization": "2^2 × 3^1"
+                    },
+                    {
+                      "value": 3,
+                      "primeFactorization": "3^1"
+                    }
+                  ],
+                  "result": {
+                    "value": 1728,
+                    "primeFactorization": "2^6 × 3^3"
+                  },
+                  "explanation": "To compute 12^3 using prime factorizations, we multiply each exponent in the factorization of 12 by 3: (2^2 × 3^1)^3 = 2^(2×3) × 3^(1×3) = 2^6 × 3^3 = 1728"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "homomorphismProperties": {
+      "type": "object",
+      "description": "How exponentiation demonstrates homomorphism properties",
+      "required": ["operationMapping", "structurePreservation"],
+      "properties": {
+        "operationMapping": {
+          "type": "object",
+          "properties": {
+            "sourceOperation": {
+              "type": "string",
+              "const": "Exponentiation a^n in natural numbers",
+              "description": "Operation in the source domain (standard representation)"
+            },
+            "targetOperation": {
+              "type": "string",
+              "const": "Scalar multiplication n × φ(a) in prime factorization",
+              "description": "Corresponding operation in the target domain (prime factorization)"
+            },
+            "mappingFunction": {
+              "type": "string",
+              "const": "φ: ℕ⁺ → ℕ⁰^∞, where φ maps a natural number to its vector of prime exponents",
+              "description": "Function that maps between domains"
+            }
+          }
+        },
+        "structurePreservation": {
+          "type": "object",
+          "properties": {
+            "isomorphism": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether the mapping is an isomorphism"
+            },
+            "preservedStructure": {
+              "type": "string",
+              "const": "Exponentiation structure",
+              "description": "Mathematical structure preserved by the mapping"
+            },
+            "explanation": {
+              "type": "string",
+              "const": "The prime factorization mapping φ transforms exponentiation in the natural numbers into scalar multiplication in the space of prime exponents. This preserves the exponential structure and is one of the key homomorphism properties of the UOR framework.",
+              "description": "Explanation of how structure is preserved"
+            }
+          }
+        },
+        "mathematicalFormulation": {
+          "type": "string",
+          "const": "φ(a^n) = n × φ(a), where φ is the prime factorization mapping",
+          "description": "Formal mathematical formulation of the homomorphism"
+        }
+      }
+    },
+    "algebraicProperties": {
+      "type": "object",
+      "description": "Algebraic properties of exponentiation",
+      "properties": {
+        "associativity": {
+          "type": "object",
+          "properties": {
+            "isAssociative": {
+              "type": "boolean",
+              "const": false,
+              "description": "Whether exponentiation is associative"
+            },
+            "counterExample": {
+              "type": "string",
+              "const": "(a^b)^c ≠ a^(b^c) in general. For example, (2^3)^2 = 8^2 = 64, but 2^(3^2) = 2^9 = 512",
+              "description": "Counter-example showing non-associativity"
+            }
+          }
+        },
+        "commutativity": {
+          "type": "object",
+          "properties": {
+            "isCommutative": {
+              "type": "boolean",
+              "const": false,
+              "description": "Whether exponentiation is commutative"
+            },
+            "counterExample": {
+              "type": "string",
+              "const": "a^b ≠ b^a in general. For example, 2^3 = 8, but 3^2 = 9",
+              "description": "Counter-example showing non-commutativity"
+            }
+          }
+        },
+        "identityElement": {
+          "type": "object",
+          "properties": {
+            "rightIdentity": {
+              "type": "object",
+              "properties": {
+                "exists": {
+                  "type": "boolean",
+                  "const": true,
+                  "description": "Whether a right identity element exists"
+                },
+                "value": {
+                  "type": "integer",
+                  "const": 1,
+                  "description": "Value of the right identity element"
+                },
+                "explanation": {
+                  "type": "string",
+                  "const": "a^1 = a for all a",
+                  "description": "Explanation of the right identity"
+                }
+              }
+            },
+            "leftIdentity": {
+              "type": "object",
+              "properties": {
+                "exists": {
+                  "type": "boolean",
+                  "const": false,
+                  "description": "Whether a left identity element exists for all values"
+                },
+                "specialCase": {
+                  "type": "string",
+                  "const": "1^n = 1 for all n, but this is only a left identity for a = 1",
+                  "description": "Special case for left identity"
+                }
+              }
+            }
+          }
+        },
+        "inverseElements": {
+          "type": "object",
+          "properties": {
+            "exist": {
+              "type": "boolean",
+              "const": false,
+              "description": "Whether inverse elements exist"
+            },
+            "domain": {
+              "type": "string",
+              "const": "Not applicable in natural numbers; the concept of logarithm extends this to rational and real numbers",
+              "description": "Domain where inverses exist"
+            },
+            "computation": {
+              "type": "string",
+              "const": "Not applicable in the natural number domain",
+              "description": "How inverses are computed"
+            }
+          }
+        },
+        "distributivity": {
+          "type": "object",
+          "properties": {
+            "distributesWith": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Operations exponentiation distributes with"
+              },
+              "default": ["multiplication (right distributivity)"]
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Examples of distributivity"
+              },
+              "default": [
+                "a^(m × n) = (a^m)^n",
+                "(a × b)^n = a^n × b^n"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "algorithmImplementation": {
+      "type": "object",
+      "description": "Implementation of exponentiation as an algorithm",
+      "properties": {
+        "pseudocode": {
+          "type": "string",
+          "const": "Function Exponentiate(a, n):\n  1. Retrieve the prime factorization of a\n     φ(a) = {(p₁, a₁), (p₂, a₂), ..., (pₖ, aₖ)}\n  2. Multiply each exponent by n\n     φ(a^n) = {(p₁, a₁×n), (p₂, a₂×n), ..., (pₖ, aₖ×n)}\n  3. Convert φ(a^n) back to the standard representation if needed\n  4. Return a^n",
+          "description": "Pseudocode for exponentiation using prime factorization"
+        },
+        "computationalComplexity": {
+          "type": "object",
+          "properties": {
+            "timeComplexity": {
+              "type": "string",
+              "const": "O(log a) assuming efficient prime factorization is available",
+              "description": "Time complexity of the algorithm"
+            },
+            "spaceComplexity": {
+              "type": "string",
+              "const": "O(log a) for storing the prime factorization",
+              "description": "Space complexity of the algorithm"
+            }
+          }
+        },
+        "optimizations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Optimizations for the algorithm"
+          },
+          "default": [
+            "Pre-compute and cache prime factorizations of frequently used numbers",
+            "Use binary exponentiation for large powers",
+            "Implement special handling for powers of 2 and other common cases"
+          ]
+        }
+      }
+    },
+    "observerFrameViews": {
+      "type": "array",
+      "description": "Views of exponentiation from different observer frames",
+      "items": {
+        "type": "object",
+        "required": ["frameName", "interpretation"],
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of exponentiation in this frame"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Examples of exponentiation in this frame"
+            }
+          }
+        }
+      },
+      "default": [
+        {
+          "frameName": "Standard-Decimal",
+          "interpretation": "Exponentiation as repeated multiplication or geometric growth",
+          "examples": [
+            "2^3 = 2 × 2 × 2 = 8, interpreted as multiplying 2 by itself 3 times"
+          ]
+        },
+        {
+          "frameName": "Prime-Factorization",
+          "interpretation": "Exponentiation as scalar multiplication of the exponent vector",
+          "examples": [
+            "(2^2 × 3^1)^3 = 2^(2×3) × 3^(1×3) = 2^6 × 3^3, interpreted as multiplying each exponent by 3"
+          ]
+        },
+        {
+          "frameName": "Logarithmic",
+          "interpretation": "Exponentiation as multiplication in the logarithmic domain",
+          "examples": [
+            "log(a^n) = n × log(a)"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,478 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/number-theory/multiplication-operation.json",
+  "title": "Multiplication Operation Schema",
+  "description": "Schema defining multiplication operation within the number theory domain using the UOR prime factorization framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "operationType", "domain", "operationRules", "homomorphismProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "const": "urn:uor:number-theory:operation:multiplication",
+      "description": "Unique identifier for multiplication operation"
+    },
+    "operationType": {
+      "type": "string",
+      "const": "multiplication",
+      "description": "Type of arithmetic operation"
+    },
+    "name": {
+      "type": "string",
+      "const": "Multiplication",
+      "description": "Human-readable name for the operation"
+    },
+    "description": {
+      "type": "string",
+      "const": "Multiplication operation in the domain of natural numbers, defined using prime factorization",
+      "description": "Description of the operation"
+    },
+    "symbol": {
+      "type": "string",
+      "const": "×",
+      "description": "Mathematical symbol for multiplication"
+    },
+    "domain": {
+      "type": "object",
+      "description": "The domain in which this operation is defined",
+      "required": ["id", "name", "elements"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "const": "urn:uor:domain:number-theory",
+          "description": "Identifier for the number theory domain"
+        },
+        "name": {
+          "type": "string",
+          "const": "Number Theory Domain",
+          "description": "Name of the domain"
+        },
+        "elements": {
+          "type": "string",
+          "const": "natural-numbers",
+          "description": "Type of elements this operation works with"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Constraints on the operation's domain"
+          },
+          "default": []
+        }
+      }
+    },
+    "operationRules": {
+      "type": "object",
+      "description": "Rules defining how multiplication works",
+      "required": ["formalDefinition", "standardRepresentation", "canonicalRepresentation"],
+      "properties": {
+        "formalDefinition": {
+          "type": "string",
+          "const": "For natural numbers a and b, a × b = c where c is the natural number whose value is the product of a and b",
+          "description": "Formal mathematical definition of multiplication"
+        },
+        "standardRepresentation": {
+          "type": "object",
+          "description": "Standard decimal representation of multiplication",
+          "required": ["definition", "method"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "For natural numbers a and b in their decimal representations, a × b is computed according to the standard multiplication algorithm",
+              "description": "Definition in terms of standard decimal representation"
+            },
+            "method": {
+              "type": "string",
+              "const": "Standard multiplication algorithm involving digit-by-digit multiplication and carrying",
+              "description": "Method for computing multiplication in standard form"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "description": "Operand values"
+                    }
+                  },
+                  "result": {
+                    "type": "integer",
+                    "description": "Result of the multiplication"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the calculation"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "operands": [12, 15],
+                  "result": 180,
+                  "explanation": "12 × 15 = 10 × 15 + 2 × 15 = 150 + 30 = 180"
+                }
+              ]
+            }
+          }
+        },
+        "canonicalRepresentation": {
+          "type": "object",
+          "description": "Canonical representation using prime factorization",
+          "required": ["definition", "method", "transformationRules"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "For natural numbers a and b with prime factorizations a = p₁^a₁ × p₂^a₂ × ... × pₙ^aₙ and b = p₁^b₁ × p₂^b₂ × ... × pₙ^bₙ, their product a × b = p₁^(a₁+b₁) × p₂^(a₂+b₂) × ... × pₙ^(aₙ+bₙ)",
+              "description": "Definition in terms of prime factorization"
+            },
+            "method": {
+              "type": "string",
+              "const": "Add the exponents of corresponding prime factors in the prime factorizations of the operands",
+              "description": "Method for computing multiplication using prime factorization"
+            },
+            "transformationRules": {
+              "type": "array",
+              "description": "Rules for transforming prime factorizations under multiplication",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "rule": {
+                    "type": "string",
+                    "description": "A transformation rule for prime factorizations"
+                  },
+                  "formula": {
+                    "type": "string",
+                    "description": "Mathematical formula for the rule"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the rule"
+                  }
+                }
+              },
+              "default": [
+                {
+                  "rule": "Exponent Addition Rule",
+                  "formula": "p^a × p^b = p^(a+b)",
+                  "explanation": "When multiplying powers of the same base, add the exponents"
+                },
+                {
+                  "rule": "Prime Factor Union Rule",
+                  "formula": "∏p_i^a_i × ∏p_j^b_j = ∏p_k^(a_k+b_k)",
+                  "explanation": "The prime factorization of a product is the union of all prime factors, with exponents added for common factors"
+                }
+              ]
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "operands": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "integer",
+                          "description": "Standard value"
+                        },
+                        "primeFactorization": {
+                          "type": "string",
+                          "description": "Prime factorization representation"
+                        }
+                      }
+                    }
+                  },
+                  "result": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "integer",
+                        "description": "Standard value of result"
+                      },
+                      "primeFactorization": {
+                        "type": "string",
+                        "description": "Prime factorization of result"
+                      }
+                    }
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of the calculation using prime factorization"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "operands": [
+                    {
+                      "value": 12,
+                      "primeFactorization": "2^2 × 3^1"
+                    },
+                    {
+                      "value": 15,
+                      "primeFactorization": "3^1 × 5^1"
+                    }
+                  ],
+                  "result": {
+                    "value": 180,
+                    "primeFactorization": "2^2 × 3^2 × 5^1"
+                  },
+                  "explanation": "To multiply 12 × 15, we add the exponents of their prime factorizations: (2^2 × 3^1) × (3^1 × 5^1) = 2^(2+0) × 3^(1+1) × 5^(0+1) = 2^2 × 3^2 × 5^1 = 180"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "homomorphismProperties": {
+      "type": "object",
+      "description": "How multiplication demonstrates homomorphism properties",
+      "required": ["operationMapping", "structurePreservation"],
+      "properties": {
+        "operationMapping": {
+          "type": "object",
+          "properties": {
+            "sourceOperation": {
+              "type": "string",
+              "const": "Multiplication in natural numbers",
+              "description": "Operation in the source domain (standard representation)"
+            },
+            "targetOperation": {
+              "type": "string",
+              "const": "Addition of exponent vectors in prime factorization",
+              "description": "Corresponding operation in the target domain (prime factorization)"
+            },
+            "mappingFunction": {
+              "type": "string",
+              "const": "φ: ℕ⁺ → ℕ⁰^∞, where φ maps a natural number to its vector of prime exponents",
+              "description": "Function that maps between domains"
+            }
+          }
+        },
+        "structurePreservation": {
+          "type": "object",
+          "properties": {
+            "isomorphism": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether the mapping is an isomorphism"
+            },
+            "preservedStructure": {
+              "type": "string",
+              "const": "Multiplicative monoid structure",
+              "description": "Mathematical structure preserved by the mapping"
+            },
+            "explanation": {
+              "type": "string",
+              "const": "The prime factorization mapping φ transforms multiplication in the natural numbers into vector addition in the space of prime exponents, preserving the multiplicative structure. This is a fundamental homomorphism property of the UOR framework.",
+              "description": "Explanation of how structure is preserved"
+            }
+          }
+        },
+        "mathematicalFormulation": {
+          "type": "string",
+          "const": "φ(a × b) = φ(a) + φ(b), where φ is the prime factorization mapping",
+          "description": "Formal mathematical formulation of the homomorphism"
+        }
+      }
+    },
+    "algebraicProperties": {
+      "type": "object",
+      "description": "Algebraic properties of multiplication",
+      "properties": {
+        "associativity": {
+          "type": "object",
+          "properties": {
+            "isAssociative": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether multiplication is associative"
+            },
+            "proof": {
+              "type": "string",
+              "const": "Multiplication is associative: (a × b) × c = a × (b × c)",
+              "description": "Reference to proof of associativity"
+            }
+          }
+        },
+        "commutativity": {
+          "type": "object",
+          "properties": {
+            "isCommutative": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether multiplication is commutative"
+            },
+            "proof": {
+              "type": "string",
+              "const": "Multiplication is commutative: a × b = b × a",
+              "description": "Reference to proof of commutativity"
+            }
+          }
+        },
+        "identityElement": {
+          "type": "object",
+          "properties": {
+            "exists": {
+              "type": "boolean",
+              "const": true,
+              "description": "Whether an identity element exists"
+            },
+            "value": {
+              "type": "integer",
+              "const": 1,
+              "description": "Value of the identity element"
+            },
+            "primeFactorization": {
+              "type": "string",
+              "const": "No prime factors (empty product)",
+              "description": "Prime factorization of the identity element"
+            }
+          }
+        },
+        "inverseElements": {
+          "type": "object",
+          "properties": {
+            "exist": {
+              "type": "boolean",
+              "const": false,
+              "description": "Whether inverse elements exist"
+            },
+            "domain": {
+              "type": "string",
+              "const": "Not applicable in natural numbers; inverses exist in rational numbers",
+              "description": "Domain where inverses exist"
+            },
+            "computation": {
+              "type": "string",
+              "const": "Not applicable in the natural number domain",
+              "description": "How inverses are computed"
+            }
+          }
+        },
+        "distributivity": {
+          "type": "object",
+          "properties": {
+            "distributesWith": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Operations multiplication distributes with"
+              },
+              "default": ["addition", "subtraction"]
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Examples of distributivity"
+              },
+              "default": [
+                "a × (b + c) = (a × b) + (a × c)",
+                "a × (b - c) = (a × b) - (a × c)"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "algorithmImplementation": {
+      "type": "object",
+      "description": "Implementation of multiplication as an algorithm",
+      "properties": {
+        "pseudocode": {
+          "type": "string",
+          "const": "Function Multiply(a, b):\n  1. Retrieve the prime factorizations of a and b\n     φ(a) = {(p₁, a₁), (p₂, a₂), ..., (pₙ, aₙ)}\n     φ(b) = {(p₁, b₁), (p₂, b₂), ..., (pₙ, bₙ)}\n  2. Initialize an empty result factorization φ(c)\n  3. For each unique prime p that appears in either factorization:\n     a. Find the exponent a_p in φ(a) (0 if not present)\n     b. Find the exponent b_p in φ(b) (0 if not present)\n     c. Add (p, a_p + b_p) to φ(c)\n  4. Convert φ(c) back to the standard representation if needed\n  5. Return c",
+          "description": "Pseudocode for multiplication using prime factorization"
+        },
+        "computationalComplexity": {
+          "type": "object",
+          "properties": {
+            "timeComplexity": {
+              "type": "string",
+              "const": "O(max(log a, log b)) assuming efficient prime factorization is available",
+              "description": "Time complexity of the algorithm"
+            },
+            "spaceComplexity": {
+              "type": "string",
+              "const": "O(max(log a, log b)) for storing the prime factorizations",
+              "description": "Space complexity of the algorithm"
+            }
+          }
+        },
+        "optimizations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Optimizations for the algorithm"
+          },
+          "default": [
+            "Pre-compute and cache prime factorizations of frequently used numbers",
+            "Use sparse representation for prime factorization to save space",
+            "Implement special handling for powers of 2 and other common cases"
+          ]
+        }
+      }
+    },
+    "observerFrameViews": {
+      "type": "array",
+      "description": "Views of multiplication from different observer frames",
+      "items": {
+        "type": "object",
+        "required": ["frameName", "interpretation"],
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of multiplication in this frame"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Examples of multiplication in this frame"
+            }
+          }
+        }
+      },
+      "default": [
+        {
+          "frameName": "Standard-Decimal",
+          "interpretation": "Multiplication as repeated addition or area calculation",
+          "examples": [
+            "12 × 15 = 180, interpreted as 12 groups of 15 or a rectangle with sides 12 and 15"
+          ]
+        },
+        {
+          "frameName": "Prime-Factorization",
+          "interpretation": "Multiplication as combining independent prime factors through exponent addition",
+          "examples": [
+            "(2² × 3¹) × (3¹ × 5¹) = 2² × 3² × 5¹"
+          ]
+        },
+        {
+          "frameName": "Logarithmic",
+          "interpretation": "Multiplication as addition in the logarithmic domain",
+          "examples": [
+            "log(12 × 15) = log(12) + log(15)"
+          ]
+        }
+      ]
+    }
+  }
+}
