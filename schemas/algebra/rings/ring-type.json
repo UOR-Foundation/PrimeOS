@@ -1,0 +1,983 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/rings/ring-type.json",
+  "title": "Ring Type Schema",
+  "description": "Schema defining specific types of rings within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "type", "ringFamily", "properties", "canonicalExamples", "primeElementTypes"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the ring type"
+    },
+    "type": {
+      "type": "string",
+      "const": "RingType",
+      "description": "Type of the mathematical entity"
+    },
+    "ringFamily": {
+      "type": "string",
+      "enum": [
+        "integer",
+        "polynomial",
+        "matrix",
+        "modular",
+        "algebraic-integer",
+        "function",
+        "power-series",
+        "laurent-series",
+        "boolean",
+        "differential",
+        "local",
+        "noetherian",
+        "artinian",
+        "field",
+        "division",
+        "group-ring",
+        "algebra",
+        "quotient",
+        "formal-power-series",
+        "formal-laurent-series",
+        "formal-parameter",
+        "valuation",
+        "adelic",
+        "completions",
+        "ordered",
+        "topological"
+      ],
+      "description": "Family of rings this type belongs to"
+    },
+    "notation": {
+      "type": "object",
+      "required": ["standard"],
+      "properties": {
+        "standard": {
+          "type": "string",
+          "description": "Standard notation for this ring type"
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Alternative notations"
+        },
+        "latexRepresentation": {
+          "type": "string",
+          "description": "LaTeX representation of the ring notation"
+        }
+      }
+    },
+    "definition": {
+      "type": "object",
+      "required": ["informal", "formal"],
+      "properties": {
+        "informal": {
+          "type": "string",
+          "description": "Informal definition of the ring type"
+        },
+        "formal": {
+          "type": "string",
+          "description": "Formal mathematical definition"
+        },
+        "constructiveMethods": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the construction method"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the construction method"
+              }
+            }
+          },
+          "description": "Ways to construct this ring type"
+        },
+        "axiomaticDefinition": {
+          "type": "string",
+          "description": "Definition in terms of axioms"
+        }
+      }
+    },
+    "properties": {
+      "type": "object",
+      "required": ["isCommutative", "hasIdentity", "isDivisionRing", "isField"],
+      "properties": {
+        "cardinality": {
+          "type": "string",
+          "description": "Cardinality of rings of this type (may be parametrized)"
+        },
+        "isFinite": {
+          "type": "boolean",
+          "description": "Whether rings of this type are finite"
+        },
+        "isCommutative": {
+          "type": "boolean",
+          "description": "Whether rings of this type are commutative"
+        },
+        "hasIdentity": {
+          "type": "boolean",
+          "description": "Whether rings of this type have a multiplicative identity"
+        },
+        "isDivisionRing": {
+          "type": "boolean",
+          "description": "Whether rings of this type are division rings"
+        },
+        "isField": {
+          "type": "boolean",
+          "description": "Whether rings of this type are fields"
+        },
+        "isIntegralDomain": {
+          "type": "boolean",
+          "description": "Whether rings of this type are integral domains"
+        },
+        "isEuclideanDomain": {
+          "type": "boolean",
+          "description": "Whether rings of this type are Euclidean domains"
+        },
+        "isPrincipalIdealDomain": {
+          "type": "boolean",
+          "description": "Whether rings of this type are principal ideal domains (PIDs)"
+        },
+        "isUniqueFactorizationDomain": {
+          "type": "boolean",
+          "description": "Whether rings of this type are unique factorization domains (UFDs)"
+        },
+        "isNoetherian": {
+          "type": "boolean",
+          "description": "Whether rings of this type are Noetherian"
+        },
+        "isArtinian": {
+          "type": "boolean",
+          "description": "Whether rings of this type are Artinian"
+        },
+        "isLocal": {
+          "type": "boolean",
+          "description": "Whether rings of this type are local rings"
+        },
+        "hasZeroDivisors": {
+          "type": "boolean",
+          "description": "Whether rings of this type have zero divisors"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "Krull dimension of rings of this type"
+        },
+        "depth": {
+          "type": "string",
+          "description": "Depth of rings of this type"
+        },
+        "globalDimension": {
+          "type": "string",
+          "description": "Global dimension of rings of this type"
+        },
+        "characteristic": {
+          "type": "string",
+          "description": "Characteristic of rings of this type"
+        }
+      }
+    },
+    "canonicalExamples": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["parameters", "description"],
+        "properties": {
+          "parameters": {
+            "type": "string",
+            "description": "Parameters specifying this example"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of this example"
+          },
+          "cardinality": {
+            "type": "string",
+            "description": "Cardinality of this example"
+          },
+          "elements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Elements of this ring (if small)"
+          },
+          "generators": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Generators of this ring"
+          },
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to ring domain entity for this example"
+          }
+        }
+      },
+      "description": "Canonical examples of rings of this type"
+    },
+    "primeElementTypes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["type", "description"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of prime element"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of this prime element type"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of this prime element type"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of this prime element type"
+          }
+        }
+      },
+      "description": "Types of prime elements in rings of this type"
+    },
+    "factorizationRules": {
+      "type": "object",
+      "description": "Rules for factorizing elements in rings of this type",
+      "properties": {
+        "existence": {
+          "type": "string",
+          "enum": [
+            "always",
+            "conditional",
+            "special-cases-only",
+            "never"
+          ],
+          "description": "Whether factorization exists for elements"
+        },
+        "uniqueness": {
+          "type": "string",
+          "enum": [
+            "unique",
+            "unique-up-to-units",
+            "unique-up-to-order",
+            "unique-up-to-units-and-order",
+            "non-unique",
+            "unique-in-specific-cases"
+          ],
+          "description": "Type of uniqueness for factorizations"
+        },
+        "method": {
+          "type": "string",
+          "description": "Method for factorizing elements"
+        },
+        "canonicalForm": {
+          "type": "string",
+          "description": "Canonical form for factorizations"
+        },
+        "factorizationTheorem": {
+          "type": "string",
+          "description": "Theorem ensuring factorization properties (if applicable)"
+        }
+      }
+    },
+    "idealStructure": {
+      "type": "object",
+      "description": "Structure of ideals in rings of this type",
+      "properties": {
+        "principalIdeals": {
+          "type": "object",
+          "properties": {
+            "areAllIdeals": {
+              "type": "boolean",
+              "description": "Whether all ideals are principal"
+            },
+            "generation": {
+              "type": "string",
+              "description": "How principal ideals are generated"
+            },
+            "characterization": {
+              "type": "string",
+              "description": "Characterization of principal ideals"
+            }
+          },
+          "description": "Properties of principal ideals"
+        },
+        "maximalIdeals": {
+          "type": "object",
+          "properties": {
+            "characterization": {
+              "type": "string",
+              "description": "Characterization of maximal ideals"
+            },
+            "finiteness": {
+              "type": "string",
+              "description": "Whether there are finitely or infinitely many maximal ideals"
+            }
+          },
+          "description": "Properties of maximal ideals"
+        },
+        "primeIdeals": {
+          "type": "object",
+          "properties": {
+            "characterization": {
+              "type": "string",
+              "description": "Characterization of prime ideals"
+            },
+            "finiteness": {
+              "type": "string",
+              "description": "Whether there are finitely or infinitely many prime ideals"
+            },
+            "inclusion": {
+              "type": "string",
+              "description": "Structure of the inclusion relation among prime ideals"
+            }
+          },
+          "description": "Properties of prime ideals"
+        },
+        "idealClassStructure": {
+          "type": "object",
+          "properties": {
+            "classGroup": {
+              "type": "string",
+              "description": "Description of the class group"
+            },
+            "classNumber": {
+              "type": "string",
+              "description": "Class number (size of the class group)"
+            }
+          },
+          "description": "Structure of ideal classes (for non-PIDs)"
+        }
+      }
+    },
+    "quotientRings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ideals": {
+            "type": "string",
+            "description": "Type of ideals used to form quotients"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the resulting quotient rings"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of these quotient rings"
+          }
+        }
+      },
+      "description": "Notable quotient rings R/I for ideals I"
+    },
+    "automorphismGroup": {
+      "type": "object",
+      "description": "The automorphism group of rings of this type",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the automorphism group"
+        },
+        "structure": {
+          "type": "string",
+          "description": "Structure of the automorphism group"
+        },
+        "order": {
+          "type": "string",
+          "description": "Order of the automorphism group (may be parametrized)"
+        },
+        "generators": {
+          "type": "string",
+          "description": "Description of the generators"
+        }
+      }
+    },
+    "characteristicProperties": {
+      "type": "object",
+      "description": "Properties related to the characteristic of rings of this type",
+      "properties": {
+        "characteristic": {
+          "type": "string",
+          "description": "Characteristic of rings of this type"
+        },
+        "primeSubring": {
+          "type": "string",
+          "description": "Description of the prime subring"
+        },
+        "implications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Implications of the characteristic"
+        }
+      }
+    },
+    "modulesOverRing": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "moduleType": {
+            "type": "string",
+            "description": "Type of module"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the module structure"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of this module type"
+          }
+        }
+      },
+      "description": "Types of modules over rings of this type"
+    },
+    "polynomialRing": {
+      "type": "object",
+      "description": "The polynomial ring over rings of this type",
+      "properties": {
+        "notation": {
+          "type": "string",
+          "description": "Notation for the polynomial ring"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the polynomial ring"
+        }
+      }
+    },
+    "completions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "completionType": {
+            "type": "string",
+            "description": "Type of completion"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the completion"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of this completion"
+          }
+        }
+      },
+      "description": "Completions of rings of this type (if applicable)"
+    },
+    "cohomologyTheory": {
+      "type": "object",
+      "description": "Cohomology theory for rings of this type",
+      "properties": {
+        "theories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "theoryName": {
+                "type": "string",
+                "description": "Name of the cohomology theory"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the theory"
+              }
+            }
+          },
+          "description": "Applicable cohomology theories"
+        },
+        "groups": {
+          "type": "string",
+          "description": "Description of the cohomology groups"
+        },
+        "applications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Applications of cohomology for these rings"
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      },
+      "description": "Applications of rings of this type"
+    },
+    "theorems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance of the theorem"
+          }
+        }
+      },
+      "description": "Theorems related to rings of this type"
+    },
+    "history": {
+      "type": "object",
+      "properties": {
+        "discovery": {
+          "type": "string",
+          "description": "History of the discovery of this ring type"
+        },
+        "nameOrigin": {
+          "type": "string",
+          "description": "Origin of the name"
+        },
+        "keyContributors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Key contributors to the understanding of this ring type"
+        },
+        "significantDevelopments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "year": {
+                "type": "string",
+                "description": "Year of the development"
+              },
+              "development": {
+                "type": "string",
+                "description": "Description of the development"
+              },
+              "contributor": {
+                "type": "string",
+                "description": "Contributor responsible for the development"
+              }
+            }
+          },
+          "description": "Significant developments in the understanding of this ring type"
+        }
+      },
+      "description": "Historical information about this ring type"
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "relatedRingType": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to a related ring type"
+          },
+          "relationshipType": {
+            "type": "string",
+            "enum": [
+              "generalization",
+              "specialization",
+              "extension",
+              "completion",
+              "localization",
+              "quotient",
+              "isomorphic-for-specific-parameters",
+              "subring-for-specific-parameters",
+              "homomorphic-image"
+            ],
+            "description": "Type of relationship"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the relationship"
+          }
+        }
+      },
+      "description": "Relationships to other ring types"
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:ring:type:polynomial",
+      "type": "RingType",
+      "ringFamily": "polynomial",
+      "notation": {
+        "standard": "R[x]",
+        "alternatives": ["R[X]", "Pol(R)", "R[x₁,x₂,...,xₙ]"],
+        "latexRepresentation": "R[x]"
+      },
+      "definition": {
+        "informal": "The ring of polynomials with coefficients from a ring R",
+        "formal": "The set of all expressions of the form a₀ + a₁x + a₂x² + ... + aₙxⁿ, where aᵢ ∈ R and n ≥ 0, together with the operations of polynomial addition and multiplication",
+        "constructiveMethods": [
+          {
+            "name": "Standard Form",
+            "description": "Represent polynomials as sums of monomials aᵢxⁱ"
+          },
+          {
+            "name": "Coefficient Sequence",
+            "description": "Represent polynomials as finite sequences [a₀, a₁, a₂, ..., aₙ] of coefficients"
+          },
+          {
+            "name": "Formal Power Series Truncation",
+            "description": "Polynomials as truncated formal power series"
+          }
+        ],
+        "axiomaticDefinition": "The free R-algebra on one generator x"
+      },
+      "properties": {
+        "cardinality": "Same as R if R is infinite, countably infinite if R is finite and non-zero",
+        "isFinite": false,
+        "isCommutative": true,
+        "hasIdentity": true,
+        "isDivisionRing": false,
+        "isField": false,
+        "isIntegralDomain": true,
+        "isEuclideanDomain": true,
+        "isPrincipalIdealDomain": true,
+        "isUniqueFactorizationDomain": true,
+        "isNoetherian": true,
+        "isArtinian": false,
+        "isLocal": false,
+        "hasZeroDivisors": true,
+        "dimension": "1 + dim(R)",
+        "depth": "1 + depth(R)",
+        "globalDimension": "1 + gldim(R)",
+        "characteristic": "Same as the characteristic of R"
+      },
+      "canonicalExamples": [
+        {
+          "parameters": "R = ℤ",
+          "description": "Polynomials with integer coefficients",
+          "cardinality": "ℵ₀",
+          "elements": ["0", "1", "x", "2x + 1", "x²", "..."],
+          "generators": ["1", "x"],
+          "id": "urn:uor:algebra:ring:integer-polynomials"
+        },
+        {
+          "parameters": "R = ℝ",
+          "description": "Polynomials with real coefficients",
+          "cardinality": "2^ℵ₀",
+          "elements": ["0", "1", "x", "πx + e", "x²", "..."],
+          "generators": ["1", "x"],
+          "id": "urn:uor:algebra:ring:real-polynomials"
+        },
+        {
+          "parameters": "R = F₂",
+          "description": "Polynomials over the field with 2 elements",
+          "cardinality": "ℵ₀",
+          "elements": ["0", "1", "x", "x+1", "x²", "x²+1", "x²+x", "x²+x+1", "..."],
+          "generators": ["1", "x"],
+          "id": "urn:uor:algebra:ring:binary-polynomials"
+        }
+      ],
+      "primeElementTypes": [
+        {
+          "type": "irreducible-polynomial",
+          "description": "A polynomial that cannot be expressed as a product of non-unit polynomials",
+          "properties": [
+            "non-constant",
+            "cannot-be-factored-further",
+            "generates-maximal-ideal-when-R-is-field"
+          ],
+          "examples": [
+            "x² + 1 in ℝ[x]",
+            "x² + x + 1 in F₂[x]",
+            "Cyclotomic polynomials Φₙ(x) in ℚ[x]"
+          ]
+        },
+        {
+          "type": "prime-polynomial",
+          "description": "A polynomial p such that p|ab implies p|a or p|b",
+          "properties": [
+            "non-constant",
+            "generates-prime-ideal"
+          ],
+          "examples": [
+            "All irreducible polynomials when R is a UFD",
+            "x² + 1 in ℝ[x]",
+            "x² + x + 1 in F₂[x]"
+          ]
+        }
+      ],
+      "factorizationRules": {
+        "existence": "conditional",
+        "uniqueness": "unique-up-to-units",
+        "method": "Various algorithms including Kronecker's method, Berlekamp's algorithm, Cantor-Zassenhaus algorithm",
+        "canonicalForm": "Monic irreducible factors with corresponding exponents",
+        "factorizationTheorem": "If R is a UFD, then R[x] is a UFD"
+      },
+      "idealStructure": {
+        "principalIdeals": {
+          "areAllIdeals": true,
+          "generation": "Every ideal in K[x] (K a field) is of the form (f(x)) for some polynomial f(x)",
+          "characterization": "Principal ideals correspond to multiples of a given polynomial"
+        },
+        "maximalIdeals": {
+          "characterization": "When R is a field, the maximal ideals are precisely (p(x)) where p(x) is irreducible",
+          "finiteness": "Infinitely many when R is infinite"
+        },
+        "primeIdeals": {
+          "characterization": "When R is a field, the prime ideals are (0) and (p(x)) for irreducible p(x)",
+          "finiteness": "Infinitely many when R is infinite",
+          "inclusion": "Totally ordered: (0) ⊂ (p(x)) for any irreducible p(x)"
+        },
+        "idealClassStructure": {
+          "classGroup": "Trivial when R is a field (since R[x] is a PID)",
+          "classNumber": "1 when R is a field"
+        }
+      },
+      "quotientRings": [
+        {
+          "ideals": "(f(x)) where f(x) is irreducible",
+          "description": "Field extensions when R is a field",
+          "properties": [
+            "field",
+            "finite-dimensional-extension",
+            "dimension-equals-degree-of-f"
+          ]
+        },
+        {
+          "ideals": "(x^n)",
+          "description": "Truncated polynomial rings R[x]/(x^n)",
+          "properties": [
+            "local-when-R-is-field",
+            "nilpotent-elements",
+            "artinian-when-R-is-field"
+          ]
+        }
+      ],
+      "automorphismGroup": {
+        "description": "Automorphisms of R[x] that fix R",
+        "structure": "Depends on R; when R is a field, typically related to the automorphism group of R",
+        "order": "Depends on R",
+        "generators": "Typically includes automorphisms induced by R and x ↦ ax + b with a unit"
+      },
+      "characteristicProperties": {
+        "characteristic": "Same as the characteristic of R",
+        "primeSubring": "Depends on the prime subring of R",
+        "implications": [
+          "If R has characteristic p, then (a + b)^p = a^p + b^p in R[x]",
+          "If R has characteristic 0, then R[x] contains a copy of ℤ[x]",
+          "The derivative of a polynomial behaves differently in positive characteristic"
+        ]
+      },
+      "modulesOverRing": [
+        {
+          "moduleType": "Free modules",
+          "description": "Direct sums of copies of R[x]",
+          "properties": ["projective", "free"]
+        },
+        {
+          "moduleType": "Quotient modules",
+          "description": "R[x]/(f(x)) for polynomials f(x)",
+          "properties": ["finitely-generated", "torsion-when-f-non-zero"]
+        },
+        {
+          "moduleType": "Polynomial functions",
+          "description": "Functions represented by polynomials",
+          "properties": ["finitely-generated", "functional-representation"]
+        }
+      ],
+      "polynomialRing": {
+        "notation": "R[x][y] or R[x,y]",
+        "properties": [
+          "isomorphic-to-bivariate-polynomials",
+          "commutative",
+          "integral-domain-when-R-is",
+          "not-a-PID-in-multiple-variables",
+          "UFD-when-R-is-UFD"
+        ]
+      },
+      "completions": [
+        {
+          "completionType": "Formal power series",
+          "description": "R[[x]], the ring of formal power series with coefficients in R",
+          "properties": ["complete", "uncountable-when-R-is-infinite", "not-a-PID-when-R-is-field"]
+        },
+        {
+          "completionType": "Localization at irreducible p(x)",
+          "description": "R[x]_{(p(x))}, localization at the prime ideal (p(x))",
+          "properties": ["local", "contains-all-rational-functions-with-denominator-not-divisible-by-p"]
+        }
+      ],
+      "cohomologyTheory": {
+        "theories": [
+          {
+            "theoryName": "Koszul Cohomology",
+            "description": "Cohomology theory for the polynomial ring as a graded algebra"
+          },
+          {
+            "theoryName": "Hochschild Cohomology",
+            "description": "Measures deformation theory of the polynomial ring"
+          }
+        ],
+        "groups": "Explicitly computable due to the regular nature of polynomial rings",
+        "applications": [
+          "Syzygies and free resolutions",
+          "Algebraic geometry connections",
+          "Homological dimension theory"
+        ]
+      },
+      "applications": [
+        {
+          "domain": "Algebraic Geometry",
+          "description": "Foundation for algebraic varieties and schemes",
+          "examples": [
+            "Affine space corresponds to the spectrum of a polynomial ring",
+            "Projective varieties from homogeneous polynomials",
+            "Algebraic curves as zero sets of polynomials"
+          ]
+        },
+        {
+          "domain": "Galois Theory",
+          "description": "Tool for understanding field extensions and solvability of equations",
+          "examples": [
+            "Field extensions via irreducible polynomials",
+            "Polynomial symmetries and Galois groups",
+            "Solvability of equations by radicals"
+          ]
+        },
+        {
+          "domain": "Coding Theory",
+          "description": "Foundation for many error-correcting codes",
+          "examples": [
+            "Reed-Solomon codes using polynomials over finite fields",
+            "BCH codes and cyclic codes",
+            "Polynomial evaluation and interpolation for encoding/decoding"
+          ]
+        }
+      ],
+      "theorems": [
+        {
+          "name": "Gauss's Lemma",
+          "statement": "If R is a UFD and f,g ∈ R[x] with f·g ∈ R[x] primitive, then f and g are primitive",
+          "significance": "Helps establish that R[x] is a UFD when R is a UFD"
+        },
+        {
+          "name": "Hilbert Basis Theorem",
+          "statement": "If R is a Noetherian ring, then R[x] is Noetherian",
+          "significance": "Ensures polynomial rings over Noetherian rings have well-behaved ideal structure"
+        },
+        {
+          "name": "Eisenstein's Criterion",
+          "statement": "Provides sufficient conditions for irreducibility of polynomials",
+          "significance": "Powerful tool for proving irreducibility in polynomial rings"
+        }
+      ],
+      "history": {
+        "discovery": "Emerged from the study of equations in ancient civilizations, formalized in the 16th-17th centuries",
+        "nameOrigin": "From 'poly' (many) and 'nomos' (part), referring to the many terms",
+        "keyContributors": [
+          "François Viète",
+          "René Descartes",
+          "Carl Friedrich Gauss",
+          "Évariste Galois",
+          "Emmy Noether",
+          "David Hilbert"
+        ],
+        "significantDevelopments": [
+          {
+            "year": "1591",
+            "development": "Introduction of systematic algebraic notation for polynomials",
+            "contributor": "Viète"
+          },
+          {
+            "year": "1799",
+            "development": "Fundamental Theorem of Algebra proven",
+            "contributor": "Gauss"
+          },
+          {
+            "year": "1832",
+            "development": "Connection between polynomial roots and field extensions",
+            "contributor": "Galois"
+          },
+          {
+            "year": "1890",
+            "development": "Hilbert Basis Theorem",
+            "contributor": "Hilbert"
+          }
+        ]
+      },
+      "relationships": [
+        {
+          "relatedRingType": "urn:uor:algebra:ring:type:field",
+          "relationshipType": "quotient",
+          "description": "K[x]/(p(x)) for irreducible p(x) is a field extension of K"
+        },
+        {
+          "relatedRingType": "urn:uor:algebra:ring:type:formal-power-series",
+          "relationshipType": "completion",
+          "description": "R[[x]] is the completion of R[x] with respect to the (x)-adic topology"
+        },
+        {
+          "relatedRingType": "urn:uor:algebra:ring:type:laurent-series",
+          "relationshipType": "localization",
+          "description": "R[x,x⁻¹] is the localization of R[x] at the powers of x"
+        }
+      ]
+    }
+  ]
+}

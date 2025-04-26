@@ -1,0 +1,684 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/modules/module-homomorphism.json",
+  "title": "Module Homomorphism Schema",
+  "description": "Schema defining structure-preserving maps between module structures in the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "sourceModule", "targetModule", "definition", "preservesStructure"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the module homomorphism"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the homomorphism"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the homomorphism"
+    },
+    "sourceModule": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the source module"
+    },
+    "targetModule": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the target module"
+    },
+    "definition": {
+      "type": "object",
+      "description": "Definition of the homomorphism mapping",
+      "required": ["mappingType", "specification"],
+      "properties": {
+        "mappingType": {
+          "type": "string",
+          "enum": [
+            "linear-transformation",
+            "basis-mapping",
+            "matrix-representation",
+            "algebraic-formula",
+            "functional-description"
+          ],
+          "description": "Type of mapping specification"
+        },
+        "specification": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "matrix": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": ["number", "string", "object"]
+                    }
+                  },
+                  "description": "Matrix representation of the homomorphism"
+                },
+                "sourceBasis": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Basis for the source module"
+                },
+                "targetBasis": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Basis for the target module"
+                }
+              },
+              "description": "Matrix specification of the mapping"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "basisMapping": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceBasisElement": {
+                        "type": "string",
+                        "description": "Source basis element"
+                      },
+                      "targetExpression": {
+                        "type": "string",
+                        "description": "Expression in terms of target basis elements"
+                      }
+                    }
+                  },
+                  "description": "Mapping of basis elements"
+                }
+              },
+              "description": "Basis mapping specification"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "formula": {
+                  "type": "string",
+                  "description": "Algebraic formula defining the mapping"
+                },
+                "variables": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Variables used in the formula"
+                }
+              },
+              "description": "Algebraic formula specification"
+            },
+            {
+              "type": "string",
+              "description": "Functional description of the mapping"
+            }
+          ],
+          "description": "Specification of the mapping"
+        },
+        "computationalMethod": {
+          "type": "string",
+          "description": "Method for computing the mapping"
+        }
+      }
+    },
+    "preservesStructure": {
+      "type": "object",
+      "description": "Structural properties preserved by the homomorphism",
+      "required": ["preservesAddition", "preservesScalarMultiplication"],
+      "properties": {
+        "preservesAddition": {
+          "type": "object",
+          "properties": {
+            "statement": {
+              "type": "string",
+              "description": "Statement of addition preservation property"
+            },
+            "proof": {
+              "type": "string",
+              "description": "Reference to proof of addition preservation"
+            }
+          },
+          "description": "Information about addition preservation"
+        },
+        "preservesScalarMultiplication": {
+          "type": "object",
+          "properties": {
+            "statement": {
+              "type": "string",
+              "description": "Statement of scalar multiplication preservation property"
+            },
+            "proof": {
+              "type": "string",
+              "description": "Reference to proof of scalar multiplication preservation"
+            }
+          },
+          "description": "Information about scalar multiplication preservation"
+        },
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "property": {
+                "type": "string",
+                "description": "Name of the preserved property"
+              },
+              "statement": {
+                "type": "string",
+                "description": "Statement of the property preservation"
+              }
+            }
+          },
+          "description": "Additional preserved properties"
+        }
+      }
+    },
+    "kernelAndImage": {
+      "type": "object",
+      "description": "Information about the kernel and image of the homomorphism",
+      "properties": {
+        "kernel": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of the kernel"
+            },
+            "basis": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Basis for the kernel"
+            },
+            "dimension": {
+              "type": "string",
+              "description": "Dimension of the kernel"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Properties of the kernel"
+            }
+          },
+          "description": "Information about the kernel"
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of the image"
+            },
+            "basis": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Basis for the image"
+            },
+            "dimension": {
+              "type": "string",
+              "description": "Dimension of the image"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Properties of the image"
+            }
+          },
+          "description": "Information about the image"
+        },
+        "rankNullityRelation": {
+          "type": "string",
+          "description": "Relationship between rank and nullity for this homomorphism"
+        }
+      }
+    },
+    "properties": {
+      "type": "object",
+      "description": "Properties of the homomorphism",
+      "properties": {
+        "isInjective": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is injective (one-to-one)"
+        },
+        "isSurjective": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is surjective (onto)"
+        },
+        "isIsomorphism": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is an isomorphism"
+        },
+        "isEndomorphism": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is an endomorphism (source = target)"
+        },
+        "isAutomorphism": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is an automorphism"
+        },
+        "rank": {
+          "type": "string",
+          "description": "Rank of the homomorphism"
+        },
+        "determinant": {
+          "type": "string",
+          "description": "Determinant of the homomorphism (if applicable)"
+        },
+        "trace": {
+          "type": "string",
+          "description": "Trace of the homomorphism (if applicable)"
+        },
+        "eigenvalues": {
+          "type": "array",
+          "items": {
+            "type": ["number", "string", "object"]
+          },
+          "description": "Eigenvalues of the homomorphism (if applicable)"
+        }
+      }
+    },
+    "dualHomomorphism": {
+      "type": "object",
+      "description": "Information about the dual homomorphism",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the dual homomorphism"
+        },
+        "reference": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the dual homomorphism if defined"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the dual homomorphism"
+        }
+      }
+    },
+    "adjointHomomorphism": {
+      "type": "object",
+      "description": "Information about the adjoint homomorphism (if applicable)",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the adjoint homomorphism"
+        },
+        "reference": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the adjoint homomorphism if defined"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the adjoint homomorphism"
+        }
+      }
+    },
+    "compositionProperties": {
+      "type": "object",
+      "description": "Properties related to composition with other homomorphisms",
+      "properties": {
+        "compositionBehavior": {
+          "type": "string",
+          "description": "Description of how this homomorphism behaves under composition"
+        },
+        "compatibleHomomorphisms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "homomorphismReference": {
+                "type": "string",
+                "format": "uri",
+                "description": "Reference to a compatible homomorphism"
+              },
+              "compositionResult": {
+                "type": "string",
+                "description": "Description of the composition result"
+              }
+            }
+          },
+          "description": "Homomorphisms that can be composed with this one"
+        }
+      }
+    },
+    "factorizationProperties": {
+      "type": "object",
+      "description": "Properties related to factorization through other modules",
+      "properties": {
+        "admitsFactorization": {
+          "type": "boolean",
+          "description": "Whether the homomorphism admits a factorization"
+        },
+        "factorizationModules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to an intermediate module in the factorization"
+          },
+          "description": "Intermediate modules in the factorization"
+        },
+        "factorizationDescription": {
+          "type": "string",
+          "description": "Description of the factorization"
+        }
+      }
+    },
+    "primeDecomposition": {
+      "type": "object",
+      "description": "Prime decomposition of the homomorphism",
+      "properties": {
+        "factorizationType": {
+          "type": "string",
+          "enum": [
+            "eigendecomposition", 
+            "singular-value-decomposition",
+            "jordan-decomposition",
+            "elementary-operation-decomposition",
+            "basis-transformation-decomposition"
+          ],
+          "description": "Type of factorization used"
+        },
+        "factors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "factor": {
+                "type": "string",
+                "description": "Description of the prime factor"
+              },
+              "multiplicity": {
+                "type": "string",
+                "description": "Multiplicity of this factor"
+              }
+            }
+          },
+          "description": "Prime factors in the decomposition"
+        },
+        "decompositionMethod": {
+          "type": "string",
+          "description": "Method used to compute the prime decomposition"
+        }
+      }
+    },
+    "canonicalForm": {
+      "type": "object",
+      "description": "Canonical form of the homomorphism",
+      "properties": {
+        "form": {
+          "type": "string",
+          "enum": [
+            "jordan-form",
+            "diagonal-form",
+            "rational-canonical-form",
+            "smith-normal-form",
+            "hermite-normal-form"
+          ],
+          "description": "Type of canonical form"
+        },
+        "representation": {
+          "type": "string",
+          "description": "Representation of the canonical form"
+        },
+        "transformations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Transformations required to achieve the canonical form"
+          },
+          "description": "Transformations to canonical form"
+        }
+      }
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "description": "Coherence measures for this homomorphism",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of coherence measure"
+          },
+          "value": {
+            "type": "number",
+            "description": "Value of the coherence measure"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of this coherence value"
+          }
+        }
+      }
+    },
+    "observerFrames": {
+      "type": "array",
+      "description": "Observer reference frames for viewing this homomorphism",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "representation": {
+            "type": "object",
+            "description": "Representation in this frame"
+          },
+          "invariantProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties invariant in this frame"
+          }
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of this homomorphism",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of the application"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:module-homomorphism:linear-transformation:rotation",
+      "name": "Rotation Linear Transformation",
+      "description": "A linear transformation representing rotation in R²",
+      "sourceModule": "urn:uor:algebra:module:vector:real:R2",
+      "targetModule": "urn:uor:algebra:module:vector:real:R2",
+      "definition": {
+        "mappingType": "matrix-representation",
+        "specification": {
+          "matrix": [
+            [0, -1],
+            [1, 0]
+          ],
+          "sourceBasis": ["e₁", "e₂"],
+          "targetBasis": ["e₁", "e₂"]
+        },
+        "computationalMethod": "Matrix multiplication"
+      },
+      "preservesStructure": {
+        "preservesAddition": {
+          "statement": "T(v + w) = T(v) + T(w) for all vectors v, w in R²",
+          "proof": "Matrix multiplication distributes over vector addition"
+        },
+        "preservesScalarMultiplication": {
+          "statement": "T(cv) = cT(v) for all scalars c and vectors v in R²",
+          "proof": "Matrix multiplication is compatible with scalar multiplication"
+        },
+        "additionalProperties": [
+          {
+            "property": "norm-preservation",
+            "statement": "||T(v)|| = ||v|| for all vectors v in R²"
+          },
+          {
+            "property": "angle-transformation",
+            "statement": "T rotates every vector by π/2 radians counterclockwise"
+          }
+        ]
+      },
+      "kernelAndImage": {
+        "kernel": {
+          "description": "The kernel is trivial, containing only the zero vector",
+          "basis": [],
+          "dimension": "0",
+          "properties": ["trivial"]
+        },
+        "image": {
+          "description": "The image is the entire R²",
+          "basis": ["e₁", "e₂"],
+          "dimension": "2",
+          "properties": ["full-dimensional", "equal-to-target"]
+        },
+        "rankNullityRelation": "rank(T) + nullity(T) = 2 + 0 = 2 = dim(R²)"
+      },
+      "properties": {
+        "isInjective": true,
+        "isSurjective": true,
+        "isIsomorphism": true,
+        "isEndomorphism": true,
+        "isAutomorphism": true,
+        "rank": "2",
+        "determinant": "1",
+        "trace": "0",
+        "eigenvalues": ["i", "-i"]
+      },
+      "dualHomomorphism": {
+        "description": "The transpose of the rotation matrix, which represents a rotation in the dual space",
+        "properties": ["isomorphism", "preserves-dual-basis"]
+      },
+      "adjointHomomorphism": {
+        "description": "The adjoint is the inverse rotation (clockwise rotation by π/2)",
+        "properties": ["isomorphism", "orthogonal"]
+      },
+      "compositionProperties": {
+        "compositionBehavior": "Composition with another rotation results in addition of rotation angles",
+        "compatibleHomomorphisms": [
+          {
+            "homomorphismReference": "urn:uor:algebra:module-homomorphism:linear-transformation:rotation:180",
+            "compositionResult": "Rotation by 270 degrees"
+          }
+        ]
+      },
+      "factorizationProperties": {
+        "admitsFactorization": true,
+        "factorizationDescription": "Can be factorized as a composition of reflections"
+      },
+      "primeDecomposition": {
+        "factorizationType": "eigendecomposition",
+        "factors": [
+          {
+            "factor": "Rotation in i-eigenspace",
+            "multiplicity": "1"
+          },
+          {
+            "factor": "Rotation in -i-eigenspace",
+            "multiplicity": "1"
+          }
+        ],
+        "decompositionMethod": "Complex eigendecomposition"
+      },
+      "canonicalForm": {
+        "form": "jordan-form",
+        "representation": "[[i, 0], [0, -i]] (over complex field)",
+        "transformations": [
+          "Change of basis to complex eigenvectors"
+        ]
+      },
+      "coherenceMeasures": [
+        {
+          "type": "orthogonality",
+          "value": 1.0,
+          "interpretation": "The transformation is perfectly orthogonal, preserving all angles and distances"
+        },
+        {
+          "type": "conditioning",
+          "value": 1.0,
+          "interpretation": "The transformation has optimal numerical stability"
+        }
+      ],
+      "observerFrames": [
+        {
+          "frameName": "Standard-Cartesian-Frame",
+          "representation": {
+            "matrix": [
+              [0, -1],
+              [1, 0]
+            ]
+          },
+          "invariantProperties": ["determinant", "eigenvalues", "rotation-angle"]
+        },
+        {
+          "frameName": "Polar-Coordinate-Frame",
+          "representation": {
+            "transformationRule": "θ → θ + π/2"
+          },
+          "invariantProperties": ["determinant", "eigenvalues", "rotation-angle"]
+        }
+      ],
+      "applications": [
+        {
+          "domain": "Computer Graphics",
+          "description": "Used for rotating objects in 2D space",
+          "examples": ["Image rotation", "Object orientation"]
+        },
+        {
+          "domain": "Signal Processing",
+          "description": "Represents phase shifts in complex signal analysis",
+          "examples": ["Fourier transform phase manipulation", "Complex filtering"]
+        }
+      ]
+    }
+  ]
+}

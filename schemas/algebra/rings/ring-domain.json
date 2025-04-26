@@ -1,0 +1,1176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/rings/ring-domain.json",
+  "title": "Ring Domain Schema",
+  "description": "Schema defining the ring algebraic structure domain within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "name", "additionStructure", "multiplicationStructure", "primeElements", "uniqueFactorizationProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the ring domain"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the ring domain"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the ring"
+    },
+    "additionStructure": {
+      "type": "object",
+      "description": "The additive structure of the ring (commutative group)",
+      "required": ["operation", "identity", "inverses"],
+      "properties": {
+        "operation": {
+          "type": "object",
+          "required": ["name", "symbol", "properties"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Addition",
+              "description": "Name of the operation"
+            },
+            "symbol": {
+              "type": "string",
+              "const": "+",
+              "description": "Symbol representing the operation"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "associative",
+                  "commutative",
+                  "identity",
+                  "inverses",
+                  "closed"
+                ]
+              },
+              "description": "Properties of the operation"
+            },
+            "definition": {
+              "type": "string",
+              "description": "Definition of how addition works in this ring"
+            }
+          }
+        },
+        "identity": {
+          "type": "object",
+          "required": ["element", "properties"],
+          "properties": {
+            "element": {
+              "type": "string",
+              "description": "Representation of the additive identity element"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "left-identity",
+                  "right-identity",
+                  "two-sided-identity",
+                  "unique"
+                ]
+              },
+              "description": "Properties of the identity element"
+            },
+            "identityLaw": {
+              "type": "string",
+              "description": "The mathematical statement of the identity law"
+            }
+          }
+        },
+        "inverses": {
+          "type": "object",
+          "required": ["definition", "properties"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "description": "Definition of additive inverses in this ring"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "left-inverse",
+                  "right-inverse",
+                  "two-sided-inverse",
+                  "unique"
+                ]
+              },
+              "description": "Properties of additive inverses"
+            },
+            "inverseLaw": {
+              "type": "string",
+              "description": "The mathematical statement of the additive inverse law"
+            },
+            "computation": {
+              "type": "string",
+              "description": "Method for computing additive inverses"
+            }
+          }
+        }
+      }
+    },
+    "multiplicationStructure": {
+      "type": "object",
+      "description": "The multiplicative structure of the ring (monoid)",
+      "required": ["operation", "associativity"],
+      "properties": {
+        "operation": {
+          "type": "object",
+          "required": ["name", "symbol", "properties"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Multiplication",
+              "description": "Name of the operation"
+            },
+            "symbol": {
+              "type": "string",
+              "description": "Symbol representing the operation"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "associative",
+                  "commutative",
+                  "identity",
+                  "closed",
+                  "distributive-over-addition",
+                  "zero-products"
+                ]
+              },
+              "description": "Properties of the operation"
+            },
+            "definition": {
+              "type": "string",
+              "description": "Definition of how multiplication works in this ring"
+            }
+          }
+        },
+        "associativity": {
+          "type": "object",
+          "required": ["law"],
+          "properties": {
+            "law": {
+              "type": "string",
+              "description": "Statement of the associative law for multiplication"
+            }
+          }
+        },
+        "identity": {
+          "type": "object",
+          "properties": {
+            "exists": {
+              "type": "boolean",
+              "description": "Whether a multiplicative identity exists"
+            },
+            "element": {
+              "type": "string",
+              "description": "Representation of the multiplicative identity element"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "left-identity",
+                  "right-identity",
+                  "two-sided-identity",
+                  "unique"
+                ]
+              },
+              "description": "Properties of the identity element"
+            },
+            "identityLaw": {
+              "type": "string",
+              "description": "The mathematical statement of the identity law"
+            }
+          }
+        },
+        "inverses": {
+          "type": "object",
+          "properties": {
+            "exists": {
+              "type": "boolean",
+              "description": "Whether multiplicative inverses exist for non-zero elements"
+            },
+            "definition": {
+              "type": "string",
+              "description": "Definition of multiplicative inverses in this ring"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "left-inverse",
+                  "right-inverse",
+                  "two-sided-inverse",
+                  "unique",
+                  "exists-for-some-elements",
+                  "exists-for-all-non-zero-elements"
+                ]
+              },
+              "description": "Properties of multiplicative inverses"
+            },
+            "inverseLaw": {
+              "type": "string",
+              "description": "The mathematical statement of the multiplicative inverse law"
+            },
+            "computation": {
+              "type": "string",
+              "description": "Method for computing multiplicative inverses"
+            }
+          }
+        }
+      }
+    },
+    "distributivity": {
+      "type": "object",
+      "description": "The distributive properties connecting addition and multiplication",
+      "required": ["leftDistributivity", "rightDistributivity"],
+      "properties": {
+        "leftDistributivity": {
+          "type": "object",
+          "required": ["law"],
+          "properties": {
+            "law": {
+              "type": "string",
+              "description": "Statement of the left distributive law"
+            }
+          }
+        },
+        "rightDistributivity": {
+          "type": "object",
+          "required": ["law"],
+          "properties": {
+            "law": {
+              "type": "string",
+              "description": "Statement of the right distributive law"
+            }
+          }
+        }
+      }
+    },
+    "elements": {
+      "type": "object",
+      "description": "Specification of the elements in this ring",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of elements in this ring"
+        },
+        "cardinality": {
+          "type": "string",
+          "enum": ["finite", "countably-infinite", "uncountably-infinite"],
+          "description": "Cardinality classification of the ring"
+        },
+        "order": {
+          "type": "string",
+          "description": "Number of elements in the ring if finite, or characterization if infinite"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "discrete",
+              "continuous",
+              "algebraic",
+              "transcendental",
+              "integral",
+              "rational"
+            ]
+          },
+          "description": "Properties of the ring elements"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string",
+                "description": "Representation of a ring element"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of this element"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this element"
+              }
+            }
+          },
+          "description": "Examples of elements from this ring"
+        }
+      }
+    },
+    "isCommutative": {
+      "type": "boolean",
+      "description": "Whether the ring is commutative (multiplication is commutative)"
+    },
+    "hasIdentity": {
+      "type": "boolean",
+      "description": "Whether the ring has a multiplicative identity"
+    },
+    "isDivisionRing": {
+      "type": "boolean",
+      "description": "Whether the ring is a division ring (every non-zero element has a multiplicative inverse)"
+    },
+    "isField": {
+      "type": "boolean",
+      "description": "Whether the ring is a field (commutative division ring)"
+    },
+    "isIntegralDomain": {
+      "type": "boolean",
+      "description": "Whether the ring is an integral domain (commutative ring with no zero divisors)"
+    },
+    "isEuclideanDomain": {
+      "type": "boolean",
+      "description": "Whether the ring is a Euclidean domain"
+    },
+    "isPrincipalIdealDomain": {
+      "type": "boolean",
+      "description": "Whether the ring is a principal ideal domain (PID)"
+    },
+    "isUniqueFactorizationDomain": {
+      "type": "boolean",
+      "description": "Whether the ring is a unique factorization domain (UFD)"
+    },
+    "primeElements": {
+      "type": "object",
+      "description": "Irreducible or prime elements in the ring",
+      "required": ["definition", "types", "properties"],
+      "properties": {
+        "definition": {
+          "type": "string",
+          "description": "Definition of what constitutes a prime element in this ring"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "description"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Type of prime element"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of this prime element type"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Examples of this prime element type"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this prime element type"
+              }
+            }
+          },
+          "description": "Types of prime elements in this ring"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "General properties of prime elements in this ring"
+        },
+        "detection": {
+          "type": "object",
+          "properties": {
+            "methods": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Methods for detecting/verifying prime elements"
+            },
+            "complexity": {
+              "type": "string",
+              "description": "Computational complexity of primality testing"
+            }
+          },
+          "description": "Methods for detecting prime elements"
+        }
+      }
+    },
+    "uniqueFactorizationProperties": {
+      "type": "object",
+      "description": "Properties related to unique factorization in this ring",
+      "required": ["factorizationExists", "uniquenessType"],
+      "properties": {
+        "factorizationExists": {
+          "type": "boolean",
+          "description": "Whether elements admit a factorization into irreducibles/primes"
+        },
+        "uniquenessType": {
+          "type": "string",
+          "enum": [
+            "unique",
+            "unique-up-to-units",
+            "unique-up-to-order",
+            "unique-up-to-units-and-order",
+            "non-unique",
+            "unique-in-specific-cases"
+          ],
+          "description": "The type of uniqueness for factorizations"
+        },
+        "factorizationForm": {
+          "type": "string",
+          "description": "Standard form of factorization for ring elements"
+        },
+        "factorizationTheorem": {
+          "type": "string",
+          "description": "The theorem ensuring unique factorization (if applicable)"
+        },
+        "factorizationAlgorithm": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of the factorization algorithm"
+            },
+            "complexity": {
+              "type": "string",
+              "description": "Computational complexity of the factorization algorithm"
+            },
+            "pseudocode": {
+              "type": "string",
+              "description": "Pseudocode for the factorization algorithm"
+            }
+          },
+          "description": "Algorithm for factoring ring elements"
+        },
+        "canonicalForm": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of the canonical form"
+            },
+            "algorithm": {
+              "type": "string",
+              "description": "Algorithm for computing the canonical form"
+            },
+            "uniquenessProof": {
+              "type": "string",
+              "description": "Reference to proof of uniqueness for the canonical form"
+            }
+          },
+          "description": "Canonical form for representing ring elements"
+        }
+      }
+    },
+    "idealStructure": {
+      "type": "object",
+      "description": "Structure of ideals in the ring",
+      "properties": {
+        "principalIdeals": {
+          "type": "object",
+          "properties": {
+            "areAllIdeals": {
+              "type": "boolean",
+              "description": "Whether all ideals are principal"
+            },
+            "generation": {
+              "type": "string",
+              "description": "How principal ideals are generated"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "ideal": {
+                    "type": "string",
+                    "description": "Representation of the ideal"
+                  },
+                  "generator": {
+                    "type": "string",
+                    "description": "Generator element"
+                  }
+                }
+              },
+              "description": "Examples of principal ideals"
+            }
+          },
+          "description": "Principal ideals in the ring"
+        },
+        "maximalIdeals": {
+          "type": "object",
+          "properties": {
+            "characterization": {
+              "type": "string",
+              "description": "Characterization of maximal ideals"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "ideal": {
+                    "type": "string",
+                    "description": "Representation of the ideal"
+                  },
+                  "generators": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Generators of the ideal"
+                  }
+                }
+              },
+              "description": "Examples of maximal ideals"
+            }
+          },
+          "description": "Maximal ideals in the ring"
+        },
+        "primeIdeals": {
+          "type": "object",
+          "properties": {
+            "characterization": {
+              "type": "string",
+              "description": "Characterization of prime ideals"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "ideal": {
+                    "type": "string",
+                    "description": "Representation of the ideal"
+                  },
+                  "generators": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Generators of the ideal"
+                  }
+                }
+              },
+              "description": "Examples of prime ideals"
+            }
+          },
+          "description": "Prime ideals in the ring"
+        },
+        "idealClassStructure": {
+          "type": "object",
+          "properties": {
+            "classGroup": {
+              "type": "string",
+              "description": "Description of the class group"
+            },
+            "classNumber": {
+              "type": "string",
+              "description": "Class number (size of the class group)"
+            }
+          },
+          "description": "Structure of ideal classes (for non-PIDs)"
+        }
+      }
+    },
+    "quotientRings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ideal": {
+            "type": "string",
+            "description": "Ideal used to form the quotient"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the quotient ring"
+          },
+          "isomorphicTo": {
+            "type": "string",
+            "description": "Ring this quotient is isomorphic to (if known)"
+          }
+        }
+      },
+      "description": "Notable quotient rings R/I for ideals I"
+    },
+    "automorphismGroup": {
+      "type": "object",
+      "description": "The automorphism group of this ring",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the automorphism group"
+        },
+        "order": {
+          "type": "string",
+          "description": "Order of the automorphism group"
+        },
+        "generators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Generators of the automorphism group"
+        }
+      }
+    },
+    "characteristicProperties": {
+      "type": "object",
+      "description": "Properties related to the characteristic of the ring",
+      "properties": {
+        "characteristic": {
+          "type": "string",
+          "description": "Characteristic of the ring"
+        },
+        "primeSubring": {
+          "type": "string",
+          "description": "Description of the prime subring"
+        },
+        "implications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Implications of the characteristic"
+        }
+      }
+    },
+    "modulesOverRing": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "moduleType": {
+            "type": "string",
+            "description": "Type of module"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the module structure"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of this module type"
+          }
+        }
+      },
+      "description": "Types of modules over this ring"
+    },
+    "polynomialRing": {
+      "type": "object",
+      "description": "The polynomial ring over this ring",
+      "properties": {
+        "notation": {
+          "type": "string",
+          "description": "Notation for the polynomial ring"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the polynomial ring"
+        },
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the polynomial ring domain entity"
+        }
+      }
+    },
+    "completions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "completionType": {
+            "type": "string",
+            "description": "Type of completion"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the completion"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of this completion"
+          }
+        }
+      },
+      "description": "Completions of the ring (if applicable)"
+    },
+    "observerFrames": {
+      "type": "array",
+      "description": "Observer reference frames relevant to this ring",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "frameDescription": {
+            "type": "string",
+            "description": "Description of the frame perspective"
+          },
+          "frameTransformations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Transformations in this frame"
+            }
+          }
+        }
+      }
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "description": "Measures of coherence applicable to this ring",
+      "items": {
+        "type": "object",
+        "properties": {
+          "measureName": {
+            "type": "string",
+            "description": "Name of the coherence measure"
+          },
+          "measureDescription": {
+            "type": "string",
+            "description": "Description of what the measure quantifies"
+          },
+          "formula": {
+            "type": "string",
+            "description": "Formula for calculating the measure"
+          }
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of this ring",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      }
+    },
+    "theorems": {
+      "type": "array",
+      "description": "Important theorems related to this ring",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance of the theorem for this ring"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:ring:integers",
+      "name": "Ring of Integers",
+      "description": "The ring of integers under standard addition and multiplication",
+      "additionStructure": {
+        "operation": {
+          "name": "Addition",
+          "symbol": "+",
+          "properties": ["associative", "commutative", "identity", "inverses", "closed"],
+          "definition": "Standard addition of integers"
+        },
+        "identity": {
+          "element": "0",
+          "properties": ["two-sided-identity", "unique"],
+          "identityLaw": "a + 0 = 0 + a = a for all integers a"
+        },
+        "inverses": {
+          "definition": "For any integer a, its additive inverse is -a",
+          "properties": ["two-sided-inverse", "unique"],
+          "inverseLaw": "a + (-a) = (-a) + a = 0 for all integers a",
+          "computation": "Negate the integer"
+        }
+      },
+      "multiplicationStructure": {
+        "operation": {
+          "name": "Multiplication",
+          "symbol": "×",
+          "properties": ["associative", "commutative", "identity", "closed", "distributive-over-addition"],
+          "definition": "Standard multiplication of integers"
+        },
+        "associativity": {
+          "law": "(a × b) × c = a × (b × c) for all integers a, b, c"
+        },
+        "identity": {
+          "exists": true,
+          "element": "1",
+          "properties": ["two-sided-identity", "unique"],
+          "identityLaw": "a × 1 = 1 × a = a for all integers a"
+        },
+        "inverses": {
+          "exists": false,
+          "definition": "Only 1 and -1 have multiplicative inverses in ℤ",
+          "properties": ["exists-for-some-elements"],
+          "inverseLaw": "For units a, a × a⁻¹ = a⁻¹ × a = 1",
+          "computation": "Only applies to units"
+        }
+      },
+      "distributivity": {
+        "leftDistributivity": {
+          "law": "a × (b + c) = (a × b) + (a × c) for all integers a, b, c"
+        },
+        "rightDistributivity": {
+          "law": "(a + b) × c = (a × c) + (b × c) for all integers a, b, c"
+        }
+      },
+      "elements": {
+        "type": "Integers",
+        "cardinality": "countably-infinite",
+        "order": "ℵ₀",
+        "properties": ["discrete", "integral"],
+        "examples": [
+          {
+            "element": "0",
+            "description": "The additive identity",
+            "properties": ["zero", "even"]
+          },
+          {
+            "element": "1",
+            "description": "The multiplicative identity",
+            "properties": ["unit", "positive", "odd"]
+          },
+          {
+            "element": "-1",
+            "description": "The negative of the multiplicative identity",
+            "properties": ["unit", "negative", "odd"]
+          },
+          {
+            "element": "2",
+            "description": "The smallest prime number",
+            "properties": ["prime", "positive", "even"]
+          }
+        ]
+      },
+      "isCommutative": true,
+      "hasIdentity": true,
+      "isDivisionRing": false,
+      "isField": false,
+      "isIntegralDomain": true,
+      "isEuclideanDomain": true,
+      "isPrincipalIdealDomain": true,
+      "isUniqueFactorizationDomain": true,
+      "primeElements": {
+        "definition": "An integer p > 1 is prime if it has exactly two divisors: 1 and p",
+        "types": [
+          {
+            "type": "prime-number",
+            "description": "A positive integer greater than 1 that has no positive divisors other than 1 and itself",
+            "examples": ["2", "3", "5", "7", "11", "13", "17", "19"],
+            "properties": ["irreducible", "generates-maximal-ideal", "infinite-in-quantity"]
+          }
+        ],
+        "properties": [
+          "p is prime if and only if p divides ab implies p divides a or p divides b",
+          "infinite in quantity according to the Prime Number Theorem",
+          "asymptotic distribution: π(n) ~ n/ln(n)"
+        ],
+        "detection": {
+          "methods": [
+            "trial division",
+            "sieve of Eratosthenes",
+            "probabilistic primality tests",
+            "AKS primality test"
+          ],
+          "complexity": "O(n^(1/2)) for trial division, O(n log log n) for sieve, O(log n)^c for advanced algorithms"
+        }
+      },
+      "uniqueFactorizationProperties": {
+        "factorizationExists": true,
+        "uniquenessType": "unique-up-to-units-and-order",
+        "factorizationForm": "n = ±p₁^e₁ × p₂^e₂ × ... × pₖ^eₖ where p₁, p₂, ..., pₖ are primes and e₁, e₂, ..., eₖ are positive integers",
+        "factorizationTheorem": "Fundamental Theorem of Arithmetic: Every integer greater than 1 can be expressed as a product of prime numbers in a unique way, up to the order of the factors.",
+        "factorizationAlgorithm": {
+          "description": "Trial division, followed by more advanced techniques for larger numbers",
+          "complexity": "O(n^(1/2)) for basic algorithm, can be improved with advanced techniques",
+          "pseudocode": "function factorize(n):\n  if n < 0: return -1 * factorize(-n)\n  factors = []\n  d = 2\n  while d * d <= n:\n    while n % d == 0:\n      factors.append(d)\n      n = n / d\n    d = d + 1\n  if n > 1: factors.append(n)\n  return factors"
+        },
+        "canonicalForm": {
+          "description": "Primes in ascending order with exponents: p₁^e₁ × p₂^e₂ × ... × pₖ^eₖ",
+          "algorithm": "Factor the number, then sort prime factors and collect exponents",
+          "uniquenessProof": "Via the Fundamental Theorem of Arithmetic"
+        }
+      },
+      "idealStructure": {
+        "principalIdeals": {
+          "areAllIdeals": true,
+          "generation": "Every ideal in ℤ is of the form nℤ for some integer n ≥ 0",
+          "examples": [
+            {
+              "ideal": "⟨0⟩",
+              "generator": "0"
+            },
+            {
+              "ideal": "⟨1⟩",
+              "generator": "1"
+            },
+            {
+              "ideal": "⟨n⟩",
+              "generator": "n"
+            }
+          ]
+        },
+        "maximalIdeals": {
+          "characterization": "The maximal ideals in ℤ are precisely the ideals ⟨p⟩ where p is prime",
+          "examples": [
+            {
+              "ideal": "⟨2⟩",
+              "generators": ["2"]
+            },
+            {
+              "ideal": "⟨3⟩",
+              "generators": ["3"]
+            },
+            {
+              "ideal": "⟨5⟩",
+              "generators": ["5"]
+            }
+          ]
+        },
+        "primeIdeals": {
+          "characterization": "The prime ideals in ℤ are exactly the same as the maximal ideals: ⟨p⟩ where p is prime, plus the zero ideal in some treatments",
+          "examples": [
+            {
+              "ideal": "⟨2⟩",
+              "generators": ["2"]
+            },
+            {
+              "ideal": "⟨3⟩",
+              "generators": ["3"]
+            },
+            {
+              "ideal": "⟨0⟩",
+              "generators": ["0"]
+            }
+          ]
+        },
+        "idealClassStructure": {
+          "classGroup": "Trivial, since ℤ is a PID",
+          "classNumber": "1"
+        }
+      },
+      "quotientRings": [
+        {
+          "ideal": "⟨n⟩",
+          "description": "ℤ/nℤ - The ring of integers modulo n",
+          "isomorphicTo": "ℤ_n, the modular ring of order n"
+        },
+        {
+          "ideal": "⟨p⟩ for prime p",
+          "description": "ℤ/pℤ - The field of integers modulo p",
+          "isomorphicTo": "F_p, the finite field of order p"
+        }
+      ],
+      "automorphismGroup": {
+        "description": "The automorphism group of ℤ is isomorphic to ℤ₂, consisting only of the identity and negation",
+        "order": "2",
+        "generators": ["negation"]
+      },
+      "characteristicProperties": {
+        "characteristic": "0",
+        "primeSubring": "ℤ itself is the prime subring",
+        "implications": [
+          "No non-zero element multiplied by itself repeatedly yields zero",
+          "Embeds a copy of the ring ℤ",
+          "Contains elements of infinite additive order"
+        ]
+      },
+      "modulesOverRing": [
+        {
+          "moduleType": "Free modules",
+          "description": "Direct sums of copies of ℤ, isomorphic to ℤⁿ",
+          "properties": ["torsion-free", "projective", "free"]
+        },
+        {
+          "moduleType": "Torsion modules",
+          "description": "Modules where every element has finite order",
+          "properties": ["artinian", "noetherian"]
+        },
+        {
+          "moduleType": "Finitely generated modules",
+          "description": "Classified by the structure theorem for finitely generated modules over PIDs",
+          "properties": ["decomposable into free part and torsion part"]
+        }
+      ],
+      "polynomialRing": {
+        "notation": "ℤ[x]",
+        "properties": [
+          "commutative",
+          "integral domain",
+          "not a PID",
+          "UFD"
+        ],
+        "id": "urn:uor:algebra:ring:integer-polynomials"
+      },
+      "completions": [
+        {
+          "completionType": "p-adic completion",
+          "description": "ℤₚ, the ring of p-adic integers (completion of ℤ with respect to the p-adic valuation)",
+          "properties": ["local ring", "compact", "totally disconnected"]
+        },
+        {
+          "completionType": "Archimedean completion",
+          "description": "ℝ, the field of real numbers (completion of ℚ with respect to the absolute value)",
+          "properties": ["field", "ordered", "complete", "continuum"]
+        }
+      ],
+      "observerFrames": [
+        {
+          "frameName": "Standard-Integer-Frame",
+          "frameDescription": "Viewing integers in their standard decimal representation",
+          "frameTransformations": ["decimal-to-binary", "decimal-to-other-bases"]
+        },
+        {
+          "frameName": "Modular-Frame",
+          "frameDescription": "Viewing integers through their residue classes modulo n",
+          "frameTransformations": ["standard-to-modular", "chinese-remainder-mapping"]
+        },
+        {
+          "frameName": "Prime-Factorization-Frame",
+          "frameDescription": "Viewing integers through their prime factorization",
+          "frameTransformations": ["integer-to-factorization", "factorization-operations"]
+        },
+        {
+          "frameName": "p-adic-Frame",
+          "frameDescription": "Viewing integers through their p-adic expansion",
+          "frameTransformations": ["standard-to-p-adic", "p-adic-to-rational"]
+        }
+      ],
+      "coherenceMeasures": [
+        {
+          "measureName": "Absolute-Value",
+          "measureDescription": "The standard measure of size for integers",
+          "formula": "|n|"
+        },
+        {
+          "measureName": "Prime-Complexity",
+          "measureDescription": "The number of prime factors counting multiplicity",
+          "formula": "Ω(n)"
+        },
+        {
+          "measureName": "Distinct-Prime-Complexity",
+          "measureDescription": "The number of distinct prime factors",
+          "formula": "ω(n)"
+        },
+        {
+          "measureName": "Bit-Complexity",
+          "measureDescription": "The number of bits required to represent the integer",
+          "formula": "⌊log₂(|n|) + 1⌋"
+        }
+      ],
+      "applications": [
+        {
+          "domain": "Number Theory",
+          "description": "Foundational structure for the study of numbers and their properties",
+          "examples": [
+            "Diophantine equations",
+            "Modular arithmetic",
+            "Prime factorization in cryptography"
+          ]
+        },
+        {
+          "domain": "Cryptography",
+          "description": "Foundation for many cryptographic systems",
+          "examples": [
+            "RSA encryption based on prime factorization",
+            "Diffie-Hellman key exchange",
+            "Elliptic curve cryptography"
+          ]
+        },
+        {
+          "domain": "Computer Science",
+          "description": "Basis for computing and algorithms",
+          "examples": [
+            "Integer arithmetic in processors",
+            "Data structures based on modular arithmetic",
+            "Error detection and correction codes"
+          ]
+        }
+      ],
+      "theorems": [
+        {
+          "name": "Fundamental Theorem of Arithmetic",
+          "statement": "Every integer greater than 1 can be expressed as a product of prime numbers in a unique way, up to the order of the factors",
+          "significance": "Establishes ℤ as a unique factorization domain"
+        },
+        {
+          "name": "Euclidean Algorithm",
+          "statement": "For integers a and b with a ≥ b > 0, there exist unique q and r such that a = bq + r with 0 ≤ r < b",
+          "significance": "Establishes ℤ as a Euclidean domain and allows efficient computation of greatest common divisors"
+        },
+        {
+          "name": "Bezout's Identity",
+          "statement": "If a and b are integers with greatest common divisor d, then there exist integers x and y such that ax + by = d",
+          "significance": "Fundamental for solving linear Diophantine equations and understanding the ideal structure of ℤ"
+        }
+      ]
+    }
+  ]
+}

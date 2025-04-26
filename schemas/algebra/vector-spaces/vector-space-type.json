@@ -1,0 +1,924 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/vector-spaces/vector-space-type.json",
+  "title": "Vector Space Type Schema",
+  "description": "Schema defining specific types of vector spaces and their properties within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "name", "notation", "definition", "properties", "canonicalExamples", "factorizationRules"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the vector space type"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the vector space type"
+    },
+    "notation": {
+      "type": "object",
+      "required": ["standard", "symbolic"],
+      "properties": {
+        "standard": {
+          "type": "string",
+          "description": "Standard notation for this vector space type"
+        },
+        "symbolic": {
+          "type": "string",
+          "description": "Symbolic notation for this vector space type"
+        },
+        "alternative": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Alternative notations"
+        }
+      },
+      "description": "Notation used for this vector space type"
+    },
+    "definition": {
+      "type": "object",
+      "required": ["formal", "informal"],
+      "properties": {
+        "formal": {
+          "type": "string",
+          "description": "Formal mathematical definition"
+        },
+        "informal": {
+          "type": "string",
+          "description": "Informal description for intuitive understanding"
+        },
+        "axiomatic": {
+          "type": "string",
+          "description": "Axiomatic definition if applicable"
+        },
+        "constructive": {
+          "type": "string",
+          "description": "Constructive definition if applicable"
+        }
+      },
+      "description": "Definition of this vector space type"
+    },
+    "properties": {
+      "type": "object",
+      "required": ["scalarField", "dimension"],
+      "properties": {
+        "scalarField": {
+          "type": "string",
+          "description": "Scalar field of vector spaces of this type"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "Dimension properties of vector spaces of this type"
+        },
+        "algebraicProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Algebraic properties of this vector space type"
+        },
+        "topologicalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Topological properties of this vector space type"
+        },
+        "additionalStructures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional structures commonly defined on this vector space type"
+        },
+        "relationToOtherTypes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Related vector space type"
+              },
+              "relationship": {
+                "type": "string",
+                "description": "Nature of the relationship"
+              }
+            }
+          },
+          "description": "Relationships to other vector space types"
+        }
+      },
+      "description": "Properties of vector spaces of this type"
+    },
+    "canonicalExamples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the example vector space"
+          },
+          "notation": {
+            "type": "string",
+            "description": "Notation for this example"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of this example"
+          },
+          "dimension": {
+            "type": "string",
+            "description": "Dimension of this example"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Special properties of this example"
+          },
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the vector space domain entity for this example"
+          }
+        }
+      },
+      "description": "Canonical examples of vector spaces of this type"
+    },
+    "factorizationRules": {
+      "type": "object",
+      "required": ["primeElements", "basisDefinition"],
+      "properties": {
+        "primeElements": {
+          "type": "string",
+          "description": "Description of what constitutes prime elements in this vector space type"
+        },
+        "basisDefinition": {
+          "type": "string",
+          "description": "Definition of a basis for this vector space type"
+        },
+        "decompositionProcess": {
+          "type": "string",
+          "description": "Process for decomposing vectors into basis elements"
+        },
+        "uniquenessProperties": {
+          "type": "string",
+          "description": "Uniqueness properties of vector decompositions"
+        },
+        "dependenceRelations": {
+          "type": "string",
+          "description": "Linear dependence relations in this vector space type"
+        }
+      },
+      "description": "Factorization rules for vector spaces of this type"
+    },
+    "dualSpace": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the dual space"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the dual space"
+        },
+        "relationship": {
+          "type": "string",
+          "description": "Relationship to the original space"
+        },
+        "isomorphism": {
+          "type": "string",
+          "description": "Conditions for isomorphism with the original space"
+        }
+      },
+      "description": "Dual space properties for this vector space type"
+    },
+    "tensorProducts": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of tensor products for this vector space type"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of tensor products"
+        },
+        "constructionMethod": {
+          "type": "string",
+          "description": "Method of constructing tensor products"
+        },
+        "basisRelationship": {
+          "type": "string",
+          "description": "Relationship between bases under tensor products"
+        }
+      },
+      "description": "Tensor product properties for this vector space type"
+    },
+    "directSums": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of direct sums for this vector space type"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of direct sums"
+        },
+        "constructionMethod": {
+          "type": "string",
+          "description": "Method of constructing direct sums"
+        },
+        "basisRelationship": {
+          "type": "string",
+          "description": "Relationship between bases under direct sums"
+        }
+      },
+      "description": "Direct sum properties for this vector space type"
+    },
+    "quotientSpaces": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of quotient spaces for this vector space type"
+        },
+        "construction": {
+          "type": "string",
+          "description": "Construction of quotient spaces"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of quotient spaces"
+        },
+        "dimensionRelationship": {
+          "type": "string",
+          "description": "Relationship between dimensions of original space, subspace, and quotient space"
+        }
+      },
+      "description": "Quotient space properties for this vector space type"
+    },
+    "innerProductSpaces": {
+      "type": "object",
+      "properties": {
+        "compatibility": {
+          "type": "boolean",
+          "description": "Whether this vector space type naturally admits an inner product structure"
+        },
+        "standardInnerProduct": {
+          "type": "string",
+          "description": "Definition of the standard inner product, if applicable"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the inner product structure"
+        },
+        "geometricInterpretation": {
+          "type": "string",
+          "description": "Geometric interpretation of the inner product"
+        }
+      },
+      "description": "Inner product space properties for this vector space type"
+    },
+    "normSpaces": {
+      "type": "object",
+      "properties": {
+        "compatibility": {
+          "type": "boolean",
+          "description": "Whether this vector space type naturally admits a norm structure"
+        },
+        "standardNorms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the norm"
+              },
+              "definition": {
+                "type": "string",
+                "description": "Definition of the norm"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this norm"
+              }
+            }
+          },
+          "description": "Standard norms defined on this vector space type"
+        },
+        "completeness": {
+          "type": "string",
+          "description": "Completeness properties with respect to norms"
+        }
+      },
+      "description": "Norm space properties for this vector space type"
+    },
+    "topologicalStructure": {
+      "type": "object",
+      "properties": {
+        "naturalTopology": {
+          "type": "string",
+          "description": "Natural topology for this vector space type"
+        },
+        "topologicalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Topological properties of this vector space type"
+        },
+        "compactness": {
+          "type": "string",
+          "description": "Compactness properties"
+        },
+        "connectedness": {
+          "type": "string",
+          "description": "Connectedness properties"
+        },
+        "separability": {
+          "type": "string",
+          "description": "Separability properties"
+        }
+      },
+      "description": "Topological structure of this vector space type"
+    },
+    "linearMapProperties": {
+      "type": "object",
+      "properties": {
+        "endomorphisms": {
+          "type": "string",
+          "description": "Properties of endomorphisms of this vector space type"
+        },
+        "automorphisms": {
+          "type": "string",
+          "description": "Properties of automorphisms of this vector space type"
+        },
+        "isomorphismConditions": {
+          "type": "string",
+          "description": "Conditions for isomorphism between two vector spaces of this type"
+        },
+        "specialLinearMaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the special linear map"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the linear map"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this linear map"
+              }
+            }
+          },
+          "description": "Special linear maps for this vector space type"
+        }
+      },
+      "description": "Linear map properties for this vector space type"
+    },
+    "primeRepresentationContext": {
+      "type": "object",
+      "properties": {
+        "primeElementsConcept": {
+          "type": "string",
+          "description": "Concept of prime elements in the UOR framework"
+        },
+        "basisAsPrimeElements": {
+          "type": "string",
+          "description": "How basis elements serve as prime elements"
+        },
+        "primitivityCriteria": {
+          "type": "string",
+          "description": "Criteria for primitivity of elements"
+        },
+        "coherencePrinciple": {
+          "type": "string",
+          "description": "Principle of coherence applicable to this vector space type"
+        }
+      },
+      "description": "Prime representation context in the UOR framework"
+    },
+    "observerFrames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "frameDescription": {
+            "type": "string",
+            "description": "Description of the frame perspective"
+          },
+          "frameTransformations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Transformations in this frame"
+            }
+          }
+        }
+      },
+      "description": "Observer reference frames relevant to this vector space type"
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      },
+      "description": "Applications of this vector space type"
+    },
+    "theorems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance for this vector space type"
+          }
+        }
+      },
+      "description": "Important theorems related to this vector space type"
+    },
+    "history": {
+      "type": "object",
+      "properties": {
+        "originators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "People who first developed this vector space type"
+        },
+        "keyDevelopments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "year": {
+                "type": "string",
+                "description": "Year of the development"
+              },
+              "development": {
+                "type": "string",
+                "description": "Description of the development"
+              },
+              "contributor": {
+                "type": "string",
+                "description": "Person who contributed to this development"
+              }
+            }
+          },
+          "description": "Key developments in the history of this vector space type"
+        }
+      },
+      "description": "Historical context"
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:vector-space:type:hilbert-space",
+      "name": "Hilbert Space",
+      "notation": {
+        "standard": "H",
+        "symbolic": "ℋ",
+        "alternative": ["(H, ⟨·,·⟩)", "L²"]
+      },
+      "definition": {
+        "formal": "A Hilbert space H is a complete inner product space, i.e., a vector space with an inner product ⟨·,·⟩ that is complete with respect to the norm induced by the inner product: ||x|| = √⟨x,x⟩.",
+        "informal": "A vector space with a notion of distance and angle that is complete (has no 'gaps') with respect to the distance induced by the inner product.",
+        "axiomatic": "A vector space H over the field of real or complex numbers equipped with an inner product ⟨·,·⟩ such that the norm defined by ||x|| = √⟨x,x⟩ makes H a complete metric space.",
+        "constructive": "Can be constructed as the completion of an inner product space with respect to the norm induced by the inner product."
+      },
+      "properties": {
+        "scalarField": "Real numbers ℝ or complex numbers ℂ",
+        "dimension": "Can be finite or infinite-dimensional",
+        "algebraicProperties": [
+          "vector space structure",
+          "inner product structure",
+          "complete with respect to induced norm",
+          "orthogonal projections onto closed subspaces exist",
+          "orthogonal decomposition with respect to closed subspaces"
+        ],
+        "topologicalProperties": [
+          "complete",
+          "metric space",
+          "locally convex",
+          "separable (may have a countable dense subset)",
+          "second-countable when separable"
+        ],
+        "additionalStructures": [
+          "inner product",
+          "norm (induced by inner product)",
+          "metric (induced by norm)",
+          "orthogonality relation",
+          "projection operators"
+        ],
+        "relationToOtherTypes": [
+          {
+            "type": "Banach Space",
+            "relationship": "Every Hilbert space is a Banach space, but not every Banach space is a Hilbert space"
+          },
+          {
+            "type": "Inner Product Space",
+            "relationship": "A Hilbert space is a complete inner product space"
+          },
+          {
+            "type": "L² Space",
+            "relationship": "L² spaces are canonical examples of Hilbert spaces"
+          },
+          {
+            "type": "Euclidean Space",
+            "relationship": "Finite-dimensional Euclidean spaces are Hilbert spaces"
+          }
+        ]
+      },
+      "canonicalExamples": [
+        {
+          "name": "Euclidean Space",
+          "notation": "ℝⁿ",
+          "description": "n-dimensional real space with the standard dot product",
+          "dimension": "n (finite)",
+          "properties": [
+            "finite-dimensional",
+            "standard dot product as inner product",
+            "Euclidean norm",
+            "complete",
+            "separable"
+          ],
+          "id": "urn:uor:algebra:vector-space:real-euclidean:n-dimensional"
+        },
+        {
+          "name": "Complex Euclidean Space",
+          "notation": "ℂⁿ",
+          "description": "n-dimensional complex space with the standard Hermitian inner product",
+          "dimension": "n (finite)",
+          "properties": [
+            "finite-dimensional",
+            "Hermitian inner product",
+            "complete",
+            "separable"
+          ],
+          "id": "urn:uor:algebra:vector-space:complex-euclidean:n-dimensional"
+        },
+        {
+          "name": "L² Space",
+          "notation": "L²(X, μ)",
+          "description": "Space of square-integrable functions on a measure space (X, μ)",
+          "dimension": "Typically infinite-dimensional",
+          "properties": [
+            "infinite-dimensional",
+            "separable if X is separable",
+            "inner product via integration: ⟨f,g⟩ = ∫ f·g̅ dμ",
+            "complete",
+            "functions are identified if they differ only on sets of measure zero"
+          ],
+          "id": "urn:uor:algebra:vector-space:l2-space"
+        },
+        {
+          "name": "Sequence Space",
+          "notation": "ℓ²",
+          "description": "Space of square-summable sequences",
+          "dimension": "Infinite-dimensional, countable basis",
+          "properties": [
+            "infinite-dimensional",
+            "separable",
+            "inner product: ⟨x,y⟩ = Σ xₙy̅ₙ",
+            "complete",
+            "natural isomorphism with sequences of Fourier coefficients of L² functions"
+          ],
+          "id": "urn:uor:algebra:vector-space:sequence-space:l2"
+        }
+      ],
+      "factorizationRules": {
+        "primeElements": "In a Hilbert space, the prime elements are the elements of an orthonormal basis. Every Hilbert space has an orthonormal basis, which in the infinite-dimensional case may require the Axiom of Choice to construct.",
+        "basisDefinition": "An orthonormal basis for a Hilbert space H is a set of orthonormal vectors {eₐ} such that every vector in H can be uniquely expressed as a convergent (in the norm topology) linear combination of basis elements.",
+        "decompositionProcess": "Every vector v in a Hilbert space can be expressed as v = Σₐ ⟨v,eₐ⟩eₐ where {eₐ} is an orthonormal basis. For infinite-dimensional spaces, this sum represents the limit of finite partial sums.",
+        "uniquenessProperties": "The coefficients in the basis expansion (⟨v,eₐ⟩) are uniquely determined by the vector v and the basis {eₐ}. This provides a unique factorization in terms of prime elements.",
+        "dependenceRelations": "A set of vectors is linearly dependent in a Hilbert space if one of the vectors can be expressed as a convergent linear combination of the others, or more generally if there exists a non-trivial convergent linear combination that equals the zero vector."
+      },
+      "dualSpace": {
+        "description": "For a Hilbert space H, the dual space H* (the space of continuous linear functionals on H) is naturally isomorphic to H itself via the Riesz representation theorem.",
+        "properties": [
+          "naturally isomorphic to the original space",
+          "every continuous linear functional F on H can be represented as F(x) = ⟨x,y⟩ for some unique y in H",
+          "the isomorphism preserves the norm"
+        ],
+        "relationship": "The Riesz representation theorem establishes a canonical isomorphism between H and H*",
+        "isomorphism": "The dual space H* is isometrically isomorphic to H for any Hilbert space H"
+      },
+      "tensorProducts": {
+        "description": "The tensor product of two Hilbert spaces H₁ and H₂ can be equipped with an inner product structure to form another Hilbert space H₁ ⊗ H₂",
+        "properties": [
+          "preserves completeness",
+          "the tensor product of separable Hilbert spaces is separable",
+          "dimension is the product of dimensions (for finite-dimensional spaces)"
+        ],
+        "constructionMethod": "First define the inner product on simple tensors: ⟨x₁⊗y₁, x₂⊗y₂⟩ = ⟨x₁,x₂⟩·⟨y₁,y₂⟩, then extend by linearity and complete the resulting inner product space",
+        "basisRelationship": "If {eₐ} is an orthonormal basis for H₁ and {fᵦ} is an orthonormal basis for H₂, then {eₐ⊗fᵦ} is an orthonormal basis for H₁ ⊗ H₂"
+      },
+      "directSums": {
+        "description": "The direct sum of Hilbert spaces can be equipped with an inner product to form another Hilbert space",
+        "properties": [
+          "preserves completeness",
+          "the direct sum of separable Hilbert spaces is separable",
+          "dimension is the sum of dimensions (for finite-dimensional spaces)",
+          "orthogonal direct sum for closed subspaces: H = M ⊕ M⊥ for any closed subspace M"
+        ],
+        "constructionMethod": "Define the inner product component-wise: ⟨(x₁,y₁), (x₂,y₂)⟩ = ⟨x₁,x₂⟩ + ⟨y₁,y₂⟩",
+        "basisRelationship": "If {eₐ} is an orthonormal basis for H₁ and {fᵦ} is an orthonormal basis for H₂, then {(eₐ,0)} ∪ {(0,fᵦ)} is an orthonormal basis for H₁ ⊕ H₂"
+      },
+      "quotientSpaces": {
+        "description": "For a closed subspace M of a Hilbert space H, the quotient space H/M can be naturally identified with M⊥, the orthogonal complement of M",
+        "construction": "Define H/M as the set of equivalence classes [x] where x ~ y if x - y ∈ M. This space is naturally isomorphic to M⊥",
+        "properties": [
+          "the quotient space H/M is itself a Hilbert space",
+          "the natural projection H → H/M is continuous",
+          "the dimension of H/M equals the codimension of M in H"
+        ],
+        "dimensionRelationship": "dim(H) = dim(M) + dim(H/M) for finite-dimensional spaces, or in general: dim(H/M) = dim(M⊥)"
+      },
+      "innerProductSpaces": {
+        "compatibility": true,
+        "standardInnerProduct": "Depends on the specific Hilbert space. For ℝⁿ, the standard inner product is ⟨x,y⟩ = Σ xᵢyᵢ. For L²(X,μ), it is ⟨f,g⟩ = ∫ f·g̅ dμ.",
+        "properties": [
+          "conjugate symmetry: ⟨x,y⟩ = ⟨y,x⟩̅ (complex case) or ⟨x,y⟩ = ⟨y,x⟩ (real case)",
+          "linearity in first argument",
+          "positive definiteness: ⟨x,x⟩ ≥ 0 with equality iff x = 0"
+        ],
+        "geometricInterpretation": "The inner product generalizes the notion of angle and length from Euclidean geometry to abstract vector spaces, allowing for concepts like orthogonality and projection"
+      },
+      "normSpaces": {
+        "compatibility": true,
+        "standardNorms": [
+          {
+            "name": "Inner Product Norm",
+            "definition": "||x|| = √⟨x,x⟩",
+            "properties": [
+              "induced by inner product",
+              "satisfies parallelogram law: ||x+y||² + ||x-y||² = 2(||x||² + ||y||²)",
+              "enables Cauchy-Schwarz inequality: |⟨x,y⟩| ≤ ||x||·||y||"
+            ]
+          }
+        ],
+        "completeness": "A Hilbert space is, by definition, complete with respect to the norm induced by its inner product. This means that every Cauchy sequence converges to an element of the space."
+      },
+      "topologicalStructure": {
+        "naturalTopology": "The norm topology induced by the inner product norm",
+        "topologicalProperties": [
+          "second-countable when separable",
+          "locally convex",
+          "complete",
+          "metrizable",
+          "Hausdorff"
+        ],
+        "compactness": "Infinite-dimensional Hilbert spaces are never locally compact; the unit ball is compact only in finite-dimensional Hilbert spaces",
+        "connectedness": "Hilbert spaces are path-connected and simply connected",
+        "separability": "A Hilbert space is separable if and only if it admits a countable orthonormal basis"
+      },
+      "linearMapProperties": {
+        "endomorphisms": "Bounded linear operators on a Hilbert space form a C*-algebra with the operator norm and the adjoint operation",
+        "automorphisms": "Unitary operators (those preserving the inner product) are the automorphisms of a Hilbert space as an inner product space",
+        "isomorphismConditions": "Two Hilbert spaces are isomorphic if and only if they have the same dimension (where dimension is defined as the cardinality of an orthonormal basis)",
+        "specialLinearMaps": [
+          {
+            "name": "Orthogonal/Unitary Operators",
+            "description": "Linear operators that preserve the inner product",
+            "properties": [
+              "isometry (preserve distances)",
+              "spectrum contained in the unit circle",
+              "adjoint equals inverse"
+            ]
+          },
+          {
+            "name": "Self-Adjoint Operators",
+            "description": "Linear operators equal to their own adjoint",
+            "properties": [
+              "real spectrum",
+              "spectral decomposition",
+              "complete set of eigenvectors (in finite dimensions)"
+            ]
+          },
+          {
+            "name": "Projection Operators",
+            "description": "Linear operators projecting onto a closed subspace",
+            "properties": [
+              "idempotent: P² = P",
+              "self-adjoint (for orthogonal projections)",
+              "norm is 0 or 1 (for non-zero orthogonal projections)"
+            ]
+          },
+          {
+            "name": "Compact Operators",
+            "description": "Linear operators that map bounded sets to relatively compact sets",
+            "properties": [
+              "approximable by finite-rank operators",
+              "spectrum is discrete with possible accumulation point at 0",
+              "spectral decomposition for self-adjoint compact operators"
+            ]
+          }
+        ]
+      },
+      "primeRepresentationContext": {
+        "primeElementsConcept": "In the UOR framework, the prime elements of a Hilbert space are the elements of an orthonormal basis, which are irreducible in the sense that they cannot be expressed as linear combinations of other elements while maintaining orthonormality",
+        "basisAsPrimeElements": "An orthonormal basis serves as the set of prime elements for the factorization of vectors in a Hilbert space, with the coefficients in the basis expansion providing the unique factorization",
+        "primitivityCriteria": "A unit vector is a prime element if it is part of an orthonormal basis. In infinite-dimensional spaces, different orthonormal bases lead to different sets of prime elements",
+        "coherencePrinciple": "The coherence principle for Hilbert spaces ensures that the representation of vectors in terms of an orthonormal basis minimizes the sum of squared coefficients (Parseval's identity)"
+      },
+      "observerFrames": [
+        {
+          "frameName": "Orthonormal-Basis-Frame",
+          "frameDescription": "Viewing the Hilbert space through the lens of a specific orthonormal basis",
+          "frameTransformations": [
+            "change-of-basis",
+            "coordinate-representation",
+            "Fourier-type-transforms"
+          ]
+        },
+        {
+          "frameName": "Spectral-Frame",
+          "frameDescription": "Viewing the Hilbert space through the eigenbasis of a specific operator",
+          "frameTransformations": [
+            "spectral-decomposition",
+            "diagonalization",
+            "eigenfunction-expansion"
+          ]
+        },
+        {
+          "frameName": "Function-Space-Frame",
+          "frameDescription": "Viewing Hilbert spaces as function spaces with L² inner products",
+          "frameTransformations": [
+            "Fourier-transform",
+            "wavelet-transform",
+            "function-representation"
+          ]
+        }
+      ],
+      "applications": [
+        {
+          "domain": "Quantum Mechanics",
+          "description": "Hilbert spaces provide the mathematical foundation for quantum mechanics",
+          "examples": [
+            "State vectors in quantum systems",
+            "Observables as self-adjoint operators",
+            "Quantum measurement via projections",
+            "Unitary evolution of quantum states"
+          ]
+        },
+        {
+          "domain": "Signal Processing",
+          "description": "Hilbert spaces model signals and provide tools for analysis and processing",
+          "examples": [
+            "Fourier analysis in L² spaces",
+            "Wavelet transforms",
+            "Signal filtering and compression",
+            "Time-frequency analysis"
+          ]
+        },
+        {
+          "domain": "Partial Differential Equations",
+          "description": "Hilbert spaces provide the setting for the weak formulation of PDEs",
+          "examples": [
+            "Sobolev spaces for weak solutions",
+            "Variational problems and Lax-Milgram theorem",
+            "Spectral methods for PDEs",
+            "Finite element analysis"
+          ]
+        },
+        {
+          "domain": "Machine Learning",
+          "description": "Hilbert spaces provide the foundation for kernel methods and functional analysis in machine learning",
+          "examples": [
+            "Reproducing kernel Hilbert spaces (RKHS) in kernel methods",
+            "Support vector machines",
+            "Functional regression",
+            "Hilbert space embeddings of distributions"
+          ]
+        }
+      ],
+      "theorems": [
+        {
+          "name": "Projection Theorem",
+          "statement": "For any closed subspace M of a Hilbert space H and any vector x in H, there exists a unique vector y in M such that ||x - y|| is minimized. This vector y is the orthogonal projection of x onto M.",
+          "significance": "Enables optimal approximations and forms the basis for many algorithms in Hilbert spaces"
+        },
+        {
+          "name": "Riesz Representation Theorem",
+          "statement": "For any continuous linear functional F on a Hilbert space H, there exists a unique vector y in H such that F(x) = ⟨x,y⟩ for all x in H.",
+          "significance": "Provides a natural isomorphism between a Hilbert space and its dual, simplifying functional analysis"
+        },
+        {
+          "name": "Spectral Theorem",
+          "statement": "Every self-adjoint operator on a Hilbert space has a spectral decomposition. In finite dimensions, this means it is diagonalizable with real eigenvalues.",
+          "significance": "Fundamental for understanding operators in quantum mechanics and many other applications"
+        },
+        {
+          "name": "Parseval's Identity",
+          "statement": "For any orthonormal basis {eₐ} of a Hilbert space H and any vector x in H, ||x||² = Σₐ |⟨x,eₐ⟩|².",
+          "significance": "Connects the norm of a vector to its components relative to an orthonormal basis, generalizing the Pythagorean theorem"
+        }
+      ],
+      "history": {
+        "originators": [
+          "David Hilbert",
+          "John von Neumann",
+          "Frigyes Riesz",
+          "Stefan Banach"
+        ],
+        "keyDevelopments": [
+          {
+            "year": "1906-1910",
+            "development": "Initial work on integral equations leading to the concept of what would later be called Hilbert spaces",
+            "contributor": "David Hilbert"
+          },
+          {
+            "year": "1927-1932",
+            "development": "Formal axiomatization of Hilbert spaces and application to quantum mechanics",
+            "contributor": "John von Neumann"
+          },
+          {
+            "year": "1907",
+            "development": "Riesz representation theorem establishing the duality between Hilbert spaces and their duals",
+            "contributor": "Frigyes Riesz"
+          },
+          {
+            "year": "1920s-1930s",
+            "development": "Development of spectral theory for operators on Hilbert spaces",
+            "contributor": "Multiple mathematicians"
+          },
+          {
+            "year": "1950s-present",
+            "development": "Applications to quantum field theory, signal processing, and functional analysis",
+            "contributor": "Mathematical and physics communities"
+          }
+        ]
+      }
+    }
+  ]
+}

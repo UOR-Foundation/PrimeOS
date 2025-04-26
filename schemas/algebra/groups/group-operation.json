@@ -1,0 +1,379 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/groups/group-operation.json",
+  "title": "Group Operation Schema",
+  "description": "Schema defining operations on group elements within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "type", "groupDomain", "operationType", "operands", "result", "primeCoordinateMapping"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the group operation"
+    },
+    "type": {
+      "type": "string",
+      "const": "GroupOperation",
+      "description": "Type of the mathematical entity"
+    },
+    "groupDomain": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the group domain this operation belongs to"
+    },
+    "operationType": {
+      "type": "string",
+      "enum": [
+        "multiplication",
+        "division",
+        "inversion",
+        "conjugation",
+        "commutator",
+        "exponentiation"
+      ],
+      "description": "Type of group operation"
+    },
+    "operands": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "description": "The operands of the operation",
+      "items": {
+        "type": "object",
+        "required": ["elementId", "representation"],
+        "properties": {
+          "elementId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the group element"
+          },
+          "representation": {
+            "type": "string",
+            "description": "Representation of the operand"
+          },
+          "primeDecomposition": {
+            "type": "object",
+            "description": "Prime decomposition of the operand",
+            "properties": {
+              "factors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "prime": {
+                      "type": "string",
+                      "description": "Prime factor"
+                    },
+                    "exponent": {
+                      "type": "integer",
+                      "description": "Exponent of the prime factor"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "required": ["elementId", "representation"],
+      "properties": {
+        "elementId": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the resulting group element"
+        },
+        "representation": {
+          "type": "string",
+          "description": "Representation of the result"
+        },
+        "primeDecomposition": {
+          "type": "object",
+          "description": "Prime decomposition of the result",
+          "properties": {
+            "factors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "prime": {
+                    "type": "string",
+                    "description": "Prime factor"
+                  },
+                  "exponent": {
+                    "type": "integer",
+                    "description": "Exponent of the prime factor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "primeCoordinateMapping": {
+      "type": "object",
+      "required": ["mappingType", "description"],
+      "description": "How the operation acts on prime coordinates",
+      "properties": {
+        "mappingType": {
+          "type": "string",
+          "enum": [
+            "exponent-addition",
+            "exponent-subtraction",
+            "coordinate-transformation",
+            "reordering",
+            "complex-mapping"
+          ],
+          "description": "Type of mapping in prime coordinate space"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of how the operation transforms prime coordinates"
+        },
+        "formula": {
+          "type": "string",
+          "description": "Mathematical formula for the coordinate transformation"
+        },
+        "homomorphismProperties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "preserves-structure",
+              "preserves-ordering",
+              "coordinate-wise",
+              "non-linear",
+              "context-dependent"
+            ]
+          },
+          "description": "Properties of the homomorphism in prime coordinates"
+        }
+      }
+    },
+    "operationProperties": {
+      "type": "object",
+      "description": "Properties of this specific operation instance",
+      "properties": {
+        "isAssociative": {
+          "type": "boolean",
+          "description": "Whether the operation is associative in this context"
+        },
+        "isCommutative": {
+          "type": "boolean",
+          "description": "Whether the operation is commutative for these operands"
+        },
+        "preservesSubgroup": {
+          "type": "boolean",
+          "description": "Whether the operation preserves a subgroup structure"
+        },
+        "commutativityMeasure": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Measure of how nearly commutative the operation is (1 = fully commutative)"
+        }
+      }
+    },
+    "computationalAspects": {
+      "type": "object",
+      "description": "Computational aspects of the operation",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Algorithm used to compute the operation"
+        },
+        "timeComplexity": {
+          "type": "string",
+          "description": "Time complexity of the operation"
+        },
+        "spaceComplexity": {
+          "type": "string",
+          "description": "Space complexity of the operation"
+        },
+        "optimalityProof": {
+          "type": "string",
+          "description": "Reference to proof that the algorithm is optimal"
+        }
+      }
+    },
+    "observerFrameTransformations": {
+      "type": "object",
+      "description": "How this operation transforms between observer frames",
+      "properties": {
+        "sourceFrame": {
+          "type": "string",
+          "description": "Source observer frame"
+        },
+        "targetFrame": {
+          "type": "string",
+          "description": "Target observer frame"
+        },
+        "transformationRule": {
+          "type": "string",
+          "description": "Rule for transforming between frames"
+        },
+        "invariants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties that remain invariant under the transformation"
+        }
+      }
+    },
+    "coherenceMeasures": {
+      "type": "object",
+      "description": "Coherence measures for this operation",
+      "properties": {
+        "operationComplexity": {
+          "type": "number",
+          "description": "Complexity measure of the operation"
+        },
+        "informationPreservation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Measure of how well the operation preserves information (1 = lossless)"
+        },
+        "structurePreservation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Measure of how well the operation preserves structure (1 = perfectly preserved)"
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of this specific operation",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:group:symmetric:S3:operation:mult:12-23",
+      "type": "GroupOperation",
+      "groupDomain": "urn:uor:algebra:group:symmetric:S3",
+      "operationType": "multiplication",
+      "operands": [
+        {
+          "elementId": "urn:uor:algebra:group:symmetric:S3:12",
+          "representation": "(1 2)",
+          "primeDecomposition": {
+            "factors": [
+              {
+                "prime": "(1 2)",
+                "exponent": 1
+              }
+            ]
+          }
+        },
+        {
+          "elementId": "urn:uor:algebra:group:symmetric:S3:23",
+          "representation": "(2 3)",
+          "primeDecomposition": {
+            "factors": [
+              {
+                "prime": "(2 3)",
+                "exponent": 1
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "elementId": "urn:uor:algebra:group:symmetric:S3:312",
+        "representation": "(1 3 2)",
+        "primeDecomposition": {
+          "factors": [
+            {
+              "prime": "(1 3 2)",
+              "exponent": 1
+            }
+          ]
+        }
+      },
+      "primeCoordinateMapping": {
+        "mappingType": "complex-mapping",
+        "description": "Composition of two transpositions results in a 3-cycle",
+        "formula": "concat((1 2), (2 3)) = (1 3 2)",
+        "homomorphismProperties": [
+          "preserves-structure",
+          "non-linear",
+          "context-dependent"
+        ]
+      },
+      "operationProperties": {
+        "isAssociative": true,
+        "isCommutative": false,
+        "preservesSubgroup": true,
+        "commutativityMeasure": 0
+      },
+      "computationalAspects": {
+        "algorithm": "Direct permutation composition",
+        "timeComplexity": "O(n) where n is the degree of the permutation",
+        "spaceComplexity": "O(n)",
+        "optimalityProof": "Trivial - must examine each position at least once"
+      },
+      "observerFrameTransformations": {
+        "sourceFrame": "CycleNotationFrame",
+        "targetFrame": "PermutationMatrixFrame",
+        "transformationRule": "Convert to permutation matrices and multiply",
+        "invariants": [
+          "group structure",
+          "conjugacy classes",
+          "element order"
+        ]
+      },
+      "coherenceMeasures": {
+        "operationComplexity": 2,
+        "informationPreservation": 1,
+        "structurePreservation": 1
+      },
+      "applications": [
+        {
+          "domain": "Molecular Symmetry",
+          "description": "Combining molecular symmetry operations",
+          "examples": [
+            "Composing a reflection with a rotation in a water molecule",
+            "Analyzing molecular vibrations in NH3"
+          ]
+        },
+        {
+          "domain": "Quantum Computing",
+          "description": "Implementation of quantum gates through permutation operations",
+          "examples": [
+            "Quantum circuit compilation",
+            "Quantum error correction codes"
+          ]
+        }
+      ]
+    }
+  ]
+}

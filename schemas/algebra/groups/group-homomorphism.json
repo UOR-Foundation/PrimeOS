@@ -1,0 +1,564 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/groups/group-homomorphism.json",
+  "title": "Group Homomorphism Schema",
+  "description": "Schema defining structure-preserving maps between groups within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "type", "sourceDomain", "targetDomain", "mappingDefinition", "homomorphismProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the group homomorphism"
+    },
+    "type": {
+      "type": "string",
+      "const": "GroupHomomorphism",
+      "description": "Type of the mathematical entity"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the homomorphism"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the homomorphism"
+    },
+    "sourceDomain": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the source group domain"
+    },
+    "targetDomain": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the target group domain"
+    },
+    "mappingDefinition": {
+      "type": "object",
+      "required": ["description", "representationMapping"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of how the mapping is defined"
+        },
+        "formalDefinition": {
+          "type": "string",
+          "description": "Formal mathematical definition of the homomorphism"
+        },
+        "representationMapping": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["sourceElement", "targetElement"],
+            "properties": {
+              "sourceElement": {
+                "type": "string",
+                "description": "Source element representation"
+              },
+              "targetElement": {
+                "type": "string",
+                "description": "Target element representation"
+              },
+              "sourceId": {
+                "type": "string",
+                "format": "uri",
+                "description": "Reference to source element entity"
+              },
+              "targetId": {
+                "type": "string",
+                "format": "uri",
+                "description": "Reference to target element entity"
+              }
+            }
+          },
+          "description": "Mapping between representations"
+        },
+        "generatorMapping": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["sourceGenerator", "targetElement"],
+            "properties": {
+              "sourceGenerator": {
+                "type": "string",
+                "description": "Source group generator"
+              },
+              "targetElement": {
+                "type": "string",
+                "description": "Target element representation"
+              }
+            }
+          },
+          "description": "Mapping of generators (sufficient to define the homomorphism)"
+        },
+        "computationalRule": {
+          "type": "string",
+          "description": "Algorithm or rule for computing the mapping"
+        }
+      }
+    },
+    "homomorphismProperties": {
+      "type": "object",
+      "required": ["isInjective", "isSurjective", "preservesStructure"],
+      "properties": {
+        "isInjective": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is injective (one-to-one)"
+        },
+        "isSurjective": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is surjective (onto)"
+        },
+        "isBijective": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is bijective (isomorphism)"
+        },
+        "isAutomorphism": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is an automorphism (bijection to same group)"
+        },
+        "isInnerAutomorphism": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is an inner automorphism (conjugation by a fixed element)"
+        },
+        "preservesStructure": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "operation",
+              "identity",
+              "inverses",
+              "order",
+              "cyclic-subgroups",
+              "normal-subgroups",
+              "commutator-subgroup"
+            ]
+          },
+          "description": "Structures preserved by the homomorphism"
+        }
+      }
+    },
+    "kernel": {
+      "type": "object",
+      "description": "The kernel of the homomorphism",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the kernel"
+        },
+        "generators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Generators of the kernel"
+        },
+        "order": {
+          "type": "string",
+          "description": "Order of the kernel"
+        },
+        "isomorphicTo": {
+          "type": "string",
+          "description": "Group the kernel is isomorphic to (if known)"
+        },
+        "isNormal": {
+          "type": "boolean",
+          "description": "Whether the kernel is a normal subgroup (always true for groups)"
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "description": "The image of the homomorphism",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the image"
+        },
+        "generators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Generators of the image"
+        },
+        "order": {
+          "type": "string",
+          "description": "Order of the image"
+        },
+        "isomorphicTo": {
+          "type": "string",
+          "description": "Group the image is isomorphic to (if known)"
+        },
+        "isSubgroup": {
+          "type": "boolean",
+          "description": "Whether the image is a subgroup of the target (always true for groups)"
+        }
+      }
+    },
+    "firstIsomorphismTheorem": {
+      "type": "object",
+      "description": "Application of the First Isomorphism Theorem",
+      "properties": {
+        "quotientGroup": {
+          "type": "string",
+          "description": "Description of G/ker(φ)"
+        },
+        "isomorphism": {
+          "type": "string",
+          "description": "Description of the isomorphism G/ker(φ) ≅ im(φ)"
+        },
+        "proof": {
+          "type": "string",
+          "description": "Reference to proof of the isomorphism"
+        }
+      }
+    },
+    "primeCoordinateMapping": {
+      "type": "object",
+      "description": "How the homomorphism acts on prime coordinates",
+      "properties": {
+        "mappingType": {
+          "type": "string",
+          "enum": [
+            "linear-transformation",
+            "coordinate-selection",
+            "coordinate-permutation",
+            "complex-mapping"
+          ],
+          "description": "Type of mapping in prime coordinate space"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of how prime coordinates are transformed"
+        },
+        "formula": {
+          "type": "string",
+          "description": "Formula for the coordinate transformation"
+        },
+        "coordinateMatrix": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": ["number", "string"]
+            }
+          },
+          "description": "Matrix representation of the coordinate transformation (if applicable)"
+        }
+      }
+    },
+    "computationalAspects": {
+      "type": "object",
+      "description": "Computational aspects of the homomorphism",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Algorithm for computing the homomorphism"
+        },
+        "timeComplexity": {
+          "type": "string",
+          "description": "Time complexity of computing the mapping"
+        },
+        "spaceComplexity": {
+          "type": "string",
+          "description": "Space complexity of storing the mapping"
+        },
+        "inverseComputation": {
+          "type": "string",
+          "description": "Method for computing preimages (if applicable)"
+        }
+      }
+    },
+    "compositionProperties": {
+      "type": "object",
+      "description": "Properties related to composition with other homomorphisms",
+      "properties": {
+        "isComposable": {
+          "type": "boolean",
+          "description": "Whether this homomorphism can be composed with others"
+        },
+        "compatibleHomomorphisms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["homomorphismId", "compositionResult"],
+            "properties": {
+              "homomorphismId": {
+                "type": "string",
+                "format": "uri",
+                "description": "ID of a compatible homomorphism"
+              },
+              "compositionOrder": {
+                "type": "string",
+                "enum": ["before", "after", "commutative"],
+                "description": "Order in which composition can occur"
+              },
+              "compositionResult": {
+                "type": "string",
+                "format": "uri",
+                "description": "ID of the resulting composed homomorphism"
+              }
+            }
+          },
+          "description": "List of homomorphisms that can be composed with this one"
+        }
+      }
+    },
+    "naturalityProperties": {
+      "type": "object",
+      "description": "Properties related to the naturality of the homomorphism",
+      "properties": {
+        "isNatural": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is natural (part of a natural transformation)"
+        },
+        "functorContext": {
+          "type": "string",
+          "description": "Functorial context in which this homomorphism is natural"
+        },
+        "naturalityDiagram": {
+          "type": "string",
+          "description": "Description of the naturality diagram"
+        }
+      }
+    },
+    "coherenceMeasures": {
+      "type": "object",
+      "description": "Coherence measures for this homomorphism",
+      "properties": {
+        "structurePreservation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Measure of structure preservation (1 = perfect)"
+        },
+        "informationLoss": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Measure of information loss (0 = lossless)"
+        },
+        "complexityReduction": {
+          "type": "number",
+          "description": "Measure of complexity reduction achieved by the mapping"
+        },
+        "cohNorm": {
+          "type": "number",
+          "description": "UOR coherence norm for the homomorphism"
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of this homomorphism",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      }
+    },
+    "theorems": {
+      "type": "array",
+      "description": "Theorems related to this homomorphism",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance of the theorem for this homomorphism"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:group:homomorphism:S3-Z2",
+      "type": "GroupHomomorphism",
+      "name": "Sign Homomorphism",
+      "description": "The homomorphism from S₃ to ℤ₂ that maps even permutations to 0 and odd permutations to 1",
+      "sourceDomain": "urn:uor:algebra:group:symmetric:S3",
+      "targetDomain": "urn:uor:algebra:group:cyclic:Z2",
+      "mappingDefinition": {
+        "description": "Maps permutations to their parity (even/odd)",
+        "formalDefinition": "φ(σ) = sgn(σ) where sgn is the sign function",
+        "representationMapping": [
+          {
+            "sourceElement": "e",
+            "targetElement": "0",
+            "sourceId": "urn:uor:algebra:group:symmetric:S3:identity",
+            "targetId": "urn:uor:algebra:group:cyclic:Z2:identity"
+          },
+          {
+            "sourceElement": "(1 2)",
+            "targetElement": "1",
+            "sourceId": "urn:uor:algebra:group:symmetric:S3:12",
+            "targetId": "urn:uor:algebra:group:cyclic:Z2:generator"
+          },
+          {
+            "sourceElement": "(1 3)",
+            "targetElement": "1",
+            "sourceId": "urn:uor:algebra:group:symmetric:S3:13",
+            "targetId": "urn:uor:algebra:group:cyclic:Z2:generator"
+          },
+          {
+            "sourceElement": "(2 3)",
+            "targetElement": "1",
+            "sourceId": "urn:uor:algebra:group:symmetric:S3:23",
+            "targetId": "urn:uor:algebra:group:cyclic:Z2:generator"
+          },
+          {
+            "sourceElement": "(1 2 3)",
+            "targetElement": "0",
+            "sourceId": "urn:uor:algebra:group:symmetric:S3:123",
+            "targetId": "urn:uor:algebra:group:cyclic:Z2:identity"
+          },
+          {
+            "sourceElement": "(1 3 2)",
+            "targetElement": "0",
+            "sourceId": "urn:uor:algebra:group:symmetric:S3:132",
+            "targetId": "urn:uor:algebra:group:cyclic:Z2:identity"
+          }
+        ],
+        "generatorMapping": [
+          {
+            "sourceGenerator": "(1 2)",
+            "targetElement": "1"
+          },
+          {
+            "sourceGenerator": "(1 2 3)",
+            "targetElement": "0"
+          }
+        ],
+        "computationalRule": "Count the number of transpositions in the cycle decomposition and take modulo 2"
+      },
+      "homomorphismProperties": {
+        "isInjective": false,
+        "isSurjective": true,
+        "isBijective": false,
+        "isAutomorphism": false,
+        "isInnerAutomorphism": false,
+        "preservesStructure": [
+          "operation",
+          "identity",
+          "inverses"
+        ]
+      },
+      "kernel": {
+        "description": "The alternating group A₃ (even permutations)",
+        "generators": ["(1 2 3)"],
+        "order": "3",
+        "isomorphicTo": "Cyclic group of order 3 (ℤ₃)",
+        "isNormal": true
+      },
+      "image": {
+        "description": "The entire group ℤ₂",
+        "generators": ["1"],
+        "order": "2",
+        "isomorphicTo": "Cyclic group of order 2 (ℤ₂)",
+        "isSubgroup": true
+      },
+      "firstIsomorphismTheorem": {
+        "quotientGroup": "S₃/A₃",
+        "isomorphism": "S₃/A₃ ≅ ℤ₂",
+        "proof": "Standard application of the First Isomorphism Theorem"
+      },
+      "primeCoordinateMapping": {
+        "mappingType": "complex-mapping",
+        "description": "Maps even permutations to the identity and odd permutations to the generator",
+        "formula": "φ(p) = sum(transpositions) mod 2",
+        "coordinateMatrix": [
+          [1, 0, 0, 0, 0, 0],
+          [0, 1, 1, 1, 0, 0]
+        ]
+      },
+      "computationalAspects": {
+        "algorithm": "Compute the sign of the permutation by counting inversions or by determining if the number of transpositions is even or odd",
+        "timeComplexity": "O(n log n) where n is the degree of the permutation",
+        "spaceComplexity": "O(1)",
+        "inverseComputation": "For 0, the preimage is A₃; for 1, the preimage is S₃ - A₃"
+      },
+      "compositionProperties": {
+        "isComposable": true,
+        "compatibleHomomorphisms": [
+          {
+            "homomorphismId": "urn:uor:algebra:group:homomorphism:Z2-Aut",
+            "compositionOrder": "after",
+            "compositionResult": "urn:uor:algebra:group:homomorphism:S3-Aut"
+          }
+        ]
+      },
+      "naturalityProperties": {
+        "isNatural": true,
+        "functorContext": "Sign functor from permutation groups to ℤ₂",
+        "naturalityDiagram": "Standard naturality diagram for the sign homomorphism"
+      },
+      "coherenceMeasures": {
+        "structurePreservation": 1.0,
+        "informationLoss": 0.5,
+        "complexityReduction": 0.67,
+        "cohNorm": 0.8
+      },
+      "applications": [
+        {
+          "domain": "Group Theory",
+          "description": "Characterizing permutations by their parity",
+          "examples": [
+            "Determining solvability of polynomial equations",
+            "Analyzing alternating groups"
+          ]
+        },
+        {
+          "domain": "Combinatorics",
+          "description": "Parity-based arguments in combinatorial proofs",
+          "examples": [
+            "Proving the impossibility of certain permutation puzzles",
+            "Analysis of permutation networks"
+          ]
+        }
+      ],
+      "theorems": [
+        {
+          "name": "First Isomorphism Theorem",
+          "statement": "For a group homomorphism φ: G → H, G/ker(φ) ≅ im(φ)",
+          "significance": "Provides the isomorphism S₃/A₃ ≅ ℤ₂"
+        },
+        {
+          "name": "Sign Homomorphism Theorem",
+          "statement": "The sign function sgn: Sₙ → {±1} is a group homomorphism with kernel Aₙ",
+          "significance": "This homomorphism is the special case for n=3"
+        }
+      ]
+    }
+  ]
+}

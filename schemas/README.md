@@ -120,6 +120,10 @@ Schemas for algebraic structures:
 - Irreducible polynomials
 - Polynomial operations (addition, multiplication, division)
 - Polynomial factorization operations
+- Group structures (domain, element, operation, homomorphism, types)
+- Ring structures (domain, element, operation, homomorphism, types)
+- Field structures (domain, element, operation, homomorphism, types)
+- Vector space structures (domain, element, operation, linear map, types)
 
 ### Integration (integration/)
 

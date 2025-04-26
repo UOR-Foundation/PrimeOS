@@ -1,0 +1,1119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/vector-spaces/vector-space-domain.json",
+  "title": "Vector Space Domain Schema",
+  "description": "Schema defining vector space structures within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "name", "scalarField", "dimension", "vectorAddition", "scalarMultiplication", "primeElements", "uniqueFactorizationProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the vector space domain"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the vector space domain"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the vector space"
+    },
+    "scalarField": {
+      "type": "object",
+      "description": "The field of scalars for this vector space",
+      "required": ["fieldId", "fieldName"],
+      "properties": {
+        "fieldId": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the field domain for scalars"
+        },
+        "fieldName": {
+          "type": "string",
+          "description": "Name of the scalar field"
+        },
+        "fieldDescription": {
+          "type": "string",
+          "description": "Description of the scalar field"
+        },
+        "fieldCharacteristic": {
+          "type": "string",
+          "description": "Characteristic of the scalar field"
+        },
+        "fieldCardinality": {
+          "type": "string",
+          "description": "Cardinality of the scalar field"
+        }
+      }
+    },
+    "dimension": {
+      "type": "object",
+      "description": "Dimension of the vector space",
+      "required": ["value", "properties"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "Dimension value or characterization (finite number, 'countably infinite', 'uncountably infinite', etc.)"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "finite",
+              "infinite",
+              "countable",
+              "uncountable",
+              "well-defined"
+            ]
+          },
+          "description": "Properties of the dimension"
+        },
+        "basisCardinalityType": {
+          "type": "string",
+          "enum": [
+            "finite",
+            "countably-infinite",
+            "uncountably-infinite"
+          ],
+          "description": "Cardinality type of the basis"
+        }
+      }
+    },
+    "vectorAddition": {
+      "type": "object",
+      "description": "The vector addition operation forming an abelian group",
+      "required": ["operation", "identity", "inverses"],
+      "properties": {
+        "operation": {
+          "type": "object",
+          "required": ["name", "symbol", "properties"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Vector Addition",
+              "description": "Name of the operation"
+            },
+            "symbol": {
+              "type": "string",
+              "description": "Symbol representing the operation"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "associative",
+                  "commutative",
+                  "identity",
+                  "inverses",
+                  "closed"
+                ]
+              },
+              "description": "Properties of the operation"
+            },
+            "definition": {
+              "type": "string",
+              "description": "Definition of how vector addition works"
+            }
+          }
+        },
+        "identity": {
+          "type": "object",
+          "required": ["element", "properties"],
+          "properties": {
+            "element": {
+              "type": "string",
+              "description": "Representation of the zero vector"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "zero-vector",
+                  "unique",
+                  "additive-identity"
+                ]
+              },
+              "description": "Properties of the zero vector"
+            },
+            "identityLaw": {
+              "type": "string",
+              "description": "The mathematical statement of the identity law"
+            }
+          }
+        },
+        "inverses": {
+          "type": "object",
+          "required": ["definition", "properties"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "description": "Definition of vector negation (additive inverses)"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "additive-inverse",
+                  "unique",
+                  "involution"
+                ]
+              },
+              "description": "Properties of vector negation"
+            },
+            "inverseLaw": {
+              "type": "string",
+              "description": "The mathematical statement of the additive inverse law"
+            }
+          }
+        }
+      }
+    },
+    "scalarMultiplication": {
+      "type": "object",
+      "description": "The scalar multiplication operation",
+      "required": ["operation", "properties", "axioms"],
+      "properties": {
+        "operation": {
+          "type": "object",
+          "required": ["name", "symbol", "definition"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Scalar Multiplication",
+              "description": "Name of the operation"
+            },
+            "symbol": {
+              "type": "string",
+              "description": "Symbol representing the operation"
+            },
+            "definition": {
+              "type": "string",
+              "description": "Definition of how scalar multiplication works"
+            }
+          }
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "distributive-over-vector-addition",
+              "distributive-over-scalar-addition",
+              "associative-with-scalar-multiplication",
+              "compatible-with-scalar-identity"
+            ]
+          },
+          "description": "Properties of scalar multiplication"
+        },
+        "axioms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the axiom"
+              },
+              "statement": {
+                "type": "string",
+                "description": "Mathematical statement of the axiom"
+              }
+            }
+          },
+          "description": "Axioms governing scalar multiplication"
+        }
+      }
+    },
+    "basis": {
+      "type": "object",
+      "description": "Basis information for the vector space",
+      "properties": {
+        "hasBasis": {
+          "type": "boolean",
+          "description": "Whether the vector space has a basis"
+        },
+        "standardBasis": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of the standard basis"
+            },
+            "notation": {
+              "type": "string",
+              "description": "Notation for the standard basis"
+            },
+            "elements": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Element of the standard basis"
+              },
+              "description": "Elements of the standard basis (if finite)"
+            }
+          },
+          "description": "Standard basis for the vector space"
+        },
+        "otherBases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of this basis"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of this basis"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this basis"
+              }
+            }
+          },
+          "description": "Other important bases for the vector space"
+        },
+        "basisChangeOperations": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of basis change operations"
+            },
+            "transformationProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Properties of basis transformations"
+            }
+          },
+          "description": "Operations for changing between bases"
+        }
+      }
+    },
+    "linearOperations": {
+      "type": "object",
+      "description": "Linear operations on the vector space",
+      "properties": {
+        "linearMaps": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of linear maps on this space"
+            },
+            "representation": {
+              "type": "string",
+              "description": "How linear maps are typically represented"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Properties of linear maps"
+            }
+          },
+          "description": "Linear maps on this vector space"
+        },
+        "endomorphisms": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of the endomorphism algebra"
+            },
+            "structure": {
+              "type": "string",
+              "description": "Structure of the endomorphism algebra"
+            },
+            "dimension": {
+              "type": "string",
+              "description": "Dimension of the endomorphism algebra"
+            }
+          },
+          "description": "Endomorphisms of this vector space"
+        },
+        "specialOperators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the operator"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the operator"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this operator"
+              }
+            }
+          },
+          "description": "Special linear operators on this space"
+        }
+      }
+    },
+    "innerProduct": {
+      "type": "object",
+      "description": "Inner product structure, if applicable",
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "description": "Whether the vector space has a canonical inner product"
+        },
+        "definition": {
+          "type": "string",
+          "description": "Definition of the inner product"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "symmetric",
+              "bilinear",
+              "sesquilinear",
+              "positive-definite",
+              "non-degenerate"
+            ]
+          },
+          "description": "Properties of the inner product"
+        },
+        "inducedNorm": {
+          "type": "string",
+          "description": "The norm induced by this inner product"
+        },
+        "orthogonality": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "description": "Definition of orthogonality"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Properties related to orthogonality"
+            }
+          },
+          "description": "Orthogonality concepts for this inner product"
+        }
+      }
+    },
+    "norm": {
+      "type": "object",
+      "description": "Norm structure, if applicable",
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "description": "Whether the vector space has a canonical norm"
+        },
+        "definition": {
+          "type": "string",
+          "description": "Definition of the norm"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "positive-definite",
+              "absolutely-homogeneous",
+              "subadditive"
+            ]
+          },
+          "description": "Properties of the norm"
+        },
+        "inducedMetric": {
+          "type": "string",
+          "description": "The metric induced by this norm"
+        }
+      }
+    },
+    "dualSpace": {
+      "type": "object",
+      "description": "The dual space of linear functionals",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the dual space"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "Dimension of the dual space"
+        },
+        "naturalIsomorphism": {
+          "type": "boolean",
+          "description": "Whether there is a natural isomorphism with the original space"
+        },
+        "dualBasis": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of the dual basis"
+            },
+            "relationship": {
+              "type": "string",
+              "description": "Relationship to the primal basis"
+            }
+          },
+          "description": "Basis for the dual space"
+        }
+      }
+    },
+    "directSums": {
+      "type": "object",
+      "description": "Direct sum decompositions",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of direct sum operations"
+        },
+        "decompositions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "Description of this decomposition"
+              },
+              "components": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Components of the decomposition"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this decomposition"
+              }
+            }
+          },
+          "description": "Notable direct sum decompositions"
+        }
+      }
+    },
+    "tensorProducts": {
+      "type": "object",
+      "description": "Tensor product structures",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of tensor product operations"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of tensor products"
+        },
+        "universalProperty": {
+          "type": "string",
+          "description": "Universal property of the tensor product"
+        }
+      }
+    },
+    "topologicalProperties": {
+      "type": "object",
+      "description": "Topological properties if applicable",
+      "properties": {
+        "isTopological": {
+          "type": "boolean",
+          "description": "Whether the vector space has a canonical topology"
+        },
+        "topology": {
+          "type": "string",
+          "description": "Description of the topology"
+        },
+        "completeness": {
+          "type": "boolean",
+          "description": "Whether the space is complete with respect to its topology"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "separable",
+              "locally-convex",
+              "metrizable",
+              "normed",
+              "banach",
+              "hilbert"
+            ]
+          },
+          "description": "Topological properties"
+        }
+      }
+    },
+    "primeElements": {
+      "type": "object",
+      "description": "Prime elements in the vector space context",
+      "required": ["definition", "properties"],
+      "properties": {
+        "definition": {
+          "type": "string",
+          "description": "Definition of prime elements in the vector space context"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of prime elements"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string",
+                "description": "Description of the element"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this element"
+              }
+            }
+          },
+          "description": "Examples of prime elements"
+        }
+      }
+    },
+    "uniqueFactorizationProperties": {
+      "type": "object",
+      "description": "Factorization properties in the vector space context",
+      "required": ["vectorFactorizationConcept", "description"],
+      "properties": {
+        "vectorFactorizationConcept": {
+          "type": "string",
+          "description": "Concept of factorization for vectors"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of factorization in this context"
+        },
+        "basisRepresentation": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of representation in terms of basis elements"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Properties of basis representation"
+            },
+            "uniqueness": {
+              "type": "string",
+              "description": "Uniqueness properties of the representation"
+            }
+          },
+          "description": "Representation of vectors in terms of basis"
+        },
+        "linearIndependence": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of linear independence"
+            },
+            "relationship": {
+              "type": "string",
+              "description": "Relationship to factorization"
+            }
+          },
+          "description": "Linear independence as a factorization concept"
+        }
+      }
+    },
+    "observerFrames": {
+      "type": "array",
+      "description": "Observer reference frames relevant to this vector space",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "frameDescription": {
+            "type": "string",
+            "description": "Description of the frame perspective"
+          },
+          "frameTransformations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Transformations in this frame"
+            }
+          }
+        }
+      }
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "description": "Measures of coherence applicable to this vector space",
+      "items": {
+        "type": "object",
+        "properties": {
+          "measureName": {
+            "type": "string",
+            "description": "Name of the coherence measure"
+          },
+          "measureDescription": {
+            "type": "string",
+            "description": "Description of what the measure quantifies"
+          },
+          "formula": {
+            "type": "string",
+            "description": "Formula for calculating the measure"
+          }
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of this vector space",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      }
+    },
+    "theorems": {
+      "type": "array",
+      "description": "Important theorems related to this vector space",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance of the theorem for this vector space"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:vector-space:real-euclidean",
+      "name": "Real Euclidean Vector Space",
+      "description": "The n-dimensional vector space over the real numbers with the standard Euclidean structure",
+      "scalarField": {
+        "fieldId": "urn:uor:algebra:field:real-numbers",
+        "fieldName": "Real Numbers",
+        "fieldDescription": "The field of real numbers ℝ",
+        "fieldCharacteristic": "0",
+        "fieldCardinality": "continuum (2^ℵ₀)"
+      },
+      "dimension": {
+        "value": "n",
+        "properties": ["finite", "well-defined"],
+        "basisCardinalityType": "finite"
+      },
+      "vectorAddition": {
+        "operation": {
+          "name": "Vector Addition",
+          "symbol": "+",
+          "properties": ["associative", "commutative", "identity", "inverses", "closed"],
+          "definition": "Component-wise addition of vectors: (x₁, ..., xₙ) + (y₁, ..., yₙ) = (x₁ + y₁, ..., xₙ + yₙ)"
+        },
+        "identity": {
+          "element": "(0, 0, ..., 0)",
+          "properties": ["zero-vector", "unique", "additive-identity"],
+          "identityLaw": "v + 0 = 0 + v = v for all vectors v"
+        },
+        "inverses": {
+          "definition": "The additive inverse of a vector (x₁, ..., xₙ) is (-x₁, ..., -xₙ)",
+          "properties": ["additive-inverse", "unique", "involution"],
+          "inverseLaw": "v + (-v) = (-v) + v = 0 for all vectors v"
+        }
+      },
+      "scalarMultiplication": {
+        "operation": {
+          "name": "Scalar Multiplication",
+          "symbol": "·",
+          "definition": "For a scalar α and vector (x₁, ..., xₙ), α·(x₁, ..., xₙ) = (α·x₁, ..., α·xₙ)"
+        },
+        "properties": [
+          "distributive-over-vector-addition",
+          "distributive-over-scalar-addition",
+          "associative-with-scalar-multiplication",
+          "compatible-with-scalar-identity"
+        ],
+        "axioms": [
+          {
+            "name": "Distributivity over vector addition",
+            "statement": "α·(u + v) = α·u + α·v for all scalars α and vectors u, v"
+          },
+          {
+            "name": "Distributivity over scalar addition",
+            "statement": "(α + β)·v = α·v + β·v for all scalars α, β and vectors v"
+          },
+          {
+            "name": "Associativity with scalar multiplication",
+            "statement": "α·(β·v) = (α·β)·v for all scalars α, β and vectors v"
+          },
+          {
+            "name": "Identity scalar",
+            "statement": "1·v = v for all vectors v"
+          }
+        ]
+      },
+      "basis": {
+        "hasBasis": true,
+        "standardBasis": {
+          "description": "The standard basis consists of n vectors, each with a 1 in one position and 0s elsewhere",
+          "notation": "{e₁, e₂, ..., eₙ}",
+          "elements": [
+            "e₁ = (1, 0, 0, ..., 0)",
+            "e₂ = (0, 1, 0, ..., 0)",
+            "...",
+            "eₙ = (0, 0, 0, ..., 1)"
+          ]
+        },
+        "otherBases": [
+          {
+            "name": "Orthonormal basis",
+            "description": "Any basis of mutually orthogonal unit vectors",
+            "properties": [
+              "orthogonal",
+              "normalized",
+              "preserves-inner-product"
+            ]
+          }
+        ],
+        "basisChangeOperations": {
+          "description": "Basis changes are represented by invertible n×n matrices",
+          "transformationProperties": [
+            "linear",
+            "invertible",
+            "preserves-dimension"
+          ]
+        }
+      },
+      "linearOperations": {
+        "linearMaps": {
+          "description": "Linear maps from ℝⁿ to ℝᵐ are represented by m×n matrices",
+          "representation": "Matrix representation using the standard basis",
+          "properties": [
+            "preserve-addition",
+            "preserve-scalar-multiplication",
+            "finite-dimensional-image"
+          ]
+        },
+        "endomorphisms": {
+          "description": "The algebra of linear operators from ℝⁿ to itself",
+          "structure": "Isomorphic to the algebra of n×n matrices over ℝ",
+          "dimension": "n²"
+        },
+        "specialOperators": [
+          {
+            "name": "Orthogonal operators",
+            "description": "Linear operators that preserve the inner product",
+            "properties": [
+              "isometry",
+              "determinant-is-plus-or-minus-one",
+              "form-a-group"
+            ]
+          },
+          {
+            "name": "Projection operators",
+            "description": "Linear operators that project onto a subspace",
+            "properties": [
+              "idempotent",
+              "self-adjoint-if-orthogonal",
+              "kernel-is-complement-of-image"
+            ]
+          }
+        ]
+      },
+      "innerProduct": {
+        "exists": true,
+        "definition": "The standard dot product: (x₁, ..., xₙ)·(y₁, ..., yₙ) = x₁y₁ + ... + xₙyₙ",
+        "properties": [
+          "symmetric",
+          "bilinear",
+          "positive-definite",
+          "non-degenerate"
+        ],
+        "inducedNorm": "||v|| = √(v·v) (Euclidean norm)",
+        "orthogonality": {
+          "definition": "Two vectors u and v are orthogonal if u·v = 0",
+          "properties": [
+            "binary-relation",
+            "symmetric",
+            "pythagorean-theorem-applies",
+            "orthogonal-decomposition-exists"
+          ]
+        }
+      },
+      "norm": {
+        "exists": true,
+        "definition": "The Euclidean norm: ||(x₁, ..., xₙ)|| = √(x₁² + ... + xₙ²)",
+        "properties": [
+          "positive-definite",
+          "absolutely-homogeneous",
+          "subadditive"
+        ],
+        "inducedMetric": "d(u, v) = ||u - v|| (Euclidean distance)"
+      },
+      "dualSpace": {
+        "description": "The space of linear functionals from ℝⁿ to ℝ",
+        "dimension": "n (same as the original space)",
+        "naturalIsomorphism": true,
+        "dualBasis": {
+          "description": "The dual basis {e¹, e², ..., eⁿ} where e^i(e_j) = δᵢⱼ (Kronecker delta)",
+          "relationship": "Via the inner product: e^i(v) = e_i·v"
+        }
+      },
+      "directSums": {
+        "description": "Direct sum decompositions of ℝⁿ into subspaces",
+        "decompositions": [
+          {
+            "description": "Decomposition into one-dimensional subspaces along the standard basis",
+            "components": [
+              "span{e₁}",
+              "span{e₂}",
+              "...",
+              "span{eₙ}"
+            ],
+            "properties": [
+              "orthogonal",
+              "n components",
+              "each component 1-dimensional"
+            ]
+          },
+          {
+            "description": "Decomposition into a subspace and its orthogonal complement",
+            "components": [
+              "subspace V",
+              "orthogonal complement V⊥"
+            ],
+            "properties": [
+              "orthogonal",
+              "V ∩ V⊥ = {0}",
+              "V + V⊥ = ℝⁿ"
+            ]
+          }
+        ]
+      },
+      "tensorProducts": {
+        "description": "Tensor products of ℝⁿ with other real vector spaces",
+        "properties": [
+          "bilinear",
+          "universal-property",
+          "distributive-over-direct-sums"
+        ],
+        "universalProperty": "For any bilinear map T: V×W → U, there exists a unique linear map T̃: V⊗W → U such that T̃(v⊗w) = T(v,w)"
+      },
+      "topologicalProperties": {
+        "isTopological": true,
+        "topology": "Standard Euclidean topology induced by the norm",
+        "completeness": true,
+        "properties": [
+          "separable",
+          "locally-convex",
+          "metrizable",
+          "normed",
+          "banach",
+          "hilbert"
+        ]
+      },
+      "primeElements": {
+        "definition": "In the vector space context, the standard basis vectors serve as 'prime elements' that generate all vectors through linear combinations",
+        "properties": [
+          "linearly-independent",
+          "spanning-set",
+          "minimal-generating-set"
+        ],
+        "examples": [
+          {
+            "element": "e₁ = (1, 0, 0, ..., 0)",
+            "properties": [
+              "unit-vector",
+              "basis-vector",
+              "orthogonal-to-other-basis-vectors"
+            ]
+          },
+          {
+            "element": "e₂ = (0, 1, 0, ..., 0)",
+            "properties": [
+              "unit-vector",
+              "basis-vector",
+              "orthogonal-to-other-basis-vectors"
+            ]
+          }
+        ]
+      },
+      "uniqueFactorizationProperties": {
+        "vectorFactorizationConcept": "Representation as a linear combination of basis vectors",
+        "description": "Every vector in ℝⁿ can be uniquely expressed as a linear combination of basis vectors",
+        "basisRepresentation": {
+          "description": "For any vector v in ℝⁿ and basis {b₁, ..., bₙ}, there exist unique scalars α₁, ..., αₙ such that v = α₁b₁ + ... + αₙbₙ",
+          "properties": [
+            "existence",
+            "uniqueness",
+            "coordinate-mapping-is-isomorphism"
+          ],
+          "uniqueness": "The coefficients in a basis representation are uniquely determined"
+        },
+        "linearIndependence": {
+          "description": "A set of vectors is linearly independent if none can be expressed as a linear combination of the others",
+          "relationship": "Basis vectors are minimal linearly independent spanning sets, analogous to prime elements in factorization"
+        }
+      },
+      "observerFrames": [
+        {
+          "frameName": "Standard-Basis-Frame",
+          "frameDescription": "Viewing vectors using coordinates in the standard basis",
+          "frameTransformations": [
+            "standard-to-arbitrary-basis",
+            "cartesian-to-other-coordinates"
+          ]
+        },
+        {
+          "frameName": "Orthonormal-Basis-Frame",
+          "frameDescription": "Viewing vectors using coordinates in an orthonormal basis",
+          "frameTransformations": [
+            "orthogonal-transformations",
+            "gram-schmidt-process"
+          ]
+        },
+        {
+          "frameName": "Metric-Induced-Frame",
+          "frameDescription": "Viewing the vector space through the lens of its metric structure",
+          "frameTransformations": [
+            "euclidean-to-other-metrics",
+            "norm-preserving-maps"
+          ]
+        }
+      ],
+      "coherenceMeasures": [
+        {
+          "measureName": "Basis-Orthogonality",
+          "measureDescription": "Measures how close a basis is to being orthogonal",
+          "formula": "The maximum absolute value of inner products between distinct normalized basis vectors"
+        },
+        {
+          "measureName": "Coordinate-Sparsity",
+          "measureDescription": "Measures the sparsity of a vector's representation in a given basis",
+          "formula": "Number of non-zero coordinates divided by the dimension"
+        },
+        {
+          "measureName": "Basis-Condition-Number",
+          "measureDescription": "Measures numerical stability of a basis",
+          "formula": "Ratio of the largest to smallest singular value of the basis transformation matrix"
+        }
+      ],
+      "applications": [
+        {
+          "domain": "Physics",
+          "description": "Modeling physical space and quantities",
+          "examples": [
+            "Position vectors in classical mechanics",
+            "Force vectors in Newtonian physics",
+            "Electric and magnetic field vectors"
+          ]
+        },
+        {
+          "domain": "Computer Graphics",
+          "description": "Representation and transformation of geometric entities",
+          "examples": [
+            "3D object modeling",
+            "Camera transformations",
+            "Lighting and shading calculations"
+          ]
+        },
+        {
+          "domain": "Machine Learning",
+          "description": "Representation of data and functions",
+          "examples": [
+            "Feature vectors",
+            "Principal component analysis",
+            "Linear regression"
+          ]
+        }
+      ],
+      "theorems": [
+        {
+          "name": "Dimension Theorem",
+          "statement": "Any two bases of ℝⁿ have the same number of elements",
+          "significance": "Ensures the dimension is well-defined"
+        },
+        {
+          "name": "Orthogonal Decomposition Theorem",
+          "statement": "Any vector can be uniquely decomposed into a sum of a vector in a subspace and a vector in its orthogonal complement",
+          "significance": "Enables projection operations and best approximations"
+        },
+        {
+          "name": "Gram-Schmidt Process",
+          "statement": "Any linearly independent set of vectors can be transformed into an orthonormal set spanning the same subspace",
+          "significance": "Provides a method for constructing orthonormal bases"
+        }
+      ]
+    }
+  ]
+}

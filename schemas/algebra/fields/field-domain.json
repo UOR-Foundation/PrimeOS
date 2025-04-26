@@ -1,0 +1,1073 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/fields/field-domain.json",
+  "title": "Field Domain Schema",
+  "description": "Schema defining the field algebraic structure domain within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "name", "additionStructure", "multiplicationStructure", "divisionStructure", "primeElements", "uniqueFactorizationProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the field domain"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the field domain"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the field"
+    },
+    "additionStructure": {
+      "type": "object",
+      "description": "The additive structure of the field (commutative group)",
+      "required": ["operation", "identity", "inverses"],
+      "properties": {
+        "operation": {
+          "type": "object",
+          "required": ["name", "symbol", "properties"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Addition",
+              "description": "Name of the operation"
+            },
+            "symbol": {
+              "type": "string",
+              "const": "+",
+              "description": "Symbol representing the operation"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "associative",
+                  "commutative",
+                  "identity",
+                  "inverses",
+                  "closed"
+                ]
+              },
+              "description": "Properties of the operation"
+            },
+            "definition": {
+              "type": "string",
+              "description": "Definition of how addition works in this field"
+            }
+          }
+        },
+        "identity": {
+          "type": "object",
+          "required": ["element", "properties"],
+          "properties": {
+            "element": {
+              "type": "string",
+              "description": "Representation of the additive identity element"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "left-identity",
+                  "right-identity",
+                  "two-sided-identity",
+                  "unique"
+                ]
+              },
+              "description": "Properties of the identity element"
+            },
+            "identityLaw": {
+              "type": "string",
+              "description": "The mathematical statement of the identity law"
+            }
+          }
+        },
+        "inverses": {
+          "type": "object",
+          "required": ["definition", "properties"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "description": "Definition of additive inverses in this field"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "left-inverse",
+                  "right-inverse",
+                  "two-sided-inverse",
+                  "unique"
+                ]
+              },
+              "description": "Properties of additive inverses"
+            },
+            "inverseLaw": {
+              "type": "string",
+              "description": "The mathematical statement of the additive inverse law"
+            },
+            "computation": {
+              "type": "string",
+              "description": "Method for computing additive inverses"
+            }
+          }
+        }
+      }
+    },
+    "multiplicationStructure": {
+      "type": "object",
+      "description": "The multiplicative structure of the field (commutative group on non-zero elements)",
+      "required": ["operation", "associativity", "identity", "inverses"],
+      "properties": {
+        "operation": {
+          "type": "object",
+          "required": ["name", "symbol", "properties"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Multiplication",
+              "description": "Name of the operation"
+            },
+            "symbol": {
+              "type": "string",
+              "description": "Symbol representing the operation"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "associative",
+                  "commutative",
+                  "identity",
+                  "closed",
+                  "distributive-over-addition",
+                  "non-zero-inverses"
+                ]
+              },
+              "description": "Properties of the operation"
+            },
+            "definition": {
+              "type": "string",
+              "description": "Definition of how multiplication works in this field"
+            }
+          }
+        },
+        "associativity": {
+          "type": "object",
+          "required": ["law"],
+          "properties": {
+            "law": {
+              "type": "string",
+              "description": "Statement of the associative law for multiplication"
+            }
+          }
+        },
+        "identity": {
+          "type": "object",
+          "required": ["element", "properties"],
+          "properties": {
+            "element": {
+              "type": "string",
+              "description": "Representation of the multiplicative identity element"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "left-identity",
+                  "right-identity",
+                  "two-sided-identity",
+                  "unique",
+                  "not-equal-to-additive-identity"
+                ]
+              },
+              "description": "Properties of the identity element"
+            },
+            "identityLaw": {
+              "type": "string",
+              "description": "The mathematical statement of the identity law"
+            }
+          }
+        },
+        "inverses": {
+          "type": "object",
+          "required": ["definition", "properties"],
+          "properties": {
+            "definition": {
+              "type": "string",
+              "description": "Definition of multiplicative inverses in this field"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "left-inverse",
+                  "right-inverse",
+                  "two-sided-inverse",
+                  "unique",
+                  "exists-for-all-non-zero-elements"
+                ]
+              },
+              "description": "Properties of multiplicative inverses"
+            },
+            "inverseLaw": {
+              "type": "string",
+              "description": "The mathematical statement of the multiplicative inverse law"
+            },
+            "computation": {
+              "type": "string",
+              "description": "Method for computing multiplicative inverses"
+            }
+          }
+        }
+      }
+    },
+    "divisionStructure": {
+      "type": "object",
+      "description": "The division structure of the field",
+      "required": ["operation", "properties"],
+      "properties": {
+        "operation": {
+          "type": "object",
+          "required": ["name", "symbol", "definition"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "Division",
+              "description": "Name of the operation"
+            },
+            "symbol": {
+              "type": "string",
+              "description": "Symbol representing the operation"
+            },
+            "definition": {
+              "type": "string",
+              "description": "Definition of division in terms of multiplication by inverse"
+            }
+          }
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "defined-for-all-non-zero-divisors",
+              "equivalent-to-inverse-multiplication",
+              "not-associative",
+              "not-commutative"
+            ]
+          },
+          "description": "Properties of division operation"
+        },
+        "divisionLaw": {
+          "type": "string",
+          "description": "The mathematical statement of the division law"
+        },
+        "zeroDivisorHandling": {
+          "type": "string",
+          "description": "How division by zero is handled (typically undefined)"
+        }
+      }
+    },
+    "distributivity": {
+      "type": "object",
+      "description": "The distributive properties connecting addition and multiplication",
+      "required": ["leftDistributivity", "rightDistributivity"],
+      "properties": {
+        "leftDistributivity": {
+          "type": "object",
+          "required": ["law"],
+          "properties": {
+            "law": {
+              "type": "string",
+              "description": "Statement of the left distributive law"
+            }
+          }
+        },
+        "rightDistributivity": {
+          "type": "object",
+          "required": ["law"],
+          "properties": {
+            "law": {
+              "type": "string",
+              "description": "Statement of the right distributive law"
+            }
+          }
+        }
+      }
+    },
+    "elements": {
+      "type": "object",
+      "description": "Specification of the elements in this field",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of elements in this field"
+        },
+        "cardinality": {
+          "type": "string",
+          "enum": ["finite", "countably-infinite", "uncountably-infinite"],
+          "description": "Cardinality classification of the field"
+        },
+        "order": {
+          "type": "string",
+          "description": "Number of elements in the field if finite, or characterization if infinite"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "discrete",
+              "continuous",
+              "algebraic",
+              "transcendental",
+              "complete",
+              "ordered"
+            ]
+          },
+          "description": "Properties of the field elements"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string",
+                "description": "Representation of a field element"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of this element"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this element"
+              }
+            }
+          },
+          "description": "Examples of elements from this field"
+        }
+      }
+    },
+    "characteristic": {
+      "type": "object",
+      "description": "The characteristic of the field",
+      "required": ["value", "definition"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The characteristic value (prime p or 0)"
+        },
+        "definition": {
+          "type": "string",
+          "description": "Definition of the characteristic"
+        },
+        "implications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Implications of this characteristic"
+        }
+      }
+    },
+    "primeSubfield": {
+      "type": "object",
+      "description": "The prime subfield (smallest subfield)",
+      "required": ["description", "isomorphicTo"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the prime subfield"
+        },
+        "isomorphicTo": {
+          "type": "string",
+          "description": "Field the prime subfield is isomorphic to (Q or F_p)"
+        },
+        "elements": {
+          "type": "string",
+          "description": "Description of the elements in the prime subfield"
+        }
+      }
+    },
+    "algebraicClosure": {
+      "type": "object",
+      "description": "The algebraic closure of the field",
+      "properties": {
+        "isClosed": {
+          "type": "boolean",
+          "description": "Whether the field is algebraically closed"
+        },
+        "closureDescription": {
+          "type": "string",
+          "description": "Description of the algebraic closure"
+        },
+        "closureProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the algebraic closure"
+        }
+      }
+    },
+    "primeElements": {
+      "type": "object",
+      "description": "Irreducible or prime elements in the field",
+      "required": ["definition", "properties"],
+      "properties": {
+        "definition": {
+          "type": "string",
+          "description": "Definition of prime elements in this field context"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of prime elements in this field"
+        },
+        "representation": {
+          "type": "string",
+          "description": "How prime elements are represented in this field"
+        }
+      }
+    },
+    "uniqueFactorizationProperties": {
+      "type": "object",
+      "description": "Properties related to factorization in this field",
+      "required": ["factorizationContext", "uniquenessType"],
+      "properties": {
+        "factorizationContext": {
+          "type": "string",
+          "description": "Context in which factorization is applicable for fields"
+        },
+        "uniquenessType": {
+          "type": "string",
+          "description": "The type of uniqueness for factorizations in appropriate context"
+        },
+        "polynomialFactorization": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of polynomial factorization over this field"
+            },
+            "algorithm": {
+              "type": "string",
+              "description": "Algorithm for polynomial factorization"
+            },
+            "complexity": {
+              "type": "string",
+              "description": "Computational complexity of factorization"
+            }
+          },
+          "description": "Factorization of polynomials over this field"
+        },
+        "elementRepresentation": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Standard representation form for field elements"
+            },
+            "canonicalForm": {
+              "type": "string",
+              "description": "Canonical form for elements"
+            }
+          },
+          "description": "Representation of field elements"
+        }
+      }
+    },
+    "extensions": {
+      "type": "array",
+      "description": "Field extensions of this field",
+      "items": {
+        "type": "object",
+        "properties": {
+          "extensionType": {
+            "type": "string",
+            "enum": [
+              "finite",
+              "algebraic",
+              "separable",
+              "normal",
+              "galois",
+              "transcendental",
+              "radical"
+            ],
+            "description": "Type of field extension"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the extension"
+          },
+          "degree": {
+            "type": "string",
+            "description": "Degree of the extension (if applicable)"
+          },
+          "basis": {
+            "type": "string",
+            "description": "Basis for the extension (if applicable)"
+          }
+        }
+      }
+    },
+    "galoisGroup": {
+      "type": "object",
+      "description": "Galois group information for this field",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the Galois group"
+        },
+        "order": {
+          "type": "string",
+          "description": "Order of the Galois group"
+        },
+        "structure": {
+          "type": "string",
+          "description": "Structure of the Galois group"
+        },
+        "generators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Generators of the Galois group"
+        }
+      }
+    },
+    "normAndTrace": {
+      "type": "object",
+      "description": "Norm and trace information for this field",
+      "properties": {
+        "normDefinition": {
+          "type": "string",
+          "description": "Definition of the norm map"
+        },
+        "traceDefinition": {
+          "type": "string",
+          "description": "Definition of the trace map"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of norm and trace"
+        }
+      }
+    },
+    "polynomialRing": {
+      "type": "object",
+      "description": "The polynomial ring over this field",
+      "properties": {
+        "notation": {
+          "type": "string",
+          "description": "Notation for the polynomial ring"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the polynomial ring"
+        },
+        "factorizationProperties": {
+          "type": "string",
+          "description": "Factorization properties of polynomials over this field"
+        },
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the polynomial ring domain entity"
+        }
+      }
+    },
+    "isOrdered": {
+      "type": "boolean",
+      "description": "Whether the field has a compatible order relation"
+    },
+    "orderProperties": {
+      "type": "object",
+      "description": "Properties of the order relation if the field is ordered",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the order relation"
+        },
+        "positiveElements": {
+          "type": "string",
+          "description": "Characterization of positive elements"
+        },
+        "completeness": {
+          "type": "string",
+          "description": "Description of completeness properties"
+        }
+      }
+    },
+    "metricProperties": {
+      "type": "array",
+      "description": "Metric structures on this field",
+      "items": {
+        "type": "object",
+        "properties": {
+          "metricType": {
+            "type": "string",
+            "description": "Type of metric"
+          },
+          "definition": {
+            "type": "string",
+            "description": "Definition of the metric"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "complete",
+                "locally-compact",
+                "archimedean",
+                "non-archimedean",
+                "discrete",
+                "induced-topology"
+              ]
+            },
+            "description": "Properties of this metric"
+          }
+        }
+      }
+    },
+    "completions": {
+      "type": "array",
+      "description": "Completions of the field (if applicable)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "completionType": {
+            "type": "string",
+            "description": "Type of completion"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the completion"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of this completion"
+          }
+        }
+      }
+    },
+    "observerFrames": {
+      "type": "array",
+      "description": "Observer reference frames relevant to this field",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "frameDescription": {
+            "type": "string",
+            "description": "Description of the frame perspective"
+          },
+          "frameTransformations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Transformations in this frame"
+            }
+          }
+        }
+      }
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "description": "Measures of coherence applicable to this field",
+      "items": {
+        "type": "object",
+        "properties": {
+          "measureName": {
+            "type": "string",
+            "description": "Name of the coherence measure"
+          },
+          "measureDescription": {
+            "type": "string",
+            "description": "Description of what the measure quantifies"
+          },
+          "formula": {
+            "type": "string",
+            "description": "Formula for calculating the measure"
+          }
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of this field",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      }
+    },
+    "theorems": {
+      "type": "array",
+      "description": "Important theorems related to this field",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance of the theorem for this field"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:field:rational-numbers",
+      "name": "Field of Rational Numbers",
+      "description": "The field of rational numbers (fractions of integers) under standard addition and multiplication",
+      "additionStructure": {
+        "operation": {
+          "name": "Addition",
+          "symbol": "+",
+          "properties": ["associative", "commutative", "identity", "inverses", "closed"],
+          "definition": "For fractions a/b and c/d, their sum is (ad + bc)/bd"
+        },
+        "identity": {
+          "element": "0",
+          "properties": ["two-sided-identity", "unique"],
+          "identityLaw": "a + 0 = 0 + a = a for all rational numbers a"
+        },
+        "inverses": {
+          "definition": "For any rational number a/b, its additive inverse is -a/b",
+          "properties": ["two-sided-inverse", "unique"],
+          "inverseLaw": "a + (-a) = (-a) + a = 0 for all rational numbers a",
+          "computation": "Negate the numerator (or denominator, but not both)"
+        }
+      },
+      "multiplicationStructure": {
+        "operation": {
+          "name": "Multiplication",
+          "symbol": "×",
+          "properties": ["associative", "commutative", "identity", "closed", "distributive-over-addition", "non-zero-inverses"],
+          "definition": "For fractions a/b and c/d, their product is (ac)/(bd)"
+        },
+        "associativity": {
+          "law": "(a × b) × c = a × (b × c) for all rational numbers a, b, c"
+        },
+        "identity": {
+          "element": "1",
+          "properties": ["two-sided-identity", "unique", "not-equal-to-additive-identity"],
+          "identityLaw": "a × 1 = 1 × a = a for all rational numbers a"
+        },
+        "inverses": {
+          "definition": "For any non-zero rational number a/b, its multiplicative inverse is b/a",
+          "properties": ["two-sided-inverse", "unique", "exists-for-all-non-zero-elements"],
+          "inverseLaw": "a × a⁻¹ = a⁻¹ × a = 1 for all non-zero rational numbers a",
+          "computation": "Swap numerator and denominator"
+        }
+      },
+      "divisionStructure": {
+        "operation": {
+          "name": "Division",
+          "symbol": "÷",
+          "definition": "For rational numbers a and b (b ≠ 0), a ÷ b = a × (1/b)"
+        },
+        "properties": [
+          "defined-for-all-non-zero-divisors",
+          "equivalent-to-inverse-multiplication",
+          "not-associative",
+          "not-commutative"
+        ],
+        "divisionLaw": "a ÷ b = a × b⁻¹ for all rational numbers a and non-zero b",
+        "zeroDivisorHandling": "Division by zero is undefined"
+      },
+      "distributivity": {
+        "leftDistributivity": {
+          "law": "a × (b + c) = (a × b) + (a × c) for all rational numbers a, b, c"
+        },
+        "rightDistributivity": {
+          "law": "(a + b) × c = (a × c) + (b × c) for all rational numbers a, b, c"
+        }
+      },
+      "elements": {
+        "type": "Fractions",
+        "cardinality": "countably-infinite",
+        "order": "ℵ₀",
+        "properties": ["discrete", "rational"],
+        "examples": [
+          {
+            "element": "0",
+            "description": "The additive identity",
+            "properties": ["zero", "integer"]
+          },
+          {
+            "element": "1",
+            "description": "The multiplicative identity",
+            "properties": ["unit", "positive", "integer"]
+          },
+          {
+            "element": "-1",
+            "description": "The negative of the multiplicative identity",
+            "properties": ["unit", "negative", "integer"]
+          },
+          {
+            "element": "1/2",
+            "description": "A simple proper fraction",
+            "properties": ["proper fraction", "positive"]
+          },
+          {
+            "element": "22/7",
+            "description": "A common approximation of π",
+            "properties": ["improper fraction", "positive"]
+          }
+        ]
+      },
+      "characteristic": {
+        "value": "0",
+        "definition": "The smallest positive integer n such that n·1 = 0 in the field, or 0 if no such integer exists",
+        "implications": [
+          "Contains a copy of the integers",
+          "No non-zero element multiplied by itself finitely many times equals zero",
+          "Contains elements of infinite additive order"
+        ]
+      },
+      "primeSubfield": {
+        "description": "Q itself is a prime field (the smallest field of characteristic 0)",
+        "isomorphicTo": "Q (itself)",
+        "elements": "All rational numbers"
+      },
+      "algebraicClosure": {
+        "isClosed": false,
+        "closureDescription": "The algebraic closure of Q is the field of algebraic numbers (complex numbers that are roots of non-zero polynomials with rational coefficients)",
+        "closureProperties": [
+          "Countably infinite",
+          "Contains all algebraic numbers",
+          "Strictly contained in the field of complex numbers (which also includes transcendental numbers)"
+        ]
+      },
+      "primeElements": {
+        "definition": "In the field context, there are no irreducible elements as such, since every non-zero element has a multiplicative inverse. However, prime elements arise in the context of factorization of polynomials over Q.",
+        "properties": [
+          "Every element is a unit (has a multiplicative inverse)",
+          "Irreducibility applies in the context of polynomial rings over Q, not within Q itself"
+        ],
+        "representation": "In polynomial factorization context, irreducible polynomials over Q function as 'prime elements'"
+      },
+      "uniqueFactorizationProperties": {
+        "factorizationContext": "Unique factorization in Q applies to the polynomial ring Q[x], not within Q itself, as every field is a unique factorization domain in a trivial sense",
+        "uniquenessType": "unique-up-to-units",
+        "polynomialFactorization": {
+          "description": "Polynomials over Q can be factored uniquely into irreducible polynomials",
+          "algorithm": "Various algorithms including the Berlekamp algorithm adapted for characteristic 0 fields",
+          "complexity": "Polynomial-time for rational polynomials, but depends on coefficient size"
+        },
+        "elementRepresentation": {
+          "description": "Every rational number can be uniquely represented as a/b where a and b are integers, b > 0, and gcd(a,b) = 1",
+          "canonicalForm": "a/b in lowest terms with positive denominator"
+        }
+      },
+      "extensions": [
+        {
+          "extensionType": "algebraic",
+          "description": "Finite extensions of Q formed by adjoining roots of polynomials (e.g., Q(√2), Q(i))",
+          "degree": "Finite, depends on the specific extension",
+          "basis": "Powers of the adjoined element up to one less than the degree"
+        },
+        {
+          "extensionType": "transcendental",
+          "description": "Extensions by adjoining transcendental numbers like π or e",
+          "degree": "Infinite",
+          "basis": "Infinite basis"
+        }
+      ],
+      "galoisGroup": {
+        "description": "The absolute Galois group of Q is the automorphism group of the algebraic closure of Q fixing Q",
+        "order": "Uncountably infinite",
+        "structure": "Profinite group, highly complex and fundamental to number theory",
+        "generators": ["Not finitely generated"]
+      },
+      "normAndTrace": {
+        "normDefinition": "For a finite extension F of Q and an element a in F, the norm N(a) is the product of all conjugates of a",
+        "traceDefinition": "For a finite extension F of Q and an element a in F, the trace Tr(a) is the sum of all conjugates of a",
+        "properties": [
+          "N(ab) = N(a)N(b)",
+          "Tr(a+b) = Tr(a) + Tr(b)",
+          "Tr(λa) = λTr(a) for λ in Q"
+        ]
+      },
+      "polynomialRing": {
+        "notation": "Q[x]",
+        "properties": [
+          "commutative",
+          "integral domain",
+          "principal ideal domain",
+          "unique factorization domain",
+          "Euclidean domain"
+        ],
+        "factorizationProperties": "Every polynomial over Q factors uniquely into irreducible polynomials",
+        "id": "urn:uor:algebra:ring:rational-polynomials"
+      },
+      "isOrdered": true,
+      "orderProperties": {
+        "description": "Q has a natural ordering inherited from the real numbers",
+        "positiveElements": "Rational numbers a/b where a and b have the same sign",
+        "completeness": "Not complete - there are 'gaps' in Q, such as at √2, π, etc."
+      },
+      "metricProperties": [
+        {
+          "metricType": "Absolute value",
+          "definition": "|a| = max(a, -a) for a in Q",
+          "properties": ["archimedean", "induced-topology"]
+        },
+        {
+          "metricType": "p-adic valuation",
+          "definition": "For a prime p, v_p(a/b) = largest integer n such that p^n divides a - largest integer m such that p^m divides b",
+          "properties": ["non-archimedean", "discrete", "induced-topology"]
+        }
+      ],
+      "completions": [
+        {
+          "completionType": "Archimedean completion",
+          "description": "The field of real numbers R is the completion of Q with respect to the standard absolute value",
+          "properties": ["complete", "ordered", "continuum"]
+        },
+        {
+          "completionType": "Non-Archimedean completion",
+          "description": "For each prime p, the field of p-adic numbers Q_p is the completion of Q with respect to the p-adic valuation",
+          "properties": ["complete", "locally-compact", "totally disconnected"]
+        }
+      ],
+      "observerFrames": [
+        {
+          "frameName": "Standard-Fraction-Frame",
+          "frameDescription": "Viewing rational numbers as fractions a/b",
+          "frameTransformations": ["decimal-to-fraction", "continued-fraction-expansion"]
+        },
+        {
+          "frameName": "Decimal-Expansion-Frame",
+          "frameDescription": "Viewing rational numbers through decimal expansions",
+          "frameTransformations": ["fraction-to-decimal", "terminating-vs-repeating"]
+        },
+        {
+          "frameName": "p-adic-Frame",
+          "frameDescription": "Viewing rational numbers through p-adic expansions",
+          "frameTransformations": ["standard-to-p-adic", "p-adic-valuation"]
+        }
+      ],
+      "coherenceMeasures": [
+        {
+          "measureName": "Height",
+          "measureDescription": "A measure of complexity for rational numbers",
+          "formula": "H(a/b) = max(|a|, |b|) for a/b in lowest terms"
+        },
+        {
+          "measureName": "Denominator-Complexity",
+          "measureDescription": "The complexity based on denominator size",
+          "formula": "C(a/b) = |b| for a/b in lowest terms"
+        },
+        {
+          "measureName": "Bit-Complexity",
+          "measureDescription": "The number of bits required to represent the rational",
+          "formula": "⌊log₂(|a|) + 1⌋ + ⌊log₂(|b|) + 1⌋ + 1"
+        }
+      ],
+      "applications": [
+        {
+          "domain": "Number Theory",
+          "description": "Foundation for studying the properties of numbers",
+          "examples": [
+            "Diophantine equations",
+            "Class field theory",
+            "Quadratic forms"
+          ]
+        },
+        {
+          "domain": "Algebra",
+          "description": "Basis for algebraic constructions and field theory",
+          "examples": [
+            "Field extensions",
+            "Galois theory",
+            "Algebraic number theory"
+          ]
+        },
+        {
+          "domain": "Science and Engineering",
+          "description": "Foundation for exact calculations in physics and engineering",
+          "examples": [
+            "Exact solutions to physical equations",
+            "Computer algebra systems",
+            "Scientific computing"
+          ]
+        }
+      ],
+      "theorems": [
+        {
+          "name": "Ostrowski's Theorem",
+          "statement": "Every non-trivial absolute value on Q is equivalent to either the standard absolute value or a p-adic absolute value for some prime p",
+          "significance": "Classifies all possible completions of Q"
+        },
+        {
+          "name": "Kronecker-Weber Theorem",
+          "statement": "Every finite abelian extension of Q is contained in a cyclotomic field",
+          "significance": "Fundamental result in class field theory relating abelian extensions to cyclotomic fields"
+        },
+        {
+          "name": "Fundamental Theorem of Algebra (for polynomials over Q)",
+          "statement": "Every non-constant polynomial over Q has a root in the algebraic closure of Q",
+          "significance": "Ensures the algebraic closure property and is fundamental for polynomial factorization"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,897 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor-foundation.org/schemas/algebra/vector-spaces/vector-linear-map.json",
+  "title": "Vector Space Linear Map Schema",
+  "description": "Schema defining linear maps between vector spaces within the UOR framework",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "uor": "https://uor-foundation.org/schemas/core/"
+  },
+  "type": "object",
+  "required": ["id", "sourceSpace", "targetSpace", "mappingDefinition", "linearMapProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the linear map"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the linear map"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the linear map"
+    },
+    "sourceSpace": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the source vector space domain"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the source vector space"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "Dimension of the source space"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the source space"
+        }
+      },
+      "description": "The source vector space of this linear map"
+    },
+    "targetSpace": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the target vector space domain"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the target vector space"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "Dimension of the target space"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the target space"
+        }
+      },
+      "description": "The target vector space of this linear map"
+    },
+    "mappingDefinition": {
+      "type": "object",
+      "required": ["additionPreservation", "scalarMultiplicationPreservation", "definition"],
+      "properties": {
+        "additionPreservation": {
+          "type": "string",
+          "description": "How this mapping preserves vector addition"
+        },
+        "scalarMultiplicationPreservation": {
+          "type": "string",
+          "description": "How this mapping preserves scalar multiplication"
+        },
+        "definition": {
+          "type": "string",
+          "description": "Formal definition of the mapping"
+        },
+        "notation": {
+          "type": "string",
+          "description": "Mathematical notation for the mapping"
+        },
+        "basisMappings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "basisElement": {
+                "type": "string",
+                "description": "Basis element from source space"
+              },
+              "image": {
+                "type": "string",
+                "description": "Image of this basis element in target space"
+              }
+            }
+          },
+          "description": "Mappings of basis elements from source to target"
+        },
+        "matrixRepresentation": {
+          "type": "object",
+          "properties": {
+            "sourceBasis": {
+              "type": "string",
+              "description": "Basis used for the source space"
+            },
+            "targetBasis": {
+              "type": "string",
+              "description": "Basis used for the target space"
+            },
+            "matrix": {
+              "type": "string",
+              "description": "Matrix representation of the linear map"
+            }
+          },
+          "description": "Matrix representation of the linear map with respect to chosen bases"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "string",
+                "description": "Input vector from source space"
+              },
+              "output": {
+                "type": "string",
+                "description": "Output vector in target space"
+              },
+              "explanation": {
+                "type": "string",
+                "description": "Explanation of this mapping example"
+              }
+            }
+          },
+          "description": "Examples of specific mappings"
+        }
+      },
+      "description": "Definition of how this linear map transforms vectors"
+    },
+    "linearMapProperties": {
+      "type": "object",
+      "required": ["isInjective", "isSurjective", "rank", "nullity"],
+      "properties": {
+        "isInjective": {
+          "type": "boolean",
+          "description": "Whether the linear map is injective (one-to-one)"
+        },
+        "isSurjective": {
+          "type": "boolean",
+          "description": "Whether the linear map is surjective (onto)"
+        },
+        "isIsomorphism": {
+          "type": "boolean",
+          "description": "Whether the linear map is an isomorphism (bijective)"
+        },
+        "rank": {
+          "type": "string",
+          "description": "Dimension of the image of the linear map"
+        },
+        "nullity": {
+          "type": "string",
+          "description": "Dimension of the kernel of the linear map"
+        },
+        "determinant": {
+          "type": "string",
+          "description": "Determinant of the linear map (if applicable)"
+        },
+        "trace": {
+          "type": "string",
+          "description": "Trace of the linear map (if applicable)"
+        },
+        "eigenvalues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Eigenvalue of the linear map"
+          },
+          "description": "Eigenvalues of the linear map (if applicable)"
+        },
+        "singularValues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Singular value of the linear map"
+          },
+          "description": "Singular values of the linear map (if applicable)"
+        },
+        "conditionNumber": {
+          "type": "string",
+          "description": "Condition number of the linear map (if applicable)"
+        }
+      },
+      "description": "Properties of this linear map"
+    },
+    "kernel": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the kernel"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "Dimension of the kernel"
+        },
+        "basis": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Basis vector for the kernel"
+          },
+          "description": "Basis for the kernel"
+        },
+        "characterization": {
+          "type": "string",
+          "description": "Characterization of the kernel"
+        }
+      },
+      "description": "The kernel (null space) of the linear map"
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the image"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "Dimension of the image"
+        },
+        "basis": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Basis vector for the image"
+          },
+          "description": "Basis for the image"
+        },
+        "characterization": {
+          "type": "string",
+          "description": "Characterization of the image"
+        }
+      },
+      "description": "The image (range) of the linear map"
+    },
+    "adjoint": {
+      "type": "object",
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "description": "Whether an adjoint map exists"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the adjoint map"
+        },
+        "definition": {
+          "type": "string",
+          "description": "Definition of the adjoint map"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the adjoint map"
+        },
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the adjoint map entity"
+        }
+      },
+      "description": "The adjoint (dual) map"
+    },
+    "inverse": {
+      "type": "object",
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "description": "Whether an inverse map exists"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the inverse map"
+        },
+        "definition": {
+          "type": "string",
+          "description": "Definition of the inverse map"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the inverse map"
+        },
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the inverse map entity"
+        }
+      },
+      "description": "The inverse map (if it exists)"
+    },
+    "eigendecomposition": {
+      "type": "object",
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "description": "Whether an eigendecomposition exists"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the eigendecomposition"
+        },
+        "eigenspaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "eigenvalue": {
+                "type": "string",
+                "description": "Eigenvalue"
+              },
+              "multiplicity": {
+                "type": "string",
+                "description": "Algebraic multiplicity"
+              },
+              "dimension": {
+                "type": "string",
+                "description": "Geometric multiplicity (dimension of eigenspace)"
+              },
+              "basis": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "Basis vector for the eigenspace"
+                },
+                "description": "Basis for the eigenspace"
+              }
+            }
+          },
+          "description": "Eigenspaces of the linear map"
+        },
+        "diagonalizable": {
+          "type": "boolean",
+          "description": "Whether the linear map is diagonalizable"
+        }
+      },
+      "description": "Eigendecomposition of the linear map"
+    },
+    "singularValueDecomposition": {
+      "type": "object",
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "description": "Whether a singular value decomposition exists"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the singular value decomposition"
+        },
+        "singularValues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Singular value"
+          },
+          "description": "Singular values of the linear map"
+        },
+        "leftSingularVectors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Left singular vector"
+          },
+          "description": "Left singular vectors"
+        },
+        "rightSingularVectors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Right singular vector"
+          },
+          "description": "Right singular vectors"
+        }
+      },
+      "description": "Singular value decomposition of the linear map"
+    },
+    "jordanForm": {
+      "type": "object",
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "description": "Whether a Jordan form exists"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the Jordan form"
+        },
+        "jordanBlocks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "eigenvalue": {
+                "type": "string",
+                "description": "Eigenvalue associated with the Jordan block"
+              },
+              "size": {
+                "type": "string",
+                "description": "Size of the Jordan block"
+              }
+            }
+          },
+          "description": "Jordan blocks in the canonical form"
+        }
+      },
+      "description": "Jordan canonical form of the linear map"
+    },
+    "minimalPolynomial": {
+      "type": "object",
+      "properties": {
+        "polynomial": {
+          "type": "string",
+          "description": "The minimal polynomial"
+        },
+        "degree": {
+          "type": "string",
+          "description": "Degree of the minimal polynomial"
+        },
+        "factors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "factor": {
+                "type": "string",
+                "description": "Irreducible factor"
+              },
+              "multiplicity": {
+                "type": "string",
+                "description": "Multiplicity of the factor"
+              }
+            }
+          },
+          "description": "Irreducible factors of the minimal polynomial"
+        }
+      },
+      "description": "Minimal polynomial of the linear map"
+    },
+    "characteristicPolynomial": {
+      "type": "object",
+      "properties": {
+        "polynomial": {
+          "type": "string",
+          "description": "The characteristic polynomial"
+        },
+        "degree": {
+          "type": "string",
+          "description": "Degree of the characteristic polynomial"
+        },
+        "factors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "factor": {
+                "type": "string",
+                "description": "Irreducible factor"
+              },
+              "multiplicity": {
+                "type": "string",
+                "description": "Multiplicity of the factor"
+              }
+            }
+          },
+          "description": "Irreducible factors of the characteristic polynomial"
+        }
+      },
+      "description": "Characteristic polynomial of the linear map"
+    },
+    "primeMappingDefinition": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of how the linear map transforms prime coordinates"
+        },
+        "mapping": {
+          "type": "string",
+          "description": "Formal definition of the mapping in prime coordinates"
+        },
+        "coherenceMeasure": {
+          "type": "string",
+          "description": "Coherence measure of this mapping"
+        }
+      },
+      "description": "Definition of how this linear map transforms prime coordinates"
+    },
+    "computationalAspects": {
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Algorithm for computing this linear map"
+        },
+        "complexity": {
+          "type": "string",
+          "description": "Computational complexity"
+        },
+        "implementation": {
+          "type": "string",
+          "description": "Implementation details"
+        },
+        "numericalStability": {
+          "type": "string",
+          "description": "Numerical stability considerations"
+        }
+      },
+      "description": "Computational aspects of this linear map"
+    },
+    "geometricInterpretation": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Geometric interpretation of the linear map"
+        },
+        "transformationTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "rotation",
+              "reflection",
+              "scaling",
+              "shear",
+              "projection",
+              "dilation",
+              "contraction"
+            ]
+          },
+          "description": "Types of geometric transformations represented"
+        },
+        "invariants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Geometric invariants of the transformation"
+        }
+      },
+      "description": "Geometric interpretation of the linear map"
+    },
+    "observerFrames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the observer frame"
+          },
+          "mapDescription": {
+            "type": "string",
+            "description": "Description of the map in this frame"
+          },
+          "mapRepresentation": {
+            "type": "string",
+            "description": "Representation of the map in this frame"
+          },
+          "frameTransformation": {
+            "type": "string",
+            "description": "How the map transforms under change to this frame"
+          }
+        }
+      },
+      "description": "How this map appears in different observer frames"
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      },
+      "description": "Applications of this linear map"
+    },
+    "theorems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance for this linear map"
+          }
+        }
+      },
+      "description": "Important theorems related to this linear map"
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:vector-space:real-euclidean:linear-map:rotation-2d",
+      "name": "2D Rotation",
+      "description": "Rotation of vectors in the 2D plane by a fixed angle",
+      "sourceSpace": {
+        "id": "urn:uor:algebra:vector-space:real-euclidean:2d",
+        "name": "2D Euclidean Vector Space",
+        "dimension": "2",
+        "description": "The 2-dimensional real Euclidean vector space ℝ²"
+      },
+      "targetSpace": {
+        "id": "urn:uor:algebra:vector-space:real-euclidean:2d",
+        "name": "2D Euclidean Vector Space",
+        "dimension": "2",
+        "description": "The 2-dimensional real Euclidean vector space ℝ²"
+      },
+      "mappingDefinition": {
+        "additionPreservation": "R_θ(u + v) = R_θ(u) + R_θ(v) for all vectors u, v in ℝ²",
+        "scalarMultiplicationPreservation": "R_θ(αv) = αR_θ(v) for all scalars α and vectors v in ℝ²",
+        "definition": "Rotation of vectors in ℝ² counterclockwise by angle θ",
+        "notation": "R_θ: ℝ² → ℝ², R_θ(v) = [cos θ -sin θ; sin θ cos θ] · v",
+        "basisMappings": [
+          {
+            "basisElement": "e₁ = (1, 0)",
+            "image": "(cos θ, sin θ)"
+          },
+          {
+            "basisElement": "e₂ = (0, 1)",
+            "image": "(-sin θ, cos θ)"
+          }
+        ],
+        "matrixRepresentation": {
+          "sourceBasis": "Standard basis {e₁, e₂}",
+          "targetBasis": "Standard basis {e₁, e₂}",
+          "matrix": "[cos θ -sin θ; sin θ cos θ]"
+        },
+        "examples": [
+          {
+            "input": "(1, 0)",
+            "output": "(cos θ, sin θ)",
+            "explanation": "The unit vector along the x-axis is rotated to (cos θ, sin θ)"
+          },
+          {
+            "input": "(0, 1)",
+            "output": "(-sin θ, cos θ)",
+            "explanation": "The unit vector along the y-axis is rotated to (-sin θ, cos θ)"
+          },
+          {
+            "input": "(r cos φ, r sin φ)",
+            "output": "(r cos(φ + θ), r sin(φ + θ))",
+            "explanation": "A vector with magnitude r and angle φ is rotated to have angle φ + θ"
+          }
+        ]
+      },
+      "linearMapProperties": {
+        "isInjective": true,
+        "isSurjective": true,
+        "isIsomorphism": true,
+        "rank": "2",
+        "nullity": "0",
+        "determinant": "1",
+        "trace": "2 cos θ",
+        "eigenvalues": ["cos θ + i sin θ", "cos θ - i sin θ"],
+        "singularValues": ["1", "1"],
+        "conditionNumber": "1"
+      },
+      "kernel": {
+        "description": "The kernel contains only the zero vector",
+        "dimension": "0",
+        "basis": [],
+        "characterization": "Trivial subspace {0}"
+      },
+      "image": {
+        "description": "The image is the entire space ℝ²",
+        "dimension": "2",
+        "basis": ["(cos θ, sin θ)", "(-sin θ, cos θ)"],
+        "characterization": "Full space ℝ²"
+      },
+      "adjoint": {
+        "exists": true,
+        "description": "The adjoint of a rotation is the inverse rotation (rotation by -θ)",
+        "definition": "R_θ* = R_{-θ}",
+        "properties": [
+          "isometric",
+          "orthogonal",
+          "inverse-of-original"
+        ],
+        "id": "urn:uor:algebra:vector-space:real-euclidean:linear-map:rotation-2d-inverse"
+      },
+      "inverse": {
+        "exists": true,
+        "description": "The inverse of a rotation by θ is a rotation by -θ",
+        "definition": "R_θ^(-1) = R_{-θ}",
+        "properties": [
+          "isometric",
+          "orthogonal",
+          "same-as-adjoint"
+        ],
+        "id": "urn:uor:algebra:vector-space:real-euclidean:linear-map:rotation-2d-inverse"
+      },
+      "eigendecomposition": {
+        "exists": true,
+        "description": "The eigendecomposition involves complex eigenvalues and eigenvectors for non-trivial rotations",
+        "eigenspaces": [
+          {
+            "eigenvalue": "cos θ + i sin θ",
+            "multiplicity": "1",
+            "dimension": "1",
+            "basis": ["(1, i)"]
+          },
+          {
+            "eigenvalue": "cos θ - i sin θ",
+            "multiplicity": "1",
+            "dimension": "1",
+            "basis": ["(1, -i)"]
+          }
+        ],
+        "diagonalizable": true
+      },
+      "singularValueDecomposition": {
+        "exists": true,
+        "description": "For a rotation matrix, all singular values are 1",
+        "singularValues": ["1", "1"],
+        "leftSingularVectors": ["e₁", "e₂"],
+        "rightSingularVectors": ["e₁", "e₂"]
+      },
+      "jordanForm": {
+        "exists": true,
+        "description": "The Jordan form requires working over the complex field",
+        "jordanBlocks": [
+          {
+            "eigenvalue": "cos θ + i sin θ",
+            "size": "1"
+          },
+          {
+            "eigenvalue": "cos θ - i sin θ",
+            "size": "1"
+          }
+        ]
+      },
+      "minimalPolynomial": {
+        "polynomial": "x² - 2(cos θ)x + 1",
+        "degree": "2",
+        "factors": [
+          {
+            "factor": "x - (cos θ + i sin θ)",
+            "multiplicity": "1"
+          },
+          {
+            "factor": "x - (cos θ - i sin θ)",
+            "multiplicity": "1"
+          }
+        ]
+      },
+      "characteristicPolynomial": {
+        "polynomial": "x² - 2(cos θ)x + 1",
+        "degree": "2",
+        "factors": [
+          {
+            "factor": "x - (cos θ + i sin θ)",
+            "multiplicity": "1"
+          },
+          {
+            "factor": "x - (cos θ - i sin θ)",
+            "multiplicity": "1"
+          }
+        ]
+      },
+      "primeMappingDefinition": {
+        "description": "In terms of prime coordinates (standard basis), the rotation maps each basis vector to a linear combination of both",
+        "mapping": "In the standard basis, e₁ maps to (cos θ)e₁ + (sin θ)e₂ and e₂ maps to (-sin θ)e₁ + (cos θ)e₂",
+        "coherenceMeasure": "Preserves orthonormality of the prime basis vectors"
+      },
+      "computationalAspects": {
+        "algorithm": "For a vector (x, y), compute (x cos θ - y sin θ, x sin θ + y cos θ)",
+        "complexity": "O(1) - constant time operation for 2D vectors",
+        "implementation": "Can be implemented efficiently using matrix multiplication or directly with trigonometric functions",
+        "numericalStability": "Generally stable, but accumulation of roundoff errors can occur with repeated rotations"
+      },
+      "geometricInterpretation": {
+        "description": "Rotation of the plane around the origin by angle θ in the counterclockwise direction",
+        "transformationTypes": ["rotation"],
+        "invariants": [
+          "origin (fixed point)",
+          "distance from origin (radius)",
+          "angles between vectors",
+          "areas of shapes",
+          "lengths of vectors",
+          "circles centered at origin"
+        ]
+      },
+      "observerFrames": [
+        {
+          "frameId": "urn:uor:algebra:vector-space:observer-frame:standard-basis",
+          "mapDescription": "Rotation by angle θ in the standard Cartesian coordinates",
+          "mapRepresentation": "Matrix [cos θ -sin θ; sin θ cos θ]",
+          "frameTransformation": "The matrix representation changes with the basis, but the rotation operation itself is basis-independent"
+        },
+        {
+          "frameId": "urn:uor:algebra:vector-space:observer-frame:polar-coordinates",
+          "mapDescription": "Addition of θ to the angular coordinate in polar coordinates",
+          "mapRepresentation": "(r, φ) → (r, φ + θ)",
+          "frameTransformation": "In polar coordinates, the rotation has a particularly simple form"
+        }
+      ],
+      "applications": [
+        {
+          "domain": "Computer Graphics",
+          "description": "Rotating objects in 2D space",
+          "examples": [
+            "Rotating sprites or images",
+            "Animated rotations of graphical objects",
+            "Camera viewpoint rotation"
+          ]
+        },
+        {
+          "domain": "Robotics",
+          "description": "Controlling orientation of robot components",
+          "examples": [
+            "Joint rotation in 2D robot arms",
+            "Orientation control of mobile robots",
+            "Sensor orientation adjustments"
+          ]
+        },
+        {
+          "domain": "Signal Processing",
+          "description": "Phase shifts and transformations",
+          "examples": [
+            "Fourier transform phase shifts",
+            "Complex signal rotation",
+            "Phase-based filtering operations"
+          ]
+        }
+      ],
+      "theorems": [
+        {
+          "name": "Orthogonal Property",
+          "statement": "Every 2D rotation is an orthogonal transformation, preserving inner products and distances",
+          "significance": "Ensures that the geometric properties of shapes are preserved under rotation"
+        },
+        {
+          "name": "Group Property",
+          "statement": "The set of all 2D rotations forms a group under composition, isomorphic to SO(2)",
+          "significance": "Allows rotations to be understood within group theory and composed meaningfully"
+        },
+        {
+          "name": "Eigenvalue Property",
+          "statement": "The eigenvalues of a 2D rotation by angle θ are e^(iθ) and e^(-iθ)",
+          "significance": "Provides insight into the complex structure and behavior of rotations"
+        }
+      ]
+    }
+  ]
+}
