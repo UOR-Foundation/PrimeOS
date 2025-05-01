@@ -1,0 +1,330 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/algebra/modules/module-element.json",
+  "title": "Module Element Schema",
+  "description": "Schema defining elements within a module structure in the UOR framework",
+  "type": "object",
+  "required": ["id", "moduleDomain", "representation", "primeDecomposition"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the module element"
+    },
+    "moduleDomain": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the module domain this element belongs to"
+    },
+    "representation": {
+      "type": "object",
+      "description": "Standard representation of the module element",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of representation (e.g., 'coordinate', 'basis-expansion', 'structural')"
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Coordinate representation as a vector of coefficients"
+            },
+            {
+              "type": "object",
+              "description": "Structured representation with additional metadata"
+            },
+            {
+              "type": "string",
+              "description": "Symbolic representation"
+            }
+          ],
+          "description": "The representation value"
+        },
+        "basis": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The basis elements used in the representation"
+        },
+        "notation": {
+          "type": "string",
+          "description": "Mathematical notation for this representation"
+        }
+      }
+    },
+    "primeDecomposition": {
+      "type": "object",
+      "description": "Decomposition of the element in terms of the module's prime elements",
+      "required": ["components"],
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["primeElement", "coefficient"],
+            "properties": {
+              "primeElement": {
+                "type": "string",
+                "format": "uri",
+                "description": "Reference to a prime element in the module"
+              },
+              "coefficient": {
+                "oneOf": [
+                  {
+                    "type": "number",
+                    "description": "Scalar coefficient from the ring"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Symbolic representation of the coefficient"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Structured representation of the coefficient"
+                  }
+                ],
+                "description": "Coefficient from the ring by which the prime element is scaled"
+              }
+            }
+          },
+          "description": "The components in the prime decomposition"
+        },
+        "uniqueness": {
+          "type": "string",
+          "enum": [
+            "unique",
+            "unique-up-to-basis-choice",
+            "unique-up-to-ordering",
+            "unique-up-to-unit-factors",
+            "non-unique"
+          ],
+          "description": "Type of uniqueness for this decomposition"
+        },
+        "method": {
+          "type": "string",
+          "description": "Method used to compute the prime decomposition"
+        }
+      }
+    },
+    "canonicalForm": {
+      "type": "object",
+      "description": "The canonical representation of this element",
+      "properties": {
+        "representation": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Canonical coordinates"
+            },
+            {
+              "type": "object",
+              "description": "Structured canonical representation"
+            },
+            {
+              "type": "string",
+              "description": "Symbolic canonical representation"
+            }
+          ],
+          "description": "The canonical representation value"
+        },
+        "normalization": {
+          "type": "string",
+          "description": "Normalization convention used for the canonical form"
+        },
+        "minimality": {
+          "type": "string",
+          "description": "Explanation of why this form is minimal"
+        }
+      }
+    },
+    "properties": {
+      "type": "object",
+      "description": "Properties of this module element",
+      "properties": {
+        "order": {
+          "type": "string",
+          "description": "The order of the element (if applicable)"
+        },
+        "annihilator": {
+          "type": "string",
+          "description": "The annihilator of the element"
+        },
+        "cyclic": {
+          "type": "boolean",
+          "description": "Whether the element generates a cyclic submodule"
+        },
+        "torsion": {
+          "type": "boolean",
+          "description": "Whether the element is a torsion element"
+        },
+        "primitive": {
+          "type": "boolean",
+          "description": "Whether the element is primitive"
+        }
+      }
+    },
+    "generatedSubmodule": {
+      "type": "object",
+      "description": "Information about the submodule generated by this element",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the generated submodule"
+        },
+        "isomorphicTo": {
+          "type": "string",
+          "description": "Description of what this submodule is isomorphic to"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "cyclic",
+              "free",
+              "simple",
+              "direct-summand",
+              "essential",
+              "pure"
+            ]
+          },
+          "description": "Properties of the generated submodule"
+        }
+      }
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "description": "Coherence measures for this element",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of coherence measure"
+          },
+          "value": {
+            "type": "number",
+            "description": "Value of the coherence measure"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of this coherence value"
+          }
+        }
+      }
+    },
+    "observerFrames": {
+      "type": "array",
+      "description": "Observer reference frames for viewing this element",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "representation": {
+            "type": "object",
+            "description": "Representation in this frame"
+          },
+          "invariantProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties invariant in this frame"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:module-element:vector:real:standard-vector",
+      "moduleDomain": "urn:uor:algebra:module:vector:real",
+      "representation": {
+        "type": "coordinate",
+        "value": [3, 4, 5],
+        "basis": ["e₁", "e₂", "e₃"],
+        "notation": "(3, 4, 5)"
+      },
+      "primeDecomposition": {
+        "components": [
+          {
+            "primeElement": "urn:uor:algebra:module-element:vector:real:basis:e1",
+            "coefficient": 3
+          },
+          {
+            "primeElement": "urn:uor:algebra:module-element:vector:real:basis:e2",
+            "coefficient": 4
+          },
+          {
+            "primeElement": "urn:uor:algebra:module-element:vector:real:basis:e3",
+            "coefficient": 5
+          }
+        ],
+        "uniqueness": "unique",
+        "method": "coordinate-expansion"
+      },
+      "canonicalForm": {
+        "representation": [3, 4, 5],
+        "normalization": "Standard basis representation",
+        "minimality": "Direct representation in terms of the standard basis"
+      },
+      "properties": {
+        "order": "infinite",
+        "cyclic": false,
+        "torsion": false,
+        "primitive": true
+      },
+      "generatedSubmodule": {
+        "description": "The line through the origin in the direction (3, 4, 5)",
+        "isomorphicTo": "R",
+        "properties": ["cyclic", "free"]
+      },
+      "coherenceMeasures": [
+        {
+          "type": "coordinate-sparsity",
+          "value": 1.0,
+          "interpretation": "All coordinates are non-zero, minimum sparsity"
+        },
+        {
+          "type": "basis-alignment",
+          "value": 0.0,
+          "interpretation": "Vector is not aligned with any single basis vector"
+        },
+        {
+          "type": "euclidean-norm",
+          "value": 7.071,
+          "interpretation": "Euclidean length of the vector"
+        }
+      ],
+      "observerFrames": [
+        {
+          "frameName": "Standard-Basis-Frame",
+          "representation": {
+            "type": "coordinate",
+            "value": [3, 4, 5]
+          },
+          "invariantProperties": ["norm", "length", "direction"]
+        },
+        {
+          "frameName": "Spherical-Coordinate-Frame",
+          "representation": {
+            "type": "coordinate",
+            "value": [7.071, 0.7297, 0.9273]
+          },
+          "invariantProperties": ["norm", "length", "direction"]
+        }
+      ]
+    }
+  ]
+}

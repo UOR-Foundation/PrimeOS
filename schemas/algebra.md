@@ -185,7 +185,7 @@ To fully model algebra within the UOR framework, the following schemas need to b
 
 ```json
 {
-  "id": "https://uor-foundation.org/schemas/algebra/group-domain.json",
+  "id": "https://uor.foundation/schemas/algebra/group-domain.json",
   "title": "Group Domain Schema",
   "description": "Schema defining group structures within the UOR framework",
   "properties": {
@@ -206,7 +206,7 @@ To fully model algebra within the UOR framework, the following schemas need to b
 
 ```json
 {
-  "id": "https://uor-foundation.org/schemas/algebra/ring-domain.json",
+  "id": "https://uor.foundation/schemas/algebra/ring-domain.json",
   "title": "Ring Domain Schema",
   "description": "Schema defining ring structures within the UOR framework",
   "properties": {
@@ -227,7 +227,7 @@ To fully model algebra within the UOR framework, the following schemas need to b
 
 ```json
 {
-  "id": "https://uor-foundation.org/schemas/algebra/field-domain.json",
+  "id": "https://uor.foundation/schemas/algebra/field-domain.json",
   "title": "Field Domain Schema",
   "description": "Schema defining field structures within the UOR framework",
   "properties": {
@@ -247,7 +247,7 @@ To fully model algebra within the UOR framework, the following schemas need to b
 
 ```json
 {
-  "id": "https://uor-foundation.org/schemas/algebra/vector-space-domain.json",
+  "id": "https://uor.foundation/schemas/algebra/vector-space-domain.json",
   "title": "Vector Space Domain Schema",
   "description": "Schema defining vector space structures within the UOR framework",
   "properties": {

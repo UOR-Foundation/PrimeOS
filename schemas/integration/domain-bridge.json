@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/integration/domain-bridge.json",
+  "$id": "https://uor.foundation/schemas/integration/domain-bridge.json",
   "title": "Domain Bridge Schema",
   "description": "Schema defining the structure of inter-domain connections within the UOR framework",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "type", "sourceDomain", "targetDomain", "mappingStructure"],
   "properties": {

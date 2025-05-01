@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/transformations/logarithmic-bridge.json",
+  "$id": "https://uor.foundation/schemas/transformations/logarithmic-bridge.json",
   "title": "Logarithmic Bridge Schema",
   "description": "Schema defining the logarithmic-exponential transformations between additive and multiplicative structures",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "type", "sourceStructure", "targetStructure", "transformationDirection"],
   "properties": {

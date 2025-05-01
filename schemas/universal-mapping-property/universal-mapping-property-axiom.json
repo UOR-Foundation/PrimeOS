@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/axioms/universal-mapping-property-axiom.json",
+  "title": "Universal Mapping Property Axiom Schema",
+  "description": "Schema representing the Universal Mapping Property Axiom: Establishing the uniqueness of the prime coordinate framework",
+  "type": "object",
+  "required": ["axiomName", "axiomStatement", "universalMappingDefinition", "universality"],
+  "properties": {
+    "axiomName": {
+      "type": "string",
+      "const": "Universal Mapping Property Axiom",
+      "description": "The name of the axiom"
+    },
+    "axiomStatement": {
+      "type": "string",
+      "description": "The formal statement of the axiom",
+      "default": "The prime coordinate mapping possesses a universal property that establishes it as the unique canonical framework for representing objects."
+    },
+    "formalStatement": {
+      "type": "string",
+      "description": "Mathematical formalization of the axiom",
+      "default": "For any representation system S with mapping φ_S: D → S, there exists a unique factorization through the prime coordinate mapping φ_P: D → P such that φ_S = τ ∘ φ_P for some transformation τ: P → S"
+    },
+    "universalMappingDefinition": {
+      "type": "object",
+      "description": "Definition of the universal mapping property",
+      "required": ["category", "functor", "universalProperty"],
+      "properties": {
+        "category": {
+          "type": "object",
+          "description": "The categorical framework for the universal property",
+          "properties": {
+            "objectCategory": {
+              "type": "string",
+              "description": "Category of objects being represented"
+            },
+            "representationCategory": {
+              "type": "string",
+              "description": "Category of representations"
+            },
+            "morphisms": {
+              "type": "string",
+              "description": "Description of the morphisms in these categories"
+            }
+          }
+        },
+        "functor": {
+          "type": "object",
+          "description": "The functor embodying the prime coordinate mapping",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the functor"
+            },
+            "definition": {
+              "type": "string",
+              "description": "Definition of how the functor maps objects and morphisms"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Properties of the functor (e.g., faithful, full)"
+              }
+            }
+          }
+        },
+        "universalProperty": {
+          "type": "object",
+          "description": "The universal property itself",
+          "properties": {
+            "statement": {
+              "type": "string",
+              "description": "Statement of the universal property"
+            },
+            "diagramDescription": {
+              "type": "string",
+              "description": "Description of the commutative diagram representing the property"
+            },
+            "existenceProof": {
+              "type": "string",
+              "description": "Reference to proof of existence of the factorization"
+            },
+            "uniquenessProof": {
+              "type": "string",
+              "description": "Reference to proof of uniqueness of the factorization"
+            }
+          }
+        }
+      }
+    },
+    "universality": {
+      "type": "object",
+      "description": "The universality aspects of the prime coordinate framework",
+      "required": ["uniquenessProperties", "minimalityProperties", "canonicalProperties"],
+      "properties": {
+        "uniquenessProperties": {
+          "type": "object",
+          "description": "Properties related to the uniqueness of the framework",
+          "properties": {
+            "isUnique": {
+              "type": "boolean",
+              "description": "Whether the framework is unique"
+            },
+            "uniquenessProof": {
+              "type": "string",
+              "description": "Reference to proof of uniqueness"
+            },
+            "uniquenessCriteria": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Criteria establishing uniqueness"
+              }
+            }
+          }
+        },
+        "minimalityProperties": {
+          "type": "object",
+          "description": "Properties related to the minimality of the framework",
+          "properties": {
+            "isMinimal": {
+              "type": "boolean",
+              "description": "Whether the framework is minimal"
+            },
+            "minimalityProof": {
+              "type": "string",
+              "description": "Reference to proof of minimality"
+            },
+            "minimalityMeasure": {
+              "type": "string",
+              "description": "Measure used to determine minimality"
+            }
+          }
+        },
+        "canonicalProperties": {
+          "type": "object",
+          "description": "Properties establishing this as the canonical framework",
+          "properties": {
+            "isCanonical": {
+              "type": "boolean",
+              "description": "Whether the framework is canonical"
+            },
+            "canonicityProof": {
+              "type": "string",
+              "description": "Reference to proof of canonicity"
+            },
+            "canonicityCriteria": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Criteria establishing canonicity"
+              }
+            }
+          }
+        }
+      }
+    },
+    "alternativeRepresentations": {
+      "type": "array",
+      "description": "Alternative representation systems that factor through the prime framework",
+      "items": {
+        "type": "object",
+        "properties": {
+          "representationName": {
+            "type": "string",
+            "description": "Name of the alternative representation system"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the system"
+          },
+          "factorizationMap": {
+            "type": "string",
+            "description": "Description of the map from prime coordinates to this system"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "type": "string",
+                  "description": "Object being represented"
+                },
+                "primeCoordinates": {
+                  "type": "string",
+                  "description": "Prime coordinate representation"
+                },
+                "alternativeRepresentation": {
+                  "type": "string",
+                  "description": "Representation in this alternative system"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "categoricalPerspective": {
+      "type": "object",
+      "description": "Categorical perspective on the universal mapping property",
+      "properties": {
+        "adjunction": {
+          "type": "string",
+          "description": "Description of any adjunction involving the prime coordinate functor"
+        },
+        "limits": {
+          "type": "string",
+          "description": "Relationship to categorical limits or colimits"
+        },
+        "naturalTransformations": {
+          "type": "string",
+          "description": "Description of relevant natural transformations"
+        },
+        "functorialProperties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Functorial properties of the framework"
+          }
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "Examples demonstrating the universal mapping property",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Domain of objects"
+          },
+          "alternativeSystem": {
+            "type": "string",
+            "description": "Alternative representation system"
+          },
+          "primeCoordinateExample": {
+            "type": "string",
+            "description": "Example of prime coordinate representation"
+          },
+          "factorizationExample": {
+            "type": "string",
+            "description": "Example of the factorization through prime coordinates"
+          },
+          "explanation": {
+            "type": "string",
+            "description": "Explanation of how this demonstrates the universal property"
+          }
+        }
+      }
+    },
+    "connections": {
+      "type": "array",
+      "description": "Connections to other axioms or concepts",
+      "items": {
+        "type": "object",
+        "properties": {
+          "concept": {
+            "type": "string",
+            "description": "Related concept or axiom"
+          },
+          "relationship": {
+            "type": "string",
+            "description": "Description of the relationship"
+          }
+        }
+      }
+    }
+  }
+}

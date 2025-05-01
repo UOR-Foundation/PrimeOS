@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/transformations/domain-homomorphism.json",
+  "$id": "https://uor.foundation/schemas/transformations/domain-homomorphism.json",
   "title": "Domain Homomorphism Schema",
   "description": "Schema defining structure-preserving maps between different domain manifolds",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "type", "sourceDomain", "targetDomain", "preservedStructures"],
   "properties": {

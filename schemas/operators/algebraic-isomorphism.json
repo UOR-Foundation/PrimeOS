@@ -1,0 +1,686 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/algebra/operators/algebraic-isomorphism.json",
+  "title": "Algebraic Isomorphism Schema",
+  "description": "A precise schema defining algebraic isomorphisms within the UOR framework, focusing on structure-preserving bijective maps between algebraic domains",
+  "type": "object",
+  "required": ["id", "name", "homomorphismReference", "bijectivityProperties", "inverseProperties", "structuralEquivalence", "primeDecomposition", "observerFrames", "coherenceMeasures"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "const": "urn:uor:domain:algebra:operators:algebraic-isomorphism",
+      "description": "Unique identifier for the algebraic isomorphism schema"
+    },
+    "name": {
+      "type": "string",
+      "const": "Algebraic Isomorphism",
+      "description": "Name of the operator concept"
+    },
+    "description": {
+      "type": "string",
+      "const": "A bijective structure-preserving map between algebraic domains that establishes complete structural equivalence",
+      "description": "Description of the algebraic isomorphism concept"
+    },
+    "homomorphismReference": {
+      "type": "object",
+      "description": "Reference to the underlying homomorphism structure",
+      "required": ["homomorphismUri", "specialization"],
+      "properties": {
+        "homomorphismUri": {
+          "type": "string",
+          "format": "uri",
+          "const": "urn:uor:domain:algebra:operators:algebraic-homomorphism",
+          "description": "URI reference to the homomorphism schema"
+        },
+        "specialization": {
+          "type": "string",
+          "const": "An isomorphism is a homomorphism that is both injective and surjective (bijective), with an inverse that is also a homomorphism",
+          "description": "How isomorphism specializes homomorphism"
+        },
+        "inheritedProperties": {
+          "type": "array",
+          "description": "Properties inherited from homomorphisms",
+          "items": {
+            "type": "string",
+            "description": "Inherited property"
+          },
+          "examples": [
+            "Structure preservation",
+            "Operation compatibility",
+            "Composition properties",
+            "Domain and range definitions"
+          ]
+        }
+      }
+    },
+    "bijectivityProperties": {
+      "type": "object",
+      "description": "Properties related to the bijectivity of isomorphisms",
+      "required": ["injectivityProperties", "surjectivityProperties", "bijectionDefinition"],
+      "properties": {
+        "injectivityProperties": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "A homomorphism φ: S → T is injective if for all a, b ∈ S, φ(a) = φ(b) implies a = b",
+              "description": "Definition of injectivity"
+            },
+            "kernelCharacterization": {
+              "type": "string",
+              "const": "A homomorphism is injective if and only if its kernel is trivial (contains only the identity element)",
+              "description": "Characterization in terms of kernel"
+            },
+            "implications": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Implications of injectivity"
+              },
+              "examples": [
+                "Preserves the distinction between elements",
+                "Embeds the source structure into the target",
+                "No information is lost in the mapping"
+              ]
+            }
+          }
+        },
+        "surjectivityProperties": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "A homomorphism φ: S → T is surjective if for all t ∈ T, there exists s ∈ S such that φ(s) = t",
+              "description": "Definition of surjectivity"
+            },
+            "imageCharacterization": {
+              "type": "string",
+              "const": "A homomorphism is surjective if and only if its image is the entire target domain",
+              "description": "Characterization in terms of image"
+            },
+            "implications": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Implications of surjectivity"
+              },
+              "examples": [
+                "The target structure is a homomorphic image of the source",
+                "Every element in the target has at least one preimage",
+                "The target cannot be 'larger' than the source in terms of structural complexity"
+              ]
+            }
+          }
+        },
+        "bijectionDefinition": {
+          "type": "string",
+          "const": "A homomorphism is bijective if it is both injective and surjective, establishing a one-to-one correspondence between elements of the source and target domains",
+          "description": "Definition of bijectivity"
+        },
+        "bijectivityTests": {
+          "type": "array",
+          "description": "Tests for determining bijectivity",
+          "items": {
+            "type": "object",
+            "properties": {
+              "testName": {
+                "type": "string",
+                "description": "Name of the test"
+              },
+              "testDescription": {
+                "type": "string",
+                "description": "Description of the test"
+              }
+            }
+          },
+          "examples": [
+            {
+              "testName": "Cardinality test",
+              "testDescription": "For finite structures, a homomorphism is bijective if and only if the source and target have the same cardinality and the mapping is injective"
+            },
+            {
+              "testName": "Dimension test",
+              "testDescription": "For vector spaces, a linear map is bijective if and only if the source and target have the same dimension and the mapping is injective"
+            },
+            {
+              "testName": "Inverse test",
+              "testDescription": "A homomorphism is bijective if and only if it has a (homomorphic) inverse"
+            }
+          ]
+        }
+      }
+    },
+    "inverseProperties": {
+      "type": "object",
+      "description": "Properties related to the inverse of isomorphisms",
+      "required": ["inverseDefinition", "inverseExistence", "inverseConstruction"],
+      "properties": {
+        "inverseDefinition": {
+          "type": "string",
+          "const": "The inverse of an isomorphism φ: S → T is a mapping φ⁻¹: T → S such that φ⁻¹(φ(s)) = s for all s ∈ S and φ(φ⁻¹(t)) = t for all t ∈ T",
+          "description": "Definition of the inverse mapping"
+        },
+        "inverseExistence": {
+          "type": "string",
+          "const": "Every isomorphism has a unique inverse that is also an isomorphism",
+          "description": "Existence and uniqueness of the inverse"
+        },
+        "inverseConstruction": {
+          "type": "object",
+          "properties": {
+            "algorithm": {
+              "type": "string",
+              "description": "Algorithm for constructing the inverse mapping"
+            },
+            "computationalComplexity": {
+              "type": "string",
+              "description": "Computational complexity of inverse construction"
+            },
+            "challenges": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Challenges in constructing the inverse"
+              }
+            }
+          }
+        },
+        "inversePreservation": {
+          "type": "string",
+          "const": "The inverse of an isomorphism preserves all the algebraic structures preserved by the original isomorphism, but in the reverse direction",
+          "description": "Structure preservation properties of the inverse"
+        },
+        "compositionProperties": {
+          "type": "string",
+          "const": "For an isomorphism φ, the compositions φ ∘ φ⁻¹ and φ⁻¹ ∘ φ are both identity maps on their respective domains",
+          "description": "Composition properties with the inverse"
+        }
+      }
+    },
+    "structuralEquivalence": {
+      "type": "object",
+      "description": "Properties related to the structural equivalence established by isomorphisms",
+      "required": ["equivalenceDefinition", "invariantProperties", "structureTransport"],
+      "properties": {
+        "equivalenceDefinition": {
+          "type": "string",
+          "const": "Two algebraic structures are isomorphic if there exists an isomorphism between them, indicating they are structurally identical despite potentially different representations",
+          "description": "Definition of structural equivalence"
+        },
+        "invariantProperties": {
+          "type": "array",
+          "description": "Properties that are invariant under isomorphism",
+          "items": {
+            "type": "string",
+            "description": "Invariant property"
+          },
+          "examples": [
+            "Algebraic structure type (group, ring, field, etc.)",
+            "Commutativity, associativity, identity, inverse properties",
+            "Order of elements and substructures",
+            "Generators and relations",
+            "Cardinality and dimension"
+          ]
+        },
+        "structureTransport": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "Isomorphisms allow for the transport of structure from one domain to another, enabling the transfer of theorems, properties, and constructions",
+              "description": "Definition of structure transport"
+            },
+            "applications": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Application of structure transport"
+              },
+              "examples": [
+                "Transferring computational methods between representations",
+                "Applying theorems from one structure to an isomorphic one",
+                "Solving problems in a simpler isomorphic domain",
+                "Constructing new structures with desired properties"
+              ]
+            },
+            "limitations": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Limitation of structure transport"
+              },
+              "examples": [
+                "Non-structural properties (like names or representations) are not preserved",
+                "Computational complexity may vary between isomorphic representations",
+                "Practical interpretations may differ despite structural equivalence"
+              ]
+            }
+          }
+        },
+        "isomorphismClasses": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "An isomorphism class is the collection of all algebraic structures that are isomorphic to each other, representing a unique abstract structure",
+              "description": "Definition of isomorphism classes"
+            },
+            "classification": {
+              "type": "string",
+              "description": "Approach to classifying structures up to isomorphism"
+            },
+            "invariants": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Invariants that determine isomorphism classes"
+              }
+            }
+          }
+        }
+      }
+    },
+    "primeDecomposition": {
+      "type": "object",
+      "description": "The prime decomposition structure of isomorphisms in the UOR framework",
+      "required": ["primeComponents", "factorizationStructure"],
+      "properties": {
+        "primeComponents": {
+          "type": "object",
+          "properties": {
+            "elementaryIsomorphisms": {
+              "type": "array",
+              "description": "Basic prime isomorphisms that serve as building blocks",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the elementary isomorphism"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Description of the isomorphism"
+                  },
+                  "irreducibilityProof": {
+                    "type": "string",
+                    "description": "Reference to proof that this isomorphism is irreducible"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "name": "Permutation isomorphism",
+                  "description": "Reorders elements while preserving structure",
+                  "irreducibilityProof": "Cannot be expressed as a composition of simpler structure-preserving bijections"
+                },
+                {
+                  "name": "Basis change isomorphism",
+                  "description": "Changes the basis of representation without changing the structure",
+                  "irreducibilityProof": "Primitive transformation that preserves all structural relations"
+                },
+                {
+                  "name": "Duality isomorphism",
+                  "description": "Maps a structure to its dual representation",
+                  "irreducibilityProof": "Fundamental transformation between dual perspectives"
+                }
+              ]
+            },
+            "isomorphismTypes": {
+              "type": "array",
+              "description": "Types of isomorphisms categorized by their effect",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "typeName": {
+                    "type": "string",
+                    "description": "Name of the isomorphism type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Description of the type"
+                  },
+                  "examples": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "Example of this isomorphism type"
+                    }
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "typeName": "Inner isomorphism",
+                  "description": "Isomorphisms that can be expressed as conjugation by an element",
+                  "examples": ["Conjugation in groups", "Similarity transformations in linear algebra"]
+                },
+                {
+                  "typeName": "Outer isomorphism",
+                  "description": "Isomorphisms that cannot be expressed as inner isomorphisms",
+                  "examples": ["Field automorphisms", "Exotic symmetries"]
+                },
+                {
+                  "typeName": "Natural isomorphism",
+                  "description": "Isomorphisms arising naturally from the structure without arbitrary choices",
+                  "examples": ["Double dual isomorphism in vector spaces", "Canonical identifications"]
+                }
+              ]
+            }
+          }
+        },
+        "factorizationStructure": {
+          "type": "object",
+          "properties": {
+            "decompositionTheorem": {
+              "type": "string",
+              "const": "Any isomorphism can be factored as a composition of elementary isomorphisms that represent fundamental structure-preserving transformations",
+              "description": "Theorem describing the factorization of isomorphisms"
+            },
+            "canonicalForm": {
+              "type": "string",
+              "const": "The canonical form of an isomorphism expresses it as a minimal sequence of elementary transformations that characterize the structural relationship",
+              "description": "Canonical representation of isomorphisms"
+            },
+            "uniquenessProperties": {
+              "type": "string",
+              "const": "The factorization of an isomorphism into elementary components is unique up to certain commutation relations between the components",
+              "description": "Uniqueness properties of the factorization"
+            }
+          }
+        },
+        "universalProperties": {
+          "type": "array",
+          "description": "Universal properties related to isomorphisms",
+          "items": {
+            "type": "object",
+            "properties": {
+              "propertyName": {
+                "type": "string",
+                "description": "Name of the universal property"
+              },
+              "propertyDescription": {
+                "type": "string",
+                "description": "Description of the property"
+              }
+            }
+          },
+          "examples": [
+            {
+              "propertyName": "Isomorphism invariance principle",
+              "propertyDescription": "Properties defined solely in terms of the algebraic structure are preserved under isomorphism"
+            },
+            {
+              "propertyName": "Canonical isomorphism principle",
+              "propertyDescription": "Certain constructions yield isomorphic results independent of arbitrary choices"
+            },
+            {
+              "propertyName": "Natural isomorphism correspondence",
+              "propertyDescription": "Natural isomorphisms correspond to equivalent ways of constructing the same abstract structure"
+            }
+          ]
+        }
+      }
+    },
+    "observerFrames": {
+      "type": "array",
+      "description": "Observer reference frames for isomorphisms",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "perspective": {
+            "type": "string",
+            "description": "Perspective defined by this frame"
+          },
+          "transformations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Transformations in this frame"
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "frameName": "Structural Frame",
+          "perspective": "Viewing isomorphisms as structure-preserving maps",
+          "transformations": [
+            "Decomposition into elementary structural components",
+            "Analysis of preserved structural elements",
+            "Identification of structural invariants"
+          ]
+        },
+        {
+          "frameName": "Transformation Frame",
+          "perspective": "Viewing isomorphisms as transformations between equivalent representations",
+          "transformations": [
+            "Basis changes and coordinate transformations",
+            "Representation switching operations",
+            "Transport of structure operations"
+          ]
+        },
+        {
+          "frameName": "Categorical Frame",
+          "perspective": "Viewing isomorphisms as invertible morphisms in a category",
+          "transformations": [
+            "Natural isomorphism compositions",
+            "Functor isomorphism operations",
+            "Equivalence identification"
+          ]
+        },
+        {
+          "frameName": "Computational Frame",
+          "perspective": "Viewing isomorphisms as computationally equivalent representations",
+          "transformations": [
+            "Complexity-preserving representation changes",
+            "Algorithm translation operations",
+            "Data structure conversion operations"
+          ]
+        }
+      ]
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "description": "Measures of coherence for isomorphisms",
+      "items": {
+        "type": "object",
+        "properties": {
+          "measureName": {
+            "type": "string",
+            "description": "Name of the coherence measure"
+          },
+          "measureDescription": {
+            "type": "string",
+            "description": "Description of what the measure quantifies"
+          },
+          "formula": {
+            "type": "string",
+            "description": "Formula or method for calculating the measure"
+          }
+        }
+      },
+      "examples": [
+        {
+          "measureName": "Complexity Ratio",
+          "measureDescription": "Ratio of computational complexity between isomorphic representations",
+          "formula": "Complexity(Target) / Complexity(Source) for standard operations"
+        },
+        {
+          "measureName": "Transformation Complexity",
+          "measureDescription": "Complexity of transforming between isomorphic representations",
+          "formula": "Minimum number of elementary operations required for the transformation"
+        },
+        {
+          "measureName": "Structural Preservation Completeness",
+          "measureDescription": "Measure of how completely all structural aspects are preserved",
+          "formula": "Proportion of structural properties successfully verified as preserved"
+        },
+        {
+          "measureName": "Isomorphism Canonicity",
+          "measureDescription": "Degree to which the isomorphism represents a canonical transformation",
+          "formula": "Distance from the canonical isomorphism between the structures"
+        },
+        {
+          "measureName": "Natural Isomorphism Measure",
+          "measureDescription": "Degree to which the isomorphism arises naturally without arbitrary choices",
+          "formula": "Invariance of the isomorphism under composing with automorphisms"
+        }
+      ]
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of isomorphisms",
+      "items": {
+        "type": "object",
+        "properties": {
+          "applicationDomain": {
+            "type": "string",
+            "description": "Domain of application"
+          },
+          "applicationDescription": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Examples of this application"
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "applicationDomain": "Problem Solving",
+          "applicationDescription": "Using isomorphisms to transform hard problems into equivalent problems with known solutions",
+          "examples": [
+            "Converting differential equations into algebraic problems",
+            "Reformulating optimization problems in more tractable domains",
+            "Translating problems between different mathematical frameworks"
+          ]
+        },
+        {
+          "applicationDomain": "Classification Theory",
+          "applicationDescription": "Using isomorphisms to classify mathematical structures into equivalence classes",
+          "examples": [
+            "Classification of finite simple groups",
+            "Classification of finitely generated abelian groups",
+            "Classification of finite fields"
+          ]
+        },
+        {
+          "applicationDomain": "Cryptography",
+          "applicationDescription": "Using isomorphism problems as basis for cryptographic security",
+          "examples": [
+            "Graph isomorphism based cryptosystems",
+            "Isomorphism between hidden subgroups",
+            "Computational hardness of certain isomorphism problems"
+          ]
+        },
+        {
+          "applicationDomain": "Physics",
+          "applicationDescription": "Using isomorphisms to identify equivalent physical systems and theories",
+          "examples": [
+            "Dualities between physical theories",
+            "Identifying equivalent formulations of quantum mechanics",
+            "Correspondence between different models of the same physical phenomenon"
+          ]
+        }
+      ]
+    },
+    "theorems": {
+      "type": "array",
+      "description": "Key theorems related to isomorphisms",
+      "items": {
+        "type": "object",
+        "properties": {
+          "theoremName": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "theoremStatement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance of the theorem"
+          }
+        }
+      },
+      "examples": [
+        {
+          "theoremName": "Isomorphism Extension Theorem",
+          "theoremStatement": "Under certain conditions, an isomorphism between substructures can be extended to an isomorphism between the entire structures",
+          "significance": "Provides criteria for when local isomorphisms can be globalized"
+        },
+        {
+          "theoremName": "Cayley's Theorem",
+          "theoremStatement": "Every group G is isomorphic to a subgroup of the symmetric group on G",
+          "significance": "Shows that all groups can be represented as permutation groups"
+        },
+        {
+          "theoremName": "Fundamental Theorem of Finitely Generated Abelian Groups",
+          "theoremStatement": "Every finitely generated abelian group is isomorphic to a direct product of cyclic groups in a unique way",
+          "significance": "Provides a complete classification of finitely generated abelian groups up to isomorphism"
+        },
+        {
+          "theoremName": "Stone-Gelfand-Naimark Representation Theorem",
+          "theoremStatement": "Every commutative C*-algebra is isomorphic to the algebra of continuous functions on its spectrum",
+          "significance": "Establishes a fundamental duality between algebraic and geometric structures"
+        }
+      ]
+    },
+    "isomorphismClasses": {
+      "type": "object",
+      "description": "Isomorphism classes and their properties",
+      "properties": {
+        "definitionOfClass": {
+          "type": "string",
+          "const": "An isomorphism class is the collection of all structures that are isomorphic to a given structure, representing a single abstract mathematical entity",
+          "description": "Definition of an isomorphism class"
+        },
+        "classRepresentatives": {
+          "type": "string",
+          "const": "Each isomorphism class can be represented by a canonical form, chosen to be the simplest or most standard representation of the class",
+          "description": "Representatives of isomorphism classes"
+        },
+        "classificationChallenges": {
+          "type": "array",
+          "description": "Challenges in classifying structures up to isomorphism",
+          "items": {
+            "type": "string",
+            "description": "Classification challenge"
+          },
+          "examples": [
+            "The isomorphism problem may be computationally hard (e.g., graph isomorphism)",
+            "Complete invariants may be difficult to compute or express",
+            "The number of isomorphism classes may be infinite or uncountable",
+            "No natural canonical forms may exist in some domains"
+          ]
+        },
+        "applications": {
+          "type": "array",
+          "description": "Applications of isomorphism classification",
+          "items": {
+            "type": "string",
+            "description": "Application"
+          },
+          "examples": [
+            "Enumeration of structures with desired properties",
+            "Structure identification and matching",
+            "Database organization of mathematical objects",
+            "Simplification of analysis by working with canonical representatives"
+          ]
+        }
+      }
+    }
+  }
+}

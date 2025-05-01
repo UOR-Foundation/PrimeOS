@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/number-theory/addition-operation.json",
+  "$id": "https://uor.foundation/schemas/number-theory/addition-operation.json",
   "title": "Addition Operation Schema",
   "description": "Schema defining addition operation within the number theory domain using the UOR prime factorization framework",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "operationType", "domain", "operationRules", "homomorphismProperties"],
   "properties": {

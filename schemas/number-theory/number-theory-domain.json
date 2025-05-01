@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/number-theory/number-theory-domain.json",
+  "$id": "https://uor.foundation/schemas/number-theory/number-theory-domain.json",
   "title": "Number Theory Domain Schema",
   "description": "A precise schema defining the number theory domain within the UOR framework, focusing on integers and their prime factorization properties",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "name", "elements", "primeElements", "compositionOperation", "uniqueFactorizationProperties"],
   "properties": {

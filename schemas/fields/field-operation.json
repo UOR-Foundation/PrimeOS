@@ -1,0 +1,402 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/algebra/fields/field-operation.json",
+  "title": "Field Operation Schema",
+  "description": "Schema defining operations on field elements within the UOR framework",
+  "type": "object",
+  "required": ["id", "fieldDomain", "operationType", "operands", "result", "primeMappingDefinition"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the field operation"
+    },
+    "fieldDomain": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the field domain for this operation"
+    },
+    "operationType": {
+      "type": "string",
+      "enum": ["addition", "subtraction", "multiplication", "division", "exponentiation", "root", "complex-conjugation", "norm", "trace"],
+      "description": "Type of field operation"
+    },
+    "operands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "operandId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the operand element"
+          },
+          "operandValue": {
+            "type": "string",
+            "description": "Value representation of the operand"
+          },
+          "operandRole": {
+            "type": "string",
+            "enum": ["left", "right", "base", "exponent", "radicand", "index"],
+            "description": "Role of this operand in the operation"
+          }
+        }
+      },
+      "description": "Operands for this operation"
+    },
+    "result": {
+      "type": "object",
+      "required": ["resultId", "resultValue"],
+      "properties": {
+        "resultId": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the result element"
+        },
+        "resultValue": {
+          "type": "string",
+          "description": "Value representation of the result"
+        },
+        "resultForm": {
+          "type": "string",
+          "enum": ["canonical", "normalized", "standard", "simplified", "exact", "approximate"],
+          "description": "Form of the result"
+        }
+      },
+      "description": "Result of the operation"
+    },
+    "operationLaws": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lawName": {
+            "type": "string",
+            "description": "Name of the law applicable to this operation"
+          },
+          "lawDescription": {
+            "type": "string",
+            "description": "Description of the law"
+          },
+          "lawFormula": {
+            "type": "string",
+            "description": "Mathematical formula of the law"
+          }
+        }
+      },
+      "description": "Mathematical laws applicable to this operation"
+    },
+    "primeMappingDefinition": {
+      "type": "object",
+      "required": ["description", "mapping"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of how the operation maps in prime coordinates"
+        },
+        "mapping": {
+          "type": "string",
+          "description": "Formal definition of the mapping in prime coordinates"
+        },
+        "operationInCoordinates": {
+          "type": "string",
+          "description": "How the operation is performed directly in prime coordinates"
+        },
+        "coherenceMeasure": {
+          "type": "string",
+          "description": "Coherence measure of this mapping"
+        }
+      },
+      "description": "Definition of how this operation maps to prime coordinates"
+    },
+    "computationalAspects": {
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Algorithm used to compute this operation"
+        },
+        "complexity": {
+          "type": "string",
+          "description": "Computational complexity of this operation"
+        },
+        "precisionIssues": {
+          "type": "string",
+          "description": "Precision or numerical issues relevant to this operation"
+        },
+        "optimizations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Possible optimizations for this operation"
+        }
+      },
+      "description": "Computational aspects of this operation"
+    },
+    "observerFrames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the observer frame"
+          },
+          "operationDescription": {
+            "type": "string",
+            "description": "Description of the operation in this frame"
+          },
+          "operationImplementation": {
+            "type": "string",
+            "description": "Implementation of the operation in this frame"
+          }
+        }
+      },
+      "description": "How this operation appears in different observer frames"
+    },
+    "extendedProperties": {
+      "type": "object",
+      "properties": {
+        "isIdempotent": {
+          "type": "boolean",
+          "description": "Whether the operation is idempotent (a op a = a)"
+        },
+        "isInvolutory": {
+          "type": "boolean",
+          "description": "Whether the operation is involutory (doing it twice returns the original)"
+        },
+        "preservesProperty": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties preserved by this operation"
+        },
+        "specialCases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "Description of the special case"
+              },
+              "condition": {
+                "type": "string",
+                "description": "Condition for the special case"
+              },
+              "result": {
+                "type": "string",
+                "description": "Result in the special case"
+              }
+            }
+          },
+          "description": "Special cases for this operation"
+        }
+      },
+      "description": "Extended properties of this operation"
+    },
+    "fieldTheoryAspects": {
+      "type": "object",
+      "properties": {
+        "extensionTheory": {
+          "type": "string",
+          "description": "Relevance to field extension theory"
+        },
+        "galoisTheory": {
+          "type": "string",
+          "description": "Relevance to Galois theory"
+        },
+        "polynomialContext": {
+          "type": "string",
+          "description": "Relevance to polynomial operations over this field"
+        }
+      },
+      "description": "Field theory aspects of this operation"
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:field:rational-numbers:operation:addition-example",
+      "fieldDomain": "urn:uor:algebra:field:rational-numbers",
+      "operationType": "addition",
+      "operands": [
+        {
+          "operandId": "urn:uor:algebra:field:rational-numbers:element:two-thirds",
+          "operandValue": "2/3",
+          "operandRole": "left"
+        },
+        {
+          "operandId": "urn:uor:algebra:field:rational-numbers:element:one-fourth",
+          "operandValue": "1/4",
+          "operandRole": "right"
+        }
+      ],
+      "result": {
+        "resultId": "urn:uor:algebra:field:rational-numbers:element:eleven-twelfths",
+        "resultValue": "11/12",
+        "resultForm": "canonical"
+      },
+      "operationLaws": [
+        {
+          "lawName": "Commutative Law",
+          "lawDescription": "Addition of field elements is commutative",
+          "lawFormula": "a + b = b + a"
+        },
+        {
+          "lawName": "Associative Law",
+          "lawDescription": "Addition of field elements is associative",
+          "lawFormula": "(a + b) + c = a + (b + c)"
+        }
+      ],
+      "primeMappingDefinition": {
+        "description": "Addition in a field requires finding a common denominator and adding the numerators when viewed as fractions",
+        "mapping": "a/b + c/d = (ad + bc)/(bd)",
+        "operationInCoordinates": "For rational numbers in prime coordinate representation, addition requires conversion to a common denominator by adjusting the coordinates of prime factors in the denominators",
+        "coherenceMeasure": "Minimal representation after finding common denominators and simplifying"
+      },
+      "computationalAspects": {
+        "algorithm": "1. Find least common multiple (LCM) of denominators: lcm(3, 4) = 12\n2. Convert fractions to equivalent forms with common denominator: 2/3 = 8/12, 1/4 = 3/12\n3. Add numerators: 8 + 3 = 11\n4. Result: 11/12\n5. Simplify if necessary (already in lowest terms)",
+        "complexity": "O(log(max(b, d))) where b, d are denominators, due to GCD/LCM computation",
+        "precisionIssues": "Exact computation with rational numbers, no precision loss",
+        "optimizations": [
+          "Use binary GCD algorithm for faster LCM computation",
+          "Detect special cases (e.g., same denominator) for simpler addition"
+        ]
+      },
+      "observerFrames": [
+        {
+          "frameId": "urn:uor:algebra:field:observer-frame:standard-fraction",
+          "operationDescription": "Standard fraction addition with common denominator",
+          "operationImplementation": "a/b + c/d = (ad + bc)/(bd) with subsequent simplification"
+        },
+        {
+          "frameId": "urn:uor:algebra:field:observer-frame:decimal-approximation",
+          "operationDescription": "Addition of decimal approximations",
+          "operationImplementation": "0.666... + 0.25 = 0.916... ≈ 0.917"
+        }
+      ],
+      "extendedProperties": {
+        "isIdempotent": false,
+        "isInvolutory": false,
+        "preservesProperty": [
+          "rationality",
+          "field-membership",
+          "algebraicity"
+        ],
+        "specialCases": [
+          {
+            "description": "Addition with zero",
+            "condition": "One operand is 0",
+            "result": "The other operand (identity property)"
+          },
+          {
+            "description": "Addition with additive inverse",
+            "condition": "a + (-a)",
+            "result": "0 (inverse property)"
+          }
+        ]
+      },
+      "fieldTheoryAspects": {
+        "extensionTheory": "Addition preserves the field of definition - the sum of elements in a field K remains in K",
+        "galoisTheory": "Addition commutes with all field automorphisms, making it a fundamentally equivariant operation",
+        "polynomialContext": "Addition of rational numbers extends to coefficient-wise addition of polynomials over Q"
+      }
+    },
+    {
+      "id": "urn:uor:algebra:field:rational-numbers:operation:division-example",
+      "fieldDomain": "urn:uor:algebra:field:rational-numbers",
+      "operationType": "division",
+      "operands": [
+        {
+          "operandId": "urn:uor:algebra:field:rational-numbers:element:two-thirds",
+          "operandValue": "2/3",
+          "operandRole": "left"
+        },
+        {
+          "operandId": "urn:uor:algebra:field:rational-numbers:element:one-fourth",
+          "operandValue": "1/4",
+          "operandRole": "right"
+        }
+      ],
+      "result": {
+        "resultId": "urn:uor:algebra:field:rational-numbers:element:eight-thirds",
+        "resultValue": "8/3",
+        "resultForm": "canonical"
+      },
+      "operationLaws": [
+        {
+          "lawName": "Division as Inverse Multiplication",
+          "lawDescription": "Division is defined as multiplication by the multiplicative inverse",
+          "lawFormula": "a ÷ b = a × b⁻¹"
+        },
+        {
+          "lawName": "Non-Associativity of Division",
+          "lawDescription": "Division is not generally associative",
+          "lawFormula": "(a ÷ b) ÷ c ≠ a ÷ (b ÷ c) in general"
+        }
+      ],
+      "primeMappingDefinition": {
+        "description": "Division in a field is performed by multiplying by the multiplicative inverse",
+        "mapping": "a/b ÷ c/d = (a/b) × (d/c) = (ad)/(bc)",
+        "operationInCoordinates": "For rational numbers in prime coordinate representation, division involves negating the exponents of the prime factors in the divisor and adding them to the corresponding exponents in the dividend",
+        "coherenceMeasure": "Minimal representation after multiplicative inverse and simplification"
+      },
+      "computationalAspects": {
+        "algorithm": "1. Multiply the first fraction by the reciprocal of the second: (2/3) × (4/1) = 8/3\n2. Simplify if necessary (already in lowest terms)",
+        "complexity": "O(log(max(numerator, denominator))) for GCD computation during simplification",
+        "precisionIssues": "Division by zero is undefined; otherwise exact for rational numbers",
+        "optimizations": [
+          "Implement division directly by cross-multiplication instead of computing inverse explicitly",
+          "Use binary GCD algorithm for faster simplification"
+        ]
+      },
+      "observerFrames": [
+        {
+          "frameId": "urn:uor:algebra:field:observer-frame:standard-fraction",
+          "operationDescription": "Standard fraction division by inverting the divisor",
+          "operationImplementation": "(a/b) ÷ (c/d) = (a/b) × (d/c) = (ad)/(bc)"
+        },
+        {
+          "frameId": "urn:uor:algebra:field:observer-frame:decimal-approximation",
+          "operationDescription": "Division of decimal approximations",
+          "operationImplementation": "0.666... ÷ 0.25 = 2.666... ≈ 2.667"
+        }
+      ],
+      "extendedProperties": {
+        "isIdempotent": false,
+        "isInvolutory": false,
+        "preservesProperty": [
+          "rationality",
+          "field-membership",
+          "algebraicity"
+        ],
+        "specialCases": [
+          {
+            "description": "Division by one",
+            "condition": "Right operand is 1",
+            "result": "The left operand (identity property of division)"
+          },
+          {
+            "description": "Division by zero",
+            "condition": "Right operand is 0",
+            "result": "Undefined (division by zero is not defined)"
+          },
+          {
+            "description": "Zero divided by non-zero",
+            "condition": "Left operand is 0, right operand is non-zero",
+            "result": "0"
+          }
+        ]
+      },
+      "fieldTheoryAspects": {
+        "extensionTheory": "Division preserves the field of definition - the quotient of elements in a field K remains in K, provided the divisor is non-zero",
+        "galoisTheory": "Division commutes with field automorphisms, making it compatible with Galois group actions",
+        "polynomialContext": "Division of rational numbers extends to the field of rational functions Q(x), but not to the polynomial ring Q[x]"
+      }
+    }
+  ]
+}

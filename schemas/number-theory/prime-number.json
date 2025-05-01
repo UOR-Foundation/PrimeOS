@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/number-theory/prime-number.json",
+  "$id": "https://uor.foundation/schemas/number-theory/prime-number.json",
   "title": "Prime Number Schema",
   "description": "Schema defining the structure and properties of prime numbers as irreducible elements in the number theory domain",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "value", "primeDecomposition", "canonicalRepresentation", "primeProperties"],
   "properties": {

@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/integration/moduli-stack.json",
+  "$id": "https://uor.foundation/schemas/integration/moduli-stack.json",
   "title": "Moduli Stack Schema",
   "description": "Schema defining the organization of all domain manifolds within the UOR framework",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "type", "manifolds", "manifoldStructure"],
   "properties": {

@@ -1,0 +1,847 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/algebra/operators/algebraic-automorphism.json",
+  "title": "Algebraic Automorphism Schema",
+  "description": "A precise schema defining algebraic automorphisms within the UOR framework, focusing on structure-preserving bijective maps from an algebraic domain to itself",
+  "type": "object",
+  "required": ["id", "name", "isomorphismReference", "automorphismProperties", "groupStructure", "fixedElements", "primeDecomposition", "observerFrames", "coherenceMeasures"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "const": "urn:uor:domain:algebra:operators:algebraic-automorphism",
+      "description": "Unique identifier for the algebraic automorphism schema"
+    },
+    "name": {
+      "type": "string",
+      "const": "Algebraic Automorphism",
+      "description": "Name of the operator concept"
+    },
+    "description": {
+      "type": "string",
+      "const": "An isomorphism from an algebraic domain to itself, representing a symmetry or structure-preserving transformation of the domain",
+      "description": "Description of the algebraic automorphism concept"
+    },
+    "isomorphismReference": {
+      "type": "object",
+      "description": "Reference to the underlying isomorphism structure",
+      "required": ["isomorphismUri", "specialization"],
+      "properties": {
+        "isomorphismUri": {
+          "type": "string",
+          "format": "uri",
+          "const": "urn:uor:domain:algebra:operators:algebraic-isomorphism",
+          "description": "URI reference to the isomorphism schema"
+        },
+        "specialization": {
+          "type": "string",
+          "const": "An automorphism is an isomorphism where the source and target domains are identical",
+          "description": "How automorphism specializes isomorphism"
+        },
+        "inheritedProperties": {
+          "type": "array",
+          "description": "Properties inherited from isomorphisms",
+          "items": {
+            "type": "string",
+            "description": "Inherited property"
+          },
+          "examples": [
+            "Bijectivity",
+            "Structure preservation",
+            "Invertibility",
+            "Operation compatibility"
+          ]
+        }
+      }
+    },
+    "automorphismProperties": {
+      "type": "object",
+      "description": "Properties specific to automorphisms",
+      "required": ["definition", "identityAutomorphism", "orderProperty"],
+      "properties": {
+        "definition": {
+          "type": "string",
+          "const": "An automorphism of an algebraic structure S is a bijective homomorphism φ: S → S that preserves all relevant operations and relations of S",
+          "description": "Definition of an automorphism"
+        },
+        "identityAutomorphism": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "The identity automorphism is the map idₛ: S → S defined by idₛ(s) = s for all s ∈ S",
+              "description": "Definition of the identity automorphism"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Property of the identity automorphism"
+              },
+              "examples": [
+                "Acts as the identity element in the automorphism group",
+                "Has order 1",
+                "Fixes every element of the domain",
+                "Commutes with all other automorphisms"
+              ]
+            }
+          }
+        },
+        "orderProperty": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "The order of an automorphism φ is the smallest positive integer n such that φⁿ = idₛ, or ∞ if no such n exists",
+              "description": "Definition of the order of an automorphism"
+            },
+            "significance": {
+              "type": "string",
+              "const": "The order of an automorphism characterizes the cyclic pattern of the transformation when applied repeatedly",
+              "description": "Significance of the order"
+            },
+            "orderComputation": {
+              "type": "string",
+              "description": "Methods for computing the order of an automorphism"
+            }
+          }
+        },
+        "innerVsOuterAutomorphisms": {
+          "type": "object",
+          "properties": {
+            "innerDefinition": {
+              "type": "string",
+              "const": "An inner automorphism of a structure S is an automorphism that can be expressed as conjugation by an element of S (when a conjugation operation is defined)",
+              "description": "Definition of inner automorphisms"
+            },
+            "outerDefinition": {
+              "type": "string",
+              "const": "An outer automorphism is an automorphism that is not inner",
+              "description": "Definition of outer automorphisms"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Domain with inner/outer distinction"
+                  },
+                  "innerExample": {
+                    "type": "string",
+                    "description": "Example of inner automorphism"
+                  },
+                  "outerExample": {
+                    "type": "string",
+                    "description": "Example of outer automorphism"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "domain": "Groups",
+                  "innerExample": "Conjugation by a group element: g ↦ h⁻¹gh",
+                  "outerExample": "Non-conjugation automorphisms of symmetric groups Sₙ for n ≥ 6"
+                },
+                {
+                  "domain": "Lie algebras",
+                  "innerExample": "Exponential of adjoint action: X ↦ exp(ad Y)(X)",
+                  "outerExample": "Diagram automorphisms of simple Lie algebras"
+                },
+                {
+                  "domain": "Field extensions",
+                  "innerExample": "Not applicable (all field automorphisms are outer)",
+                  "outerExample": "Complex conjugation on the complex numbers"
+                }
+              ]
+            },
+            "significance": {
+              "type": "string",
+              "const": "The distinction between inner and outer automorphisms captures whether a symmetry can be realized from within the structure or requires an external perspective",
+              "description": "Significance of inner vs outer distinction"
+            }
+          }
+        }
+      }
+    },
+    "groupStructure": {
+      "type": "object",
+      "description": "The group structure formed by automorphisms",
+      "required": ["automorphismGroup", "composition", "subgroups"],
+      "properties": {
+        "automorphismGroup": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "The set of all automorphisms of a structure S forms a group Aut(S) under the operation of function composition",
+              "description": "Definition of the automorphism group"
+            },
+            "notation": {
+              "type": "string",
+              "const": "Aut(S)",
+              "description": "Standard notation for the automorphism group"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Property of the automorphism group"
+              },
+              "examples": [
+                "The identity element is the identity automorphism",
+                "The inverse of an automorphism is its inverse function",
+                "Composition is associative",
+                "The group may be finite or infinite",
+                "The group may be abelian or non-abelian"
+              ]
+            }
+          }
+        },
+        "composition": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "The composition of automorphisms φ and ψ is the automorphism φ ∘ ψ defined by (φ ∘ ψ)(s) = φ(ψ(s)) for all s ∈ S",
+              "description": "Definition of composition of automorphisms"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Property of composition"
+              },
+              "examples": [
+                "Associative: (φ ∘ ψ) ∘ θ = φ ∘ (ψ ∘ θ)",
+                "Identity element: φ ∘ idₛ = idₛ ∘ φ = φ",
+                "Inverse: φ ∘ φ⁻¹ = φ⁻¹ ∘ φ = idₛ",
+                "Generally non-commutative: φ ∘ ψ ≠ ψ ∘ φ in general"
+              ]
+            }
+          }
+        },
+        "subgroups": {
+          "type": "object",
+          "properties": {
+            "innerAutomorphismGroup": {
+              "type": "object",
+              "properties": {
+                "definition": {
+                  "type": "string",
+                  "const": "The set of all inner automorphisms of a structure S forms a normal subgroup Inn(S) of Aut(S)",
+                  "description": "Definition of the inner automorphism group"
+                },
+                "notation": {
+                  "type": "string",
+                  "const": "Inn(S)",
+                  "description": "Standard notation for the inner automorphism group"
+                },
+                "properties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Property of the inner automorphism group"
+                  },
+                  "examples": [
+                    "Normal subgroup of Aut(S)",
+                    "Isomorphic to S/Z(S) for groups (where Z(S) is the center)",
+                    "May be proper or equal to Aut(S)"
+                  ]
+                }
+              }
+            },
+            "galoisGroup": {
+              "type": "object",
+              "properties": {
+                "definition": {
+                  "type": "string",
+                  "const": "For a field extension E/F, the Galois group Gal(E/F) is the group of all automorphisms of E that fix every element of F",
+                  "description": "Definition of the Galois group"
+                },
+                "properties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Property of the Galois group"
+                  },
+                  "examples": [
+                    "Subgroup of Aut(E)",
+                    "Acts on the elements of E",
+                    "Central to the Galois correspondence",
+                    "Size equals the degree of the extension for Galois extensions"
+                  ]
+                }
+              }
+            },
+            "otherSignificantSubgroups": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the subgroup"
+                  },
+                  "definition": {
+                    "type": "string",
+                    "description": "Definition of the subgroup"
+                  },
+                  "significance": {
+                    "type": "string",
+                    "description": "Significance of the subgroup"
+                  }
+                }
+              },
+              "examples": [
+                {
+                  "name": "Stabilizer subgroup",
+                  "definition": "Automorphisms that fix a particular element or subset",
+                  "significance": "Captures symmetries that preserve specific features"
+                },
+                {
+                  "name": "Outer automorphism group",
+                  "definition": "Quotient Aut(S)/Inn(S)",
+                  "significance": "Measures the extent to which symmetries cannot be realized internally"
+                },
+                {
+                  "name": "Cyclic subgroups",
+                  "definition": "Subgroups generated by a single automorphism",
+                  "significance": "Represents iterative applications of a single transformation"
+                }
+              ]
+            }
+          }
+        },
+        "groupActions": {
+          "type": "object",
+          "properties": {
+            "actionOnDomain": {
+              "type": "string",
+              "const": "The automorphism group Aut(S) acts on the structure S via the evaluation map (φ, s) ↦ φ(s)",
+              "description": "Action on the domain"
+            },
+            "actionOnSubstructures": {
+              "type": "string",
+              "const": "Aut(S) acts on the set of substructures of S by mapping each substructure to its image",
+              "description": "Action on substructures"
+            },
+            "otherActions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "actionName": {
+                    "type": "string",
+                    "description": "Name of the action"
+                  },
+                  "actionDescription": {
+                    "type": "string",
+                    "description": "Description of the action"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "fixedElements": {
+      "type": "object",
+      "description": "Elements and structures fixed by automorphisms",
+      "required": ["fixedPointDefinition", "fixedPointSet", "fixedSubstructures"],
+      "properties": {
+        "fixedPointDefinition": {
+          "type": "string",
+          "const": "A fixed point of an automorphism φ is an element s ∈ S such that φ(s) = s",
+          "description": "Definition of fixed points"
+        },
+        "fixedPointSet": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "The fixed point set of an automorphism φ is the set Fix(φ) = {s ∈ S | φ(s) = s}",
+              "description": "Definition of the fixed point set"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Property of the fixed point set"
+              },
+              "examples": [
+                "Forms a substructure of S (closed under operations)",
+                "May be empty, finite, or infinite",
+                "Equal to the entire domain only for the identity automorphism",
+                "Characterizes the automorphism's action"
+              ]
+            }
+          }
+        },
+        "fixedSubstructures": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "A substructure T of S is fixed by an automorphism φ if φ(T) = T, meaning φ maps T onto itself (not necessarily fixing each element)",
+              "description": "Definition of fixed substructures"
+            },
+            "significance": {
+              "type": "string",
+              "const": "Fixed substructures reveal invariant components under the automorphism's action",
+              "description": "Significance of fixed substructures"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Example of fixed substructures"
+              }
+            }
+          }
+        },
+        "fixedFieldTheory": {
+          "type": "object",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "const": "In field theory, the fixed field of a group of automorphisms G is the subfield consisting of all elements fixed by every automorphism in G",
+              "description": "Definition of fixed field"
+            },
+            "galoisCorrespondence": {
+              "type": "string",
+              "const": "The Galois correspondence establishes a bijection between subgroups of the Galois group and intermediate fields of a Galois extension",
+              "description": "Galois correspondence for fixed fields"
+            },
+            "applications": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Application of fixed field theory"
+              },
+              "examples": [
+                "Determining solvability of polynomial equations",
+                "Constructibility proofs in geometry",
+                "Identifying intermediate field extensions",
+                "Characterizing splitting fields"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "primeDecomposition": {
+      "type": "object",
+      "description": "The prime decomposition structure of automorphisms in the UOR framework",
+      "required": ["irreducibleAutomorphisms", "decompositionStructure"],
+      "properties": {
+        "irreducibleAutomorphisms": {
+          "type": "array",
+          "description": "Basic prime automorphisms that serve as building blocks",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the irreducible automorphism"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the automorphism"
+              },
+              "irreducibilityProof": {
+                "type": "string",
+                "description": "Reference to proof that this automorphism is irreducible"
+              }
+            }
+          },
+          "examples": [
+            {
+              "name": "Elementary transposition",
+              "description": "Swaps two elements while preserving structure",
+              "irreducibilityProof": "Minimal non-trivial permutation automorphism"
+            },
+            {
+              "name": "Primitive rotation",
+              "description": "Rotates elements in a cyclic substructure",
+              "irreducibilityProof": "Cannot be expressed as a composition of simpler rotations"
+            },
+            {
+              "name": "Field conjugation",
+              "description": "Basic field automorphism (e.g., complex conjugation)",
+              "irreducibilityProof": "Atomic involution in the field structure"
+            }
+          ]
+        },
+        "decompositionStructure": {
+          "type": "object",
+          "properties": {
+            "cycleStructure": {
+              "type": "object",
+              "properties": {
+                "definition": {
+                  "type": "string",
+                  "const": "An automorphism can be decomposed into disjoint cycles, each representing an irreducible cyclic transformation on a subset of elements",
+                  "description": "Definition of cycle structure"
+                },
+                "significance": {
+                  "type": "string",
+                  "const": "The cycle structure characterizes the automorphism up to conjugation and determines its order",
+                  "description": "Significance of cycle structure"
+                }
+              }
+            },
+            "jordanDecomposition": {
+              "type": "object",
+              "properties": {
+                "definition": {
+                  "type": "string",
+                  "const": "In appropriate contexts, an automorphism can be decomposed into semisimple and unipotent components: φ = φs ∘ φu",
+                  "description": "Definition of Jordan decomposition"
+                },
+                "domains": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Domains where Jordan decomposition applies"
+                  },
+                  "examples": [
+                    "Linear automorphisms of vector spaces",
+                    "Algebraic group automorphisms",
+                    "Lie algebra automorphisms"
+                  ]
+                }
+              }
+            },
+            "canonicalForm": {
+              "type": "string",
+              "const": "The canonical form of an automorphism expresses it in terms of minimal generators of the automorphism group or in terms of irreducible cycles",
+              "description": "Canonical representation of automorphisms"
+            }
+          }
+        },
+        "decompositionTheorems": {
+          "type": "array",
+          "description": "Theorems governing the decomposition of automorphisms",
+          "items": {
+            "type": "object",
+            "properties": {
+              "theoremName": {
+                "type": "string",
+                "description": "Name of the theorem"
+              },
+              "theoremStatement": {
+                "type": "string",
+                "description": "Statement of the theorem"
+              },
+              "application": {
+                "type": "string",
+                "description": "Application of the theorem"
+              }
+            }
+          },
+          "examples": [
+            {
+              "theoremName": "Disjoint Cycle Decomposition",
+              "theoremStatement": "Every permutation automorphism can be uniquely represented as a product of disjoint cycles",
+              "application": "Classification and analysis of permutation automorphisms"
+            },
+            {
+              "theoremName": "Rational Canonical Form",
+              "theoremStatement": "Every linear automorphism has a canonical matrix representation in terms of companion matrices",
+              "application": "Classification of linear automorphisms up to conjugacy"
+            },
+            {
+              "theoremName": "Multiplicative Jordan Decomposition",
+              "theoremStatement": "In certain contexts, every automorphism can be uniquely written as a product of commuting semisimple and unipotent automorphisms",
+              "application": "Structural analysis of automorphism groups"
+            }
+          ]
+        }
+      }
+    },
+    "observerFrames": {
+      "type": "array",
+      "description": "Observer reference frames for automorphisms",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "perspective": {
+            "type": "string",
+            "description": "Perspective defined by this frame"
+          },
+          "transformations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Transformations in this frame"
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "frameName": "Group Action Frame",
+          "perspective": "Viewing automorphisms as actions on the domain",
+          "transformations": [
+            "Orbit-stabilizer transformations",
+            "Cycle structure analyses",
+            "Fixed point set identifications"
+          ]
+        },
+        {
+          "frameName": "Symmetry Frame",
+          "perspective": "Viewing automorphisms as symmetries of the structure",
+          "transformations": [
+            "Symmetry group decompositions",
+            "Invariant structure identifications",
+            "Symmetry breaking analyses"
+          ]
+        },
+        {
+          "frameName": "Galois Frame",
+          "perspective": "Viewing automorphisms as Galois transformations",
+          "transformations": [
+            "Fixed field calculations",
+            "Galois correspondence applications",
+            "Solvability analyses"
+          ]
+        },
+        {
+          "frameName": "Structural Frame",
+          "perspective": "Viewing automorphisms in terms of structural preservation",
+          "transformations": [
+            "Structure-preserving decompositions",
+            "Invariant substructure analyses",
+            "Canonical form transformations"
+          ]
+        }
+      ]
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "description": "Measures of coherence for automorphisms",
+      "items": {
+        "type": "object",
+        "properties": {
+          "measureName": {
+            "type": "string",
+            "description": "Name of the coherence measure"
+          },
+          "measureDescription": {
+            "type": "string",
+            "description": "Description of what the measure quantifies"
+          },
+          "formula": {
+            "type": "string",
+            "description": "Formula or method for calculating the measure"
+          }
+        }
+      },
+      "examples": [
+        {
+          "measureName": "Fixed Point Measure",
+          "measureDescription": "Proportion of elements fixed by the automorphism",
+          "formula": "|Fix(φ)| / |S| for finite structures"
+        },
+        {
+          "measureName": "Cycle Length Diversity",
+          "measureDescription": "Variation in the lengths of cycles in the automorphism",
+          "formula": "Standard deviation of cycle lengths in the cycle decomposition"
+        },
+        {
+          "measureName": "Automorphism Order",
+          "measureDescription": "Number of applications needed to return to identity",
+          "formula": "Least positive integer n such that φⁿ = id, or ∞ if none exists"
+        },
+        {
+          "measureName": "Structural Disruption",
+          "measureDescription": "Degree to which the automorphism rearranges the structure",
+          "formula": "Average distance between elements and their images under the automorphism"
+        },
+        {
+          "measureName": "Inner Measure",
+          "measureDescription": "Degree to which the automorphism can be approximated by inner automorphisms",
+          "formula": "Minimal distance to the nearest inner automorphism in an appropriate metric"
+        }
+      ]
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of automorphisms",
+      "items": {
+        "type": "object",
+        "properties": {
+          "applicationDomain": {
+            "type": "string",
+            "description": "Domain of application"
+          },
+          "applicationDescription": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Examples of this application"
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "applicationDomain": "Galois Theory",
+          "applicationDescription": "Using automorphisms to analyze field extensions and polynomial solvability",
+          "examples": [
+            "Determining solvability of polynomial equations by radicals",
+            "Identifying intermediate fields in extensions",
+            "Constructing field extensions with desired properties"
+          ]
+        },
+        {
+          "applicationDomain": "Symmetry Analysis",
+          "applicationDescription": "Using automorphisms to identify symmetries in mathematical structures",
+          "examples": [
+            "Classification of crystal structures in crystallography",
+            "Analysis of molecular symmetries in chemistry",
+            "Identification of symmetry patterns in combinatorial structures"
+          ]
+        },
+        {
+          "applicationDomain": "Cryptography",
+          "applicationDescription": "Using automorphisms for cryptographic operations and security analysis",
+          "examples": [
+            "Automorphism-based encryption schemes",
+            "Security analysis based on automorphism group properties",
+            "Generation of cryptographic primitives using automorphism groups"
+          ]
+        },
+        {
+          "applicationDomain": "Algebraic Geometry",
+          "applicationDescription": "Using automorphisms to analyze algebraic varieties and their properties",
+          "examples": [
+            "Classification of curves and surfaces up to isomorphism",
+            "Study of moduli spaces of algebraic structures",
+            "Analysis of birational equivalence classes"
+          ]
+        }
+      ]
+    },
+    "theorems": {
+      "type": "array",
+      "description": "Key theorems related to automorphisms",
+      "items": {
+        "type": "object",
+        "properties": {
+          "theoremName": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "theoremStatement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance of the theorem"
+          }
+        }
+      },
+      "examples": [
+        {
+          "theoremName": "Fundamental Theorem of Galois Theory",
+          "theoremStatement": "For a Galois extension E/F, there is a one-to-one correspondence between the subgroups of the Galois group Gal(E/F) and the intermediate fields between F and E",
+          "significance": "Establishes the deep connection between field extensions and automorphism groups"
+        },
+        {
+          "theoremName": "Orbit-Stabilizer Theorem",
+          "theoremStatement": "For a group action of G on a set X, the size of the orbit of an element x equals the index of its stabilizer: |Orb(x)| = [G : Stab(x)]",
+          "significance": "Relates orbit sizes to group structure for automorphism group actions"
+        },
+        {
+          "theoremName": "Burnside's Lemma",
+          "theoremStatement": "The number of orbits equals the average number of fixed points: |X/G| = (1/|G|) Σ_{g∈G} |Fix(g)|",
+          "significance": "Provides a counting formula for orbits based on fixed point information"
+        },
+        {
+          "theoremName": "Sylow Theorems",
+          "theoremStatement": "Specifies the number and conjugacy of Sylow p-subgroups in finite groups",
+          "significance": "Essential for analyzing the structure of automorphism groups"
+        }
+      ]
+    },
+    "specialCases": {
+      "type": "array",
+      "description": "Special cases and types of automorphisms",
+      "items": {
+        "type": "object",
+        "properties": {
+          "caseName": {
+            "type": "string",
+            "description": "Name of the special case"
+          },
+          "definition": {
+            "type": "string",
+            "description": "Definition of this special case"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Properties of this special case"
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "caseName": "Involution",
+          "definition": "An automorphism φ such that φ² = id, i.e., φ is its own inverse",
+          "properties": [
+            "Has order 2",
+            "Fixed points form a substructure",
+            "Common in many algebraic structures (e.g., complex conjugation)",
+            "Decomposes the domain into fixed points and pairs that are swapped"
+          ]
+        },
+        {
+          "caseName": "Cyclic automorphism",
+          "definition": "An automorphism that generates a cyclic subgroup of the automorphism group",
+          "properties": [
+            "Determined by a single generator",
+            "All powers are also automorphisms",
+            "May have finite or infinite order",
+            "Describes a cyclic action on the domain"
+          ]
+        },
+        {
+          "caseName": "Normal automorphism",
+          "definition": "An automorphism φ such that φψφ⁻¹ψ⁻¹ ∈ Inn(S) for all ψ ∈ Aut(S)",
+          "properties": [
+            "Represents the kernel of the map Aut(S) → Out(S)",
+            "Includes all inner automorphisms",
+            "May include some outer automorphisms as well",
+            "Important for structural analysis of automorphism groups"
+          ]
+        },
+        {
+          "caseName": "Frobenius automorphism",
+          "definition": "In fields of characteristic p, the automorphism φ(x) = x^p",
+          "properties": [
+            "Fundamental in the theory of finite fields",
+            "Generates the Galois group of finite field extensions",
+            "Fixed field is the prime subfield",
+            "Central to defining and analyzing field extensions in positive characteristic"
+          ]
+        }
+      ]
+    }
+  }
+}

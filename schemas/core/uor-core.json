@@ -1,12 +1,9 @@
+
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/core/uor-core.json",
+  "$id": "https://uor.foundation/schemas/core/uor-core.json",
   "title": "UOR Core Schema",
   "description": "Core schema defining the fundamental Universal Object Reference (UOR) model components",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "definitions": {
     "UORObject": {

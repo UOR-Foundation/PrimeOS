@@ -1,0 +1,399 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/algebra/vector-spaces/vector-operation.json",
+  "title": "Vector Space Operation Schema",
+  "description": "Schema defining operations on vector elements within the UOR framework",
+  "type": "object",
+  "required": ["id", "vectorSpaceDomain", "operationType", "operands", "result", "primeMappingDefinition"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the vector operation"
+    },
+    "vectorSpaceDomain": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the vector space domain for this operation"
+    },
+    "operationType": {
+      "type": "string",
+      "enum": [
+        "vector-addition",
+        "vector-subtraction",
+        "scalar-multiplication",
+        "inner-product",
+        "outer-product",
+        "cross-product",
+        "projection",
+        "tensor-product",
+        "linear-combination",
+        "linear-transformation"
+      ],
+      "description": "Type of vector space operation"
+    },
+    "operands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "operandId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the operand element"
+          },
+          "operandValue": {
+            "type": "string",
+            "description": "Value representation of the operand"
+          },
+          "operandRole": {
+            "type": "string",
+            "enum": [
+              "left-vector",
+              "right-vector",
+              "scalar",
+              "projection-target",
+              "projection-direction",
+              "linear-operator",
+              "operand-vector",
+              "coefficient"
+            ],
+            "description": "Role of this operand in the operation"
+          }
+        }
+      },
+      "description": "Operands for this operation"
+    },
+    "result": {
+      "type": "object",
+      "required": ["resultType", "resultValue"],
+      "properties": {
+        "resultId": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the result element"
+        },
+        "resultValue": {
+          "type": "string",
+          "description": "Value representation of the result"
+        },
+        "resultType": {
+          "type": "string",
+          "enum": [
+            "vector",
+            "scalar",
+            "tensor",
+            "matrix",
+            "linear-operator"
+          ],
+          "description": "Type of the result"
+        },
+        "resultForm": {
+          "type": "string",
+          "enum": [
+            "canonical",
+            "normalized",
+            "standard",
+            "simplified",
+            "coordinate"
+          ],
+          "description": "Form of the result"
+        },
+        "resultSpace": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the space containing the result"
+        }
+      },
+      "description": "Result of the operation"
+    },
+    "operationLaws": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lawName": {
+            "type": "string",
+            "description": "Name of the law applicable to this operation"
+          },
+          "lawDescription": {
+            "type": "string",
+            "description": "Description of the law"
+          },
+          "lawFormula": {
+            "type": "string",
+            "description": "Mathematical formula of the law"
+          }
+        }
+      },
+      "description": "Mathematical laws applicable to this operation"
+    },
+    "primeMappingDefinition": {
+      "type": "object",
+      "required": ["description", "mapping"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of how the operation maps in prime coordinates"
+        },
+        "mapping": {
+          "type": "string",
+          "description": "Formal definition of the mapping in prime coordinates"
+        },
+        "operationInCoordinates": {
+          "type": "string",
+          "description": "How the operation is performed directly in prime coordinates"
+        },
+        "coherenceMeasure": {
+          "type": "string",
+          "description": "Coherence measure of this mapping"
+        }
+      },
+      "description": "Definition of how this operation maps to prime coordinates"
+    },
+    "computationalAspects": {
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Algorithm used to compute this operation"
+        },
+        "complexity": {
+          "type": "string",
+          "description": "Computational complexity of this operation"
+        },
+        "precisionIssues": {
+          "type": "string",
+          "description": "Precision or numerical issues relevant to this operation"
+        },
+        "optimizations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Possible optimizations for this operation"
+        }
+      },
+      "description": "Computational aspects of this operation"
+    },
+    "algebraicProperties": {
+      "type": "object",
+      "properties": {
+        "linearity": {
+          "type": "object",
+          "properties": {
+            "isLinearInFirstArgument": {
+              "type": "boolean",
+              "description": "Whether the operation is linear in its first argument"
+            },
+            "isLinearInSecondArgument": {
+              "type": "boolean",
+              "description": "Whether the operation is linear in its second argument"
+            },
+            "linearityEquations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Equations expressing the linearity properties"
+            }
+          },
+          "description": "Linearity properties of the operation"
+        },
+        "distributivity": {
+          "type": "object",
+          "properties": {
+            "distributesWith": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Operations this operation distributes with"
+            },
+            "distributivityEquations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Equations expressing the distributivity properties"
+            }
+          },
+          "description": "Distributivity properties of the operation"
+        },
+        "associativity": {
+          "type": "object",
+          "properties": {
+            "isAssociative": {
+              "type": "boolean",
+              "description": "Whether the operation is associative"
+            },
+            "associativityEquation": {
+              "type": "string",
+              "description": "Equation expressing the associativity property"
+            }
+          },
+          "description": "Associativity properties of the operation"
+        },
+        "commutativity": {
+          "type": "object",
+          "properties": {
+            "isCommutative": {
+              "type": "boolean",
+              "description": "Whether the operation is commutative"
+            },
+            "commutativityEquation": {
+              "type": "string",
+              "description": "Equation expressing the commutativity property"
+            }
+          },
+          "description": "Commutativity properties of the operation"
+        }
+      },
+      "description": "Algebraic properties of the operation"
+    },
+    "geometricInterpretation": {
+      "type": "object",
+      "properties": {
+        "interpretation": {
+          "type": "string",
+          "description": "Geometric interpretation of the operation"
+        },
+        "visualization": {
+          "type": "string",
+          "description": "How the operation can be visualized"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Geometric properties of the operation"
+        }
+      },
+      "description": "Geometric interpretation of the operation"
+    },
+    "observerFrames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the observer frame"
+          },
+          "operationDescription": {
+            "type": "string",
+            "description": "Description of the operation in this frame"
+          },
+          "operationImplementation": {
+            "type": "string",
+            "description": "Implementation of the operation in this frame"
+          },
+          "frameInvariance": {
+            "type": "string",
+            "description": "Description of how the operation behaves under frame changes"
+          }
+        }
+      },
+      "description": "How this operation appears in different observer frames"
+    },
+    "extendedProperties": {
+      "type": "object",
+      "properties": {
+        "isIdempotent": {
+          "type": "boolean",
+          "description": "Whether the operation is idempotent (a op a = a)"
+        },
+        "isInvolutory": {
+          "type": "boolean",
+          "description": "Whether the operation is involutory (doing it twice returns the original)"
+        },
+        "preservesProperty": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties preserved by this operation"
+        },
+        "specialCases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "Description of the special case"
+              },
+              "condition": {
+                "type": "string",
+                "description": "Condition for the special case"
+              },
+              "result": {
+                "type": "string",
+                "description": "Result in the special case"
+              }
+            }
+          },
+          "description": "Special cases for this operation"
+        }
+      },
+      "description": "Extended properties of this operation"
+    },
+    "functionalProperties": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "type": "string",
+          "description": "Domain of the operation as a function"
+        },
+        "codomain": {
+          "type": "string",
+          "description": "Codomain of the operation as a function"
+        },
+        "kernel": {
+          "type": "string",
+          "description": "Kernel of the operation (if applicable)"
+        },
+        "image": {
+          "type": "string",
+          "description": "Image of the operation (if applicable)"
+        },
+        "rank": {
+          "type": "string",
+          "description": "Rank of the operation (if applicable)"
+        },
+        "nullity": {
+          "type": "string",
+          "description": "Nullity of the operation (if applicable)"
+        }
+      },
+      "description": "Functional properties of the operation"
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      },
+      "description": "Applications of this operation"
+    }
+  }
+}

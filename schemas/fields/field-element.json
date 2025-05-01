@@ -1,0 +1,384 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/algebra/fields/field-element.json",
+  "title": "Field Element Schema",
+  "description": "Schema defining elements of a field with their properties and prime representation within the UOR framework",
+  "type": "object",
+  "required": ["id", "fieldDomain", "representation", "properties", "primeRepresentation"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the field element"
+    },
+    "fieldDomain": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to the field domain this element belongs to"
+    },
+    "representation": {
+      "type": "object",
+      "description": "Standard representation of the field element",
+      "required": ["value", "form"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "Symbolic or numerical value representation"
+        },
+        "form": {
+          "type": "string",
+          "enum": [
+            "canonical",
+            "normalized",
+            "standard",
+            "decimal",
+            "fraction",
+            "algebraic-expression",
+            "basis-expansion"
+          ],
+          "description": "Form of representation"
+        },
+        "renderingNotation": {
+          "type": "string",
+          "description": "Notation used for rendering this element (e.g., LaTeX)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of this element"
+        }
+      }
+    },
+    "properties": {
+      "type": "object",
+      "description": "Properties of this field element",
+      "required": ["isZero", "isOne", "isUnit"],
+      "properties": {
+        "isZero": {
+          "type": "boolean",
+          "description": "Whether this element is the additive identity (zero)"
+        },
+        "isOne": {
+          "type": "boolean",
+          "description": "Whether this element is the multiplicative identity (one)"
+        },
+        "isUnit": {
+          "type": "boolean",
+          "description": "Whether this element has a multiplicative inverse (all non-zero field elements are units)"
+        },
+        "order": {
+          "type": "string",
+          "description": "The order (multiplicative) of this element in the field, if applicable"
+        },
+        "isAlgebraic": {
+          "type": "boolean",
+          "description": "Whether this element is algebraic over the prime subfield"
+        },
+        "isTranscendental": {
+          "type": "boolean",
+          "description": "Whether this element is transcendental over the prime subfield"
+        },
+        "minimalPolynomial": {
+          "type": "string",
+          "description": "Minimal polynomial of this element over the prime subfield, if algebraic"
+        },
+        "degree": {
+          "type": "string",
+          "description": "Degree of the minimal polynomial, if algebraic"
+        },
+        "conjugates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Conjugates of this element under automorphisms of the field"
+        },
+        "norm": {
+          "type": "string",
+          "description": "Field norm of this element, if applicable"
+        },
+        "trace": {
+          "type": "string",
+          "description": "Field trace of this element, if applicable"
+        },
+        "absoluteValue": {
+          "type": "string",
+          "description": "Absolute value or valuation of this element, if applicable"
+        },
+        "sign": {
+          "type": "string",
+          "enum": ["positive", "negative", "zero", "not-applicable"],
+          "description": "Sign of this element, if the field is ordered"
+        }
+      }
+    },
+    "primeRepresentation": {
+      "type": "object",
+      "description": "Representation of this element in terms of prime elements or prime constructs in the appropriate UOR context",
+      "required": ["representationType", "description"],
+      "properties": {
+        "representationType": {
+          "type": "string",
+          "enum": [
+            "minimal-polynomial",
+            "prime-subfield-expansion",
+            "basis-decomposition",
+            "normalized-form",
+            "factorization-context",
+            "field-extension-basis"
+          ],
+          "description": "Type of prime representation applicable to field elements"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of how this element is represented in prime terms"
+        },
+        "basisElements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Basis element in the representation"
+          },
+          "description": "Basis elements used in the representation"
+        },
+        "coordinates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Coefficient or coordinate value"
+          },
+          "description": "Coordinates or coefficients in the basis representation"
+        },
+        "minimalPolynomialFactorization": {
+          "type": "string",
+          "description": "Factorization of the minimal polynomial in terms of irreducible polynomials over the prime subfield"
+        },
+        "observerFrameMapping": {
+          "type": "object",
+          "properties": {
+            "observerFrame": {
+              "type": "string",
+              "format": "uri",
+              "description": "Reference to the observer frame"
+            },
+            "representation": {
+              "type": "string",
+              "description": "Representation in this observer frame"
+            }
+          },
+          "description": "Mapping of this element in different observer frames"
+        }
+      }
+    },
+    "additiveInverse": {
+      "type": "object",
+      "description": "The additive inverse of this element",
+      "properties": {
+        "representation": {
+          "type": "string",
+          "description": "Representation of the additive inverse"
+        },
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the additive inverse element entity"
+        },
+        "computation": {
+          "type": "string",
+          "description": "How to compute the additive inverse"
+        }
+      }
+    },
+    "multiplicativeInverse": {
+      "type": "object",
+      "description": "The multiplicative inverse of this element, if it exists",
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "description": "Whether a multiplicative inverse exists (true for all non-zero field elements)"
+        },
+        "representation": {
+          "type": "string",
+          "description": "Representation of the multiplicative inverse"
+        },
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the multiplicative inverse element entity"
+        },
+        "computation": {
+          "type": "string",
+          "description": "How to compute the multiplicative inverse"
+        }
+      }
+    },
+    "embeddings": {
+      "type": "array",
+      "description": "Embeddings of this element in various field extensions or completions",
+      "items": {
+        "type": "object",
+        "properties": {
+          "targetField": {
+            "type": "string",
+            "description": "Field where this element is embedded"
+          },
+          "representation": {
+            "type": "string",
+            "description": "Representation in the target field"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties in the target field"
+          }
+        }
+      }
+    },
+    "primeCoordinates": {
+      "type": "object",
+      "description": "Coordinates of this element in the UOR prime coordinate system",
+      "properties": {
+        "system": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the prime coordinate system"
+        },
+        "coordinates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "prime": {
+                "type": "string",
+                "description": "Prime element or basis element"
+              },
+              "exponent": {
+                "type": "string",
+                "description": "Exponent or coefficient"
+              }
+            }
+          },
+          "description": "Prime coordinates"
+        },
+        "coherenceMeasure": {
+          "type": "string",
+          "description": "Coherence measure of this representation"
+        }
+      }
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "description": "Coherence measures specific to this element",
+      "items": {
+        "type": "object",
+        "properties": {
+          "measureName": {
+            "type": "string",
+            "description": "Name of the coherence measure"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value of the measure for this element"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of this measure value"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:field:rational-numbers:element:two-thirds",
+      "fieldDomain": "urn:uor:algebra:field:rational-numbers",
+      "representation": {
+        "value": "2/3",
+        "form": "fraction",
+        "renderingNotation": "\\frac{2}{3}",
+        "description": "The rational number two-thirds"
+      },
+      "properties": {
+        "isZero": false,
+        "isOne": false,
+        "isUnit": true,
+        "order": "infinite",
+        "isAlgebraic": true,
+        "isTranscendental": false,
+        "minimalPolynomial": "3x - 2",
+        "degree": "1",
+        "conjugates": ["2/3"],
+        "norm": "2/3",
+        "trace": "2/3",
+        "absoluteValue": "2/3",
+        "sign": "positive"
+      },
+      "primeRepresentation": {
+        "representationType": "prime-subfield-expansion",
+        "description": "Representation as a fraction of integers in lowest terms",
+        "basisElements": ["1"],
+        "coordinates": ["2/3"],
+        "minimalPolynomialFactorization": "3x - 2 (irreducible over Q)",
+        "observerFrameMapping": {
+          "observerFrame": "urn:uor:algebra:field:observer-frame:standard-fraction",
+          "representation": "2/3"
+        }
+      },
+      "additiveInverse": {
+        "representation": "-2/3",
+        "id": "urn:uor:algebra:field:rational-numbers:element:negative-two-thirds",
+        "computation": "Negate the numerator: -2/3"
+      },
+      "multiplicativeInverse": {
+        "exists": true,
+        "representation": "3/2",
+        "id": "urn:uor:algebra:field:rational-numbers:element:three-halves",
+        "computation": "Swap numerator and denominator: 3/2"
+      },
+      "embeddings": [
+        {
+          "targetField": "Real Numbers",
+          "representation": "0.6666...",
+          "properties": ["positive", "less-than-one"]
+        },
+        {
+          "targetField": "3-adic Numbers",
+          "representation": "2·3^(-1)",
+          "properties": ["negative-valuation"]
+        }
+      ],
+      "primeCoordinates": {
+        "system": "urn:uor:algebra:field:prime-coordinate-system:rational",
+        "coordinates": [
+          {
+            "prime": "2",
+            "exponent": "1"
+          },
+          {
+            "prime": "3",
+            "exponent": "-1"
+          }
+        ],
+        "coherenceMeasure": "2 (number of distinct prime factors in numerator and denominator)"
+      },
+      "coherenceMeasures": [
+        {
+          "measureName": "Height",
+          "value": "3",
+          "interpretation": "Maximum of absolute values of numerator and denominator"
+        },
+        {
+          "measureName": "Denominator-Complexity",
+          "value": "3",
+          "interpretation": "Absolute value of the denominator"
+        },
+        {
+          "measureName": "Bit-Complexity",
+          "value": "4",
+          "interpretation": "Number of bits required to represent this rational number"
+        }
+      ]
+    }
+  ]
+}

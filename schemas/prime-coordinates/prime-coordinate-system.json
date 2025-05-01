@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/prime-coordinates/prime-coordinate-system.json",
+  "$id": "https://uor.foundation/schemas/prime-coordinates/prime-coordinate-system.json",
   "title": "Prime Coordinate System Schema",
   "description": "Schema defining the structure and properties of prime coordinate systems in the UOR framework",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "domain", "primeElements", "coordinateProperties"],
   "properties": {

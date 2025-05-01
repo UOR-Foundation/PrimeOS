@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/number-theory/arithmetic-operations.json",
+  "$id": "https://uor.foundation/schemas/number-theory/arithmetic-operations.json",
   "title": "Arithmetic Operations Schema",
   "description": "Schema defining arithmetic operations within the number theory domain using the UOR prime factorization framework",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "operationType", "domain", "operationRules", "homomorphismProperties"],
   "properties": {

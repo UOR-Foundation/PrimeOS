@@ -1,0 +1,540 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/algebra/vector-spaces/vector-space-type.json",
+  "title": "Vector Space Type Schema",
+  "description": "Schema defining specific types of vector spaces and their properties within the UOR framework",
+  "type": "object",
+  "required": ["id", "name", "notation", "definition", "properties", "canonicalExamples", "factorizationRules"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the vector space type"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the vector space type"
+    },
+    "notation": {
+      "type": "object",
+      "required": ["standard", "symbolic"],
+      "properties": {
+        "standard": {
+          "type": "string",
+          "description": "Standard notation for this vector space type"
+        },
+        "symbolic": {
+          "type": "string",
+          "description": "Symbolic notation for this vector space type"
+        },
+        "alternative": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Alternative notations"
+        }
+      },
+      "description": "Notation used for this vector space type"
+    },
+    "definition": {
+      "type": "object",
+      "required": ["formal", "informal"],
+      "properties": {
+        "formal": {
+          "type": "string",
+          "description": "Formal mathematical definition"
+        },
+        "informal": {
+          "type": "string",
+          "description": "Informal description for intuitive understanding"
+        },
+        "axiomatic": {
+          "type": "string",
+          "description": "Axiomatic definition if applicable"
+        },
+        "constructive": {
+          "type": "string",
+          "description": "Constructive definition if applicable"
+        }
+      },
+      "description": "Definition of this vector space type"
+    },
+    "properties": {
+      "type": "object",
+      "required": ["scalarField", "dimension"],
+      "properties": {
+        "scalarField": {
+          "type": "string",
+          "description": "Scalar field of vector spaces of this type"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "Dimension properties of vector spaces of this type"
+        },
+        "algebraicProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Algebraic properties of this vector space type"
+        },
+        "topologicalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Topological properties of this vector space type"
+        },
+        "additionalStructures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional structures commonly defined on this vector space type"
+        },
+        "relationToOtherTypes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Related vector space type"
+              },
+              "relationship": {
+                "type": "string",
+                "description": "Nature of the relationship"
+              }
+            }
+          },
+          "description": "Relationships to other vector space types"
+        }
+      },
+      "description": "Properties of vector spaces of this type"
+    },
+    "canonicalExamples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the example vector space"
+          },
+          "notation": {
+            "type": "string",
+            "description": "Notation for this example"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of this example"
+          },
+          "dimension": {
+            "type": "string",
+            "description": "Dimension of this example"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Special properties of this example"
+          },
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the vector space domain entity for this example"
+          }
+        }
+      },
+      "description": "Canonical examples of vector spaces of this type"
+    },
+    "factorizationRules": {
+      "type": "object",
+      "required": ["primeElements", "basisDefinition"],
+      "properties": {
+        "primeElements": {
+          "type": "string",
+          "description": "Description of what constitutes prime elements in this vector space type"
+        },
+        "basisDefinition": {
+          "type": "string",
+          "description": "Definition of a basis for this vector space type"
+        },
+        "decompositionProcess": {
+          "type": "string",
+          "description": "Process for decomposing vectors into basis elements"
+        },
+        "uniquenessProperties": {
+          "type": "string",
+          "description": "Uniqueness properties of vector decompositions"
+        },
+        "dependenceRelations": {
+          "type": "string",
+          "description": "Linear dependence relations in this vector space type"
+        }
+      },
+      "description": "Factorization rules for vector spaces of this type"
+    },
+    "dualSpace": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the dual space"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the dual space"
+        },
+        "relationship": {
+          "type": "string",
+          "description": "Relationship to the original space"
+        },
+        "isomorphism": {
+          "type": "string",
+          "description": "Conditions for isomorphism with the original space"
+        }
+      },
+      "description": "Dual space properties for this vector space type"
+    },
+    "tensorProducts": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of tensor products for this vector space type"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of tensor products"
+        },
+        "constructionMethod": {
+          "type": "string",
+          "description": "Method of constructing tensor products"
+        },
+        "basisRelationship": {
+          "type": "string",
+          "description": "Relationship between bases under tensor products"
+        }
+      },
+      "description": "Tensor product properties for this vector space type"
+    },
+    "directSums": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of direct sums for this vector space type"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of direct sums"
+        },
+        "constructionMethod": {
+          "type": "string",
+          "description": "Method of constructing direct sums"
+        },
+        "basisRelationship": {
+          "type": "string",
+          "description": "Relationship between bases under direct sums"
+        }
+      },
+      "description": "Direct sum properties for this vector space type"
+    },
+    "quotientSpaces": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of quotient spaces for this vector space type"
+        },
+        "construction": {
+          "type": "string",
+          "description": "Construction of quotient spaces"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of quotient spaces"
+        },
+        "dimensionRelationship": {
+          "type": "string",
+          "description": "Relationship between dimensions of original space, subspace, and quotient space"
+        }
+      },
+      "description": "Quotient space properties for this vector space type"
+    },
+    "innerProductSpaces": {
+      "type": "object",
+      "properties": {
+        "compatibility": {
+          "type": "boolean",
+          "description": "Whether this vector space type naturally admits an inner product structure"
+        },
+        "standardInnerProduct": {
+          "type": "string",
+          "description": "Definition of the standard inner product, if applicable"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the inner product structure"
+        },
+        "geometricInterpretation": {
+          "type": "string",
+          "description": "Geometric interpretation of the inner product"
+        }
+      },
+      "description": "Inner product space properties for this vector space type"
+    },
+    "normSpaces": {
+      "type": "object",
+      "properties": {
+        "compatibility": {
+          "type": "boolean",
+          "description": "Whether this vector space type naturally admits a norm structure"
+        },
+        "standardNorms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the norm"
+              },
+              "definition": {
+                "type": "string",
+                "description": "Definition of the norm"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this norm"
+              }
+            }
+          },
+          "description": "Standard norms defined on this vector space type"
+        },
+        "completeness": {
+          "type": "string",
+          "description": "Completeness properties with respect to norms"
+        }
+      },
+      "description": "Norm space properties for this vector space type"
+    },
+    "topologicalStructure": {
+      "type": "object",
+      "properties": {
+        "naturalTopology": {
+          "type": "string",
+          "description": "Natural topology for this vector space type"
+        },
+        "topologicalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Topological properties of this vector space type"
+        },
+        "compactness": {
+          "type": "string",
+          "description": "Compactness properties"
+        },
+        "connectedness": {
+          "type": "string",
+          "description": "Connectedness properties"
+        },
+        "separability": {
+          "type": "string",
+          "description": "Separability properties"
+        }
+      },
+      "description": "Topological structure of this vector space type"
+    },
+    "linearMapProperties": {
+      "type": "object",
+      "properties": {
+        "endomorphisms": {
+          "type": "string",
+          "description": "Properties of endomorphisms of this vector space type"
+        },
+        "automorphisms": {
+          "type": "string",
+          "description": "Properties of automorphisms of this vector space type"
+        },
+        "isomorphismConditions": {
+          "type": "string",
+          "description": "Conditions for isomorphism between two vector spaces of this type"
+        },
+        "specialLinearMaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the special linear map"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the linear map"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this linear map"
+              }
+            }
+          },
+          "description": "Special linear maps for this vector space type"
+        }
+      },
+      "description": "Linear map properties for this vector space type"
+    },
+    "primeRepresentationContext": {
+      "type": "object",
+      "properties": {
+        "primeElementsConcept": {
+          "type": "string",
+          "description": "Concept of prime elements in the UOR framework"
+        },
+        "basisAsPrimeElements": {
+          "type": "string",
+          "description": "How basis elements serve as prime elements"
+        },
+        "primitivityCriteria": {
+          "type": "string",
+          "description": "Criteria for primitivity of elements"
+        },
+        "coherencePrinciple": {
+          "type": "string",
+          "description": "Principle of coherence applicable to this vector space type"
+        }
+      },
+      "description": "Prime representation context in the UOR framework"
+    },
+    "observerFrames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "frameDescription": {
+            "type": "string",
+            "description": "Description of the frame perspective"
+          },
+          "frameTransformations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Transformations in this frame"
+            }
+          }
+        }
+      },
+      "description": "Observer reference frames relevant to this vector space type"
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      },
+      "description": "Applications of this vector space type"
+    },
+    "theorems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance for this vector space type"
+          }
+        }
+      },
+      "description": "Important theorems related to this vector space type"
+    },
+    "history": {
+      "type": "object",
+      "properties": {
+        "originators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "People who first developed this vector space type"
+        },
+        "keyDevelopments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "year": {
+                "type": "string",
+                "description": "Year of the development"
+              },
+              "development": {
+                "type": "string",
+                "description": "Description of the development"
+              },
+              "contributor": {
+                "type": "string",
+                "description": "Person who contributed to this development"
+              }
+            }
+          },
+          "description": "Key developments in the history of this vector space type"
+        }
+      },
+      "description": "Historical context"
+    }
+  }
+}

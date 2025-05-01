@@ -1,0 +1,324 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/axioms/coherence-inner-product-axiom.json",
+  "title": "Coherence Inner Product Axiom Schema",
+  "description": "Schema representing the Coherence Inner Product Axiom: A mechanism exists for measuring relationships between representations",
+  "type": "object",
+  "required": ["axiomName", "axiomStatement", "innerProductDefinition", "relationalProperties"],
+  "properties": {
+    "axiomName": {
+      "type": "string",
+      "const": "Coherence Inner Product Axiom",
+      "description": "The name of the axiom"
+    },
+    "axiomStatement": {
+      "type": "string",
+      "description": "The formal statement of the axiom",
+      "default": "There exists an inner product on representations that measures their relational coherence and induces the coherence norm."
+    },
+    "formalStatement": {
+      "type": "string",
+      "description": "Mathematical formalization of the axiom",
+      "default": "∃ ⟨·,·⟩: R × R → ℂ satisfying inner product axioms, such that ||R|| = √⟨R,R⟩"
+    },
+    "innerProductDefinition": {
+      "type": "object",
+      "description": "Definition of the coherence inner product",
+      "required": ["formula", "properties", "inducedNorm"],
+      "properties": {
+        "formula": {
+          "type": "string",
+          "description": "Formula defining the inner product"
+        },
+        "properties": {
+          "type": "object",
+          "description": "Mathematical properties of the inner product",
+          "properties": {
+            "isHermitian": {
+              "type": "boolean",
+              "description": "Whether the inner product is Hermitian (⟨x,y⟩ = ⟨y,x⟩*)"
+            },
+            "isLinearInFirstArgument": {
+              "type": "boolean",
+              "description": "Whether the inner product is linear in its first argument"
+            },
+            "isPositiveDefinite": {
+              "type": "boolean",
+              "description": "Whether the inner product is positive definite (⟨x,x⟩ > 0 for x ≠ 0)"
+            },
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "propertyName": {
+                    "type": "string",
+                    "description": "Name of the additional property"
+                  },
+                  "propertyDescription": {
+                    "type": "string",
+                    "description": "Description of the property"
+                  },
+                  "propertyProof": {
+                    "type": "string",
+                    "description": "Reference to proof that the inner product has this property"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "inducedNorm": {
+          "type": "object",
+          "description": "The norm induced by the inner product",
+          "properties": {
+            "normFormula": {
+              "type": "string",
+              "description": "Formula for the induced norm in terms of the inner product"
+            },
+            "equivalenceProof": {
+              "type": "string",
+              "description": "Reference to proof that this is equivalent to the coherence norm"
+            }
+          }
+        },
+        "hilbertSpace": {
+          "type": "object",
+          "description": "The Hilbert space structure induced by the inner product",
+          "properties": {
+            "spaceDescription": {
+              "type": "string",
+              "description": "Description of the Hilbert space"
+            },
+            "completeness": {
+              "type": "boolean",
+              "description": "Whether the space is complete"
+            },
+            "basisStructure": {
+              "type": "string",
+              "description": "Description of the basis structure of the space"
+            }
+          }
+        }
+      }
+    },
+    "relationalProperties": {
+      "type": "object",
+      "description": "How the inner product measures relationships between representations",
+      "required": ["interpretation", "orthogonality", "similarity"],
+      "properties": {
+        "interpretation": {
+          "type": "string",
+          "description": "Interpretation of what the inner product measures conceptually"
+        },
+        "orthogonality": {
+          "type": "object",
+          "description": "Properties related to orthogonality",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "description": "Definition of orthogonality in terms of the inner product"
+            },
+            "significance": {
+              "type": "string",
+              "description": "Significance of orthogonal representations"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "representation1": {
+                    "type": "string",
+                    "description": "First representation"
+                  },
+                  "representation2": {
+                    "type": "string",
+                    "description": "Second representation orthogonal to the first"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of why they are orthogonal"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "similarity": {
+          "type": "object",
+          "description": "Properties related to similarity measures",
+          "properties": {
+            "definition": {
+              "type": "string",
+              "description": "Definition of similarity in terms of the inner product"
+            },
+            "normalizedMeasure": {
+              "type": "string",
+              "description": "Normalized similarity measure (typically cosine similarity)"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "representation1": {
+                    "type": "string",
+                    "description": "First representation"
+                  },
+                  "representation2": {
+                    "type": "string",
+                    "description": "Second representation"
+                  },
+                  "similarityValue": {
+                    "type": "number",
+                    "description": "Value of the similarity measure"
+                  },
+                  "interpretation": {
+                    "type": "string",
+                    "description": "Interpretation of this similarity value"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "decomposition": {
+          "type": "object",
+          "description": "Decomposition properties based on the inner product",
+          "properties": {
+            "orthogonalDecomposition": {
+              "type": "string",
+              "description": "How representations can be decomposed into orthogonal components"
+            },
+            "gramSchmidt": {
+              "type": "string",
+              "description": "Application of Gram-Schmidt orthogonalization to representations"
+            },
+            "spectralDecomposition": {
+              "type": "string",
+              "description": "Spectral decomposition of representations using the inner product"
+            }
+          }
+        }
+      }
+    },
+    "innerProductObserverDependence": {
+      "type": "object",
+      "description": "How the inner product behaves across different observer frames",
+      "properties": {
+        "isObserverInvariant": {
+          "type": "boolean",
+          "description": "Whether the inner product is invariant across observer frames"
+        },
+        "transformationRules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "transformation": {
+                "type": "string",
+                "description": "Type of observer frame transformation"
+              },
+              "innerProductTransformationFormula": {
+                "type": "string",
+                "description": "How the inner product transforms under this transformation"
+              }
+            }
+          }
+        },
+        "invarianceProof": {
+          "type": "string",
+          "description": "Reference to proof of invariance or transformation properties"
+        }
+      }
+    },
+    "computationAlgorithm": {
+      "type": "object",
+      "description": "Algorithm for computing the inner product",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the algorithm"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of how the algorithm works"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Steps in the algorithm"
+          }
+        },
+        "complexity": {
+          "type": "string",
+          "description": "Computational complexity of the algorithm"
+        },
+        "optimizations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Optimizations for efficient computation"
+          }
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "Examples demonstrating the coherence inner product",
+      "items": {
+        "type": "object",
+        "properties": {
+          "representation1": {
+            "type": "string",
+            "description": "First representation"
+          },
+          "representation2": {
+            "type": "string",
+            "description": "Second representation"
+          },
+          "innerProductValue": {
+            "type": "number",
+            "description": "Value of the inner product"
+          },
+          "interpretation": {
+            "type": "string",
+            "description": "Interpretation of this inner product value"
+          },
+          "inducedNormValues": {
+            "type": "object",
+            "properties": {
+              "norm1": {
+                "type": "number",
+                "description": "Norm of the first representation"
+              },
+              "norm2": {
+                "type": "number",
+                "description": "Norm of the second representation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "connections": {
+      "type": "array",
+      "description": "Connections to other axioms or concepts",
+      "items": {
+        "type": "object",
+        "properties": {
+          "concept": {
+            "type": "string",
+            "description": "Related concept or axiom"
+          },
+          "relationship": {
+            "type": "string",
+            "description": "Description of the relationship"
+          }
+        }
+      }
+    }
+  }
+}

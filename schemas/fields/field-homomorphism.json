@@ -1,0 +1,637 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/algebra/fields/field-homomorphism.json",
+  "title": "Field Homomorphism Schema",
+  "description": "Schema defining structure-preserving maps between fields within the UOR framework",
+  "type": "object",
+  "required": ["id", "sourceField", "targetField", "mappingDefinition", "homomorphismProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the field homomorphism"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the field homomorphism"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the homomorphism"
+    },
+    "sourceField": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the source field domain"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the source field"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the source field"
+        }
+      },
+      "description": "The source field of this homomorphism"
+    },
+    "targetField": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the target field domain"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the target field"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the target field"
+        }
+      },
+      "description": "The target field of this homomorphism"
+    },
+    "mappingDefinition": {
+      "type": "object",
+      "required": ["additivePreservation", "multiplicativePreservation", "definition"],
+      "properties": {
+        "additivePreservation": {
+          "type": "string",
+          "description": "How this mapping preserves addition"
+        },
+        "multiplicativePreservation": {
+          "type": "string",
+          "description": "How this mapping preserves multiplication"
+        },
+        "identityPreservation": {
+          "type": "object",
+          "properties": {
+            "additiveIdentity": {
+              "type": "string",
+              "description": "How the additive identity is mapped"
+            },
+            "multiplicativeIdentity": {
+              "type": "string",
+              "description": "How the multiplicative identity is mapped"
+            }
+          },
+          "description": "How identities are preserved"
+        },
+        "inversePreservation": {
+          "type": "object",
+          "properties": {
+            "additiveInverses": {
+              "type": "string",
+              "description": "How additive inverses are preserved"
+            },
+            "multiplicativeInverses": {
+              "type": "string",
+              "description": "How multiplicative inverses are preserved"
+            }
+          },
+          "description": "How inverses are preserved"
+        },
+        "definition": {
+          "type": "string",
+          "description": "Formal definition of the mapping"
+        },
+        "notation": {
+          "type": "string",
+          "description": "Mathematical notation for the mapping"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "string",
+                "description": "Input element from source field"
+              },
+              "output": {
+                "type": "string",
+                "description": "Output element in target field"
+              },
+              "explanation": {
+                "type": "string",
+                "description": "Explanation of this mapping example"
+              }
+            }
+          },
+          "description": "Examples of specific mappings"
+        }
+      },
+      "description": "Definition of how this homomorphism maps elements"
+    },
+    "homomorphismProperties": {
+      "type": "object",
+      "required": ["isInjective", "isSurjective"],
+      "properties": {
+        "isInjective": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is injective (one-to-one)"
+        },
+        "isSurjective": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is surjective (onto)"
+        },
+        "isIsomorphism": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is an isomorphism (bijective)"
+        },
+        "isEmbedding": {
+          "type": "boolean",
+          "description": "Whether the homomorphism is an embedding (injective)"
+        },
+        "degree": {
+          "type": "string",
+          "description": "Degree of the field extension, if applicable"
+        },
+        "isSeparable": {
+          "type": "boolean",
+          "description": "Whether the field extension is separable, if applicable"
+        },
+        "isNormal": {
+          "type": "boolean",
+          "description": "Whether the field extension is normal, if applicable"
+        },
+        "isGalois": {
+          "type": "boolean",
+          "description": "Whether the field extension is Galois, if applicable"
+        },
+        "isFinite": {
+          "type": "boolean",
+          "description": "Whether the field extension is finite, if applicable"
+        },
+        "fixedField": {
+          "type": "string",
+          "description": "Description of the fixed field, if applicable"
+        }
+      },
+      "description": "Properties of this homomorphism"
+    },
+    "kernel": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the kernel"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Element in the kernel"
+          },
+          "description": "Elements in the kernel"
+        },
+        "isomorphicTo": {
+          "type": "string",
+          "description": "What the kernel is isomorphic to"
+        }
+      },
+      "description": "The kernel of the homomorphism (trivial for non-zero field homomorphisms)"
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the image"
+        },
+        "characterization": {
+          "type": "string",
+          "description": "Characterization of the image"
+        },
+        "isomorphicTo": {
+          "type": "string",
+          "description": "What the image is isomorphic to"
+        }
+      },
+      "description": "The image of the homomorphism"
+    },
+    "algebraicCharacterization": {
+      "type": "object",
+      "properties": {
+        "minimalPolynomials": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string",
+                "description": "Element in the target field"
+              },
+              "polynomial": {
+                "type": "string",
+                "description": "Minimal polynomial over the source field"
+              }
+            }
+          },
+          "description": "Minimal polynomials of elements in the extension"
+        },
+        "primitiveElement": {
+          "type": "string",
+          "description": "Primitive element if the extension is simple"
+        },
+        "basis": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Basis element"
+          },
+          "description": "Basis for the extension"
+        }
+      },
+      "description": "Algebraic characterization of the field extension"
+    },
+    "normAndTrace": {
+      "type": "object",
+      "properties": {
+        "normDefinition": {
+          "type": "string",
+          "description": "Definition of the norm map"
+        },
+        "traceDefinition": {
+          "type": "string",
+          "description": "Definition of the trace map"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string",
+                "description": "Element in the target field"
+              },
+              "norm": {
+                "type": "string",
+                "description": "Norm of the element"
+              },
+              "trace": {
+                "type": "string",
+                "description": "Trace of the element"
+              }
+            }
+          },
+          "description": "Examples of norm and trace calculations"
+        }
+      },
+      "description": "Norm and trace mappings associated with the field extension"
+    },
+    "galoisTheory": {
+      "type": "object",
+      "properties": {
+        "galoisGroup": {
+          "type": "string",
+          "description": "Description of the Galois group"
+        },
+        "fixedFields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "subgroup": {
+                "type": "string",
+                "description": "Subgroup of the Galois group"
+              },
+              "fixedField": {
+                "type": "string",
+                "description": "Corresponding fixed field"
+              }
+            }
+          },
+          "description": "Correspondence between subgroups and fixed fields"
+        },
+        "galoisCorrespondence": {
+          "type": "string",
+          "description": "Description of the Galois correspondence"
+        }
+      },
+      "description": "Galois theory aspects of the field extension"
+    },
+    "implications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Domain of implication"
+          },
+          "implication": {
+            "type": "string",
+            "description": "The implication itself"
+          }
+        }
+      },
+      "description": "Implications of this homomorphism in various contexts"
+    },
+    "primeMappingDefinition": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of how the homomorphism maps in prime coordinate space"
+        },
+        "mapping": {
+          "type": "string",
+          "description": "Formal definition of the mapping in prime coordinates"
+        },
+        "coherenceMeasure": {
+          "type": "string",
+          "description": "Coherence measure of this mapping"
+        }
+      },
+      "description": "Definition of how this homomorphism maps to prime coordinates"
+    },
+    "computationalAspects": {
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Algorithm for computing this homomorphism"
+        },
+        "complexity": {
+          "type": "string",
+          "description": "Computational complexity"
+        },
+        "implementation": {
+          "type": "string",
+          "description": "Implementation details"
+        }
+      },
+      "description": "Computational aspects of this homomorphism"
+    },
+    "generalizedProperties": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Categorical interpretation"
+        },
+        "functoriality": {
+          "type": "string",
+          "description": "Functoriality properties"
+        },
+        "universalProperty": {
+          "type": "string",
+          "description": "Universal property, if applicable"
+        }
+      },
+      "description": "More general mathematical properties"
+    },
+    "observerFrames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the observer frame"
+          },
+          "homomorphismDescription": {
+            "type": "string",
+            "description": "Description of the homomorphism in this frame"
+          },
+          "homomorphismRepresentation": {
+            "type": "string",
+            "description": "Representation of the homomorphism in this frame"
+          }
+        }
+      },
+      "description": "How this homomorphism appears in different observer frames"
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      },
+      "description": "Applications of this homomorphism"
+    },
+    "theorems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance for this homomorphism"
+          }
+        }
+      },
+      "description": "Important theorems related to this homomorphism"
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:field:homomorphism:rational-to-real",
+      "name": "Natural Embedding of Rational Numbers into Real Numbers",
+      "description": "The canonical embedding of the field of rational numbers into the field of real numbers",
+      "sourceField": {
+        "id": "urn:uor:algebra:field:rational-numbers",
+        "name": "Field of Rational Numbers",
+        "description": "The field Q of rational numbers"
+      },
+      "targetField": {
+        "id": "urn:uor:algebra:field:real-numbers",
+        "name": "Field of Real Numbers",
+        "description": "The field R of real numbers"
+      },
+      "mappingDefinition": {
+        "additivePreservation": "φ(a + b) = φ(a) + φ(b) for all a, b in Q",
+        "multiplicativePreservation": "φ(a × b) = φ(a) × φ(b) for all a, b in Q",
+        "identityPreservation": {
+          "additiveIdentity": "φ(0) = 0",
+          "multiplicativeIdentity": "φ(1) = 1"
+        },
+        "inversePreservation": {
+          "additiveInverses": "φ(-a) = -φ(a) for all a in Q",
+          "multiplicativeInverses": "φ(a^(-1)) = φ(a)^(-1) for all non-zero a in Q"
+        },
+        "definition": "The embedding φ: Q → R maps each rational number to the corresponding real number, preserving all field operations",
+        "notation": "φ: Q → R, φ(a/b) = a/b viewed as a real number",
+        "examples": [
+          {
+            "input": "2/3",
+            "output": "2/3 = 0.666...",
+            "explanation": "The rational number 2/3 maps to the same value viewed as a real number"
+          },
+          {
+            "input": "-5/2",
+            "output": "-5/2 = -2.5",
+            "explanation": "The rational number -5/2 maps to the same value viewed as a real number"
+          },
+          {
+            "input": "0",
+            "output": "0",
+            "explanation": "The rational number 0 maps to the real number 0 (additive identity preserved)"
+          }
+        ]
+      },
+      "homomorphismProperties": {
+        "isInjective": true,
+        "isSurjective": false,
+        "isIsomorphism": false,
+        "isEmbedding": true,
+        "degree": "infinity",
+        "isSeparable": true,
+        "isNormal": false,
+        "isGalois": false,
+        "isFinite": false,
+        "fixedField": "Not applicable as this is not an automorphism"
+      },
+      "kernel": {
+        "description": "The kernel is trivial, containing only the zero element",
+        "elements": ["0"],
+        "isomorphicTo": "The trivial field with one element (typical for non-zero field homomorphisms)"
+      },
+      "image": {
+        "description": "The image is exactly the rational numbers viewed as a subfield of the real numbers",
+        "characterization": "The set of all real numbers that can be expressed as a ratio of integers",
+        "isomorphicTo": "Q (the field of rational numbers)"
+      },
+      "algebraicCharacterization": {
+        "minimalPolynomials": [
+          {
+            "element": "√2",
+            "polynomial": "x² - 2"
+          },
+          {
+            "element": "π",
+            "polynomial": "No polynomial (transcendental)"
+          },
+          {
+            "element": "e",
+            "polynomial": "No polynomial (transcendental)"
+          }
+        ],
+        "primitiveElement": "Not applicable (infinite extension)",
+        "basis": "Not expressible as a finite basis (transcendental extension)"
+      },
+      "normAndTrace": {
+        "normDefinition": "Not directly applicable in the standard sense due to the infinite degree",
+        "traceDefinition": "Not directly applicable in the standard sense due to the infinite degree",
+        "examples": []
+      },
+      "galoisTheory": {
+        "galoisGroup": "Not applicable as R/Q is not a Galois extension",
+        "fixedFields": [],
+        "galoisCorrespondence": "Not applicable"
+      },
+      "implications": [
+        {
+          "domain": "Analysis",
+          "implication": "Allows the completion of Q to R through Cauchy sequences or Dedekind cuts"
+        },
+        {
+          "domain": "Number Theory",
+          "implication": "Establishes a connection between algebraic numbers and transcendental numbers"
+        },
+        {
+          "domain": "Topology",
+          "implication": "The image is dense in R under the standard topology"
+        }
+      ],
+      "primeMappingDefinition": {
+        "description": "In the UOR framework, the mapping preserves the prime factorization structure of rational numbers",
+        "mapping": "For a rational number with prime coordinate representation, the embedding preserves these coordinates while extending to the larger coordinate space of real numbers",
+        "coherenceMeasure": "Perfect coherence preservation (the structure of rational numbers is perfectly preserved in the embedding)"
+      },
+      "computationalAspects": {
+        "algorithm": "Direct embedding - no computation necessary beyond representing the rational number in the target field",
+        "complexity": "O(1) - constant time operation",
+        "implementation": "Implemented natively in most computer algebra systems and programming languages that support both rational and real number types"
+      },
+      "generalizedProperties": {
+        "category": "This embedding is a morphism in the category of fields",
+        "functoriality": "Extends to a functor from vector spaces over Q to vector spaces over R",
+        "universalProperty": "R is the completion of Q with respect to the standard absolute value"
+      },
+      "observerFrames": [
+        {
+          "frameId": "urn:uor:algebra:field:observer-frame:decimal-expansion",
+          "homomorphismDescription": "Maps rational numbers to their decimal expansions as real numbers",
+          "homomorphismRepresentation": "Rational numbers map to either terminating or repeating decimal expansions"
+        },
+        {
+          "frameId": "urn:uor:algebra:field:observer-frame:cauchy-sequence",
+          "homomorphismDescription": "Maps each rational number to the constant Cauchy sequence containing that number",
+          "homomorphismRepresentation": "φ(q) = (q, q, q, ...)"
+        }
+      ],
+      "applications": [
+        {
+          "domain": "Numerical Analysis",
+          "description": "Provides the foundation for approximating real numbers by rational numbers",
+          "examples": [
+            "Floating-point approximations",
+            "Numerical integration",
+            "Error bounds in computational mathematics"
+          ]
+        },
+        {
+          "domain": "Mathematical Physics",
+          "description": "Enables the representation of physical quantities as real numbers, approximated by rational measurements",
+          "examples": [
+            "Physical constants",
+            "Measurement theory",
+            "Scientific computation"
+          ]
+        }
+      ],
+      "theorems": [
+        {
+          "name": "Density of Rationals in Reals",
+          "statement": "The image of Q under this embedding is dense in R with respect to the standard topology",
+          "significance": "Every real number can be approximated arbitrarily closely by rational numbers"
+        },
+        {
+          "name": "Incompleteness of Rationals",
+          "statement": "Q is not complete with respect to the standard absolute value metric",
+          "significance": "Motivates the construction of R as the completion of Q"
+        },
+        {
+          "name": "Existence of Transcendentals",
+          "statement": "R contains elements that are not algebraic over Q",
+          "significance": "Demonstrates that R is a proper extension of the algebraic closure of Q"
+        }
+      ]
+    }
+  ]
+}

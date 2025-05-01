@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/representations/canonical-representation.json",
+  "$id": "https://uor.foundation/schemas/representations/canonical-representation.json",
   "title": "Canonical Representation Schema",
   "description": "Schema defining the structure and properties of canonical representations in the UOR framework",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "representationType", "objectReference", "primeDecomposition", "canonicalProperties"],
   "properties": {

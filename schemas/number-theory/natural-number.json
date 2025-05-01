@@ -1,12 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor-foundation.org/schemas/number-theory/natural-number.json",
+  "$id": "https://uor.foundation/schemas/number-theory/natural-number.json",
   "title": "Natural Number Schema",
   "description": "Schema defining the structure and properties of natural numbers in the UOR framework with prime factorization as canonical representation",
-  "@context": {
-    "@vocab": "https://schema.org/",
-    "uor": "https://uor-foundation.org/schemas/core/"
-  },
   "type": "object",
   "required": ["id", "value", "primeDecomposition", "canonicalRepresentation"],
   "properties": {

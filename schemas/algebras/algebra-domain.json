@@ -1,0 +1,1044 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/algebra/algebras/algebra-domain.json",
+  "title": "Algebra Domain Schema",
+  "description": "Schema defining the algebra algebraic structure domain within the UOR framework",
+  "type": "object",
+  "required": ["id", "name", "scalarField", "additiveStructure", "multiplicativeStructure", "primeElements", "uniqueFactorizationProperties"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the algebra domain"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the algebra domain"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the algebra"
+    },
+    "scalarField": {
+      "type": "object",
+      "description": "The scalar field over which the algebra is defined",
+      "required": ["reference", "properties"],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the field domain"
+        },
+        "properties": {
+          "type": "array",
+          "description": "Properties of the field for this algebra",
+          "items": {
+            "type": "string",
+            "enum": [
+              "commutative",
+              "algebraically-closed",
+              "characteristic-zero",
+              "ordered",
+              "complete"
+            ]
+          }
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the field for this context"
+        }
+      }
+    },
+    "additiveStructure": {
+      "type": "object",
+      "description": "The additive structure of the algebra",
+      "required": ["reference", "properties"],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference to the additive group domain or module domain"
+        },
+        "properties": {
+          "type": "array",
+          "description": "Properties of the additive structure",
+          "items": {
+            "type": "string",
+            "enum": [
+              "abelian",
+              "finitely-generated",
+              "free",
+              "finite-dimensional",
+              "countable-dimension",
+              "uncountable-dimension"
+            ]
+          }
+        },
+        "basis": {
+          "type": "object",
+          "description": "Basis properties if the algebra has a basis",
+          "properties": {
+            "hasBasis": {
+              "type": "boolean",
+              "description": "Whether the algebra has a basis"
+            },
+            "isFiniteDimensional": {
+              "type": "boolean",
+              "description": "Whether the algebra has a finite basis"
+            },
+            "dimension": {
+              "type": "string",
+              "description": "Dimension of the algebra if applicable"
+            },
+            "basisDescription": {
+              "type": "string",
+              "description": "Description of the basis"
+            }
+          }
+        }
+      }
+    },
+    "multiplicativeStructure": {
+      "type": "object",
+      "description": "The multiplicative structure of the algebra",
+      "required": ["properties", "identityElement"],
+      "properties": {
+        "properties": {
+          "type": "array",
+          "description": "Properties of the multiplicative structure",
+          "items": {
+            "type": "string",
+            "enum": [
+              "associative",
+              "commutative",
+              "unital",
+              "non-unital",
+              "divisible",
+              "alternative",
+              "power-associative",
+              "jordan",
+              "lie",
+              "graded"
+            ]
+          }
+        },
+        "identityElement": {
+          "type": "object",
+          "description": "The identity element for multiplication (if exists)",
+          "properties": {
+            "exists": {
+              "type": "boolean",
+              "description": "Whether an identity element exists"
+            },
+            "representation": {
+              "type": "string",
+              "description": "Representation of the identity element"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Properties of the identity element"
+            }
+          }
+        },
+        "zeroElement": {
+          "type": "object",
+          "description": "The zero element for the algebra",
+          "properties": {
+            "representation": {
+              "type": "string",
+              "description": "Representation of the zero element"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Properties of the zero element"
+            }
+          }
+        },
+        "zeroDivisors": {
+          "type": "object",
+          "description": "Information about zero divisors",
+          "properties": {
+            "hasZeroDivisors": {
+              "type": "boolean",
+              "description": "Whether the algebra has zero divisors"
+            },
+            "description": {
+              "type": "string",
+              "description": "Description of the zero divisors"
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Examples of zero divisors"
+            }
+          }
+        }
+      }
+    },
+    "compatibilityConditions": {
+      "type": "array",
+      "description": "Compatibility conditions between operations in the algebra",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the compatibility condition"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the compatibility condition"
+          },
+          "verification": {
+            "type": "string",
+            "description": "Verification or proof of the condition"
+          }
+        }
+      }
+    },
+    "algebraType": {
+      "type": "object",
+      "description": "Classification of the algebra type",
+      "properties": {
+        "primaryType": {
+          "type": "string",
+          "enum": [
+            "associative-algebra",
+            "lie-algebra",
+            "jordan-algebra",
+            "clifford-algebra",
+            "grassmann-algebra",
+            "hopf-algebra",
+            "c-star-algebra",
+            "von-neumann-algebra",
+            "banach-algebra",
+            "division-algebra",
+            "octonion-algebra",
+            "tensor-algebra",
+            "exterior-algebra",
+            "universal-enveloping-algebra",
+            "group-algebra",
+            "quantum-group",
+            "vertex-algebra"
+          ],
+          "description": "Primary classification of the algebra"
+        },
+        "isSimple": {
+          "type": "boolean",
+          "description": "Whether the algebra is simple (has no non-trivial ideals)"
+        },
+        "isSemisimple": {
+          "type": "boolean",
+          "description": "Whether the algebra is semisimple"
+        },
+        "isNilpotent": {
+          "type": "boolean",
+          "description": "Whether the algebra is nilpotent"
+        },
+        "isSolvable": {
+          "type": "boolean",
+          "description": "Whether the algebra is solvable"
+        },
+        "isDivision": {
+          "type": "boolean",
+          "description": "Whether the algebra is a division algebra"
+        },
+        "isFiniteDimensional": {
+          "type": "boolean",
+          "description": "Whether the algebra is finite-dimensional"
+        },
+        "isCentral": {
+          "type": "boolean",
+          "description": "Whether the algebra is central over its base field"
+        },
+        "isGraded": {
+          "type": "boolean",
+          "description": "Whether the algebra has a graded structure"
+        },
+        "isUnital": {
+          "type": "boolean",
+          "description": "Whether the algebra has a unit element"
+        }
+      }
+    },
+    "substructures": {
+      "type": "object",
+      "description": "Important substructures of the algebra",
+      "properties": {
+        "center": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of the center"
+            },
+            "dimension": {
+              "type": "string",
+              "description": "Dimension of the center"
+            },
+            "basis": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Basis for the center"
+            }
+          },
+          "description": "The center of the algebra"
+        },
+        "radicals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the radical"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the radical"
+              },
+              "dimension": {
+                "type": "string",
+                "description": "Dimension of the radical"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of the radical"
+              }
+            }
+          },
+          "description": "Radicals of the algebra"
+        },
+        "ideals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the ideal"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the ideal"
+              },
+              "generators": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Generators of the ideal"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "left",
+                    "right",
+                    "two-sided",
+                    "maximal",
+                    "minimal",
+                    "prime",
+                    "primitive",
+                    "primary",
+                    "nil"
+                  ]
+                },
+                "description": "Properties of the ideal"
+              }
+            }
+          },
+          "description": "Important ideals in the algebra"
+        },
+        "subalgebras": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the subalgebra"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the subalgebra"
+              },
+              "generators": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Generators of the subalgebra"
+              },
+              "dimension": {
+                "type": "string",
+                "description": "Dimension of the subalgebra"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of the subalgebra"
+              }
+            }
+          },
+          "description": "Important subalgebras"
+        }
+      }
+    },
+    "quotientAlgebras": {
+      "type": "array",
+      "description": "Important quotient algebras",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ideal": {
+            "type": "string",
+            "description": "Ideal used to form the quotient"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the quotient algebra"
+          },
+          "isomorphicTo": {
+            "type": "string",
+            "description": "Description of what this quotient is isomorphic to"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of this quotient"
+          }
+        }
+      }
+    },
+    "tensorProducts": {
+      "type": "array",
+      "description": "Significant tensor products involving this algebra",
+      "items": {
+        "type": "object",
+        "properties": {
+          "withAlgebra": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the other algebra in the tensor product"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the tensor product"
+          },
+          "isomorphicTo": {
+            "type": "string",
+            "description": "Description of what this tensor product is isomorphic to"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of this tensor product"
+          }
+        }
+      }
+    },
+    "representations": {
+      "type": "array",
+      "description": "Representations of the algebra",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the representation"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the representation"
+          },
+          "dimension": {
+            "type": "string",
+            "description": "Dimension of the representation"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "faithful",
+                "irreducible",
+                "completely-reducible",
+                "indecomposable",
+                "cyclic",
+                "projective",
+                "injective",
+                "adjoint"
+              ]
+            },
+            "description": "Properties of the representation"
+          }
+        }
+      }
+    },
+    "derivations": {
+      "type": "array",
+      "description": "Derivations of the algebra",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the derivation"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the derivation"
+          },
+          "definition": {
+            "type": "string",
+            "description": "Definition of the derivation"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of the derivation"
+          }
+        }
+      }
+    },
+    "automorphisms": {
+      "type": "object",
+      "description": "Automorphism group of the algebra",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the automorphism group"
+        },
+        "generators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Generators of the automorphism group"
+        },
+        "isomorphicTo": {
+          "type": "string",
+          "description": "Group that the automorphism group is isomorphic to"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of the automorphism group"
+        }
+      }
+    },
+    "deformations": {
+      "type": "array",
+      "description": "Deformations of the algebra structure",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the deformation"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the deformation"
+          },
+          "parameter": {
+            "type": "string",
+            "description": "Parameter of the deformation"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties of the deformation"
+          }
+        }
+      }
+    },
+    "cohomology": {
+      "type": "object",
+      "description": "Cohomology information for the algebra",
+      "properties": {
+        "hochschildCohomology": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "degree": {
+                "type": "string",
+                "description": "Degree of the cohomology group"
+              },
+              "dimension": {
+                "type": "string",
+                "description": "Dimension of the cohomology group"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the cohomology group"
+              }
+            }
+          },
+          "description": "Hochschild cohomology groups"
+        },
+        "lieCohomology": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "degree": {
+                "type": "string",
+                "description": "Degree of the cohomology group"
+              },
+              "dimension": {
+                "type": "string",
+                "description": "Dimension of the cohomology group"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the cohomology group"
+              }
+            }
+          },
+          "description": "Lie algebra cohomology groups"
+        }
+      }
+    },
+    "primeElements": {
+      "type": "object",
+      "description": "Prime (irreducible) elements in the algebra structure",
+      "required": ["definition", "elements", "properties"],
+      "properties": {
+        "definition": {
+          "type": "string",
+          "description": "Definition of what constitutes a prime element in this algebra"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string",
+                "description": "Representation of a prime element"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Properties of this prime element"
+              }
+            }
+          },
+          "description": "The prime elements of the algebra"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Properties of prime elements in this algebra"
+        }
+      }
+    },
+    "uniqueFactorizationProperties": {
+      "type": "object",
+      "description": "Properties related to unique factorization in this algebra",
+      "required": ["factorizationExists", "uniquenessType", "factorizationForm"],
+      "properties": {
+        "factorizationExists": {
+          "type": "boolean",
+          "description": "Whether elements admit a factorization into prime elements"
+        },
+        "uniquenessType": {
+          "type": "string",
+          "enum": [
+            "unique",
+            "unique-up-to-ordering",
+            "unique-up-to-units",
+            "unique-up-to-conjugacy",
+            "non-unique",
+            "unique-in-specific-cases"
+          ],
+          "description": "The type of uniqueness for factorizations"
+        },
+        "factorizationForm": {
+          "type": "string",
+          "description": "Standard form of factorization for algebra elements"
+        },
+        "structureTheorem": {
+          "type": "string",
+          "description": "Structure theorem that governs the factorization properties"
+        },
+        "canonicalForm": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Description of the canonical form"
+            },
+            "algorithm": {
+              "type": "string",
+              "description": "Algorithm for computing the canonical form"
+            },
+            "uniquenessProof": {
+              "type": "string",
+              "description": "Reference to proof of uniqueness for the canonical form"
+            }
+          },
+          "description": "Canonical form for representing algebra elements"
+        }
+      }
+    },
+    "observerFrames": {
+      "type": "array",
+      "description": "Observer reference frames relevant to this algebra",
+      "items": {
+        "type": "object",
+        "properties": {
+          "frameName": {
+            "type": "string",
+            "description": "Name of the observer frame"
+          },
+          "frameDescription": {
+            "type": "string",
+            "description": "Description of the frame perspective"
+          },
+          "frameTransformations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Transformations in this frame"
+            }
+          }
+        }
+      }
+    },
+    "coherenceMeasures": {
+      "type": "array",
+      "description": "Measures of coherence applicable to this algebra",
+      "items": {
+        "type": "object",
+        "properties": {
+          "measureName": {
+            "type": "string",
+            "description": "Name of the coherence measure"
+          },
+          "measureDescription": {
+            "type": "string",
+            "description": "Description of what the measure quantifies"
+          },
+          "formula": {
+            "type": "string",
+            "description": "Formula for calculating the measure"
+          }
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "description": "Applications of this algebra structure",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Application domain"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the application"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Examples of applications"
+          }
+        }
+      }
+    },
+    "theorems": {
+      "type": "array",
+      "description": "Important theorems related to this algebra",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the theorem"
+          },
+          "statement": {
+            "type": "string",
+            "description": "Statement of the theorem"
+          },
+          "significance": {
+            "type": "string",
+            "description": "Significance of the theorem for this algebra"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "urn:uor:algebra:matrix-algebra:2x2",
+      "name": "2×2 Matrix Algebra",
+      "description": "The algebra of 2×2 matrices with real entries",
+      "scalarField": {
+        "reference": "urn:uor:algebra:field:reals",
+        "properties": ["commutative", "ordered", "characteristic-zero"],
+        "description": "The field of real numbers"
+      },
+      "additiveStructure": {
+        "reference": "urn:uor:algebra:module:vector:real:4-dimensional",
+        "properties": ["abelian", "finite-dimensional", "free"],
+        "basis": {
+          "hasBasis": true,
+          "isFiniteDimensional": true,
+          "dimension": "4",
+          "basisDescription": "The standard basis {E11, E12, E21, E22} where Eij is the matrix with 1 in position (i,j) and 0 elsewhere"
+        }
+      },
+      "multiplicativeStructure": {
+        "properties": ["associative", "non-commutative", "unital"],
+        "identityElement": {
+          "exists": true,
+          "representation": "[[1, 0], [0, 1]] (the identity matrix)",
+          "properties": ["unit", "invertible", "idempotent", "central"]
+        },
+        "zeroElement": {
+          "representation": "[[0, 0], [0, 0]] (the zero matrix)",
+          "properties": ["absorbing", "nilpotent"]
+        },
+        "zeroDivisors": {
+          "hasZeroDivisors": true,
+          "description": "Any non-invertible matrix is a zero divisor",
+          "examples": ["[[1, 0], [0, 0]] (a projection matrix)"]
+        }
+      },
+      "compatibilityConditions": [
+        {
+          "name": "Left distributivity",
+          "statement": "A(B + C) = AB + AC for all matrices A, B, C",
+          "verification": "Follows from the definition of matrix multiplication"
+        },
+        {
+          "name": "Right distributivity",
+          "statement": "(A + B)C = AC + BC for all matrices A, B, C",
+          "verification": "Follows from the definition of matrix multiplication"
+        },
+        {
+          "name": "Scalar compatibility",
+          "statement": "α(AB) = (αA)B = A(αB) for all matrices A, B and scalar α",
+          "verification": "Follows from the definition of scalar multiplication of matrices"
+        }
+      ],
+      "algebraType": {
+        "primaryType": "associative-algebra",
+        "isSimple": true,
+        "isSemisimple": true,
+        "isNilpotent": false,
+        "isSolvable": false,
+        "isDivision": false,
+        "isFiniteDimensional": true,
+        "isCentral": true,
+        "isGraded": false,
+        "isUnital": true
+      },
+      "substructures": {
+        "center": {
+          "description": "The center consists of scalar multiples of the identity matrix",
+          "dimension": "1",
+          "basis": ["[[1, 0], [0, 1]] (the identity matrix)"]
+        },
+        "radicals": [
+          {
+            "name": "Jacobson radical",
+            "description": "The Jacobson radical is trivial",
+            "dimension": "0",
+            "properties": ["trivial"]
+          }
+        ],
+        "ideals": [
+          {
+            "name": "Trivial ideal",
+            "description": "The zero ideal",
+            "generators": ["[[0, 0], [0, 0]]"],
+            "properties": ["two-sided", "minimal"]
+          },
+          {
+            "name": "Full algebra",
+            "description": "The entire algebra as an ideal of itself",
+            "generators": ["[[1, 0], [0, 0]], [[0, 1], [0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1]]"],
+            "properties": ["two-sided", "maximal"]
+          }
+        ],
+        "subalgebras": [
+          {
+            "name": "Diagonal matrices",
+            "description": "Subalgebra of diagonal 2×2 matrices",
+            "generators": ["[[1, 0], [0, 0]], [[0, 0], [0, 1]]"],
+            "dimension": "2",
+            "properties": ["commutative", "semisimple"]
+          },
+          {
+            "name": "Upper triangular matrices",
+            "description": "Subalgebra of upper triangular 2×2 matrices",
+            "generators": ["[[1, 0], [0, 0]], [[0, 1], [0, 0]], [[0, 0], [0, 1]]"],
+            "dimension": "3",
+            "properties": ["non-commutative", "solvable"]
+          }
+        ]
+      },
+      "quotientAlgebras": [
+        {
+          "ideal": "There are no non-trivial proper ideals (the algebra is simple)",
+          "description": "No non-trivial quotient algebras exist",
+          "isomorphicTo": "Only trivial quotients exist",
+          "properties": []
+        }
+      ],
+      "tensorProducts": [
+        {
+          "withAlgebra": "urn:uor:algebra:matrix-algebra:2x2",
+          "description": "Tensor product of 2×2 matrix algebra with itself",
+          "isomorphicTo": "Algebra of 4×4 matrices",
+          "properties": ["simple", "central", "associative"]
+        }
+      ],
+      "representations": [
+        {
+          "name": "Standard representation",
+          "description": "Action on 2-dimensional vector space by matrix multiplication",
+          "dimension": "2",
+          "properties": ["faithful", "irreducible"]
+        },
+        {
+          "name": "Adjoint representation",
+          "description": "Action on the matrix algebra itself by conjugation: X ↦ [A, X] = AX - XA",
+          "dimension": "4",
+          "properties": ["faithful", "reducible"]
+        }
+      ],
+      "derivations": [
+        {
+          "name": "Inner derivation",
+          "description": "For a fixed matrix A, the map X ↦ [A, X] = AX - XA",
+          "definition": "D_A(X) = AX - XA",
+          "properties": ["linear", "satisfies-leibniz-rule"]
+        }
+      ],
+      "automorphisms": {
+        "description": "The automorphism group is PGL(2, R), consisting of conjugation by invertible matrices",
+        "generators": ["Conjugation by elementary matrices"],
+        "isomorphicTo": "PGL(2, R)",
+        "properties": ["continuous", "non-abelian"]
+      },
+      "primeElements": {
+        "definition": "In this algebra, the prime elements are the matrices that cannot be expressed as products of simpler matrices",
+        "elements": [
+          {
+            "element": "[[0, 1], [0, 0]]",
+            "properties": ["nilpotent", "non-diagonalizable"]
+          },
+          {
+            "element": "[[1, 0], [0, -1]]",
+            "properties": ["semisimple", "traceless"]
+          }
+        ],
+        "properties": ["generate-the-algebra", "linearly-independent"]
+      },
+      "uniqueFactorizationProperties": {
+        "factorizationExists": true,
+        "uniquenessType": "unique-up-to-conjugacy",
+        "factorizationForm": "Jordan normal form or polar decomposition",
+        "structureTheorem": "Every matrix can be expressed in Jordan normal form",
+        "canonicalForm": {
+          "description": "Jordan normal form",
+          "algorithm": "Compute eigenvalues and generalized eigenvectors",
+          "uniquenessProof": "Follows from the uniqueness of Jordan canonical form"
+        }
+      },
+      "observerFrames": [
+        {
+          "frameName": "Standard-Basis-Frame",
+          "frameDescription": "Viewing matrices in terms of the standard basis",
+          "frameTransformations": ["basis-change", "similarity-transformation"]
+        },
+        {
+          "frameName": "Eigenbasis-Frame",
+          "frameDescription": "Viewing matrices in terms of their eigenvectors (when diagonalizable)",
+          "frameTransformations": ["diagonalization", "spectral-decomposition"]
+        }
+      ],
+      "coherenceMeasures": [
+        {
+          "measureName": "Frobenius-Norm",
+          "measureDescription": "Frobenius norm of matrices",
+          "formula": "||A|| = sqrt(sum(a_ij^2))"
+        },
+        {
+          "measureName": "Spectral-Radius",
+          "measureDescription": "Maximum absolute value of eigenvalues",
+          "formula": "ρ(A) = max(|λ|) where λ are eigenvalues of A"
+        }
+      ],
+      "applications": [
+        {
+          "domain": "Linear Transformations",
+          "description": "Represents linear transformations in 2D space",
+          "examples": ["Rotations", "Reflections", "Scaling", "Shearing"]
+        },
+        {
+          "domain": "Differential Equations",
+          "description": "Used to represent and solve systems of linear differential equations",
+          "examples": ["Coupled oscillators", "Control systems", "Circuit analysis"]
+        },
+        {
+          "domain": "Quantum Mechanics",
+          "description": "Represents observables and transformations in 2-state quantum systems",
+          "examples": ["Spin-1/2 systems", "Qubit operations", "Pauli matrices"]
+        }
+      ],
+      "theorems": [
+        {
+          "name": "Cayley-Hamilton Theorem",
+          "statement": "Every matrix satisfies its own characteristic polynomial",
+          "significance": "Provides polynomial relations between matrix powers"
+        },
+        {
+          "name": "Wedderburn-Artin Theorem (Application)",
+          "statement": "This algebra is isomorphic to the endomorphism ring of a 2-dimensional vector space",
+          "significance": "Classifies this algebra as a simple algebra over R"
+        }
+      ]
+    }
+  ]
+}
