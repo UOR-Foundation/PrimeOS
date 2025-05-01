@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `models/` directory contains the complete definition of the Universal Object Reference (UOR) framework - a comprehensive model-driven architecture that implements a universal computational substrate based on mathematical principles of prime decomposition and observer invariance.
+The `UOR-Foundation/models` repository contains the complete definition of the Universal Object Reference (UOR) framework - a comprehensive model-driven architecture that implements a universal computational substrate based on mathematical principles of prime decomposition and observer invariance.
 
 This repository is exclusively defined in JSON and serves as the canonical source of truth for all UOR models. **No scripts or executable code** are authorized within this repository - it is a pure definition space where models are defined declaratively and then externally processed.
 
