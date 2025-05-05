@@ -149,7 +149,9 @@ function findInIndex(apiName, endpointName, mediaType) {
  * @returns {string} - The filename
  */
 function getFilenameForEntry(entry) {
-  return constructFilename(entry.anchor, entry.endpoint, entry.media);
+  const filename = constructFilename(entry.anchor, entry.endpoint, entry.media);
+  console.error(`Constructed filename: ${filename}`);
+  return filename;
 }
 
 module.exports = {

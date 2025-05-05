@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "schema",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "core",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "axiom-canonical-representation",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "test",
+    "endpoint": "schema",
+    "media": "json"
+  },
+  {
+    "anchor": "test",
+    "endpoint": "data",
+    "media": "json"
+  }
+]

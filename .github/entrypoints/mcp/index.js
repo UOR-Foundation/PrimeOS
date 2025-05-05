@@ -5,6 +5,19 @@
  * Provides tools and resources for the index API
  */
 
+// Set the working directory if provided by the MCP client
+if (process.env.cwd) {
+  try {
+    process.chdir(process.env.cwd);
+    console.error(`Changed working directory to: ${process.env.cwd}`);
+  } catch (error) {
+    console.error(`Failed to change working directory: ${error.message}`);
+  }
+}
+
+// Log the current working directory
+console.error(`Current working directory: ${process.cwd()}`);
+
 // Import the index API libraries
 const validateLib = require('../../lib/index/validate/index.js');
 const mutateLib = require('../../lib/index/mutate/index.js');

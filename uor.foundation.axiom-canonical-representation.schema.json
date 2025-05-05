@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor.foundation/schemas/axioms/canonical-representation-axiom.json",
+  "$id": "https://uor.foundation/axioms/canonical-representation-axiom",
   "title": "Canonical Representation Axiom Schema",
   "description": "Schema representing the Canonical Representation Axiom: There exists a unique, observer-invariant representation for each object",
   "type": "object",
@@ -263,6 +263,7 @@
           }
         }
       }
-    }
+    },
+    "schemaType": "axiom"
   }
 }

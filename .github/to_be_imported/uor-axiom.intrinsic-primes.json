@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://uor.foundation/schemas/axioms/intrinsic-primes-axiom.json",
+  "$id": "https://uor.foundation/axioms/intrinsic-primes-axiom.json",
   "title": "Intrinsic Primes Axiom Schema",
   "description": "Schema representing the Intrinsic Primes Axiom: A set P of atomic elements exists such that no element in P factors further under composition in the domain",
   "type": "object",
