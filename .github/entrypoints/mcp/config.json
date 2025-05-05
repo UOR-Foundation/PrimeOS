@@ -1,0 +1,7 @@
+{
+  "name": "repository-api-server",
+  "version": "0.1.0",
+  "description": "Repository API MCP Server for index API",
+  "entrypoint": "index.js",
+  "env": {}
+}
