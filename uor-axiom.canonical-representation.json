@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/axioms/canonical-representation-axiom.json",
+  "title": "Canonical Representation Axiom Schema",
+  "description": "Schema representing the Canonical Representation Axiom: There exists a unique, observer-invariant representation for each object",
+  "type": "object",
+  "required": [
+    "axiomName",
+    "axiomStatement",
+    "representationProperties",
+    "invarianceProperties"
+  ],
+  "properties": {
+    "axiomName": {
+      "type": "string",
+      "const": "Canonical Representation Axiom",
+      "description": "The name of the axiom"
+    },
+    "axiomStatement": {
+      "type": "string",
+      "description": "The formal statement of the axiom",
+      "default": "There exists a unique, observer-invariant representation for each object that reveals its inherent structure."
+    },
+    "formalStatement": {
+      "type": "string",
+      "description": "Mathematical formalization of the axiom",
+      "default": "∀ x ∈ D, ∃! R(x) such that R(x) is invariant across all observer frames F and minimizes the coherence norm ||R(x)||"
+    },
+    "representationProperties": {
+      "type": "object",
+      "description": "Properties of the canonical representation",
+      "required": [
+        "uniquenessProof",
+        "completeness",
+        "minimality"
+      ],
+      "properties": {
+        "uniquenessProof": {
+          "type": "string",
+          "description": "Reference to proof that the representation is unique"
+        },
+        "completeness": {
+          "type": "object",
+          "description": "Completeness properties of the representation",
+          "properties": {
+            "isComplete": {
+              "type": "boolean",
+              "description": "Whether the representation is complete"
+            },
+            "completenessProof": {
+              "type": "string",
+              "description": "Reference to proof of completeness"
+            },
+            "informationContent": {
+              "type": "string",
+              "description": "Description of the information content of the representation"
+            }
+          }
+        },
+        "minimality": {
+          "type": "object",
+          "description": "Minimality properties of the representation",
+          "properties": {
+            "isMinimal": {
+              "type": "boolean",
+              "description": "Whether the representation is minimal"
+            },
+            "minimalityProof": {
+              "type": "string",
+              "description": "Reference to proof of minimality"
+            },
+            "minimalityMeasure": {
+              "type": "string",
+              "description": "Measure used to determine minimality"
+            }
+          }
+        },
+        "canonicalizationRules": {
+          "type": "array",
+          "description": "Rules for converting to canonical form",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ruleName": {
+                "type": "string",
+                "description": "Name of the canonicalization rule"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the rule"
+              },
+              "applicationOrder": {
+                "type": "integer",
+                "description": "Order in which to apply the rule in the canonicalization process"
+              }
+            }
+          }
+        }
+      }
+    },
+    "invarianceProperties": {
+      "type": "object",
+      "description": "Properties related to observer invariance",
+      "required": [
+        "invariantFeatures",
+        "transformationInvariance"
+      ],
+      "properties": {
+        "invariantFeatures": {
+          "type": "array",
+          "description": "Features that remain invariant across observer frames",
+          "items": {
+            "type": "object",
+            "properties": {
+              "feature": {
+                "type": "string",
+                "description": "Invariant feature"
+              },
+              "invarianceProof": {
+                "type": "string",
+                "description": "Reference to proof of invariance"
+              }
+            }
+          }
+        },
+        "transformationInvariance": {
+          "type": "object",
+          "description": "How invariance is maintained under transformations",
+          "properties": {
+            "transformationTypes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Types of transformations under which the representation is invariant"
+              }
+            },
+            "invarianceProofs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "transformation": {
+                    "type": "string",
+                    "description": "Type of transformation"
+                  },
+                  "proof": {
+                    "type": "string",
+                    "description": "Reference to proof of invariance under this transformation"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "observerFrames": {
+          "type": "array",
+          "description": "Different observer frames for which invariance is guaranteed",
+          "items": {
+            "type": "object",
+            "properties": {
+              "frameName": {
+                "type": "string",
+                "description": "Name of the observer frame"
+              },
+              "frameProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "Properties of the frame"
+                }
+              },
+              "invarianceProof": {
+                "type": "string",
+                "description": "Reference to proof of invariance in this frame"
+              }
+            }
+          }
+        }
+      }
+    },
+    "representationAlgorithm": {
+      "type": "object",
+      "description": "Algorithm for determining the canonical representation",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the algorithm"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of how the algorithm works"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Steps in the algorithm"
+          }
+        },
+        "complexity": {
+          "type": "string",
+          "description": "Computational complexity of the algorithm"
+        },
+        "implementation": {
+          "type": "string",
+          "description": "Reference to implementation of the algorithm"
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "Examples demonstrating canonical representation",
+      "items": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "Object being represented"
+          },
+          "canonicalRepresentation": {
+            "type": "string",
+            "description": "Canonical representation of the object"
+          },
+          "alternateRepresentations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Alternative non-canonical representations"
+            }
+          },
+          "observerFrames": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "frameName": {
+                  "type": "string",
+                  "description": "Name of the observer frame"
+                },
+                "frameInterpretation": {
+                  "type": "string",
+                  "description": "How the representation is interpreted in this frame"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "connections": {
+      "type": "array",
+      "description": "Connections to other axioms or concepts",
+      "items": {
+        "type": "object",
+        "properties": {
+          "concept": {
+            "type": "string",
+            "description": "Related concept or axiom"
+          },
+          "relationship": {
+            "type": "string",
+            "description": "Description of the relationship"
+          }
+        }
+      }
+    }
+  }
+}

@@ -194,7 +194,7 @@ function validateJsonSchema(schema) {
  */
 function readJsonFile(filename) {
   try {
-    const repoRoot = process.cwd();
+    const repoRoot = process.env.REPO_ROOT || process.cwd();
     const filePath = path.join(repoRoot, filename);
     const content = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(content);
@@ -211,7 +211,7 @@ function readJsonFile(filename) {
  */
 function writeJsonFile(filename, content) {
   try {
-    const repoRoot = process.cwd();
+    const repoRoot = process.env.REPO_ROOT || process.cwd();
     const filePath = path.join(repoRoot, filename);
     fs.writeFileSync(filePath, JSON.stringify(content, null, 2), 'utf8');
   } catch (error) {

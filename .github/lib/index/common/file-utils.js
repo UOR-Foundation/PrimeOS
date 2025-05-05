@@ -11,7 +11,7 @@ const path = require('path');
  * @returns {string} - The absolute path to the repository root
  */
 function getRepoRoot() {
-  return process.cwd();
+  return process.env.REPO_ROOT || process.cwd();
 }
 
 /**

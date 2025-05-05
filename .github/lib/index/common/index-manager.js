@@ -64,6 +64,18 @@ function addToIndex(apiName, endpointName, mediaType) {
     // Save the updated index
     writeJsonFile(INDEX_FILE, index);
     
+    // Validate that the entry was added to the index
+    const updatedIndex = getIndex();
+    const entryExists = updatedIndex.some(e => 
+      e.anchor === apiName && 
+      e.endpoint === endpointName && 
+      e.media === mediaType
+    );
+    
+    if (!entryExists) {
+      throw new Error(`Failed to add entry to index: Entry validation failed`);
+    }
+    
     return entry;
   } catch (error) {
     throw new Error(`Failed to add to index: ${error.message}`);

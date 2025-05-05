@@ -166,6 +166,47 @@ class RepositoryApiServer {
       
       console.error(`Parsed request: ${JSON.stringify(request)}`);
       
+      // Handle JSON-RPC 2.0 protocol
+      if (request.jsonrpc === "2.0") {
+        if (request.method === "initialize") {
+          console.error('Handling initialize request');
+          this.sendJsonRpcResponse(request.id, {
+            protocolVersion: "2024-11-05",
+            serverInfo: {
+              name: "repository-api-server",
+              version: "0.1.0"
+            },
+            capabilities: {}
+          });
+          return;
+        } else if (request.method === "tools/list") {
+          console.error('Handling tools/list request');
+          this.handleListTools(request);
+          return;
+        } else if (request.method === "tools/call") {
+          console.error('Handling tools/call request');
+          this.handleJsonRpcCallTool(request);
+          return;
+        } else if (request.method === "resources/list") {
+          console.error('Handling resources/list request');
+          this.handleListResources(request);
+          return;
+        } else if (request.method === "resource_templates/list") {
+          console.error('Handling resource_templates/list request');
+          this.handleListResourceTemplates(request);
+          return;
+        } else if (request.method === "resources/read") {
+          console.error('Handling resources/read request');
+          this.handleReadResource(request);
+          return;
+        } else if (request.method === "notifications/cancelled") {
+          console.error('Handling notifications/cancelled request');
+          // No response needed for notifications
+          return;
+        }
+      }
+      
+      // Legacy protocol
       if (!request.method || !request.id) {
         console.error('Invalid request format');
         this.sendError(null, 'Invalid request format');
@@ -276,6 +317,133 @@ class RepositoryApiServer {
       console.error(`Error sending error response: ${error.message}`);
       this.isConnected = false;
       this.stopHeartbeat();
+    }
+  }
+
+  /**
+   * Send a JSON-RPC 2.0 response to stdout
+   * 
+   * @param {string} id - The request ID
+   * @param {Object} result - The result to send
+   */
+  sendJsonRpcResponse(id, result) {
+    const response = {
+      jsonrpc: "2.0",
+      id,
+      result
+    };
+    
+    console.error(`Sending JSON-RPC response: ${JSON.stringify(response)}`);
+    
+    try {
+      // Write the response and ensure it's flushed
+      const responseStr = JSON.stringify(response) + '\n';
+      
+      // Use a synchronous write to ensure the response is sent immediately
+      process.stdout.write(responseStr, (err) => {
+        if (err) {
+          console.error(`Error writing JSON-RPC response: ${err.message}`);
+          this.isConnected = false;
+          this.stopHeartbeat();
+        } else {
+          // Update the last activity time
+          this.lastActivityTime = Date.now();
+        }
+      });
+    } catch (error) {
+      console.error(`Error sending JSON-RPC response: ${error.message}`);
+      this.isConnected = false;
+      this.stopHeartbeat();
+    }
+  }
+
+  /**
+   * Send a JSON-RPC 2.0 error to stdout
+   * 
+   * @param {string} id - The request ID
+   * @param {string} message - The error message
+   * @param {number} code - The error code
+   */
+  sendJsonRpcError(id, message, code = -32603) {
+    const response = {
+      jsonrpc: "2.0",
+      id,
+      error: {
+        code,
+        message
+      }
+    };
+    
+    console.error(`Sending JSON-RPC error: ${JSON.stringify(response)}`);
+    
+    try {
+      // Write the error and ensure it's flushed
+      const responseStr = JSON.stringify(response) + '\n';
+      
+      // Use a synchronous write to ensure the error is sent immediately
+      process.stdout.write(responseStr, (err) => {
+        if (err) {
+          console.error(`Error writing JSON-RPC error response: ${err.message}`);
+          this.isConnected = false;
+          this.stopHeartbeat();
+        } else {
+          // Update the last activity time
+          this.lastActivityTime = Date.now();
+        }
+      });
+    } catch (error) {
+      console.error(`Error sending JSON-RPC error response: ${error.message}`);
+      this.isConnected = false;
+      this.stopHeartbeat();
+    }
+  }
+
+  /**
+   * Handle JSON-RPC 2.0 tools/call request
+   * 
+   * @param {Object} request - The request object
+   */
+  handleJsonRpcCallTool(request) {
+    try {
+      if (!request.params || !request.params.name || !request.params.arguments) {
+        this.sendJsonRpcError(request.id, 'Invalid tools/call request');
+        return;
+      }
+      
+      const { name, arguments: args } = request.params;
+      
+      let result;
+      let isError = false;
+      
+      switch (name) {
+        case 'validate_json':
+          result = validateLib.validate(args);
+          isError = !result.isValid;
+          break;
+        case 'index_content':
+          result = mutateLib.mutate(args);
+          isError = !result.success;
+          break;
+        case 'resolve_content':
+          result = resolveLib.resolve(args);
+          isError = !result.success;
+          break;
+        default:
+          this.sendJsonRpcError(request.id, `Unknown tool: ${name}`);
+          return;
+      }
+      
+      this.sendJsonRpcResponse(request.id, {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
+        isError,
+      });
+    } catch (error) {
+      this.sendJsonRpcError(request.id, `Error calling tool: ${error.message}`);
     }
   }
 
