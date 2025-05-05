@@ -9,6 +9,7 @@ const path = require('path');
 const API_TEST_PATH = path.resolve(__dirname, 'api-test.js');
 const MCP_TEST_PATH = path.resolve(__dirname, '../entrypoints/mcp/test/mcp-test.js');
 const END_TO_END_TEST_PATH = path.resolve(__dirname, 'end-to-end-test.js');
+const SCHEMA_SEARCH_TEST_PATH = path.resolve(__dirname, 'schema-search-test.js');
 
 /**
  * Run all tests
@@ -33,6 +34,12 @@ async function runAllTests() {
   await runTest(END_TO_END_TEST_PATH);
   
   console.log('\n=== End-to-End Tests Completed ===\n');
+  
+  // Run the schema search tests
+  console.log('Running Schema Search Tests...');
+  await runTest(SCHEMA_SEARCH_TEST_PATH);
+  
+  console.log('\n=== Schema Search Tests Completed ===\n');
   
   console.log('All tests completed!');
 }

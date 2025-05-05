@@ -35,6 +35,9 @@ async function runTests() {
     // Test resolve tool
     await testResolveTool(server);
     
+    // Test search tool
+    await testSearchTool(server);
+    
     // Test resource templates
     await testResourceTemplates(server);
     
@@ -150,12 +153,66 @@ async function testListTools(server) {
     const hasValidateTool = result.tools.some(tool => tool.name === 'validate_json');
     const hasMutateTool = result.tools.some(tool => tool.name === 'index_content');
     const hasResolveTool = result.tools.some(tool => tool.name === 'resolve_content');
+    const hasSearchTool = result.tools.some(tool => tool.name === 'search_index');
     
     console.log('Has validate tool:', hasValidateTool ? 'PASS' : 'FAIL');
     console.log('Has mutate tool:', hasMutateTool ? 'PASS' : 'FAIL');
     console.log('Has resolve tool:', hasResolveTool ? 'PASS' : 'FAIL');
+    console.log('Has search tool:', hasSearchTool ? 'PASS' : 'FAIL');
   } catch (error) {
     console.error('List tools failed:', error);
+  }
+}
+
+/**
+ * Test the search tool
+ * 
+ * @param {ChildProcess} server - The MCP server process
+ */
+async function testSearchTool(server) {
+  console.log('\n--- Testing Search Tool ---');
+  
+  try {
+    // Test searching by namespace
+    const namespaceResult = await sendRequest(server, 'call_tool', {
+      name: 'search_index',
+      arguments: {
+        namespace: 'mcp-test'
+      }
+    });
+    
+    // Parse the result from the text content
+    const namespaceResultObj = JSON.parse(namespaceResult.content[0].text);
+    console.log('Search by namespace:', namespaceResultObj.success ? 'PASS' : 'FAIL');
+    
+    // Test searching by property
+    const propertyResult = await sendRequest(server, 'call_tool', {
+      name: 'search_index',
+      arguments: {
+        property: 'name'
+      }
+    });
+    
+    // Parse the result from the text content
+    const propertyResultObj = JSON.parse(propertyResult.content[0].text);
+    console.log('Search by property:', propertyResultObj.success ? 'PASS' : 'FAIL');
+    
+    // Test searching with pagination and sorting
+    const paginationResult = await sendRequest(server, 'call_tool', {
+      name: 'search_index',
+      arguments: {
+        limit: 1,
+        offset: 0,
+        sortBy: 'id',
+        sortOrder: 'asc'
+      }
+    });
+    
+    // Parse the result from the text content
+    const paginationResultObj = JSON.parse(paginationResult.content[0].text);
+    console.log('Search with pagination:', paginationResultObj.success ? 'PASS' : 'FAIL');
+  } catch (error) {
+    console.error('Search tool test failed:', error);
   }
 }
 

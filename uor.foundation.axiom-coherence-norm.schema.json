@@ -272,6 +272,11 @@
           }
         }
       }
+    },
+    "schemaType": {
+      "type": "string",
+      "const": "axiom",
+      "description": "The type of schema"
     }
   }
 }

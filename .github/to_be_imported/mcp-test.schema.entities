@@ -5,13 +5,13 @@
     "name": {
       "type": "string"
     },
-    "email": {
-      "type": "string",
-      "format": "email"
+    "age": {
+      "type": "integer",
+      "minimum": 0
     }
   },
   "required": [
     "name",
-    "email"
+    "age"
   ]
 }

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/test/component-test",
+  "title": "Test Component Schema",
+  "description": "A test component schema",
+  "type": "object",
+  "schemaType": "component",
+  "namespace": "uor.foundation/test",
+  "properties": {
+    "componentId": {
+      "type": "string",
+      "description": "Component identifier"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "$ref": "https://uor.foundation/test/entity-test"
+      },
+      "description": "Component dependencies"
+    }
+  }
+}

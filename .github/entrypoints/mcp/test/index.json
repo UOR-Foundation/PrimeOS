@@ -1,0 +1,12 @@
+[
+  {
+    "anchor": "mcp-test",
+    "endpoint": "schema",
+    "media": "entities"
+  },
+  {
+    "anchor": "mcp-test",
+    "endpoint": "data",
+    "media": "entities"
+  }
+]

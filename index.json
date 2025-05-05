@@ -15,13 +15,63 @@
     "media": "schema.json"
   },
   {
-    "anchor": "test",
-    "endpoint": "schema",
-    "media": "json"
+    "anchor": "uor.foundation",
+    "endpoint": "axiom-coherence-inner-product",
+    "media": "schema.json"
   },
   {
-    "anchor": "test",
+    "anchor": "uor.foundation",
+    "endpoint": "axiom-coherence-norm",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "axiom-intrinsic-primes",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "mcp-test",
+    "endpoint": "schema",
+    "media": "entities"
+  },
+  {
+    "anchor": "mcp-test",
     "endpoint": "data",
-    "media": "json"
+    "media": "entities"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "index",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "mcp-test",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "interface",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "modelcontextprotocol.io",
+    "endpoint": "schema",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "entity",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "component",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "model",
+    "media": "schema.json"
   }
 ]

@@ -3,25 +3,26 @@
  * Repository API MCP Server
  * 
  * Provides tools and resources for the index API
+ * 
+ * Version: 2.0.0 (Updated with search_index tool)
  */
 
-// Set the working directory if provided by the MCP client
-if (process.env.cwd) {
-  try {
-    process.chdir(process.env.cwd);
-    console.error(`Changed working directory to: ${process.env.cwd}`);
-  } catch (error) {
-    console.error(`Failed to change working directory: ${error.message}`);
-  }
-}
+// Standard JSON-RPC error codes
+const PARSE_ERROR = -32700;
+const INVALID_REQUEST = -32600;
+const METHOD_NOT_FOUND = -32601;
+const INVALID_PARAMS = -32602;
+const INTERNAL_ERROR = -32603;
 
-// Log the current working directory
-console.error(`Current working directory: ${process.cwd()}`);
+// Protocol versions
+const PROTOCOL_VERSION_2024 = "2024-11-05";
+const PROTOCOL_VERSION_2025 = "2025-03-26";
 
 // Import the index API libraries
 const validateLib = require('../../lib/index/validate/index.js');
 const mutateLib = require('../../lib/index/mutate/index.js');
 const resolveLib = require('../../lib/index/resolve/index.js');
+const searchLib = require('../../lib/index/search/index.js');
 
 /**
  * Improved MCP Server implementation with robust connection handling
@@ -32,6 +33,8 @@ class RepositoryApiServer {
     this.lastActivityTime = Date.now();
     this.heartbeatInterval = null;
     this.inputBuffer = '';
+    this.shutdownScheduled = false;
+    this.protocolVersion = PROTOCOL_VERSION_2025; // Default to latest protocol version
     
     // Set up error handling for various signals
     process.on('SIGINT', this.handleShutdown.bind(this, 'SIGINT'));
@@ -110,17 +113,28 @@ class RepositoryApiServer {
    * @param {string} signal - The signal that triggered the shutdown
    */
   handleShutdown(signal) {
-    console.error(`Server shutting down due to ${signal}`);
-    this.stopHeartbeat();
-    this.isConnected = false;
+    console.error(`Server received ${signal} signal`);
     
-    // Flush any pending output
+    // Only shutdown if explicitly requested via a signal
+    if (this.shutdownScheduled) {
+      console.error('Shutdown already scheduled, ignoring duplicate signal');
+      return;
+    }
+    
+    this.shutdownScheduled = true;
+    console.error('Scheduling graceful shutdown');
+    
+    // Stop the heartbeat but keep the connection alive
+    this.stopHeartbeat();
+    
+    // Flush any pending output before considering shutdown
     try {
       process.stdout.write('', () => {
-        process.exit(0);
+        // Don't exit immediately - allow pending operations to complete
+        console.error('Output flushed, server will remain active for pending operations');
       });
     } catch (error) {
-      process.exit(0);
+      console.error(`Error flushing output: ${error.message}`);
     }
   }
   
@@ -131,14 +145,20 @@ class RepositoryApiServer {
     this.stopHeartbeat(); // Clear any existing interval
     
     this.heartbeatInterval = setInterval(() => {
-      // Check if there's been activity in the last 30 seconds
+      // Check if there's been activity in the last 15 seconds
       const inactiveTime = Date.now() - this.lastActivityTime;
       
-      if (inactiveTime > 30000) {
+      if (inactiveTime > 15000) {
         // Send a ping to keep the connection alive
         this.sendPing();
       }
-    }, 15000); // Check every 15 seconds
+      
+      // If shutdown is scheduled but we're still getting activity, cancel it
+      if (this.shutdownScheduled && inactiveTime < 5000) {
+        console.error('Cancelling scheduled shutdown due to recent activity');
+        this.shutdownScheduled = false;
+      }
+    }, 5000); // Check more frequently (every 5 seconds)
   }
   
   /**
@@ -161,11 +181,11 @@ class RepositoryApiServer {
       this.lastActivityTime = Date.now();
     } catch (error) {
       console.error(`Error sending ping: ${error.message}`);
-      this.isConnected = false;
-      this.stopHeartbeat();
+      // Don't disconnect immediately on ping error, try to recover
+      console.error('Attempting to recover from ping error');
     }
   }
-
+  
   /**
    * Handle input from stdin
    * 
@@ -179,18 +199,73 @@ class RepositoryApiServer {
       
       console.error(`Parsed request: ${JSON.stringify(request)}`);
       
+      // If we receive any input, we're connected
+      if (!this.isConnected) {
+        console.error('Connection re-established');
+        this.isConnected = true;
+        this.startHeartbeat();
+      }
+      
+      // Reset shutdown if it was scheduled
+      if (this.shutdownScheduled) {
+        console.error('Cancelling scheduled shutdown due to new request');
+        this.shutdownScheduled = false;
+      }
+      
       // Handle JSON-RPC 2.0 protocol
       if (request.jsonrpc === "2.0") {
         if (request.method === "initialize") {
           console.error('Handling initialize request');
+          
+          // Get the client's requested protocol version
+          const clientProtocolVersion = request.params?.protocolVersion || PROTOCOL_VERSION_2025;
+          console.error(`Client requested protocol version: ${clientProtocolVersion}`);
+          
+          // Determine which protocol version to use
+          let protocolVersion = PROTOCOL_VERSION_2025;
+          let capabilities = {
+            tools: {
+              listChanged: false
+            },
+            resources: {
+              subscribe: false,
+              listChanged: false
+            },
+            resourceTemplates: true
+          };
+          
+          // If client requests 2024 protocol version, use that
+          if (clientProtocolVersion === PROTOCOL_VERSION_2024) {
+            protocolVersion = PROTOCOL_VERSION_2024;
+            // 2024 version capabilities structure
+            capabilities = {
+              tools: {
+                listChanged: false
+              },
+              resources: {
+                subscribe: false,
+                listChanged: false
+              },
+              resourceTemplates: true
+            };
+          }
+          
+          // Store the protocol version for this session
+          this.protocolVersion = protocolVersion;
+          console.error(`Using protocol version: ${this.protocolVersion}`);
+          
           this.sendJsonRpcResponse(request.id, {
-            protocolVersion: "2024-11-05",
+            protocolVersion,
             serverInfo: {
               name: "repository-api-server",
               version: "0.1.0"
             },
-            capabilities: {}
+            capabilities
           });
+          return;
+        } else if (request.method === "notifications/initialized") {
+          console.error('Handling notifications/initialized request');
+          // No response needed for notifications
           return;
         } else if (request.method === "tools/list") {
           console.error('Handling tools/list request');
@@ -204,7 +279,7 @@ class RepositoryApiServer {
           console.error('Handling resources/list request');
           this.handleListResources(request);
           return;
-        } else if (request.method === "resource_templates/list") {
+        } else if (request.method === "resource_templates/list" || request.method === "resources/templates/list") {
           console.error('Handling resource_templates/list request');
           this.handleListResourceTemplates(request);
           return;
@@ -216,13 +291,18 @@ class RepositoryApiServer {
           console.error('Handling notifications/cancelled request');
           // No response needed for notifications
           return;
+        } else if (request.method === "ping") {
+          console.error('Handling ping request');
+          // Respond immediately to ping requests
+          this.sendJsonRpcResponse(request.id, {});
+          return;
         }
       }
       
       // Legacy protocol
       if (!request.method || !request.id) {
         console.error('Invalid request format');
-        this.sendError(null, 'Invalid request format');
+        this.sendError(null, 'Invalid request format', INVALID_REQUEST);
         return;
       }
       
@@ -249,11 +329,11 @@ class RepositoryApiServer {
           break;
         default:
           console.error(`Unknown method: ${request.method}`);
-          this.sendError(request.id, `Unknown method: ${request.method}`);
+          this.sendError(request.id, `Unknown method: ${request.method}`, METHOD_NOT_FOUND);
       }
     } catch (error) {
       console.error(`Error parsing request: ${error.message}`);
-      this.sendError(null, `Error parsing request: ${error.message}`);
+      this.sendError(null, `Error parsing request: ${error.message}`, PARSE_ERROR);
     }
   }
 
@@ -265,6 +345,7 @@ class RepositoryApiServer {
    */
   sendResponse(id, result) {
     const response = {
+      jsonrpc: "2.0",
       id,
       result
     };
@@ -284,6 +365,7 @@ class RepositoryApiServer {
         } else {
           // Update the last activity time
           this.lastActivityTime = Date.now();
+          
         }
       });
     } catch (error) {
@@ -302,6 +384,7 @@ class RepositoryApiServer {
    */
   sendError(id, message, code = -32603) {
     const response = {
+      jsonrpc: "2.0",
       id,
       error: {
         code,
@@ -324,6 +407,7 @@ class RepositoryApiServer {
         } else {
           // Update the last activity time
           this.lastActivityTime = Date.now();
+          
         }
       });
     } catch (error) {
@@ -361,6 +445,7 @@ class RepositoryApiServer {
         } else {
           // Update the last activity time
           this.lastActivityTime = Date.now();
+          
         }
       });
     } catch (error) {
@@ -402,6 +487,7 @@ class RepositoryApiServer {
         } else {
           // Update the last activity time
           this.lastActivityTime = Date.now();
+          
         }
       });
     } catch (error) {
@@ -419,7 +505,7 @@ class RepositoryApiServer {
   handleJsonRpcCallTool(request) {
     try {
       if (!request.params || !request.params.name || !request.params.arguments) {
-        this.sendJsonRpcError(request.id, 'Invalid tools/call request');
+        this.sendJsonRpcError(request.id, 'Invalid tools/call request', INVALID_PARAMS);
         return;
       }
       
@@ -441,22 +527,46 @@ class RepositoryApiServer {
           result = resolveLib.resolve(args);
           isError = !result.success;
           break;
+        case 'search_index':
+          result = searchLib.searchIndex(args);
+          isError = !result.success;
+          break;
         default:
-          this.sendJsonRpcError(request.id, `Unknown tool: ${name}`);
+          this.sendJsonRpcError(request.id, `Unknown tool: ${name}`, METHOD_NOT_FOUND);
           return;
       }
       
-      this.sendJsonRpcResponse(request.id, {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
-        isError,
-      });
+      // Format the response according to the protocol version
+      let responseContent;
+      
+      if (this.protocolVersion === PROTOCOL_VERSION_2024) {
+        // 2024 version has a slightly different structure for TextContent
+        responseContent = {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2)
+            },
+          ],
+          isError,
+        };
+      } else {
+        // 2025 version
+        responseContent = {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+              annotations: {} // 2025 version uses annotations
+            },
+          ],
+          isError,
+        };
+      }
+      
+      this.sendJsonRpcResponse(request.id, responseContent);
     } catch (error) {
-      this.sendJsonRpcError(request.id, `Error calling tool: ${error.message}`);
+      this.sendJsonRpcError(request.id, `Error calling tool: ${error.message}`, INTERNAL_ERROR);
     }
   }
 
@@ -568,6 +678,64 @@ class RepositoryApiServer {
           required: ['apiName', 'endpointName', 'mediaType'],
         },
       },
+      {
+        name: 'search_index',
+        description: 'Search for schemas in the index',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            namespace: {
+              type: 'string',
+              description: 'Filter by schema namespace (e.g., "uor.foundation")'
+            },
+            schemaType: {
+              type: 'string',
+              description: 'Filter by schema type (e.g., "axiom", "test", "core")'
+            },
+            property: {
+              type: 'string',
+              description: 'Search for schemas containing a specific property'
+            },
+            propertyType: {
+              type: 'string',
+              description: 'Filter property by type (e.g., "string", "object", "array")'
+            },
+            references: {
+              type: 'string',
+              description: 'Find schemas that reference another schema by $id'
+            },
+            pattern: {
+              type: 'string',
+              description: 'Text pattern to match against schema $id, title, or description'
+            },
+            includeContent: {
+              type: 'boolean',
+              description: 'Whether to include full schema content in results',
+              default: false
+            },
+            limit: {
+              type: 'integer',
+              description: 'Maximum number of results to return'
+            },
+            offset: {
+              type: 'integer',
+              description: 'Number of results to skip (for pagination)',
+              default: 0
+            },
+            sortBy: {
+              type: 'string',
+              description: 'Field to sort by (id, title, type, namespace)',
+              enum: ['id', 'title', 'type', 'namespace', 'entry.apiName', 'entry.endpointName']
+            },
+            sortOrder: {
+              type: 'string',
+              description: 'Sort order',
+              enum: ['asc', 'desc'],
+              default: 'asc'
+            }
+          }
+        }
+      }
     ];
     
     this.sendResponse(request.id, { tools });
@@ -581,7 +749,7 @@ class RepositoryApiServer {
   handleCallTool(request) {
     try {
       if (!request.params || !request.params.name || !request.params.arguments) {
-        this.sendError(request.id, 'Invalid call_tool request');
+        this.sendError(request.id, 'Invalid call_tool request', INVALID_PARAMS);
         return;
       }
       
@@ -603,8 +771,12 @@ class RepositoryApiServer {
           result = resolveLib.resolve(args);
           isError = !result.success;
           break;
+        case 'search_index':
+          result = searchLib.searchIndex(args);
+          isError = !result.success;
+          break;
         default:
-          this.sendError(request.id, `Unknown tool: ${name}`);
+          this.sendError(request.id, `Unknown tool: ${name}`, METHOD_NOT_FOUND);
           return;
       }
       
@@ -618,7 +790,7 @@ class RepositoryApiServer {
         isError,
       });
     } catch (error) {
-      this.sendError(request.id, `Error calling tool: ${error.message}`);
+      this.sendError(request.id, `Error calling tool: ${error.message}`, INTERNAL_ERROR);
     }
   }
 
@@ -657,7 +829,7 @@ class RepositoryApiServer {
   handleReadResource(request) {
     try {
       if (!request.params || !request.params.uri) {
-        this.sendError(request.id, 'Invalid read_resource request');
+        this.sendError(request.id, 'Invalid read_resource request', INVALID_PARAMS);
         return;
       }
       
@@ -666,7 +838,7 @@ class RepositoryApiServer {
       const match = uri.match(/^index:\/\/([^/]+)\/([^/]+)\/([^/]+)$/);
       
       if (!match) {
-        this.sendError(request.id, `Invalid URI format: ${uri}`);
+        this.sendError(request.id, `Invalid URI format: ${uri}`, INVALID_PARAMS);
         return;
       }
       
@@ -677,21 +849,40 @@ class RepositoryApiServer {
       const result = resolveLib.resolveJson(apiName, endpointName, mediaType);
       
       if (!result.success) {
-        this.sendError(request.id, result.error);
+        this.sendError(request.id, result.error || 'Resource not found', METHOD_NOT_FOUND);
         return;
       }
       
-      this.sendResponse(request.id, {
-        contents: [
-          {
-            uri,
-            mimeType: 'application/json',
-            text: JSON.stringify(result.content, null, 2),
-          },
-        ],
-      });
+      // Format the response according to the protocol version
+      let responseContent;
+      
+      if (this.protocolVersion === PROTOCOL_VERSION_2024) {
+        // 2024 version has a slightly different structure for TextResourceContents
+        responseContent = {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify(result.content, null, 2),
+            },
+          ],
+        };
+      } else {
+        // 2025 version includes annotations
+        responseContent = {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify(result.content, null, 2),
+            },
+          ],
+        };
+      }
+      
+      this.sendResponse(request.id, responseContent);
     } catch (error) {
-      this.sendError(request.id, `Error reading resource: ${error.message}`);
+      this.sendError(request.id, `Error reading resource: ${error.message}`, INTERNAL_ERROR);
     }
   }
 

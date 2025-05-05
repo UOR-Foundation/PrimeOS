@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/schemas/index.schema.json",
+  "title": "UOR Flat‑Directory Index Manifest",
+  "description": "Validates an `index.json` array that enumerates every (<anchor>.<endpoint>.<media>.schema.json) artefact in a flat directory.",
+  "type": "array",
+  "items": {
+    "$ref": "#/$defs/IndexEntry"
+  },
+  "$defs": {
+    "kebab": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+      "description": "Lower‑case alphanumerics separated by single hyphens; no dots."
+    },
+    "media": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9]+(?:[-+][A-Za-z0-9]+)*$",
+      "description": "IANA media‑type token with slashes replaced by hyphens; embedded '+' retained."
+    },
+    "IndexEntry": {
+      "type": "object",
+      "required": [
+        "anchor",
+        "endpoint",
+        "media"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "anchor": {
+          "$ref": "#/$defs/kebab"
+        },
+        "endpoint": {
+          "$ref": "#/$defs/kebab"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        }
+      }
+    }
+  }
+}
