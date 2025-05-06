@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://uor.foundation/transport",
+  "title": "JSON-RPC 2.0 Transport Schema",
+  "description": "Schema defining the structure and validation rules for JSON-RPC 2.0 transport protocol",
+  "definitions": {
+    "RequestId": {
+      "description": "A uniquely identifying ID for a request in JSON-RPC.",
+      "type": [
+        "string",
+        "integer"
+      ]
+    },
+    "JSONRPCRequest": {
+      "description": "A request that expects a response.",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/RequestId"
+        },
+        "jsonrpc": {
+          "const": "2.0",
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "id",
+        "jsonrpc",
+        "method"
+      ],
+      "type": "object"
+    },
+    "JSONRPCNotification": {
+      "description": "A notification which does not expect a response.",
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0",
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "jsonrpc",
+        "method"
+      ],
+      "type": "object"
+    },
+    "JSONRPCResponse": {
+      "description": "A successful (non-error) response to a request.",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/RequestId"
+        },
+        "jsonrpc": {
+          "const": "2.0",
+          "type": "string"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "id",
+        "jsonrpc",
+        "result"
+      ],
+      "type": "object"
+    },
+    "JSONRPCError": {
+      "description": "A response to a request that indicates an error occurred.",
+      "properties": {
+        "error": {
+          "properties": {
+            "code": {
+              "description": "The error type that occurred.",
+              "type": "integer"
+            },
+            "data": {
+              "description": "Additional information about the error. The value of this member is defined by the sender (e.g. detailed error information, nested errors etc.)."
+            },
+            "message": {
+              "description": "A short description of the error. The message SHOULD be limited to a concise single sentence.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "type": "object"
+        },
+        "id": {
+          "$ref": "#/definitions/RequestId"
+        },
+        "jsonrpc": {
+          "const": "2.0",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error",
+        "id",
+        "jsonrpc"
+      ],
+      "type": "object"
+    },
+    "JSONRPCBatchRequest": {
+      "description": "A JSON-RPC batch request, as described in https://www.jsonrpc.org/specification#batch.",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/JSONRPCRequest"
+          },
+          {
+            "$ref": "#/definitions/JSONRPCNotification"
+          }
+        ]
+      },
+      "type": "array"
+    },
+    "JSONRPCBatchResponse": {
+      "description": "A JSON-RPC batch response, as described in https://www.jsonrpc.org/specification#batch.",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/JSONRPCResponse"
+          },
+          {
+            "$ref": "#/definitions/JSONRPCError"
+          }
+        ]
+      },
+      "type": "array"
+    },
+    "JSONRPCMessage": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/JSONRPCRequest"
+        },
+        {
+          "$ref": "#/definitions/JSONRPCNotification"
+        },
+        {
+          "$ref": "#/definitions/JSONRPCBatchRequest"
+        },
+        {
+          "$ref": "#/definitions/JSONRPCResponse"
+        },
+        {
+          "$ref": "#/definitions/JSONRPCError"
+        },
+        {
+          "$ref": "#/definitions/JSONRPCBatchResponse"
+        }
+      ],
+      "description": "Refers to any valid JSON-RPC object that can be decoded off the wire, or encoded to be sent."
+    }
+  },
+  "type": "object",
+  "properties": {
+    "message": {
+      "$ref": "#/definitions/JSONRPCMessage"
+    }
+  },
+  "schemaType": "transport"
+}

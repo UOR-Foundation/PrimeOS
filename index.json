@@ -73,5 +73,80 @@
     "anchor": "uor.foundation",
     "endpoint": "model",
     "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "transport",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "entity.interface",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "entity.component",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "entity.model",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "component.entity",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "component.interface",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "component.model",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "interface.entity",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "interface.interface",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "interface.model",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "component.component",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "entity.entity",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "model.entity",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "model.interface",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "model.model",
+    "media": "json"
   }
 ]

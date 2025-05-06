@@ -1,0 +1,492 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/entity.interface",
+  "title": "UOR Entity Interface Schema",
+  "description": "Schema defining the interface for entities in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "methods"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the entity interface"
+    },
+    "type": {
+      "type": "string",
+      "const": "entity.interface",
+      "description": "Type of the schema"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the entity interface"
+    },
+    "methods": {
+      "type": "object",
+      "description": "Methods defined by the entity interface",
+      "properties": {
+        "getProperty": {
+          "type": "object",
+          "description": "Get a property value by name",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "const": "name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "default": "Name of the property to get"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "any"
+                },
+                "description": {
+                  "type": "string",
+                  "default": "Value of the property"
+                }
+              }
+            }
+          }
+        },
+        "setProperty": {
+          "type": "object",
+          "description": "Set a property value",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "enum": [
+                      "name",
+                      "value"
+                    ]
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "boolean"
+                },
+                "description": {
+                  "type": "string",
+                  "default": "Success status of the operation"
+                }
+              }
+            }
+          }
+        },
+        "getPropertyNames": {
+          "type": "object",
+          "description": "Get all property names",
+          "required": [
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "array<string>"
+                },
+                "description": {
+                  "type": "string",
+                  "default": "Array of property names"
+                }
+              }
+            }
+          }
+        },
+        "hasRelationship": {
+          "type": "object",
+          "description": "Check if entity has a relationship",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "enum": [
+                      "interfaceId",
+                      "targetEntityId"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "boolean"
+                },
+                "description": {
+                  "type": "string",
+                  "default": "Whether the relationship exists"
+                }
+              }
+            }
+          }
+        },
+        "getRelatedEntities": {
+          "type": "object",
+          "description": "Get related entities",
+          "required": [
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "const": "interfaceId"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "default": "Optional interface ID to filter by"
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "const": true
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "array<Entity>"
+                },
+                "description": {
+                  "type": "string",
+                  "default": "Array of related entities"
+                }
+              }
+            }
+          }
+        },
+        "addRelationship": {
+          "type": "object",
+          "description": "Add a relationship to another entity",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "enum": [
+                      "interfaceId",
+                      "targetEntityId"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "boolean"
+                },
+                "description": {
+                  "type": "string",
+                  "default": "Success status of the operation"
+                }
+              }
+            }
+          }
+        },
+        "removeRelationship": {
+          "type": "object",
+          "description": "Remove a relationship",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "enum": [
+                      "interfaceId",
+                      "targetEntityId"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "boolean"
+                },
+                "description": {
+                  "type": "string",
+                  "default": "Success status of the operation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Attributes defined by the entity interface",
+      "properties": {
+        "id": {
+          "type": "object",
+          "required": [
+            "type",
+            "readonly"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "string"
+            },
+            "description": {
+              "type": "string",
+              "default": "Unique identifier for the entity"
+            },
+            "readonly": {
+              "type": "boolean",
+              "const": true
+            }
+          }
+        },
+        "type": {
+          "type": "object",
+          "required": [
+            "type",
+            "readonly"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "string"
+            },
+            "description": {
+              "type": "string",
+              "default": "Type of the entity"
+            },
+            "readonly": {
+              "type": "boolean",
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    "transportMappings": {
+      "type": "object",
+      "description": "Mappings to transport protocols",
+      "properties": {
+        "jsonRpc": {
+          "type": "object",
+          "description": "JSON-RPC mapping",
+          "properties": {
+            "methods": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "rest": {
+          "type": "object",
+          "description": "REST mapping",
+          "properties": {
+            "endpoints": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "method",
+                  "path",
+                  "interfaceMethod"
+                ],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET",
+                      "POST",
+                      "PUT",
+                      "DELETE",
+                      "PATCH"
+                    ]
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "interfaceMethod": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "schemaType": "interface"
+}

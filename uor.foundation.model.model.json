@@ -1,0 +1,488 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/model.model",
+  "title": "UOR Model Model Schema",
+  "description": "Schema defining the meta-model structure for models in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "name",
+    "models",
+    "metaModels"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the model model"
+    },
+    "type": {
+      "type": "string",
+      "const": "model.model",
+      "description": "Type of the schema"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the model model"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the model model's purpose"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the model model"
+    },
+    "models": {
+      "type": "array",
+      "description": "Models in this meta-model",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Unique identifier for the model"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the model"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the model"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the model"
+          },
+          "modelType": {
+            "type": "string",
+            "description": "Type of model",
+            "enum": [
+              "domain",
+              "system",
+              "application",
+              "infrastructure",
+              "integration",
+              "other"
+            ]
+          },
+          "elements": {
+            "type": "array",
+            "description": "Elements in this model",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "type"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Unique identifier for the element"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the element"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the element"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the element"
+                }
+              }
+            }
+          },
+          "relationships": {
+            "type": "array",
+            "description": "Relationships in this model",
+            "items": {
+              "type": "object",
+              "required": [
+                "sourceId",
+                "targetId",
+                "type"
+              ],
+              "properties": {
+                "sourceId": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Identifier of the source element"
+                },
+                "targetId": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Identifier of the target element"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the relationship"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name of the relationship"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the relationship"
+                },
+                "properties": {
+                  "type": "object",
+                  "description": "Additional properties of the relationship",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metaModels": {
+      "type": "array",
+      "description": "Meta-models in this model model",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Unique identifier for the meta-model"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the meta-model"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the meta-model"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the meta-model"
+          },
+          "modelTypes": {
+            "type": "array",
+            "description": "Types of models this meta-model can describe",
+            "items": {
+              "type": "string"
+            }
+          },
+          "elementTypes": {
+            "type": "array",
+            "description": "Types of elements this meta-model can describe",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "description"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the element type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the element type"
+                },
+                "properties": {
+                  "type": "array",
+                  "description": "Properties of the element type",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the property"
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Type of the property"
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Description of the property"
+                      },
+                      "required": {
+                        "type": "boolean",
+                        "description": "Whether this property is required",
+                        "default": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "relationshipTypes": {
+            "type": "array",
+            "description": "Types of relationships this meta-model can describe",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "description"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the relationship type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the relationship type"
+                },
+                "sourceTypes": {
+                  "type": "array",
+                  "description": "Types of elements that can be sources of this relationship",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "targetTypes": {
+                  "type": "array",
+                  "description": "Types of elements that can be targets of this relationship",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "properties": {
+                  "type": "array",
+                  "description": "Properties of the relationship type",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the property"
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Type of the property"
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Description of the property"
+                      },
+                      "required": {
+                        "type": "boolean",
+                        "description": "Whether this property is required",
+                        "default": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "modelRelationships": {
+      "type": "array",
+      "description": "Relationships between models in this model model",
+      "items": {
+        "type": "object",
+        "required": [
+          "sourceModelId",
+          "targetModelId",
+          "type"
+        ],
+        "properties": {
+          "sourceModelId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Identifier of the source model"
+          },
+          "targetModelId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Identifier of the target model"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the relationship",
+            "enum": [
+              "extends",
+              "imports",
+              "references",
+              "implements",
+              "other"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the relationship"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the relationship"
+          },
+          "mappings": {
+            "type": "array",
+            "description": "Mappings between elements in the source and target models",
+            "items": {
+              "type": "object",
+              "required": [
+                "sourceElementId",
+                "targetElementId"
+              ],
+              "properties": {
+                "sourceElementId": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Identifier of the source element"
+                },
+                "targetElementId": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Identifier of the target element"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of the mapping"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the mapping"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "transformations": {
+      "type": "array",
+      "description": "Transformations between models in this model model",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "sourceModelType",
+          "targetModelType"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the transformation"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the transformation"
+          },
+          "sourceModelType": {
+            "type": "string",
+            "description": "Type of the source model"
+          },
+          "targetModelType": {
+            "type": "string",
+            "description": "Type of the target model"
+          },
+          "rules": {
+            "type": "array",
+            "description": "Transformation rules",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "description"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the rule"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the rule"
+                },
+                "sourcePattern": {
+                  "type": "string",
+                  "description": "Pattern to match in the source model"
+                },
+                "targetPattern": {
+                  "type": "string",
+                  "description": "Pattern to create in the target model"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "validationRules": {
+      "type": "array",
+      "description": "Validation rules for models in this model model",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "rule"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the validation rule"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the validation rule"
+          },
+          "rule": {
+            "type": "string",
+            "description": "Expression or code defining the validation rule"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ],
+            "default": "error",
+            "description": "Severity level if the rule is violated"
+          },
+          "appliesTo": {
+            "type": "array",
+            "description": "Types of models this rule applies to",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the model model",
+      "additionalProperties": true
+    }
+  },
+  "schemaType": "model"
+}

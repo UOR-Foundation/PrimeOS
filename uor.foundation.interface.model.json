@@ -1,0 +1,372 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/interface.model",
+  "title": "UOR Interface Model Schema",
+  "description": "Schema defining the model that links interface entities and meta-interfaces in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "name",
+    "interfaces",
+    "metaInterfaces"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the interface model"
+    },
+    "type": {
+      "type": "string",
+      "const": "interface.model",
+      "description": "Type of the schema"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the interface model"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the interface model's purpose"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the interface model"
+    },
+    "interfaces": {
+      "type": "array",
+      "description": "Interface entities in this model",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Unique identifier for the interface entity"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the interface entity"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the interface entity"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the interface entity"
+          },
+          "methods": {
+            "type": "array",
+            "description": "Methods defined by this interface",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "description"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the method"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the method"
+                },
+                "signature": {
+                  "type": "string",
+                  "description": "Signature of the method"
+                }
+              }
+            }
+          },
+          "extends": {
+            "type": "array",
+            "description": "Interfaces that this interface extends",
+            "items": {
+              "type": "string",
+              "format": "uri",
+              "description": "Reference to an interface"
+            }
+          }
+        }
+      }
+    },
+    "metaInterfaces": {
+      "type": "array",
+      "description": "Meta-interfaces in this model",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Unique identifier for the meta-interface"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the meta-interface"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the meta-interface"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the meta-interface"
+          },
+          "operations": {
+            "type": "array",
+            "description": "Operations defined by this meta-interface",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "description"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the operation"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the operation"
+                },
+                "signature": {
+                  "type": "string",
+                  "description": "Signature of the operation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "description": "Relationships between interfaces and meta-interfaces",
+      "items": {
+        "type": "object",
+        "required": [
+          "interfaceId",
+          "metaInterfaceId",
+          "type"
+        ],
+        "properties": {
+          "interfaceId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to an interface entity"
+          },
+          "metaInterfaceId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to a meta-interface"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of relationship",
+            "enum": [
+              "implements",
+              "extends",
+              "uses",
+              "other"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the relationship"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Additional properties of the relationship",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "hierarchies": {
+      "type": "array",
+      "description": "Interface hierarchies in this model",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "rootInterfaceId"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the hierarchy"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the hierarchy"
+          },
+          "rootInterfaceId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the root interface of the hierarchy"
+          },
+          "structure": {
+            "type": "object",
+            "description": "Structure of the hierarchy",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          }
+        }
+      }
+    },
+    "transportMappings": {
+      "type": "object",
+      "description": "Transport protocol mappings for interfaces in this model",
+      "properties": {
+        "jsonRpc": {
+          "type": "array",
+          "description": "JSON-RPC mappings",
+          "items": {
+            "type": "object",
+            "required": [
+              "interfaceId",
+              "mapping"
+            ],
+            "properties": {
+              "interfaceId": {
+                "type": "string",
+                "format": "uri",
+                "description": "Reference to an interface"
+              },
+              "mapping": {
+                "type": "object",
+                "description": "JSON-RPC mapping for the interface",
+                "properties": {
+                  "methods": {
+                    "type": "object",
+                    "description": "Mapping of interface methods to JSON-RPC methods",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rest": {
+          "type": "array",
+          "description": "REST mappings",
+          "items": {
+            "type": "object",
+            "required": [
+              "interfaceId",
+              "mapping"
+            ],
+            "properties": {
+              "interfaceId": {
+                "type": "string",
+                "format": "uri",
+                "description": "Reference to an interface"
+              },
+              "mapping": {
+                "type": "object",
+                "description": "REST mapping for the interface",
+                "properties": {
+                  "endpoints": {
+                    "type": "array",
+                    "description": "REST endpoint mappings",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "method",
+                        "path",
+                        "interfaceMethod"
+                      ],
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "GET",
+                            "POST",
+                            "PUT",
+                            "DELETE",
+                            "PATCH"
+                          ]
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "interfaceMethod": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "validationRules": {
+      "type": "array",
+      "description": "Validation rules for the interface model",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "rule"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the validation rule"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the validation rule"
+          },
+          "rule": {
+            "type": "string",
+            "description": "Expression or code defining the validation rule"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ],
+            "default": "error",
+            "description": "Severity level if the rule is violated"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the interface model",
+      "additionalProperties": true
+    }
+  },
+  "schemaType": "model"
+}

@@ -1,0 +1,824 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/entity.entity",
+  "title": "UOR Entity Entity Schema",
+  "description": "Schema defining the meta-entity structure for entities in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "name",
+    "entityType"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the entity entity"
+    },
+    "type": {
+      "type": "string",
+      "const": "entity.entity",
+      "description": "Type of the schema"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the entity entity"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the entity entity's purpose"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the entity entity"
+    },
+    "entityType": {
+      "type": "string",
+      "description": "Type of entity this meta-entity represents",
+      "enum": [
+        "core",
+        "domain",
+        "aggregate",
+        "value",
+        "service",
+        "event",
+        "other"
+      ]
+    },
+    "factory": {
+      "type": "object",
+      "description": "Factory methods for creating entity instances",
+      "properties": {
+        "create": {
+          "type": "object",
+          "description": "Method for creating an entity instance",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the create method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "description": "Whether this parameter is optional",
+                    "default": false
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "createFromData": {
+          "type": "object",
+          "description": "Method for creating an entity instance from data",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the createFromData method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "description": "Whether this parameter is optional",
+                    "default": false
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "description": "Identity management for entities",
+      "properties": {
+        "generateId": {
+          "type": "object",
+          "description": "Method for generating a unique entity ID",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the generateId method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "description": "Whether this parameter is optional",
+                    "default": false
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "validateId": {
+          "type": "object",
+          "description": "Method for validating an entity ID",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the validateId method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "properties": {
+      "type": "object",
+      "description": "Property management for entities",
+      "properties": {
+        "schema": {
+          "type": "object",
+          "description": "JSON Schema for entity properties",
+          "additionalProperties": true
+        },
+        "getProperty": {
+          "type": "object",
+          "description": "Method for getting an entity property",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the getProperty method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "setProperty": {
+          "type": "object",
+          "description": "Method for setting an entity property",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the setProperty method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "getPropertyNames": {
+          "type": "object",
+          "description": "Method for getting all property names",
+          "required": [
+            "returns"
+          ],
+          "properties": {
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "relationships": {
+      "type": "object",
+      "description": "Relationship management for entities",
+      "properties": {
+        "hasRelationship": {
+          "type": "object",
+          "description": "Method for checking if an entity has a relationship",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the hasRelationship method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "getRelatedEntities": {
+          "type": "object",
+          "description": "Method for getting related entities",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the getRelatedEntities method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "description": "Whether this parameter is optional",
+                    "default": false
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "addRelationship": {
+          "type": "object",
+          "description": "Method for adding a relationship",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the addRelationship method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "removeRelationship": {
+          "type": "object",
+          "description": "Method for removing a relationship",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the removeRelationship method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "description": "Repository for entity instances",
+      "properties": {
+        "save": {
+          "type": "object",
+          "description": "Method for saving an entity",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the save method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "findById": {
+          "type": "object",
+          "description": "Method for finding an entity by ID",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the findById method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "findAll": {
+          "type": "object",
+          "description": "Method for finding all entities",
+          "required": [
+            "returns"
+          ],
+          "properties": {
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "type": "object",
+          "description": "Method for deleting an entity",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the delete method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the entity entity",
+      "additionalProperties": true
+    }
+  },
+  "schemaType": "entity"
+}

@@ -1,0 +1,348 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/interface.entity",
+  "title": "UOR Interface Entity Schema",
+  "description": "Schema defining the entity structure for interfaces in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "name",
+    "methods"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the interface entity"
+    },
+    "type": {
+      "type": "string",
+      "const": "interface.entity",
+      "description": "Type of the schema"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the interface entity"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the interface entity's purpose"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the interface entity"
+    },
+    "extends": {
+      "type": "array",
+      "description": "Interfaces that this interface extends",
+      "items": {
+        "type": "string",
+        "format": "uri",
+        "description": "URI reference to an interface"
+      }
+    },
+    "methods": {
+      "type": "object",
+      "description": "Methods defined by the interface entity",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "description",
+          "parameters",
+          "returns"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of what the method does"
+          },
+          "parameters": {
+            "type": "array",
+            "description": "Parameters for the method",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Parameter name"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Parameter type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Parameter description"
+                },
+                "optional": {
+                  "type": "boolean",
+                  "description": "Whether this parameter is optional",
+                  "default": false
+                },
+                "default": {
+                  "description": "Default value for the parameter if it's optional"
+                }
+              }
+            }
+          },
+          "returns": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Return type"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the return value"
+              }
+            }
+          },
+          "throws": {
+            "type": "array",
+            "description": "Exceptions that this method can throw",
+            "items": {
+              "type": "object",
+              "required": [
+                "type",
+                "description"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Type of the exception"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of when this exception is thrown"
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Error code for this exception"
+                }
+              }
+            }
+          },
+          "async": {
+            "type": "boolean",
+            "description": "Whether this method is asynchronous",
+            "default": false
+          },
+          "deprecated": {
+            "type": "boolean",
+            "description": "Whether this method is deprecated",
+            "default": false
+          },
+          "deprecationReason": {
+            "type": "string",
+            "description": "Reason for deprecation if the method is deprecated"
+          }
+        }
+      }
+    },
+    "properties": {
+      "type": "object",
+      "description": "Properties exposed by the interface entity",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of the property"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the property"
+          },
+          "readOnly": {
+            "type": "boolean",
+            "description": "Whether this property is read-only",
+            "default": false
+          },
+          "observable": {
+            "type": "boolean",
+            "description": "Whether changes to this property can be observed",
+            "default": false
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "description": "Events that can be emitted by implementations of this interface",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "description",
+          "payload"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of the event"
+          },
+          "payload": {
+            "type": "object",
+            "description": "Schema for the event payload",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Type of the payload"
+              },
+              "properties": {
+                "type": "object",
+                "description": "Properties of the payload",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Type of the property"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Description of the property"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Constraints that implementations of this interface must satisfy",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "constraint"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the constraint"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the constraint"
+          },
+          "constraint": {
+            "type": "string",
+            "description": "Expression or code defining the constraint"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ],
+            "default": "error",
+            "description": "Severity level if the constraint is violated"
+          }
+        }
+      }
+    },
+    "idl": {
+      "type": "string",
+      "description": "Web IDL definition of the interface"
+    },
+    "transportMappings": {
+      "type": "object",
+      "description": "Mappings to transport protocols",
+      "properties": {
+        "jsonRpc": {
+          "type": "object",
+          "description": "JSON-RPC mapping",
+          "properties": {
+            "methods": {
+              "type": "object",
+              "description": "Mapping of interface methods to JSON-RPC methods",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "rest": {
+          "type": "object",
+          "description": "REST mapping",
+          "properties": {
+            "endpoints": {
+              "type": "array",
+              "description": "REST endpoint mappings",
+              "items": {
+                "type": "object",
+                "required": [
+                  "method",
+                  "path",
+                  "interfaceMethod"
+                ],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "GET",
+                      "POST",
+                      "PUT",
+                      "DELETE",
+                      "PATCH"
+                    ]
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "interfaceMethod": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "graphql": {
+          "type": "object",
+          "description": "GraphQL mapping",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "GraphQL type name"
+            },
+            "fields": {
+              "type": "object",
+              "description": "Mapping of interface methods to GraphQL fields",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the interface entity",
+      "additionalProperties": true
+    }
+  },
+  "schemaType": "entity"
+}

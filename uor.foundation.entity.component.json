@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/entity.component",
+  "title": "UOR Entity Component Schema",
+  "description": "Schema defining components that can be attached to entities in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "implementedInterfaces"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the component"
+    },
+    "type": {
+      "type": "string",
+      "const": "entity.component",
+      "description": "Type of the schema"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the component"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the component's purpose"
+    },
+    "implementedInterfaces": {
+      "type": "array",
+      "description": "Interfaces implemented by this component",
+      "items": {
+        "type": "string",
+        "format": "uri",
+        "description": "URI reference to an interface"
+      },
+      "minItems": 1
+    },
+    "compatibleEntityTypes": {
+      "type": "array",
+      "description": "Types of entities this component can be attached to",
+      "items": {
+        "type": "string",
+        "description": "Entity type name"
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "description": "Other components this component depends on",
+      "items": {
+        "type": "string",
+        "format": "uri",
+        "description": "URI reference to a component"
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "description": "Configuration schema for this component",
+      "properties": {
+        "properties": {
+          "type": "object",
+          "description": "Configuration properties for this component",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Data type of the property"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the property"
+              },
+              "default": {
+                "description": "Default value for the property"
+              },
+              "required": {
+                "type": "boolean",
+                "description": "Whether this property is required",
+                "default": false
+              }
+            }
+          }
+        },
+        "required": {
+          "type": "array",
+          "description": "List of required configuration properties",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "methods": {
+      "type": "object",
+      "description": "Methods provided by this component",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "description",
+          "parameters",
+          "returns"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of what the method does"
+          },
+          "parameters": {
+            "type": "array",
+            "description": "Parameters for the method",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Parameter name"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Parameter type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Parameter description"
+                },
+                "optional": {
+                  "type": "boolean",
+                  "description": "Whether this parameter is optional",
+                  "default": false
+                }
+              }
+            }
+          },
+          "returns": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Return type"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the return value"
+              }
+            }
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "description": "Events emitted by this component",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "description",
+          "payload"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of the event"
+          },
+          "payload": {
+            "type": "object",
+            "description": "Schema for the event payload",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Type of the payload"
+              },
+              "properties": {
+                "type": "object",
+                "description": "Properties of the payload",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Type of the property"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Description of the property"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "implementation": {
+      "type": "object",
+      "description": "Implementation details for the component",
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "Implementation language",
+          "enum": [
+            "javascript",
+            "typescript",
+            "python",
+            "java",
+            "c#",
+            "c++",
+            "go",
+            "rust"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "description": "Implementation code or reference to code"
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "External dependencies required by the implementation",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "version"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Dependency name"
+              },
+              "version": {
+                "type": "string",
+                "description": "Dependency version"
+              },
+              "source": {
+                "type": "string",
+                "description": "Source of the dependency"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "schemaType": "component"
+}

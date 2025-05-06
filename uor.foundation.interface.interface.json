@@ -1,0 +1,477 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/interface.interface",
+  "title": "UOR Interface Interface Schema",
+  "description": "Schema defining the meta-interface for interfaces in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "name",
+    "operations"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the interface interface"
+    },
+    "type": {
+      "type": "string",
+      "const": "interface.interface",
+      "description": "Type of the schema"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the interface interface"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the interface interface's purpose"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the interface interface"
+    },
+    "operations": {
+      "type": "object",
+      "description": "Operations that can be performed on interfaces",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "description",
+          "parameters",
+          "returns"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of what the operation does"
+          },
+          "parameters": {
+            "type": "array",
+            "description": "Parameters for the operation",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Parameter name"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Parameter type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Parameter description"
+                },
+                "optional": {
+                  "type": "boolean",
+                  "description": "Whether this parameter is optional",
+                  "default": false
+                },
+                "default": {
+                  "description": "Default value for the parameter if it's optional"
+                }
+              }
+            }
+          },
+          "returns": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Return type"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the return value"
+              }
+            }
+          }
+        }
+      }
+    },
+    "introspection": {
+      "type": "object",
+      "description": "Introspection capabilities for interfaces",
+      "properties": {
+        "methods": {
+          "type": "object",
+          "description": "Methods for introspecting interfaces",
+          "properties": {
+            "getMethodSignature": {
+              "type": "object",
+              "description": "Get the signature of a method",
+              "required": [
+                "parameters",
+                "returns"
+              ],
+              "properties": {
+                "parameters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "const": "methodName"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "string"
+                      },
+                      "description": {
+                        "type": "string",
+                        "default": "Name of the method to get the signature for"
+                      }
+                    }
+                  }
+                },
+                "returns": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "object"
+                    },
+                    "description": {
+                      "type": "string",
+                      "default": "Signature of the method"
+                    }
+                  }
+                }
+              }
+            },
+            "getMethods": {
+              "type": "object",
+              "description": "Get all methods of the interface",
+              "required": [
+                "returns"
+              ],
+              "properties": {
+                "returns": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "array<string>"
+                    },
+                    "description": {
+                      "type": "string",
+                      "default": "Array of method names"
+                    }
+                  }
+                }
+              }
+            },
+            "getProperties": {
+              "type": "object",
+              "description": "Get all properties of the interface",
+              "required": [
+                "returns"
+              ],
+              "properties": {
+                "returns": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "array<string>"
+                    },
+                    "description": {
+                      "type": "string",
+                      "default": "Array of property names"
+                    }
+                  }
+                }
+              }
+            },
+            "getEvents": {
+              "type": "object",
+              "description": "Get all events of the interface",
+              "required": [
+                "returns"
+              ],
+              "properties": {
+                "returns": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "array<string>"
+                    },
+                    "description": {
+                      "type": "string",
+                      "default": "Array of event names"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "description": "Validation capabilities for interfaces",
+      "properties": {
+        "methods": {
+          "type": "object",
+          "description": "Methods for validating interfaces",
+          "properties": {
+            "validateImplementation": {
+              "type": "object",
+              "description": "Validate an implementation of the interface",
+              "required": [
+                "parameters",
+                "returns"
+              ],
+              "properties": {
+                "parameters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "const": "implementation"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "object"
+                      },
+                      "description": {
+                        "type": "string",
+                        "default": "Implementation to validate"
+                      }
+                    }
+                  }
+                },
+                "returns": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "object"
+                    },
+                    "description": {
+                      "type": "string",
+                      "default": "Validation result"
+                    }
+                  }
+                }
+              }
+            },
+            "validateMethod": {
+              "type": "object",
+              "description": "Validate a method implementation",
+              "required": [
+                "parameters",
+                "returns"
+              ],
+              "properties": {
+                "parameters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "enum": [
+                          "methodName",
+                          "implementation"
+                        ]
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "string",
+                          "function"
+                        ]
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "returns": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "object"
+                    },
+                    "description": {
+                      "type": "string",
+                      "default": "Validation result"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "description": "Compatibility checking for interfaces",
+      "properties": {
+        "methods": {
+          "type": "object",
+          "description": "Methods for checking compatibility",
+          "properties": {
+            "isCompatibleWith": {
+              "type": "object",
+              "description": "Check if this interface is compatible with another interface",
+              "required": [
+                "parameters",
+                "returns"
+              ],
+              "properties": {
+                "parameters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "const": "interfaceId"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "string"
+                      },
+                      "description": {
+                        "type": "string",
+                        "default": "ID of the interface to check compatibility with"
+                      }
+                    }
+                  }
+                },
+                "returns": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "boolean"
+                    },
+                    "description": {
+                      "type": "string",
+                      "default": "Whether the interfaces are compatible"
+                    }
+                  }
+                }
+              }
+            },
+            "getCompatibilityIssues": {
+              "type": "object",
+              "description": "Get compatibility issues with another interface",
+              "required": [
+                "parameters",
+                "returns"
+              ],
+              "properties": {
+                "parameters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "const": "interfaceId"
+                      },
+                      "type": {
+                        "type": "string",
+                        "const": "string"
+                      },
+                      "description": {
+                        "type": "string",
+                        "default": "ID of the interface to check compatibility with"
+                      }
+                    }
+                  }
+                },
+                "returns": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "array<object>"
+                    },
+                    "description": {
+                      "type": "string",
+                      "default": "Array of compatibility issues"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the interface interface",
+      "additionalProperties": true
+    }
+  },
+  "schemaType": "interface"
+}

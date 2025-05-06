@@ -1,0 +1,635 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/component.component",
+  "title": "UOR Component Component Schema",
+  "description": "Schema defining the meta-component structure for components in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "name",
+    "componentType"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the component component"
+    },
+    "type": {
+      "type": "string",
+      "const": "component.component",
+      "description": "Type of the schema"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the component component"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the component component's purpose"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the component component"
+    },
+    "componentType": {
+      "type": "string",
+      "description": "Type of component this meta-component represents",
+      "enum": [
+        "ui",
+        "data",
+        "service",
+        "utility",
+        "infrastructure",
+        "domain",
+        "other"
+      ]
+    },
+    "factory": {
+      "type": "object",
+      "description": "Factory methods for creating component instances",
+      "properties": {
+        "create": {
+          "type": "object",
+          "description": "Method for creating a component instance",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the create method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "description": "Whether this parameter is optional",
+                    "default": false
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "createFromConfig": {
+          "type": "object",
+          "description": "Method for creating a component instance from configuration",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the createFromConfig method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "description": "Whether this parameter is optional",
+                    "default": false
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "description": "Lifecycle management for components",
+      "properties": {
+        "initialize": {
+          "type": "object",
+          "description": "Method for initializing a component",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the initialize method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "activate": {
+          "type": "object",
+          "description": "Method for activating a component",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the activate method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "deactivate": {
+          "type": "object",
+          "description": "Method for deactivating a component",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the deactivate method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "dispose": {
+          "type": "object",
+          "description": "Method for disposing a component",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the dispose method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "description": "Configuration schema for components of this type",
+      "properties": {
+        "schema": {
+          "type": "object",
+          "description": "JSON Schema for component configuration",
+          "additionalProperties": true
+        },
+        "defaults": {
+          "type": "object",
+          "description": "Default configuration values",
+          "additionalProperties": true
+        },
+        "validate": {
+          "type": "object",
+          "description": "Method for validating component configuration",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the validate method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "registry": {
+      "type": "object",
+      "description": "Registry for component instances",
+      "properties": {
+        "register": {
+          "type": "object",
+          "description": "Method for registering a component instance",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the register method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "unregister": {
+          "type": "object",
+          "description": "Method for unregistering a component instance",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the unregister method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "getById": {
+          "type": "object",
+          "description": "Method for getting a component instance by ID",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the getById method",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "getAll": {
+          "type": "object",
+          "description": "Method for getting all component instances",
+          "required": [
+            "returns"
+          ],
+          "properties": {
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the component component",
+      "additionalProperties": true
+    }
+  },
+  "schemaType": "component"
+}

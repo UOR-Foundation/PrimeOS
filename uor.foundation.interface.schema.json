@@ -1,178 +1,146 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://uor.foundation/interface",
-  "title": "JSON-RPC 2.0 Interface Schema",
-  "description": "Schema defining the structure and validation rules for JSON-RPC 2.0 interfaces",
-  "definitions": {
-    "RequestId": {
-      "description": "A uniquely identifying ID for a request in JSON-RPC.",
-      "type": [
-        "string",
-        "integer"
-      ]
+  "title": "UOR Interface Schema based on Web IDL",
+  "description": "Schema defining interfaces between entities in the UOR system using Web IDL",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "idl"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the interface"
     },
-    "JSONRPCRequest": {
-      "description": "A request that expects a response.",
+    "name": {
+      "type": "string",
+      "description": "Name of the interface"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the interface purpose"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the interface"
+    },
+    "idl": {
+      "type": "string",
+      "description": "Web IDL definition of the interface"
+    },
+    "uorExtensions": {
+      "type": "object",
+      "description": "UOR-specific extensions",
       "properties": {
-        "id": {
-          "$ref": "#/definitions/RequestId"
+        "extends": {
+          "type": "array",
+          "description": "Interfaces that this interface extends",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
         },
-        "jsonrpc": {
-          "const": "2.0",
-          "type": "string"
+        "sourceEntityTypes": {
+          "type": "array",
+          "description": "Types of entities that can implement this interface",
+          "items": {
+            "type": "string"
+          }
         },
-        "method": {
-          "type": "string"
+        "targetEntityTypes": {
+          "type": "array",
+          "description": "Types of entities that can be targets of this interface",
+          "items": {
+            "type": "string"
+          }
         },
-        "params": {
+        "transport": {
           "type": "object",
-          "additionalProperties": {}
-        }
-      },
-      "required": [
-        "id",
-        "jsonrpc",
-        "method"
-      ],
-      "type": "object"
-    },
-    "JSONRPCNotification": {
-      "description": "A notification which does not expect a response.",
-      "properties": {
-        "jsonrpc": {
-          "const": "2.0",
-          "type": "string"
-        },
-        "method": {
-          "type": "string"
-        },
-        "params": {
-          "type": "object",
-          "additionalProperties": {}
-        }
-      },
-      "required": [
-        "jsonrpc",
-        "method"
-      ],
-      "type": "object"
-    },
-    "JSONRPCResponse": {
-      "description": "A successful (non-error) response to a request.",
-      "properties": {
-        "id": {
-          "$ref": "#/definitions/RequestId"
-        },
-        "jsonrpc": {
-          "const": "2.0",
-          "type": "string"
-        },
-        "result": {
-          "type": "object",
-          "additionalProperties": {}
-        }
-      },
-      "required": [
-        "id",
-        "jsonrpc",
-        "result"
-      ],
-      "type": "object"
-    },
-    "JSONRPCError": {
-      "description": "A response to a request that indicates an error occurred.",
-      "properties": {
-        "error": {
+          "description": "Transport protocol mappings",
           "properties": {
-            "code": {
-              "description": "The error type that occurred.",
-              "type": "integer"
+            "jsonRpc": {
+              "type": "object",
+              "description": "JSON-RPC mapping",
+              "properties": {
+                "methods": {
+                  "type": "object",
+                  "description": "Mapping of interface methods to JSON-RPC methods",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
             },
-            "data": {
-              "description": "Additional information about the error. The value of this member is defined by the sender (e.g. detailed error information, nested errors etc.)."
+            "rest": {
+              "type": "object",
+              "description": "REST mapping",
+              "properties": {
+                "endpoints": {
+                  "type": "array",
+                  "description": "REST endpoint mappings",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "method": {
+                        "type": "string",
+                        "enum": [
+                          "GET",
+                          "POST",
+                          "PUT",
+                          "DELETE",
+                          "PATCH"
+                        ]
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "interfaceMethod": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
             },
-            "message": {
-              "description": "A short description of the error. The message SHOULD be limited to a concise single sentence.",
-              "type": "string"
+            "graphql": {
+              "type": "object",
+              "description": "GraphQL mapping",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "GraphQL type name"
+                },
+                "fields": {
+                  "type": "object",
+                  "description": "Mapping of interface methods to GraphQL fields",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
             }
-          },
-          "required": [
-            "code",
-            "message"
-          ],
-          "type": "object"
-        },
-        "id": {
-          "$ref": "#/definitions/RequestId"
-        },
-        "jsonrpc": {
-          "const": "2.0",
-          "type": "string"
-        }
-      },
-      "required": [
-        "error",
-        "id",
-        "jsonrpc"
-      ],
-      "type": "object"
-    },
-    "JSONRPCBatchRequest": {
-      "description": "A JSON-RPC batch request, as described in https://www.jsonrpc.org/specification#batch.",
-      "items": {
-        "anyOf": [
-          {
-            "$ref": "#/definitions/JSONRPCRequest"
-          },
-          {
-            "$ref": "#/definitions/JSONRPCNotification"
           }
-        ]
-      },
-      "type": "array"
-    },
-    "JSONRPCBatchResponse": {
-      "description": "A JSON-RPC batch response, as described in https://www.jsonrpc.org/specification#batch.",
-      "items": {
-        "anyOf": [
-          {
-            "$ref": "#/definitions/JSONRPCResponse"
-          },
-          {
-            "$ref": "#/definitions/JSONRPCError"
-          }
-        ]
-      },
-      "type": "array"
-    },
-    "JSONRPCMessage": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/JSONRPCRequest"
-        },
-        {
-          "$ref": "#/definitions/JSONRPCNotification"
-        },
-        {
-          "$ref": "#/definitions/JSONRPCBatchRequest"
-        },
-        {
-          "$ref": "#/definitions/JSONRPCResponse"
-        },
-        {
-          "$ref": "#/definitions/JSONRPCError"
-        },
-        {
-          "$ref": "#/definitions/JSONRPCBatchResponse"
         }
-      ],
-      "description": "Refers to any valid JSON-RPC object that can be decoded off the wire, or encoded to be sent."
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "Example implementations of the interface",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "implementation": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
-  "type": "object",
-  "properties": {
-    "message": {
-      "$ref": "#/definitions/JSONRPCMessage"
-    }
-  }
+  "schemaType": "interface"
 }

@@ -1,0 +1,751 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/model.interface",
+  "title": "UOR Model Interface Schema",
+  "description": "Schema defining the interface structure for models in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "name",
+    "operations"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the model interface"
+    },
+    "type": {
+      "type": "string",
+      "const": "model.interface",
+      "description": "Type of the schema"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the model interface"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the model interface's purpose"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the model interface"
+    },
+    "operations": {
+      "type": "object",
+      "description": "Operations that can be performed on models",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "description",
+          "parameters",
+          "returns"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of what the operation does"
+          },
+          "parameters": {
+            "type": "array",
+            "description": "Parameters for the operation",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Parameter name"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Parameter type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Parameter description"
+                },
+                "optional": {
+                  "type": "boolean",
+                  "description": "Whether this parameter is optional",
+                  "default": false
+                },
+                "default": {
+                  "description": "Default value for the parameter if it's optional"
+                }
+              }
+            }
+          },
+          "returns": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Return type"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the return value"
+              }
+            }
+          }
+        }
+      }
+    },
+    "modelManagement": {
+      "type": "object",
+      "description": "Model management operations",
+      "properties": {
+        "createModel": {
+          "type": "object",
+          "description": "Operation for creating a model",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the createModel operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "description": "Whether this parameter is optional",
+                    "default": false
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "loadModel": {
+          "type": "object",
+          "description": "Operation for loading a model",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the loadModel operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "saveModel": {
+          "type": "object",
+          "description": "Operation for saving a model",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the saveModel operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "validateModel": {
+          "type": "object",
+          "description": "Operation for validating a model",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the validateModel operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "elementManagement": {
+      "type": "object",
+      "description": "Element management operations",
+      "properties": {
+        "addElement": {
+          "type": "object",
+          "description": "Operation for adding an element to a model",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the addElement operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "removeElement": {
+          "type": "object",
+          "description": "Operation for removing an element from a model",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the removeElement operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "updateElement": {
+          "type": "object",
+          "description": "Operation for updating an element in a model",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the updateElement operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "getElement": {
+          "type": "object",
+          "description": "Operation for getting an element from a model",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the getElement operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "relationshipManagement": {
+      "type": "object",
+      "description": "Relationship management operations",
+      "properties": {
+        "addRelationship": {
+          "type": "object",
+          "description": "Operation for adding a relationship between elements",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the addRelationship operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "removeRelationship": {
+          "type": "object",
+          "description": "Operation for removing a relationship between elements",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the removeRelationship operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "updateRelationship": {
+          "type": "object",
+          "description": "Operation for updating a relationship between elements",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the updateRelationship operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        },
+        "getRelationships": {
+          "type": "object",
+          "description": "Operation for getting relationships between elements",
+          "required": [
+            "parameters",
+            "returns"
+          ],
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameters for the getRelationships operation",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Parameter name"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Parameter type"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Parameter description"
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "description": "Whether this parameter is optional",
+                    "default": false
+                  }
+                }
+              }
+            },
+            "returns": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Return type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the return value"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the model interface",
+      "additionalProperties": true
+    }
+  },
+  "schemaType": "interface"
+}
