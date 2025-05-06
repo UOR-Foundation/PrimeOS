@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/mutate.model",
+  "title": "UOR Mutate Model Schema",
+  "description": "Schema defining the mutation model in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "entities",
+    "interfaces",
+    "components"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the model",
+      "default": "https://uor.foundation/mutate"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the model",
+      "default": "Mutate"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the model purpose",
+      "default": "Model for schema mutation in the UOR system"
+    },
+    "entities": {
+      "type": "array",
+      "description": "Entities in this model",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "default": [
+        "https://uor.foundation/mutate.entity"
+      ]
+    },
+    "interfaces": {
+      "type": "array",
+      "description": "Interfaces in this model",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "default": [
+        "https://uor.foundation/mutate.interface"
+      ]
+    },
+    "components": {
+      "type": "array",
+      "description": "Components in this model",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "default": [
+        "https://uor.foundation/mutate.component"
+      ]
+    },
+    "relationships": {
+      "type": "array",
+      "description": "Explicit relationships between entities in this model",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sourceEntityId": {
+            "type": "string",
+            "format": "uri"
+          },
+          "interfaceId": {
+            "type": "string",
+            "format": "uri"
+          },
+          "targetEntityId": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "default": [
+        {
+          "sourceEntityId": "https://uor.foundation/mutate.entity",
+          "interfaceId": "https://uor.foundation/mutate.interface",
+          "targetEntityId": "https://uor.foundation/entity"
+        },
+        {
+          "sourceEntityId": "https://uor.foundation/mutate.entity",
+          "interfaceId": "https://uor.foundation/validate.interface",
+          "targetEntityId": "https://uor.foundation/validate.entity"
+        }
+      ]
+    },
+    "dependencies": {
+      "type": "array",
+      "description": "Dependencies on other models",
+      "items": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uri",
+            "description": "ID of the dependent model"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "uses",
+              "extends",
+              "implements"
+            ],
+            "description": "Type of dependency"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the dependency"
+          }
+        }
+      },
+      "default": [
+        {
+          "modelId": "https://uor.foundation/validate",
+          "type": "uses",
+          "description": "Uses the validate model to validate schemas before mutation"
+        }
+      ]
+    },
+    "useCases": {
+      "type": "array",
+      "description": "Use cases for this model",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the use case"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the use case"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Step in the use case"
+            }
+          }
+        }
+      },
+      "default": [
+        {
+          "name": "Add Property to Schema",
+          "description": "Add a new property to an existing schema",
+          "steps": [
+            "Create a mutation entity with target schema URI",
+            "Define an 'add' operation with path to the new property",
+            "Invoke the validateAndMutate method on the entity",
+            "Check the mutation result and get the resulting schema URI"
+          ]
+        },
+        {
+          "name": "Update Schema Description",
+          "description": "Update the description of an existing schema",
+          "steps": [
+            "Create a mutation entity with target schema URI",
+            "Define a 'replace' operation with path to the description property",
+            "Invoke the mutate method on the entity",
+            "Check the mutation result and get the resulting schema URI"
+          ]
+        },
+        {
+          "name": "Restructure Schema",
+          "description": "Restructure a schema by moving properties",
+          "steps": [
+            "Create a mutation entity with target schema URI",
+            "Define multiple operations (move, copy, add, remove) to restructure the schema",
+            "Invoke the validateAndMutate method on the entity",
+            "Check the mutation result and get the resulting schema URI"
+          ]
+        }
+      ]
+    },
+    "operationTypes": {
+      "type": "array",
+      "description": "Types of operations supported by this model",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the operation type"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the operation type"
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the parameter"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of the parameter"
+                },
+                "required": {
+                  "type": "boolean",
+                  "description": "Whether the parameter is required"
+                }
+              }
+            }
+          }
+        }
+      },
+      "default": [
+        {
+          "name": "add",
+          "description": "Add a value to an object or insert into an array",
+          "parameters": [
+            {
+              "name": "path",
+              "description": "JSON Pointer path where the value should be added",
+              "required": true
+            },
+            {
+              "name": "value",
+              "description": "Value to add",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "remove",
+          "description": "Remove a value from an object or array",
+          "parameters": [
+            {
+              "name": "path",
+              "description": "JSON Pointer path to the value to remove",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "replace",
+          "description": "Replace a value",
+          "parameters": [
+            {
+              "name": "path",
+              "description": "JSON Pointer path to the value to replace",
+              "required": true
+            },
+            {
+              "name": "value",
+              "description": "New value",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "move",
+          "description": "Move a value from one location to another",
+          "parameters": [
+            {
+              "name": "from",
+              "description": "JSON Pointer path to the value to move",
+              "required": true
+            },
+            {
+              "name": "path",
+              "description": "JSON Pointer path to the target location",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "copy",
+          "description": "Copy a value from one location to another",
+          "parameters": [
+            {
+              "name": "from",
+              "description": "JSON Pointer path to the value to copy",
+              "required": true
+            },
+            {
+              "name": "path",
+              "description": "JSON Pointer path to the target location",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "test",
+          "description": "Test that a value at a location is equal to a specified value",
+          "parameters": [
+            {
+              "name": "path",
+              "description": "JSON Pointer path to the value to test",
+              "required": true
+            },
+            {
+              "name": "value",
+              "description": "Value to test against",
+              "required": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "schemaType": "model"
+}

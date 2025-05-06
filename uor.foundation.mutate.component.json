@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/mutate.component",
+  "title": "UOR Mutate Component Schema",
+  "description": "Schema defining the mutation component in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "implementedInterfaces"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the component",
+      "default": "https://uor.foundation/mutate.component"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the component",
+      "default": "SchemaMutator"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the component purpose",
+      "default": "Component that implements schema mutation functionality"
+    },
+    "implementedInterfaces": {
+      "type": "array",
+      "description": "Interfaces implemented by this component",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "default": [
+        "https://uor.foundation/mutate.interface"
+      ]
+    },
+    "implementation": {
+      "type": "object",
+      "description": "Implementation details of the component",
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "Implementation language",
+          "default": "JavaScript"
+        },
+        "methods": {
+          "type": "object",
+          "description": "Method implementations",
+          "properties": {
+            "validate": {
+              "type": "object",
+              "description": "Implementation of the validate method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function validate(targetSchemaUri, validationSchemaUri) {\n  try {\n    // Use the validate model to perform validation\n    const validator = UOR.createEntity('https://uor.foundation/validate.entity');\n    validator.properties.targetSchema = targetSchemaUri;\n    validator.properties.referenceSchema = validationSchemaUri || 'https://uor.foundation/schema';\n    \n    const validateInterface = UOR.getInterface(validator, 'https://uor.foundation/validate.interface');\n    const result = validateInterface.validate(targetSchemaUri, validationSchemaUri);\n    \n    this._lastValidationResult = result;\n    return result;\n  } catch (error) {\n    this._lastError = error.message;\n    return false;\n  }\n}"
+                }
+              }
+            },
+            "mutate": {
+              "type": "object",
+              "description": "Implementation of the mutate method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function mutate(targetSchemaUri, operations, mutationMode = 'atomic') {\n  try {\n    const targetSchema = resolveSchema(targetSchemaUri);\n    \n    if (!targetSchema) {\n      this._lastError = 'Failed to resolve target schema';\n      return {\n        success: false,\n        validationPassed: false,\n        errors: [{\n          operation: 0,\n          path: '',\n          message: 'Failed to resolve target schema'\n        }]\n      };\n    }\n    \n    // Apply operations\n    const result = applyOperations(targetSchema, operations, mutationMode);\n    \n    if (result.success) {\n      // Store the result schema\n      const resultSchemaUri = storeResultSchema(result.schema);\n      result.resultSchemaUri = resultSchemaUri;\n    }\n    \n    this._lastResult = result;\n    return result;\n  } catch (error) {\n    this._lastError = error.message;\n    return {\n      success: false,\n      validationPassed: false,\n      errors: [{\n        operation: 0,\n        path: '',\n        message: error.message\n      }]\n    };\n  }\n}"
+                }
+              }
+            },
+            "validateAndMutate": {
+              "type": "object",
+              "description": "Implementation of the validateAndMutate method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function validateAndMutate(targetSchemaUri, validationSchemaUri, operations, mutationMode = 'atomic') {\n  try {\n    // First validate\n    const validationResult = this.validate(targetSchemaUri, validationSchemaUri);\n    \n    if (!validationResult) {\n      return {\n        success: false,\n        validationPassed: false,\n        errors: [{\n          operation: 0,\n          path: '',\n          message: this._lastError || 'Validation failed'\n        }]\n      };\n    }\n    \n    // Then mutate\n    const mutationResult = this.mutate(targetSchemaUri, operations, mutationMode);\n    \n    // Ensure validation result is reflected\n    mutationResult.validationPassed = true;\n    \n    return mutationResult;\n  } catch (error) {\n    this._lastError = error.message;\n    return {\n      success: false,\n      validationPassed: false,\n      errors: [{\n        operation: 0,\n        path: '',\n        message: error.message\n      }]\n    };\n  }\n}"
+                }
+              }
+            },
+            "getLastMutationError": {
+              "type": "object",
+              "description": "Implementation of the getLastMutationError method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function getLastMutationError() {\n  return this._lastError || '';\n}"
+                }
+              }
+            },
+            "getResultSchema": {
+              "type": "object",
+              "description": "Implementation of the getResultSchema method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function getResultSchema() {\n  return this._lastResult && this._lastResult.resultSchemaUri ? this._lastResult.resultSchemaUri : '';\n}"
+                }
+              }
+            }
+          }
+        },
+        "helpers": {
+          "type": "object",
+          "description": "Helper functions",
+          "properties": {
+            "resolveSchema": {
+              "type": "object",
+              "description": "Helper to resolve a schema by URI",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function resolveSchema(uri) {\n  // Implementation would use the UOR system's schema resolution mechanism\n  // This is a placeholder for the actual implementation\n  return UOR.resolve(uri);\n}"
+                }
+              }
+            },
+            "applyOperations": {
+              "type": "object",
+              "description": "Helper to apply mutation operations to a schema",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function applyOperations(schema, operations, mode) {\n  const errors = [];\n  let success = true;\n  let resultSchema = JSON.parse(JSON.stringify(schema)); // Deep clone\n  \n  for (let i = 0; i < operations.length; i++) {\n    const op = operations[i];\n    try {\n      switch (op.operation) {\n        case 'add':\n          resultSchema = applyAddOperation(resultSchema, op.path, op.value);\n          break;\n        case 'remove':\n          resultSchema = applyRemoveOperation(resultSchema, op.path);\n          break;\n        case 'replace':\n          resultSchema = applyReplaceOperation(resultSchema, op.path, op.value);\n          break;\n        case 'move':\n          resultSchema = applyMoveOperation(resultSchema, op.from, op.path);\n          break;\n        case 'copy':\n          resultSchema = applyCopyOperation(resultSchema, op.from, op.path);\n          break;\n        case 'test':\n          const testResult = applyTestOperation(resultSchema, op.path, op.value);\n          if (!testResult.success) {\n            errors.push({\n              operation: i,\n              path: op.path,\n              message: testResult.message\n            });\n            if (mode === 'atomic') {\n              success = false;\n              break;\n            }\n          }\n          break;\n        default:\n          errors.push({\n            operation: i,\n            path: op.path,\n            message: `Unknown operation: ${op.operation}`\n          });\n          if (mode === 'atomic') {\n            success = false;\n            break;\n          }\n      }\n    } catch (error) {\n      errors.push({\n        operation: i,\n        path: op.path,\n        message: error.message\n      });\n      if (mode === 'atomic') {\n        success = false;\n        break;\n      }\n    }\n    \n    if (!success && mode === 'atomic') {\n      break;\n    }\n  }\n  \n  return {\n    success: success && (mode === 'partial' || errors.length === 0),\n    validationPassed: true, // Validation is handled separately\n    errors: errors.length > 0 ? errors : null,\n    schema: resultSchema\n  };\n}"
+                }
+              }
+            },
+            "applyAddOperation": {
+              "type": "object",
+              "description": "Helper to apply an add operation",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function applyAddOperation(schema, path, value) {\n  const pathParts = path.split('/').filter(p => p !== '');\n  let current = schema;\n  \n  for (let i = 0; i < pathParts.length - 1; i++) {\n    const part = pathParts[i];\n    if (current[part] === undefined) {\n      current[part] = {};\n    }\n    current = current[part];\n  }\n  \n  const lastPart = pathParts[pathParts.length - 1];\n  \n  // Handle array insertion\n  if (Array.isArray(current) && lastPart === '-') {\n    current.push(value);\n  } else if (Array.isArray(current) && !isNaN(parseInt(lastPart))) {\n    const index = parseInt(lastPart);\n    if (index > current.length) {\n      throw new Error(`Array index out of bounds: ${index}`);\n    }\n    current.splice(index, 0, value);\n  } else {\n    current[lastPart] = value;\n  }\n  \n  return schema;\n}"
+                }
+              }
+            },
+            "applyRemoveOperation": {
+              "type": "object",
+              "description": "Helper to apply a remove operation",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function applyRemoveOperation(schema, path) {\n  const pathParts = path.split('/').filter(p => p !== '');\n  let current = schema;\n  \n  for (let i = 0; i < pathParts.length - 1; i++) {\n    const part = pathParts[i];\n    if (current[part] === undefined) {\n      throw new Error(`Path not found: ${path}`);\n    }\n    current = current[part];\n  }\n  \n  const lastPart = pathParts[pathParts.length - 1];\n  \n  if (Array.isArray(current)) {\n    const index = parseInt(lastPart);\n    if (isNaN(index) || index >= current.length) {\n      throw new Error(`Invalid array index: ${lastPart}`);\n    }\n    current.splice(index, 1);\n  } else if (current[lastPart] === undefined) {\n    throw new Error(`Property not found: ${lastPart}`);\n  } else {\n    delete current[lastPart];\n  }\n  \n  return schema;\n}"
+                }
+              }
+            },
+            "applyReplaceOperation": {
+              "type": "object",
+              "description": "Helper to apply a replace operation",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function applyReplaceOperation(schema, path, value) {\n  const pathParts = path.split('/').filter(p => p !== '');\n  let current = schema;\n  \n  for (let i = 0; i < pathParts.length - 1; i++) {\n    const part = pathParts[i];\n    if (current[part] === undefined) {\n      throw new Error(`Path not found: ${path}`);\n    }\n    current = current[part];\n  }\n  \n  const lastPart = pathParts[pathParts.length - 1];\n  \n  if (Array.isArray(current)) {\n    const index = parseInt(lastPart);\n    if (isNaN(index) || index >= current.length) {\n      throw new Error(`Invalid array index: ${lastPart}`);\n    }\n    current[index] = value;\n  } else if (current[lastPart] === undefined) {\n    throw new Error(`Property not found: ${lastPart}`);\n  } else {\n    current[lastPart] = value;\n  }\n  \n  return schema;\n}"
+                }
+              }
+            },
+            "applyMoveOperation": {
+              "type": "object",
+              "description": "Helper to apply a move operation",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function applyMoveOperation(schema, fromPath, toPath) {\n  // Get the value at fromPath\n  const value = getValueAtPath(schema, fromPath);\n  \n  // Remove it from the source\n  schema = applyRemoveOperation(schema, fromPath);\n  \n  // Add it to the destination\n  schema = applyAddOperation(schema, toPath, value);\n  \n  return schema;\n}"
+                }
+              }
+            },
+            "applyCopyOperation": {
+              "type": "object",
+              "description": "Helper to apply a copy operation",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function applyCopyOperation(schema, fromPath, toPath) {\n  // Get the value at fromPath\n  const value = getValueAtPath(schema, fromPath);\n  \n  // Add it to the destination\n  schema = applyAddOperation(schema, toPath, JSON.parse(JSON.stringify(value)));\n  \n  return schema;\n}"
+                }
+              }
+            },
+            "applyTestOperation": {
+              "type": "object",
+              "description": "Helper to apply a test operation",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function applyTestOperation(schema, path, expectedValue) {\n  try {\n    const actualValue = getValueAtPath(schema, path);\n    \n    // Deep equality check\n    const isEqual = JSON.stringify(actualValue) === JSON.stringify(expectedValue);\n    \n    if (!isEqual) {\n      return {\n        success: false,\n        message: `Test failed: expected ${JSON.stringify(expectedValue)} but got ${JSON.stringify(actualValue)}`\n      };\n    }\n    \n    return { success: true };\n  } catch (error) {\n    return {\n      success: false,\n      message: error.message\n    };\n  }\n}"
+                }
+              }
+            },
+            "getValueAtPath": {
+              "type": "object",
+              "description": "Helper to get a value at a JSON Pointer path",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function getValueAtPath(obj, path) {\n  const pathParts = path.split('/').filter(p => p !== '');\n  let current = obj;\n  \n  for (const part of pathParts) {\n    if (current[part] === undefined) {\n      throw new Error(`Path not found: ${path}`);\n    }\n    current = current[part];\n  }\n  \n  return current;\n}"
+                }
+              }
+            },
+            "storeResultSchema": {
+              "type": "object",
+              "description": "Helper to store a result schema",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function storeResultSchema(schema) {\n  // Implementation would use the UOR system's schema storage mechanism\n  // This is a placeholder for the actual implementation\n  const resultId = `https://uor.foundation/mutate/result/${generateUUID()}`;\n  UOR.store(resultId, schema);\n  return resultId;\n}"
+                }
+              }
+            },
+            "generateUUID": {
+              "type": "object",
+              "description": "Helper to generate a UUID",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "compatibleEntityTypes": {
+      "type": "array",
+      "description": "Types of entities this component can be attached to",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "mutate.entity"
+      ]
+    }
+  },
+  "schemaType": "component"
+}

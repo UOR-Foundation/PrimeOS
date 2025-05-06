@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/validate.model",
+  "title": "UOR Validate Model Schema",
+  "description": "Schema defining the validation model in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "entities",
+    "interfaces",
+    "components"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the model",
+      "default": "https://uor.foundation/validate"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the model",
+      "default": "Validate"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the model purpose",
+      "default": "Model for schema validation in the UOR system"
+    },
+    "entities": {
+      "type": "array",
+      "description": "Entities in this model",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "default": [
+        "https://uor.foundation/validate.entity"
+      ]
+    },
+    "interfaces": {
+      "type": "array",
+      "description": "Interfaces in this model",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "default": [
+        "https://uor.foundation/validate.interface"
+      ]
+    },
+    "components": {
+      "type": "array",
+      "description": "Components in this model",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "default": [
+        "https://uor.foundation/validate.component"
+      ]
+    },
+    "relationships": {
+      "type": "array",
+      "description": "Explicit relationships between entities in this model",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sourceEntityId": {
+            "type": "string",
+            "format": "uri"
+          },
+          "interfaceId": {
+            "type": "string",
+            "format": "uri"
+          },
+          "targetEntityId": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "default": [
+        {
+          "sourceEntityId": "https://uor.foundation/validate.entity",
+          "interfaceId": "https://uor.foundation/validate.interface",
+          "targetEntityId": "https://uor.foundation/entity"
+        }
+      ]
+    },
+    "useCases": {
+      "type": "array",
+      "description": "Use cases for this model",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the use case"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the use case"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Step in the use case"
+            }
+          }
+        }
+      },
+      "default": [
+        {
+          "name": "Validate Schema Against Reference",
+          "description": "Validate that a schema conforms to a reference schema",
+          "steps": [
+            "Create a validation entity with target and reference schema URIs",
+            "Invoke the validate method on the entity",
+            "Check the validation result"
+          ]
+        },
+        {
+          "name": "Validate Instance Against Schema",
+          "description": "Validate that a JSON instance conforms to a schema",
+          "steps": [
+            "Create a validation entity",
+            "Invoke the validateInstance method with the instance and schema URI",
+            "Check the validation result"
+          ]
+        }
+      ]
+    },
+    "validationRules": {
+      "type": "array",
+      "description": "Validation rules specific to this model",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the validation rule"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the validation rule"
+          },
+          "rule": {
+            "type": "string",
+            "description": "Expression or code defining the validation rule"
+          }
+        }
+      },
+      "default": [
+        {
+          "name": "RequiredPropertiesRule",
+          "description": "All required properties in the reference schema must be present in the target schema",
+          "rule": "referenceSchema.required.every(prop => targetSchema.required.includes(prop))"
+        },
+        {
+          "name": "PropertyTypesRule",
+          "description": "Property types in the target schema must match those in the reference schema",
+          "rule": "Object.entries(referenceSchema.properties).every(([name, prop]) => !targetSchema.properties[name] || targetSchema.properties[name].type === prop.type)"
+        }
+      ]
+    }
+  },
+  "schemaType": "model"
+}

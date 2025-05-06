@@ -148,5 +148,80 @@
     "anchor": "uor.foundation",
     "endpoint": "model.model",
     "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "validate.entity",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "validate.interface",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "validate.component",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "validate.model",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "validate",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "mutate.entity",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "mutate.interface",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "mutate.component",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "mutate.model",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "mutate",
+    "media": "schema.json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "resolve.entity",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "resolve.interface",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "resolve.component",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "resolve.model",
+    "media": "json"
+  },
+  {
+    "anchor": "uor.foundation",
+    "endpoint": "resolve",
+    "media": "schema.json"
   }
 ]

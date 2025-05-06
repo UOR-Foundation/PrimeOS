@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/resolve.entity",
+  "title": "UOR Resolve Entity Schema",
+  "description": "Schema defining the structure of resolution entities in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "properties"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the resolution entity"
+    },
+    "type": {
+      "type": "string",
+      "const": "resolve.entity",
+      "description": "The type of entity"
+    },
+    "properties": {
+      "type": "object",
+      "description": "Properties specific to resolution entity",
+      "required": [
+        "targetUri"
+      ],
+      "properties": {
+        "targetUri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI reference to the resource to be resolved"
+        },
+        "validationSchema": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI reference to the schema to validate against after resolution"
+        },
+        "resolutionMode": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "lenient",
+            "recursive"
+          ],
+          "default": "strict",
+          "description": "Mode of resolution to perform"
+        },
+        "resolutionOptions": {
+          "type": "object",
+          "description": "Additional options for resolution",
+          "properties": {
+            "resolveReferences": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether to resolve references in the target"
+            },
+            "maxDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 10,
+              "description": "Maximum depth for recursive resolution"
+            },
+            "cacheResults": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether to cache resolution results"
+            },
+            "timeout": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Timeout in milliseconds for resolution operations"
+            }
+          }
+        },
+        "resolutionResults": {
+          "type": "object",
+          "description": "Results of the resolution operation",
+          "properties": {
+            "success": {
+              "type": "boolean",
+              "description": "Whether the resolution succeeded"
+            },
+            "validationPassed": {
+              "type": "boolean",
+              "description": "Whether validation passed after resolution"
+            },
+            "resolvedContent": {
+              "description": "The resolved content"
+            },
+            "errors": {
+              "type": "array",
+              "description": "Resolution errors if any",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path where the error occurred"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Error message"
+                  },
+                  "severity": {
+                    "type": "string",
+                    "enum": [
+                      "error",
+                      "warning",
+                      "info"
+                    ],
+                    "default": "error",
+                    "description": "Severity of the resolution issue"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "description": "Relationships to other entities",
+      "items": {
+        "type": "object",
+        "properties": {
+          "interfaceId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the interface defining this relationship"
+          },
+          "targetEntityId": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the target entity"
+          }
+        }
+      }
+    }
+  },
+  "schemaType": "entity"
+}

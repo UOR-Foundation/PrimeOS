@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/mutate.interface",
+  "title": "UOR Mutate Interface Schema",
+  "description": "Schema defining the interface for mutation operations in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "idl"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the interface"
+    },
+    "name": {
+      "type": "string",
+      "const": "MutateInterface",
+      "description": "Name of the interface"
+    },
+    "description": {
+      "type": "string",
+      "default": "Interface for performing schema mutation operations",
+      "description": "Description of the interface purpose"
+    },
+    "version": {
+      "type": "string",
+      "default": "1.0.0",
+      "description": "Version of the interface"
+    },
+    "idl": {
+      "type": "string",
+      "description": "Web IDL definition of the interface",
+      "default": "interface MutateInterface {\n  boolean validate(DOMString targetSchemaUri, optional DOMString validationSchemaUri);\n  MutationResult mutate(DOMString targetSchemaUri, sequence<MutationOperation> operations, optional DOMString mutationMode);\n  MutationResult validateAndMutate(DOMString targetSchemaUri, DOMString validationSchemaUri, sequence<MutationOperation> operations, optional DOMString mutationMode);\n  DOMString getLastMutationError();\n  DOMString getResultSchema();\n};\n\ninterface MutationOperation {\n  readonly attribute DOMString operation;\n  readonly attribute DOMString path;\n  readonly attribute any value;\n  readonly attribute DOMString? from;\n};\n\ninterface MutationResult {\n  readonly attribute boolean success;\n  readonly attribute boolean validationPassed;\n  readonly attribute FrozenArray<MutationError>? errors;\n  readonly attribute DOMString? resultSchemaUri;\n};\n\ninterface MutationError {\n  readonly attribute unsigned long operation;\n  readonly attribute DOMString path;\n  readonly attribute DOMString message;\n};"
+    },
+    "uorExtensions": {
+      "type": "object",
+      "description": "UOR-specific extensions",
+      "properties": {
+        "extends": {
+          "type": "array",
+          "description": "Interfaces that this interface extends",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "sourceEntityTypes": {
+          "type": "array",
+          "description": "Types of entities that can implement this interface",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "mutate.entity"
+          ]
+        },
+        "targetEntityTypes": {
+          "type": "array",
+          "description": "Types of entities that can be targets of this interface",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transport": {
+          "type": "object",
+          "description": "Transport protocol mappings",
+          "properties": {
+            "jsonRpc": {
+              "type": "object",
+              "description": "JSON-RPC mapping",
+              "properties": {
+                "methods": {
+                  "type": "object",
+                  "description": "Mapping of interface methods to JSON-RPC methods",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "default": {
+                    "validate": "validate",
+                    "mutate": "mutate",
+                    "validateAndMutate": "validateAndMutate",
+                    "getLastMutationError": "getLastMutationError",
+                    "getResultSchema": "getResultSchema"
+                  }
+                }
+              }
+            },
+            "rest": {
+              "type": "object",
+              "description": "REST mapping",
+              "properties": {
+                "endpoints": {
+                  "type": "array",
+                  "description": "REST endpoint mappings",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "method": {
+                        "type": "string",
+                        "enum": [
+                          "GET",
+                          "POST",
+                          "PUT",
+                          "DELETE",
+                          "PATCH"
+                        ]
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "interfaceMethod": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "default": [
+                    {
+                      "method": "POST",
+                      "path": "/mutate/validate",
+                      "interfaceMethod": "validate"
+                    },
+                    {
+                      "method": "PATCH",
+                      "path": "/mutate",
+                      "interfaceMethod": "mutate"
+                    },
+                    {
+                      "method": "PATCH",
+                      "path": "/mutate/validate",
+                      "interfaceMethod": "validateAndMutate"
+                    },
+                    {
+                      "method": "GET",
+                      "path": "/mutate/error",
+                      "interfaceMethod": "getLastMutationError"
+                    },
+                    {
+                      "method": "GET",
+                      "path": "/mutate/result",
+                      "interfaceMethod": "getResultSchema"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "Example implementations of the interface",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "implementation": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [
+        {
+          "description": "Basic mutation example",
+          "implementation": "// Validate and mutate a schema\nconst operations = [\n  {\n    operation: 'add',\n    path: '/properties/newProperty',\n    value: { type: 'string', description: 'A new property' }\n  },\n  {\n    operation: 'replace',\n    path: '/properties/existingProperty/description',\n    value: 'Updated description'\n  }\n];\n\nconst result = validateAndMutate('https://uor.foundation/example', 'https://uor.foundation/entity', operations);\n\nif (result.success) {\n  console.log(`Mutation successful. Result schema: ${result.resultSchemaUri}`);\n} else {\n  console.log('Mutation failed:');\n  result.errors.forEach(err => console.log(`Operation ${err.operation} failed at ${err.path}: ${err.message}`));\n}"
+        }
+      ]
+    }
+  },
+  "schemaType": "interface"
+}

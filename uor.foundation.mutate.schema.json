@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/mutate",
+  "title": "UOR Mutate Schema",
+  "description": "Schema defining the mutation system in UOR for modifying schemas",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "targetSchema",
+    "operations"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the mutation operation"
+    },
+    "type": {
+      "type": "string",
+      "const": "mutate",
+      "description": "Type identifier for mutation operations"
+    },
+    "targetSchema": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI reference to the schema to be mutated"
+    },
+    "validationSchema": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI reference to the schema to validate against before mutation"
+    },
+    "operations": {
+      "type": "array",
+      "description": "Operations to perform on the target schema",
+      "items": {
+        "type": "object",
+        "required": [
+          "operation",
+          "path"
+        ],
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "add",
+              "remove",
+              "replace",
+              "move",
+              "copy",
+              "test"
+            ],
+            "description": "Type of operation to perform (JSON Patch operations)"
+          },
+          "path": {
+            "type": "string",
+            "description": "JSON Pointer path to the target location"
+          },
+          "value": {
+            "description": "Value to use for the operation (required for add, replace, test)"
+          },
+          "from": {
+            "type": "string",
+            "description": "JSON Pointer path to the source location (required for move, copy)"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "operation": {
+                  "enum": [
+                    "add",
+                    "replace",
+                    "test"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "value"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "operation": {
+                  "enum": [
+                    "move",
+                    "copy"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "from"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "mutationMode": {
+      "type": "string",
+      "enum": [
+        "atomic",
+        "partial"
+      ],
+      "default": "atomic",
+      "description": "Whether all operations must succeed (atomic) or partial success is acceptable"
+    },
+    "validateBeforeMutation": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to validate the target schema before mutation"
+    },
+    "mutationResults": {
+      "type": "object",
+      "description": "Results of the mutation operation",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the mutation succeeded"
+        },
+        "validationPassed": {
+          "type": "boolean",
+          "description": "Whether validation passed before mutation"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the mutation was performed"
+        },
+        "errors": {
+          "type": "array",
+          "description": "Mutation errors if any",
+          "items": {
+            "type": "object",
+            "required": [
+              "operation",
+              "path",
+              "message"
+            ],
+            "properties": {
+              "operation": {
+                "type": "integer",
+                "description": "Index of the operation that failed"
+              },
+              "path": {
+                "type": "string",
+                "description": "JSON path where the error occurred"
+              },
+              "message": {
+                "type": "string",
+                "description": "Error message"
+              }
+            }
+          }
+        },
+        "resultSchema": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI reference to the resulting schema after mutation"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the mutation operation",
+      "properties": {
+        "createdBy": {
+          "type": "string",
+          "description": "Entity that created this mutation operation"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this mutation operation was created"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of this mutation operation"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Tags associated with this mutation operation"
+        },
+        "previousVersions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "Previous versions of the schema that was mutated"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "https://uor.foundation/mutate/example1",
+      "type": "mutate",
+      "targetSchema": "https://uor.foundation/component",
+      "validationSchema": "https://uor.foundation/entity",
+      "operations": [
+        {
+          "operation": "add",
+          "path": "/properties/newProperty",
+          "value": {
+            "type": "string",
+            "description": "A new property added to the schema"
+          }
+        },
+        {
+          "operation": "replace",
+          "path": "/description",
+          "value": "Updated description for the component schema"
+        }
+      ],
+      "mutationMode": "atomic",
+      "validateBeforeMutation": true,
+      "metadata": {
+        "description": "Add a new property and update description of component schema",
+        "tags": [
+          "component",
+          "update",
+          "mutation"
+        ]
+      }
+    }
+  ],
+  "schemaType": "mutate"
+}

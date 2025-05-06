@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uor.foundation/resolve.component",
+  "title": "UOR Resolve Component Schema",
+  "description": "Schema defining the resolution component in the UOR system",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "implementedInterfaces"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Unique identifier for the component",
+      "default": "https://uor.foundation/resolve.component"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the component",
+      "default": "ResourceResolver"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the component purpose",
+      "default": "Component that implements resource resolution functionality"
+    },
+    "implementedInterfaces": {
+      "type": "array",
+      "description": "Interfaces implemented by this component",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "default": [
+        "https://uor.foundation/resolve.interface"
+      ]
+    },
+    "implementation": {
+      "type": "object",
+      "description": "Implementation details of the component",
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "Implementation language",
+          "default": "JavaScript"
+        },
+        "methods": {
+          "type": "object",
+          "description": "Method implementations",
+          "properties": {
+            "resolve": {
+              "type": "object",
+              "description": "Implementation of the resolve method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function resolve(targetUri, resolutionMode = 'strict') {\n  try {\n    // Check cache first\n    if (this._cache && this._cache[targetUri]) {\n      return this._cache[targetUri];\n    }\n    \n    // Perform resolution based on URI scheme\n    let result;\n    const uriScheme = getUriScheme(targetUri);\n    \n    switch (uriScheme) {\n      case 'https':\n      case 'http':\n        result = resolveHttpUri(targetUri, resolutionMode);\n        break;\n      case 'file':\n        result = resolveFileUri(targetUri, resolutionMode);\n        break;\n      case 'uor':\n        result = resolveUorUri(targetUri, resolutionMode);\n        break;\n      default:\n        throw new Error(`Unsupported URI scheme: ${uriScheme}`);\n    }\n    \n    // Cache the result if caching is enabled\n    if (this._cacheEnabled) {\n      this._cache = this._cache || {};\n      this._cache[targetUri] = result;\n    }\n    \n    return result;\n  } catch (error) {\n    this._lastError = error.message;\n    return null;\n  }\n}"
+                }
+              }
+            },
+            "resolveWithOptions": {
+              "type": "object",
+              "description": "Implementation of the resolveWithOptions method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function resolveWithOptions(targetUri, options = {}) {\n  try {\n    const {\n      resolutionMode = 'strict',\n      resolveReferences = true,\n      maxDepth = 10,\n      cacheResults = true,\n      timeout = 30000\n    } = options;\n    \n    // Set cache option for this operation\n    const previousCacheEnabled = this._cacheEnabled;\n    this._cacheEnabled = cacheResults;\n    \n    // Check cache first if caching is enabled\n    if (cacheResults && this._cache && this._cache[targetUri]) {\n      return {\n        success: true,\n        validationPassed: true,\n        resolvedContent: this._cache[targetUri],\n        errors: null\n      };\n    }\n    \n    // Set up timeout\n    let timeoutId;\n    let timeoutPromise = new Promise((_, reject) => {\n      if (timeout > 0) {\n        timeoutId = setTimeout(() => {\n          reject(new Error(`Resolution timed out after ${timeout}ms`));\n        }, timeout);\n      }\n    });\n    \n    // Perform resolution\n    const resolutionPromise = new Promise(async (resolve) => {\n      try {\n        // Perform resolution based on URI scheme\n        const uriScheme = getUriScheme(targetUri);\n        let content;\n        \n        switch (uriScheme) {\n          case 'https':\n          case 'http':\n            content = await resolveHttpUri(targetUri, resolutionMode);\n            break;\n          case 'file':\n            content = await resolveFileUri(targetUri, resolutionMode);\n            break;\n          case 'uor':\n            content = await resolveUorUri(targetUri, resolutionMode);\n            break;\n          default:\n            throw new Error(`Unsupported URI scheme: ${uriScheme}`);\n        }\n        \n        // Resolve references if needed\n        if (resolveReferences && content) {\n          content = await resolveReferencesInContent(content, maxDepth);\n        }\n        \n        // Cache the result if caching is enabled\n        if (cacheResults) {\n          this._cache = this._cache || {};\n          this._cache[targetUri] = content;\n        }\n        \n        resolve({\n          success: true,\n          validationPassed: true,\n          resolvedContent: content,\n          errors: null\n        });\n      } catch (error) {\n        this._lastError = error.message;\n        resolve({\n          success: false,\n          validationPassed: false,\n          resolvedContent: null,\n          errors: [{\n            path: '',\n            message: error.message,\n            severity: 'error'\n          }]\n        });\n      }\n    });\n    \n    // Race between resolution and timeout\n    const result = await Promise.race([resolutionPromise, timeoutPromise]);\n    \n    // Clear timeout if it was set\n    if (timeoutId) {\n      clearTimeout(timeoutId);\n    }\n    \n    // Restore previous cache setting\n    this._cacheEnabled = previousCacheEnabled;\n    \n    return result;\n  } catch (error) {\n    this._lastError = error.message;\n    return {\n      success: false,\n      validationPassed: false,\n      resolvedContent: null,\n      errors: [{\n        path: '',\n        message: error.message,\n        severity: 'error'\n      }]\n    };\n  }\n}"
+                }
+              }
+            },
+            "resolveAndValidate": {
+              "type": "object",
+              "description": "Implementation of the resolveAndValidate method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function resolveAndValidate(targetUri, validationSchemaUri, options = {}) {\n  try {\n    // First resolve the content\n    const resolutionResult = this.resolveWithOptions(targetUri, options);\n    \n    if (!resolutionResult.success) {\n      return resolutionResult;\n    }\n    \n    // Then validate using the validate model\n    const validator = UOR.createEntity('https://uor.foundation/validate.entity');\n    validator.properties.targetSchema = resolutionResult.resolvedContent;\n    validator.properties.referenceSchema = validationSchemaUri;\n    \n    const validateInterface = UOR.getInterface(validator, 'https://uor.foundation/validate.interface');\n    const validationResult = validateInterface.validateWithDetails(resolutionResult.resolvedContent, validationSchemaUri);\n    \n    // Combine resolution and validation results\n    return {\n      success: resolutionResult.success,\n      validationPassed: validationResult.valid,\n      resolvedContent: resolutionResult.resolvedContent,\n      errors: validationResult.valid ? null : validationResult.errors\n    };\n  } catch (error) {\n    this._lastError = error.message;\n    return {\n      success: false,\n      validationPassed: false,\n      resolvedContent: null,\n      errors: [{\n        path: '',\n        message: error.message,\n        severity: 'error'\n      }]\n    };\n  }\n}"
+                }
+              }
+            },
+            "getLastResolutionError": {
+              "type": "object",
+              "description": "Implementation of the getLastResolutionError method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function getLastResolutionError() {\n  return this._lastError || '';\n}"
+                }
+              }
+            },
+            "isCached": {
+              "type": "object",
+              "description": "Implementation of the isCached method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function isCached(targetUri) {\n  return !!(this._cache && this._cache[targetUri]);\n}"
+                }
+              }
+            },
+            "clearCache": {
+              "type": "object",
+              "description": "Implementation of the clearCache method",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function clearCache() {\n  this._cache = {};\n}"
+                }
+              }
+            }
+          }
+        },
+        "helpers": {
+          "type": "object",
+          "description": "Helper functions",
+          "properties": {
+            "getUriScheme": {
+              "type": "object",
+              "description": "Helper to extract the scheme from a URI",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function getUriScheme(uri) {\n  const match = uri.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);\n  return match ? match[1].toLowerCase() : null;\n}"
+                }
+              }
+            },
+            "resolveHttpUri": {
+              "type": "object",
+              "description": "Helper to resolve an HTTP URI",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "async function resolveHttpUri(uri, mode) {\n  // Implementation would use HTTP client to fetch the resource\n  // This is a placeholder for the actual implementation\n  const response = await fetch(uri);\n  \n  if (!response.ok) {\n    if (mode === 'strict') {\n      throw new Error(`HTTP error: ${response.status} ${response.statusText}`);\n    } else {\n      return null;\n    }\n  }\n  \n  const contentType = response.headers.get('content-type');\n  \n  if (contentType && contentType.includes('application/json')) {\n    return await response.json();\n  } else {\n    return await response.text();\n  }\n}"
+                }
+              }
+            },
+            "resolveFileUri": {
+              "type": "object",
+              "description": "Helper to resolve a file URI",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function resolveFileUri(uri, mode) {\n  // Implementation would use file system to read the file\n  // This is a placeholder for the actual implementation\n  const path = uri.replace(/^file:\\/\\//, '');\n  \n  try {\n    const content = UOR.readFile(path);\n    \n    if (path.endsWith('.json')) {\n      return JSON.parse(content);\n    } else {\n      return content;\n    }\n  } catch (error) {\n    if (mode === 'strict') {\n      throw error;\n    } else {\n      return null;\n    }\n  }\n}"
+                }
+              }
+            },
+            "resolveUorUri": {
+              "type": "object",
+              "description": "Helper to resolve a UOR URI",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "function resolveUorUri(uri, mode) {\n  // Implementation would use UOR system's resolution mechanism\n  // This is a placeholder for the actual implementation\n  try {\n    return UOR.resolve(uri);\n  } catch (error) {\n    if (mode === 'strict') {\n      throw error;\n    } else {\n      return null;\n    }\n  }\n}"
+                }
+              }
+            },
+            "resolveReferencesInContent": {
+              "type": "object",
+              "description": "Helper to resolve references in content",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Code implementation",
+                  "default": "async function resolveReferencesInContent(content, maxDepth, currentDepth = 0) {\n  if (currentDepth >= maxDepth) {\n    return content;\n  }\n  \n  if (typeof content !== 'object' || content === null) {\n    return content;\n  }\n  \n  // Handle arrays\n  if (Array.isArray(content)) {\n    const result = [];\n    for (const item of content) {\n      result.push(await resolveReferencesInContent(item, maxDepth, currentDepth + 1));\n    }\n    return result;\n  }\n  \n  // Handle objects\n  const result = {};\n  \n  // Check for $ref property which indicates a reference\n  if (content.$ref && typeof content.$ref === 'string') {\n    try {\n      const resolved = await this.resolve(content.$ref);\n      return resolved;\n    } catch (error) {\n      // Keep the reference if it can't be resolved\n      return content;\n    }\n  }\n  \n  // Process all properties recursively\n  for (const [key, value] of Object.entries(content)) {\n    result[key] = await resolveReferencesInContent(value, maxDepth, currentDepth + 1);\n  }\n  \n  return result;\n}"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "compatibleEntityTypes": {
+      "type": "array",
+      "description": "Types of entities this component can be attached to",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "resolve.entity"
+      ]
+    }
+  },
+  "schemaType": "component"
+}
