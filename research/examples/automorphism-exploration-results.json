@@ -1,0 +1,68 @@
+{
+  "findings": {
+    "totalAutomorphisms": 2048,
+    "groupStructure": {
+      "order": 2048,
+      "factorization": "2^11",
+      "abelian": false,
+      "nilpotent": true
+    },
+    "generatorStructure": {
+      "diagonalAuts": 2048,
+      "offDiagonalAuts": 0
+    },
+    "orderDistribution": {
+      "computed": {
+        "1": 1,
+        "2": 7,
+        "4": 8
+      },
+      "theoretical": "Powers of 2 dominate"
+    },
+    "specialAutomorphisms": {
+      "identity": 1,
+      "involutions": "Multiple",
+      "unityPreserving": "Subgroup exists"
+    },
+    "applications": {
+      "symmetry": "2048-fold symmetry in algorithms",
+      "parallelism": "2048 independent transformations",
+      "errorCorrection": "Automorphism codes"
+    }
+  },
+  "sampleAutomorphisms": [
+    {
+      "name": "Identity",
+      "alpha": 1,
+      "beta": 0,
+      "gamma": 0,
+      "delta": 1,
+      "order": 1
+    },
+    {
+      "name": "Negation",
+      "alpha": 47,
+      "beta": 0,
+      "gamma": 0,
+      "delta": 255,
+      "order": 2
+    }
+  ],
+  "unitOrders": {
+    "mod48": {
+      "1": 1,
+      "2": 7,
+      "4": 8
+    },
+    "mod256": {
+      "1": 1,
+      "2": 3,
+      "4": 4,
+      "8": 8,
+      "16": 16,
+      "32": 32,
+      "64": 64
+    }
+  },
+  "timestamp": "2025-06-30T06:11:36.471Z"
+}

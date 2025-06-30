@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "title": "Optimal Navigation Criteria for Klein-Satisfying Automorphisms",
+    "timestamp": "2025-06-30T07:23:43.488Z"
+  },
+  "patternAnalysis": {
+    "totalSatisfying": 128,
+    "constraintDistribution": {
+      "0": 0,
+      "1": 64,
+      "48": 0,
+      "49": 64
+    },
+    "topAValues": [
+      {
+        "value": 1,
+        "count": 8
+      },
+      {
+        "value": 5,
+        "count": 8
+      },
+      {
+        "value": 7,
+        "count": 8
+      },
+      {
+        "value": 11,
+        "count": 8
+      },
+      {
+        "value": 13,
+        "count": 8
+      }
+    ],
+    "topDValues": [
+      {
+        "value": 193,
+        "count": 32
+      },
+      {
+        "value": 241,
+        "count": 32
+      },
+      {
+        "value": 41,
+        "count": 16
+      },
+      {
+        "value": 49,
+        "count": 16
+      },
+      {
+        "value": 161,
+        "count": 16
+      }
+    ]
+  },
+  "navigationStrategies": {
+    "resonanceBased": "Score by Klein constraint proximity",
+    "modularConsistency": "Preserve multiplicative structure",
+    "statistical": "Prefer common automorphism parameters",
+    "adaptive": "Learn from successful navigations"
+  },
+  "performance": {
+    "basicNavigation": "67% success",
+    "optimizedNavigation": "100% success",
+    "adaptivePotential": "Improves with more data"
+  },
+  "insights": [
+    "Klein-satisfying automorphisms show patterns in a,d values",
+    "Combined scoring improves navigation success",
+    "Adaptive learning can optimize decision weights",
+    "Multiple automorphisms often satisfy Klein for same semiprime"
+  ]
+}

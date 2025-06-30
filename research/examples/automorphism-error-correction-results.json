@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "title": "Automorphism-based Error Correction Codes",
+    "group": "ℤ/48ℤ × ℤ/256ℤ",
+    "automorphismCount": 2048,
+    "timestamp": "2025-06-30T06:41:44.165Z"
+  },
+  "codes": {
+    "orbit": {
+      "description": "Orbit-based code using automorphism images",
+      "rate": 0.0625,
+      "redundancy": 16,
+      "errorCapability": 7
+    },
+    "checksum": {
+      "description": "Fixed-point based checksums",
+      "checksumBits": 4,
+      "selectedAutomorphisms": [
+        {
+          "matrix": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "fixedPoints": 1536
+        },
+        {
+          "matrix": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              5
+            ]
+          ],
+          "fixedPoints": 3072
+        },
+        {
+          "matrix": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              7
+            ]
+          ],
+          "fixedPoints": 1536
+        },
+        {
+          "matrix": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              9
+            ]
+          ],
+          "fixedPoints": 6144
+        }
+      ]
+    },
+    "resonance": {
+      "description": "Resonance-preserving redundancy",
+      "automorphismCount": 8,
+      "preservationThreshold": 0.1
+    },
+    "hybrid": {
+      "description": "Multi-layer code combining techniques",
+      "layers": [
+        "orbit",
+        "checksum",
+        "resonance"
+      ]
+    }
+  },
+  "performance": {
+    "orbitCode": {
+      "encodingComplexity": "O(n)",
+      "decodingComplexity": "O(n²)",
+      "storageOverhead": "16x"
+    },
+    "checksumCode": {
+      "encodingComplexity": "O(k)",
+      "decodingComplexity": "O(k)",
+      "storageOverhead": "4 bits"
+    }
+  },
+  "applications": [
+    "Quantum error correction analogue",
+    "Distributed storage with algebraic redundancy",
+    "Cryptographic authentication",
+    "Self-correcting parallel computation"
+  ]
+}

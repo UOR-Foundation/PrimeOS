@@ -1,0 +1,133 @@
+{
+  "metadata": {
+    "group": "Aut(ℤ/48ℤ × ℤ/256ℤ)",
+    "totalElements": 2048,
+    "structure": "U(48) × U(256)",
+    "timestamp": "2025-06-30T06:39:19.111Z"
+  },
+  "groupDecomposition": {
+    "U48": {
+      "order": 16,
+      "structure": "(ℤ/2ℤ)^5",
+      "generators": [
+        47,
+        5,
+        7
+      ]
+    },
+    "U256": {
+      "order": 128,
+      "structure": "ℤ/2ℤ × ℤ/64ℤ",
+      "generators": [
+        255,
+        3
+      ]
+    }
+  },
+  "minimalGenerators": {
+    "count": 5,
+    "generators": [
+      {
+        "id": 0,
+        "matrix": [
+          [
+            47,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "description": "U(48) generator: 47",
+        "component": "first"
+      },
+      {
+        "id": 1,
+        "matrix": [
+          [
+            5,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "description": "U(48) generator: 5",
+        "component": "first"
+      },
+      {
+        "id": 2,
+        "matrix": [
+          [
+            7,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "description": "U(48) generator: 7",
+        "component": "first"
+      },
+      {
+        "id": 3,
+        "matrix": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            255
+          ]
+        ],
+        "description": "U(256) generator: 255",
+        "component": "second"
+      },
+      {
+        "id": 4,
+        "matrix": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "description": "U(256) generator: 3",
+        "component": "second"
+      }
+    ]
+  },
+  "alternativeSets": [
+    {
+      "description": "Alternative U(48) generators",
+      "U48": [
+        47,
+        5,
+        11,
+        13,
+        17
+      ],
+      "U256": [
+        255,
+        3
+      ]
+    }
+  ],
+  "efficiency": {
+    "storageReduction": "409.6:1",
+    "generatorCount": 5,
+    "fullStorageBytes": 4096,
+    "generatorStorageBytes": 10
+  },
+  "verification": {
+    "generatesAll": true,
+    "elementCount": 2048
+  }
+}

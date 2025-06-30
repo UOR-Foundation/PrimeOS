@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Perfect Factorization via 2048 Automorphisms",
+    "timestamp": "2025-06-30T07:04:42.466Z"
+  },
+  "kleinGroup": {
+    "elements": [
+      0,
+      1,
+      48,
+      49
+    ],
+    "structure": "ℤ/2ℤ × ℤ/2ℤ",
+    "verified": true
+  },
+  "statistics": {
+    "totalSemiprimes": 325,
+    "naturalKleinSatisfied": 6,
+    "percentage": "1.85%"
+  },
+  "automorphisms": {
+    "count": 2048,
+    "structure": "|U(48)| × |U(256)| = 16 × 128 = 2048"
+  },
+  "orbits": {
+    "count": 704,
+    "averageSize": 1.0909090909090908
+  },
+  "conservation": {
+    "totalResonance": 687.1101326986247,
+    "expected": 687.110133
+  },
+  "perfectFactorization": {
+    "hypothesis": "Every semiprime has a revealing automorphism",
+    "testSuccessRate": "5/5",
+    "binaryNavigation": "11-bit tree structure"
+  }
+}

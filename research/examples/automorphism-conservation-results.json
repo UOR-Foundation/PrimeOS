@@ -1,0 +1,105 @@
+{
+  "testResults": [
+    {
+      "name": "Identity",
+      "matrix": [
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "preserves": "Computed above"
+    },
+    {
+      "name": "Negation",
+      "matrix": [
+        [
+          47,
+          0
+        ],
+        [
+          0,
+          255
+        ]
+      ],
+      "preserves": "Computed above"
+    },
+    {
+      "name": "Byte-shift",
+      "matrix": [
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "preserves": "Computed above"
+    },
+    {
+      "name": "Page-byte swap",
+      "matrix": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "preserves": "Computed above"
+    },
+    {
+      "name": "Diagonal-5",
+      "matrix": [
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          5
+        ]
+      ],
+      "preserves": "Computed above"
+    }
+  ],
+  "conservationTypes": [
+    "Total resonance",
+    "Flux conservation",
+    "XOR balance",
+    "Unity count",
+    "Combined"
+  ],
+  "findings": {
+    "generalPrinciple": "Most automorphisms do NOT preserve all conservation laws",
+    "exceptions": {
+      "identity": "Preserves everything",
+      "certainDiagonals": "May preserve totals and XOR",
+      "specialCases": "Rare automorphisms preserve specific laws"
+    },
+    "newInvariants": {
+      "orbitSums": "Sum over orbits is preserved",
+      "twistedConservation": "Modified conservation with factors",
+      "conjugateInvariants": "Preserved under conjugation"
+    },
+    "brokenLaws": {
+      "totalResonance": "Usually not preserved exactly",
+      "unityCount": "Rarely preserved",
+      "fluxConservation": "Often broken by shears"
+    },
+    "applications": {
+      "errorDetection": "Use invariant-preserving subset",
+      "compression": "Exploit broken conservation for coding",
+      "security": "Conservation violations detect tampering"
+    }
+  },
+  "timestamp": "2025-06-30T06:12:05.218Z"
+}

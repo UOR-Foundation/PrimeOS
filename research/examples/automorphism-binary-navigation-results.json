@@ -1,0 +1,70 @@
+{
+  "metadata": {
+    "title": "Binary Navigation for Automorphism Space",
+    "timestamp": "2025-06-30T07:06:04.212Z"
+  },
+  "encoding": {
+    "bits": 11,
+    "structure": "4 bits for U(48), 7 bits for U(256)",
+    "total": 2048
+  },
+  "navigation": {
+    "algorithm": "Binary tree traversal with constraint evaluation",
+    "complexity": "O(11 × sample_size)",
+    "decisions": 11
+  },
+  "testResults": [
+    {
+      "N": 143,
+      "p": 11,
+      "q": 13,
+      "path": 320,
+      "automorphism": {
+        "id": 320,
+        "a": 1,
+        "d": 41,
+        "binary": "00101000000"
+      },
+      "satisfied": true,
+      "constraint": 49
+    },
+    {
+      "N": 323,
+      "p": 17,
+      "q": 19,
+      "path": 1536,
+      "automorphism": {
+        "id": 1536,
+        "a": 1,
+        "d": 193,
+        "binary": "11000000000"
+      },
+      "satisfied": true,
+      "constraint": 1
+    },
+    {
+      "N": 667,
+      "p": 23,
+      "q": 29,
+      "path": 256,
+      "automorphism": {
+        "id": 256,
+        "a": 1,
+        "d": 33,
+        "binary": "00100000000"
+      },
+      "satisfied": false,
+      "constraint": 177
+    }
+  ],
+  "efficiency": {
+    "exhaustiveChecks": 2048,
+    "navigationChecks": 110,
+    "speedup": 18.6
+  },
+  "implications": {
+    "mathematical": "Factorization encoded in 11-bit tree",
+    "cryptographic": "Efficient navigation would break RSA",
+    "computational": "Navigation difficulty preserves security"
+  }
+}
