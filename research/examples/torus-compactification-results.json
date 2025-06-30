@@ -1,0 +1,32 @@
+{
+  "topology": {
+    "dimension": 16,
+    "type": "T^16 = S¹ × ... × S¹",
+    "circumference": 6.283185307179586,
+    "radius": 0.15915494309189535,
+    "volume": 5900351625162.472
+  },
+  "compactifiedDimensions": {
+    "range": [
+      48,
+      63
+    ],
+    "count": 16,
+    "unityResonance": true
+  },
+  "kkSpectrum": {
+    "massFormula": "m_n = 2πn",
+    "massGap": 6.283185307179586,
+    "observableModes": "n = 0 only"
+  },
+  "fieldPatterns": {
+    "preserved": 64,
+    "modified": 192,
+    "preservationRate": 0.25
+  },
+  "topologicalInvariants": {
+    "eulerCharacteristic": 0,
+    "totalBetti": 65536,
+    "fundamentalGroup": "Z^16"
+  }
+}

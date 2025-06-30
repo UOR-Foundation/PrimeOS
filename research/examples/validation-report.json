@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-06-30T01:52:57.727Z",
+  "unityResonance": {
+    "value": 1,
+    "exact": true,
+    "position": 48
+  },
+  "dimensions": {
+    "total": 64,
+    "observable": 48,
+    "hidden": 16,
+    "relationship": "48 = 64 - 16"
+  },
+  "superCycle": {
+    "size": 768,
+    "decompositions": [
+      "12 × 64",
+      "16 × 48"
+    ],
+    "lcm": "LCM(48, 256) = 768"
+  },
+  "conservation": {
+    "scales": [
+      8,
+      16,
+      32,
+      48,
+      64,
+      128,
+      256,
+      768
+    ],
+    "totalResonance": 687.1101326986247,
+    "exact": true
+  },
+  "fieldPatterns": {
+    "total": 256,
+    "preserved": 64,
+    "preservationRate": 0.25
+  },
+  "validation": {
+    "allScriptsPass": true,
+    "mathematicallyConsistent": true,
+    "crossValidated": true
+  }
+}

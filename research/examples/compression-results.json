@@ -1,0 +1,62 @@
+{
+  "algorithm": "64D-aware compression",
+  "timestamp": "2025-06-30T01:52:55.831Z",
+  "results": [
+    {
+      "name": "Pattern data",
+      "originalSize": 768,
+      "compressedSize": 216,
+      "ratio": 3.5555555555555554,
+      "method": "pattern",
+      "lossless": true,
+      "time": 2
+    },
+    {
+      "name": "Sparse fields",
+      "originalSize": 768,
+      "compressedSize": 1000,
+      "ratio": 0.768,
+      "method": "projection",
+      "lossless": true,
+      "time": 2
+    },
+    {
+      "name": "Symmetric blocks",
+      "originalSize": 768,
+      "compressedSize": 200,
+      "ratio": 3.84,
+      "method": "symmetry",
+      "lossless": true,
+      "time": 1
+    },
+    {
+      "name": "Text data",
+      "originalSize": 1024,
+      "compressedSize": 592,
+      "ratio": 1.7297297297297298,
+      "method": "hybrid",
+      "lossless": true,
+      "time": 4
+    },
+    {
+      "name": "Random data",
+      "originalSize": 512,
+      "compressedSize": 308,
+      "ratio": 1.6623376623376624,
+      "method": "hybrid",
+      "lossless": true,
+      "time": 1
+    }
+  ],
+  "features": {
+    "methods": [
+      "pattern",
+      "projection",
+      "symmetry",
+      "hybrid"
+    ],
+    "errorCorrection": true,
+    "conservation": true,
+    "adaptive": true
+  }
+}

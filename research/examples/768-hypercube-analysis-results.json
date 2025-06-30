@@ -1,0 +1,106 @@
+{
+  "structure": {
+    "total": 768,
+    "hypercubeSize": 64,
+    "numHypercubes": 12,
+    "decomposition": "768 = 12 × 64"
+  },
+  "keyRelationships": {
+    "pageSize": 48,
+    "hiddenDims": 16,
+    "relation": "48 = 64 - 16"
+  },
+  "resonanceStats": [
+    {
+      "hypercube": 0,
+      "avgResonance": 2.941634221404247,
+      "minResonance": 0.07957747154594767,
+      "maxResonance": 18.698938450662354
+    },
+    {
+      "hypercube": 1,
+      "avgResonance": 0.5871854902029443,
+      "minResonance": 0.015884618250229708,
+      "maxResonance": 3.7325325020136138
+    },
+    {
+      "hypercube": 2,
+      "avgResonance": 0.04157919077013813,
+      "minResonance": 0.0011248056764972952,
+      "maxResonance": 0.26430435279203846
+    },
+    {
+      "hypercube": 3,
+      "avgResonance": 0.008299705428008812,
+      "minResonance": 0.00022452471069697814,
+      "maxResonance": 0.05275832046952438
+    },
+    {
+      "hypercube": 4,
+      "avgResonance": 2.941634221404247,
+      "minResonance": 0.07957747154594767,
+      "maxResonance": 18.698938450662354
+    },
+    {
+      "hypercube": 5,
+      "avgResonance": 0.5871854902029443,
+      "minResonance": 0.015884618250229708,
+      "maxResonance": 3.7325325020136138
+    },
+    {
+      "hypercube": 6,
+      "avgResonance": 0.04157919077013813,
+      "minResonance": 0.0011248056764972952,
+      "maxResonance": 0.26430435279203846
+    },
+    {
+      "hypercube": 7,
+      "avgResonance": 0.008299705428008812,
+      "minResonance": 0.00022452471069697814,
+      "maxResonance": 0.05275832046952438
+    },
+    {
+      "hypercube": 8,
+      "avgResonance": 2.941634221404247,
+      "minResonance": 0.07957747154594767,
+      "maxResonance": 18.698938450662354
+    },
+    {
+      "hypercube": 9,
+      "avgResonance": 0.5871854902029443,
+      "minResonance": 0.015884618250229708,
+      "maxResonance": 3.7325325020136138
+    },
+    {
+      "hypercube": 10,
+      "avgResonance": 0.04157919077013813,
+      "minResonance": 0.0011248056764972952,
+      "maxResonance": 0.26430435279203846
+    },
+    {
+      "hypercube": 11,
+      "avgResonance": 0.008299705428008812,
+      "minResonance": 0.00022452471069697814,
+      "maxResonance": 0.05275832046952438
+    }
+  ],
+  "unityDistribution": [
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16
+  ],
+  "connectivity": {
+    "gcd_64_48": 16,
+    "lcm_64_48": 192,
+    "overlappingPages": true
+  }
+}

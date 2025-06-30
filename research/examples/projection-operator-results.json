@@ -1,0 +1,50 @@
+{
+  "operator": {
+    "domain": 64,
+    "codomain": 48,
+    "kernel": 16,
+    "type": "Orthogonal projection"
+  },
+  "spectral": {
+    "eigenvalues": "48 ones, 16 zeros",
+    "spectralGap": 1,
+    "conditionNumber": 1
+  },
+  "fieldPatterns": {
+    "preserved": 64,
+    "total": 256,
+    "preservationRate": 0.25,
+    "transformationRatios": [
+      {
+        "ratio": 1,
+        "count": 64,
+        "example": 0
+      },
+      {
+        "ratio": 5.009718854577881,
+        "count": 64,
+        "example": 64
+      },
+      {
+        "ratio": 70.74775066370233,
+        "count": 64,
+        "example": 128
+      },
+      {
+        "ratio": 354.4263404189244,
+        "count": 64,
+        "example": 192
+      }
+    ]
+  },
+  "information": {
+    "dimensionalReduction": 0.25,
+    "preservedCapacity": 0.75,
+    "hiddenDimensions": 16
+  },
+  "geometric": {
+    "nonExpansive": true,
+    "optimalReconstruction": "π^T",
+    "fiberDimension": 16
+  }
+}

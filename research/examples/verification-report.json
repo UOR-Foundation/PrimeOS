@@ -1,0 +1,144 @@
+{
+  "timestamp": "2025-06-30T01:52:57.735Z",
+  "summary": {
+    "total": 23,
+    "passed": 5,
+    "warnings": 17,
+    "failed": 1
+  },
+  "results": {
+    "passed": [
+      "compression-algorithm-optimal.js",
+      "quantum-operator-interpretation.js",
+      "torus-compactification-example.js",
+      "unity-positions-analysis.js",
+      "validate-all-proofs.js"
+    ],
+    "failed": [
+      {
+        "script": "12288-object-space-example.js",
+        "issues": [
+          "Runtime error: spawnSync /bin/sh ETIMEDOUT"
+        ]
+      }
+    ],
+    "warnings": [
+      {
+        "script": "64-48-16-proof-example.js",
+        "issues": [
+          "Limiting results without showing all at lines 107",
+          "No error handling",
+          "Incomplete proof"
+        ]
+      },
+      {
+        "script": "768-hypercube-analysis-example.js",
+        "issues": [
+          "No error handling"
+        ]
+      },
+      {
+        "script": "compression-algorithm-example.js",
+        "issues": [
+          "Limiting results without showing all at lines 687"
+        ]
+      },
+      {
+        "script": "computational-complexity-analysis.js",
+        "issues": [
+          "No error handling",
+          "Complexity class confusion"
+        ]
+      },
+      {
+        "script": "field-dimension-correspondence-example.js",
+        "issues": [
+          "Limiting results without showing all at lines 144",
+          "No error handling"
+        ]
+      },
+      {
+        "script": "fractal-self-similarity.js",
+        "issues": [
+          "Arbitrary threshold 0.1 without justification at lines 296",
+          "Limiting results without showing all at lines 213",
+          "No error handling"
+        ]
+      },
+      {
+        "script": "group-automorphisms-analysis.js",
+        "issues": [
+          "Limiting results without showing all at lines 83, 85, 193"
+        ]
+      },
+      {
+        "script": "hidden-periodicities-search.js",
+        "issues": [
+          "Computational shortcut that may miss results at lines 127",
+          "Limiting results without showing all at lines 208, 293"
+        ]
+      },
+      {
+        "script": "higher-order-resonance-products.js",
+        "issues": [
+          "Limiting results without showing all at lines 321",
+          "No error handling"
+        ]
+      },
+      {
+        "script": "information-loss-projection.js",
+        "issues": [
+          "Limiting results without showing all at lines 47, 52, 225, 229, 233, 277"
+        ]
+      },
+      {
+        "script": "modular-forms-number-theory.js",
+        "issues": [
+          "Check if actual Dirichlet character properties are satisfied at lines 31, 60, 466",
+          "Check if actual L-function properties are satisfied at lines 76, 77, 79, 99, 467, 474",
+          "Check if actual modular form properties are satisfied at lines 1, 4, 468, 474, 477",
+          "Limiting results without showing all at lines 165, 202, 308"
+        ]
+      },
+      {
+        "script": "projection-operator-example.js",
+        "issues": [
+          "Limiting results without showing all at lines 17, 196, 201",
+          "No error handling"
+        ]
+      },
+      {
+        "script": "resonance-conservation-example.js",
+        "issues": [
+          "Limiting results without showing all at lines 223"
+        ]
+      },
+      {
+        "script": "resonance-current-dynamics.js",
+        "issues": [
+          "Limiting results without showing all at lines 148, 211, 261, 313"
+        ]
+      },
+      {
+        "script": "resonance-spectrum-analysis.js",
+        "issues": [
+          "Limiting results without showing all at lines 101, 203",
+          "Incomplete proof"
+        ]
+      },
+      {
+        "script": "resonance-spectrum-detailed.js",
+        "issues": [
+          "Arbitrary threshold 0.1 without justification at lines 138",
+          "Limiting results without showing all at lines 110, 252"
+        ]
+      },
+      {
+        "script": "symmetry-group-example.js",
+        "issues": [
+          "Limiting results without showing all at lines 189"
+        ]
+      }
+    ]
+  }
+}

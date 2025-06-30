@@ -1,0 +1,22 @@
+{
+  "unityResonance": {
+    "alpha4": 0.15915494309189535,
+    "alpha5": 6.283185307179586,
+    "product": 1,
+    "firstUnityPosition": 48
+  },
+  "dimensionalBreakdown": {
+    "total": 64,
+    "observable": 48,
+    "hidden": 16,
+    "compactificationStart": 48
+  },
+  "fieldPatterns": {
+    "unityPattern": "00110000",
+    "compactifiedPrefix": "0011"
+  },
+  "informationDistribution": {
+    "observablePercent": 75,
+    "hiddenPercent": 25
+  }
+}

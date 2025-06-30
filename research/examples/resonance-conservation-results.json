@@ -1,0 +1,28 @@
+{
+  "globalFlux": -2.220446049250313e-16,
+  "totalResonance": 687.1101326986247,
+  "averageResonance": 0.8946746519513343,
+  "uniqueValues": 96,
+  "maxCurrent": {
+    "value": 8.532531066031835,
+    "position": 37
+  },
+  "minCurrent": {
+    "value": -15.55734579707256,
+    "position": 39
+  },
+  "conservationScales": [
+    8,
+    16,
+    32,
+    48,
+    64,
+    128,
+    256,
+    768
+  ],
+  "symmetryConserved": [
+    256,
+    768
+  ]
+}

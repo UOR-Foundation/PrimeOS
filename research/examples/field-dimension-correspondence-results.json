@@ -1,0 +1,109 @@
+{
+  "fields": [
+    {
+      "index": 0,
+      "symbol": "α₀",
+      "value": 1,
+      "name": "Identity",
+      "dimensionalScale": 1
+    },
+    {
+      "index": 1,
+      "symbol": "α₁",
+      "value": 1.8392867552141612,
+      "name": "Tribonacci",
+      "dimensionalScale": 2
+    },
+    {
+      "index": 2,
+      "symbol": "α₂",
+      "value": 1.618033988749895,
+      "name": "Golden",
+      "dimensionalScale": 4
+    },
+    {
+      "index": 3,
+      "symbol": "α₃",
+      "value": 0.5,
+      "name": "Half",
+      "dimensionalScale": 8
+    },
+    {
+      "index": 4,
+      "symbol": "α₄",
+      "value": 0.15915494309189535,
+      "name": "1/2π",
+      "dimensionalScale": 16
+    },
+    {
+      "index": 5,
+      "symbol": "α₅",
+      "value": 6.283185307179586,
+      "name": "2π",
+      "dimensionalScale": 32
+    },
+    {
+      "index": 6,
+      "symbol": "α₆",
+      "value": 0.199612,
+      "name": "Phase",
+      "dimensionalScale": 64
+    },
+    {
+      "index": 7,
+      "symbol": "α₇",
+      "value": 0.014134725,
+      "name": "Zeta",
+      "dimensionalScale": 128
+    }
+  ],
+  "criticalDimensions": [
+    {
+      "dim": 8,
+      "desc": "Byte boundary - first complete unit"
+    },
+    {
+      "dim": 16,
+      "desc": "Field 4 scale - compactification begins"
+    },
+    {
+      "dim": 32,
+      "desc": "Field 5 scale - 2π periodicity"
+    },
+    {
+      "dim": 48,
+      "desc": "Page size - unity resonance"
+    },
+    {
+      "dim": 64,
+      "desc": "Hypercube - field 6 scale"
+    },
+    {
+      "dim": 256,
+      "desc": "Full field cycle"
+    },
+    {
+      "dim": 768,
+      "desc": "Super-cycle - LCM(48, 256)"
+    }
+  ],
+  "unityResonance": {
+    "fields": [
+      4,
+      5
+    ],
+    "product": 1,
+    "dimension": 48
+  },
+  "dimensionalDoubling": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    64,
+    128
+  ],
+  "maxDimension": 768
+}

@@ -1,0 +1,79 @@
+{
+  "group": {
+    "formula": "ℤ/48ℤ × ℤ/256ℤ",
+    "order": 12288,
+    "type": "Abelian",
+    "rank": 2
+  },
+  "generators": [
+    {
+      "name": "page",
+      "element": "(1, 0)",
+      "order": 48
+    },
+    {
+      "name": "field",
+      "element": "(0, 1)",
+      "order": 256
+    }
+  ],
+  "subgroups": [
+    {
+      "name": "Page translations",
+      "formula": "ℤ/48ℤ × {0}",
+      "order": 48,
+      "index": 256
+    },
+    {
+      "name": "Field transformations",
+      "formula": "{0} × ℤ/256ℤ",
+      "order": 256,
+      "index": 48
+    },
+    {
+      "name": "Super-cycle",
+      "formula": "ℤ/48ℤ × ℤ/16ℤ",
+      "order": 768,
+      "index": 16
+    },
+    {
+      "name": "Hypercube period",
+      "formula": "ℤ/48ℤ × ℤ/64ℤ",
+      "order": 3072,
+      "index": 4
+    },
+    {
+      "name": "Compactification aligned",
+      "formula": "ℤ/16ℤ × ℤ/256ℤ",
+      "order": 4096,
+      "index": 3
+    }
+  ],
+  "automorphisms": {
+    "lowerBound": 2048,
+    "factors": [
+      "φ(48) = 16",
+      "φ(256) = 128"
+    ]
+  },
+  "invariants": [
+    "Unity resonance points",
+    "Total resonance",
+    "XOR balance (per page)",
+    "Hypercube structure"
+  ],
+  "quotients": [
+    {
+      "name": "G/(ℤ/16ℤ × {0})",
+      "result": "ℤ/3ℤ × ℤ/256ℤ",
+      "order": 768,
+      "interpretation": "Mod out compactification"
+    },
+    {
+      "name": "G/({0} × ℤ/16ℤ)",
+      "result": "ℤ/48ℤ × ℤ/16ℤ",
+      "order": 768,
+      "interpretation": "The super-cycle!"
+    }
+  ]
+}
