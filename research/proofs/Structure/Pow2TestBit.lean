@@ -17,64 +17,69 @@ open Basic
   This is a fundamental property needed for single field activation.
 -/
 
+-- Helper: x * n % x = 0
+private theorem mul_mod_self_left (x n : Nat) : n * x % x = 0 := by
+  cases x with
+  | zero => simp
+  | succ x' => 
+    apply Nat.mod_eq_zero_of_dvd
+    apply Nat.dvd_mul_left
+
+-- Helper: if a < b then a / b = 0
+private theorem div_eq_zero_of_lt {a b : Nat} (h : a < b) : a / b = 0 := by
+  cases b with
+  | zero => cases h
+  | succ b' =>
+    apply Nat.div_eq_of_lt h
+
 -- Powers of 2 have exactly one bit set
 theorem pow2_testBit (i j : Nat) : (2^i).testBit j = (i = j) := by
   -- Unfold the definition of testBit
   unfold Nat.testBit
-  -- We need to show: ((2^i >>> j) % 2 = 1) = (i = j)
-  -- This is a boolean equality, so we split cases
+  -- Split on whether i = j
   by_cases h : i = j
   · -- Case: i = j
-    rw [h]
-    -- Show (2^j >>> j) % 2 = 1
+    subst h
+    -- Show (2^j >>> j) % 2 = 1 = true
     rw [Nat.shiftRight_eq_div_pow]
     -- 2^j / 2^j = 1
-    have h_pos : 0 < 2^j := Nat.pow_pos (by omega : 0 < 2)
+    have h_pos : 0 < 2^j := Nat.pow_pos (by decide : 0 < 2)
     rw [Nat.div_self h_pos]
-    -- 1 % 2 = 1
-    simp
+    -- 1 % 2 = 1, and (1 = 1) = true
+    decide
   · -- Case: i ≠ j
-    -- Show the boolean equality is false
-    simp only [h]
-    -- We need to show (2^i >>> j) % 2 = 1 is false
-    rw [Nat.shiftRight_eq_div_pow]
-    -- Consider two cases: i < j or j < i
-    cases Nat.lt_or_ge i j with
-    | inl hij =>
-      -- i < j: Then 2^i < 2^j
-      have h_lt : 2^i < 2^j := Nat.pow_lt_pow_right (by omega : 1 < 2) hij
-      -- So 2^i / 2^j = 0
-      have h_div : 2^i / 2^j = 0 := by
-        apply Nat.div_eq_zero_iff.mpr
-        constructor
-        · exact h_lt
-        · exact Nat.pow_pos (by omega : 0 < 2)
-      rw [h_div]
-      -- 0 % 2 = 0 ≠ 1
-      simp
-    | inr hji =>
-      -- j ≤ i and j ≠ i, so j < i
-      have hji' : j < i := by
-        cases Nat.eq_or_lt_of_le hji with
-        | inl heq => exact absurd heq.symm h
-        | inr hlt => exact hlt
-      -- Write i = j + (i - j) where i - j > 0
-      have hi_eq : i = j + (i - j) := by
-        rw [Nat.add_sub_of_le (Nat.le_of_lt hji')]
-      rw [hi_eq, Nat.pow_add]
-      -- (2^j * 2^(i-j)) / 2^j = 2^(i-j)
-      have h_pos : 0 < 2^j := Nat.pow_pos (by omega : 0 < 2)
-      rw [Nat.mul_div_cancel_left _ h_pos]
-      -- 2^(i-j) is even when i - j > 0
-      have h_sub_pos : 0 < i - j := Nat.sub_pos_of_lt hji'
-      -- Write i - j = k + 1 for some k
-      obtain ⟨k, hk⟩ : ∃ k, i - j = k + 1 := ⟨i - j - 1, by omega⟩
-      rw [hk, Nat.pow_succ]
-      -- (2 * 2^k) % 2 = 0
-      have : 2 * 2^k % 2 = 0 := by
-        rw [Nat.mul_comm]
-        apply Nat.mul_mod_right
-      rw [this]
-      simp
+    -- We need to show ((2^i >>> j) % 2 = 1) = false
+    -- First show (2^i >>> j) % 2 = 0
+    have h_eq_zero : (2^i >>> j) % 2 = 0 := by
+      rw [Nat.shiftRight_eq_div_pow]
+      -- Split on whether i < j or j < i
+      cases Nat.lt_or_ge i j with
+      | inl hij =>
+        -- i < j: Then 2^i < 2^j
+        have h_lt : 2^i < 2^j := Nat.pow_lt_pow_right (by decide : 1 < 2) hij
+        -- So 2^i / 2^j = 0
+        rw [div_eq_zero_of_lt h_lt]
+        decide
+      | inr hji =>
+        -- j ≤ i and j ≠ i, so j < i
+        have hji' : j < i := Nat.lt_of_le_of_ne hji (Ne.symm h)
+        -- Write i = j + (i - j)
+        have hi_eq : i = j + (i - j) := by
+          rw [← Nat.add_sub_of_le (Nat.le_of_lt hji')]
+        rw [hi_eq, Nat.pow_add]
+        -- (2^j * 2^(i-j)) / 2^j = 2^(i-j)
+        have h_pos : 0 < 2^j := Nat.pow_pos (by decide : 0 < 2)
+        rw [Nat.mul_div_cancel_left _ h_pos]
+        -- 2^(i-j) is even when i - j > 0
+        have h_sub_pos : 0 < i - j := Nat.sub_pos_of_lt hji'
+        -- Write i - j = k + 1 for some k
+        obtain ⟨k, hk⟩ : ∃ k, i - j = k + 1 := ⟨i - j - 1, by omega⟩
+        rw [hk, Nat.pow_succ]
+        -- 2^k * 2 % 2 = 0
+        exact mul_mod_self_left 2 (2^k)
+    -- Now show (0 = 1) = false
+    rw [h_eq_zero]
+    -- (0 = 1) = false and false = (i = j) when i ≠ j
+    simp [h]
 
 end Structure
