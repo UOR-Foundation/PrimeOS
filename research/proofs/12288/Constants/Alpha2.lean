@@ -78,9 +78,41 @@ theorem α₂_lt_two : α₂ < 2 := by
 /-- Approximation of α₂ -/
 theorem α₂_approx : |α₂ - 1.618| < 0.001 := by
   rw [α₂_formula]
-  -- This would require numerical computation
-  -- Real.sqrt 5 ≈ 2.236, so (1 + 2.236)/2 ≈ 1.618
-  sorry
+  -- We need to show |(1 + √5)/2 - 1.618| < 0.001
+  -- This is equivalent to showing 1.617 < (1 + √5)/2 < 1.619
+  -- Which requires 2.234 < √5 < 2.238
+  
+  -- First establish bounds on √5
+  have sqrt5_lower : 2.234 < Real.sqrt 5 := by
+    rw [← Real.sqrt_sq (by norm_num : (0 : ℝ) ≤ 2.234)]
+    apply Real.sqrt_lt_sqrt
+    · norm_num
+    · norm_num
+  
+  have sqrt5_upper : Real.sqrt 5 < 2.238 := by
+    rw [← Real.sqrt_sq (by norm_num : (0 : ℝ) ≤ 2.238)]
+    apply Real.sqrt_lt_sqrt
+    · norm_num
+    · norm_num
+  
+  -- Now show the bounds on α₂
+  have lower_bound : 1.617 < (1 + Real.sqrt 5) / 2 := by
+    calc (1 + Real.sqrt 5) / 2 
+        > (1 + 2.234) / 2 := by linarith [sqrt5_lower]
+      _ = 3.234 / 2 := by ring
+      _ = 1.617 := by norm_num
+  
+  have upper_bound : (1 + Real.sqrt 5) / 2 < 1.619 := by
+    calc (1 + Real.sqrt 5) / 2 
+        < (1 + 2.238) / 2 := by linarith [sqrt5_upper]
+      _ = 3.238 / 2 := by ring
+      _ = 1.619 := by norm_num
+  
+  -- Convert to absolute value form
+  rw [abs_sub_lt_iff]
+  constructor
+  · linarith [lower_bound]
+  · linarith [upper_bound]
 
 /-- α₂ - 1 = 1/α₂ -/
 theorem α₂_reciprocal : α₂ - 1 = 1 / α₂ := by

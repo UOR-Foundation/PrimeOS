@@ -1,6 +1,7 @@
 import Mathlib.Data.Real.Basic
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Data.Real.Sqrt
+import Mathlib.Data.Real.Pi.Bounds
 import PrimeOS12288.Constants.Pi
 
 namespace PrimeOS12288.Constants
@@ -49,30 +50,68 @@ theorem α₅_gt_one : 1 < α₅ := by
 /-- Numerical lower bound for α₄ -/
 theorem α₄_lower_bound : 0.159 < α₄ := by
   unfold α₄
-  -- α₄ = 1/(2π) > 0.159 requires showing π < 1/(2 * 0.159) ≈ 3.145
-  -- This would follow from Real.pi_lt_3145 if it exists in Mathlib
-  sorry  -- Requires: Real.pi < 3.145
+  -- We want to show 0.159 < 1/(2π)
+  -- This is equivalent to 0.159 * 2π < 1
+  rw [div_lt_iff (mul_pos two_pos Real.pi_pos)]
+  norm_num
+  ring_nf
+  -- Need to show π * 0.318 < 1, which is π < 1/0.318 ≈ 3.1446
+  -- Since π ≈ 3.14159..., we have π < 3.1446
+  -- We'll use the approximation π < 3.1416 (which is true)
+  have h_pi_upper : Real.pi < 3.1416 := Real.pi_lt_31416
+  calc Real.pi * 0.318 < 3.1416 * 0.318 := by
+    apply mul_lt_mul_of_pos_right h_pi_upper
+    norm_num
+  _ = 0.9990288 := by norm_num
+  _ < 1 := by norm_num
 
 /-- Numerical upper bound for α₄ -/
 theorem α₄_upper_bound : α₄ < 0.160 := by
   unfold α₄
-  -- α₄ = 1/(2π) < 0.160 requires showing π > 1/(2 * 0.160) = 3.125
-  -- This would follow from Real.three_le_pi or similar bounds
-  sorry  -- Requires: 3.125 < Real.pi
+  -- We want to show 1/(2π) < 0.160
+  -- This is equivalent to 1 < 0.160 * 2π
+  rw [lt_div_iff (mul_pos two_pos Real.pi_pos)]
+  norm_num
+  ring_nf
+  -- Need to show 1 < π * 0.32, which is 3.125 < π
+  -- Since π > 3.14159... > 3.125, this holds
+  have h_pi_lower : 3.14159 < Real.pi := by
+    -- We use that 3.1415 < π
+    have h : 3.1415 < Real.pi := Real.pi_gt_31415
+    linarith
+  calc 1 = 0.32 * 3.125 := by norm_num
+  _ < 0.32 * 3.14159 := by
+    apply mul_lt_mul_of_pos_left
+    norm_num
+    norm_num
+  _ < 0.32 * Real.pi := by
+    apply mul_lt_mul_of_pos_left h_pi_lower
+    norm_num
 
 /-- Numerical lower bound for α₅ -/
 theorem α₅_lower_bound : 6.28 < α₅ := by
   unfold α₅
-  -- α₅ = 2π > 6.28 requires showing π > 3.14
-  -- This would follow from Real.three_le_pi
-  sorry  -- Requires: 3.14 < Real.pi
+  -- We want to show 6.28 < 2π
+  -- This is equivalent to 3.14 < π
+  have h_pi_lower : 3.14 < Real.pi := Real.pi_gt_314
+  calc 6.28 = 2 * 3.14 := by norm_num
+  _ < 2 * Real.pi := by
+    apply mul_lt_mul_of_pos_left h_pi_lower
+    norm_num
 
 /-- Numerical upper bound for α₅ -/
 theorem α₅_upper_bound : α₅ < 6.29 := by
   unfold α₅
-  -- α₅ = 2π < 6.29 requires showing π < 3.145
-  -- This would follow from Real.pi_lt_3145 if it exists
-  sorry  -- Requires: Real.pi < 3.145
+  -- We want to show 2π < 6.29
+  -- This is equivalent to π < 3.145
+  have h_pi_upper : Real.pi < 3.145 := by
+    -- We use that π < 3.15
+    have h : Real.pi < 3.15 := Real.pi_lt_315
+    linarith
+  calc 2 * Real.pi < 2 * 3.145 := by
+    apply mul_lt_mul_of_pos_left h_pi_upper
+    norm_num
+  _ = 6.29 := by norm_num
 
 /-- The unity product: α₄ * α₅ = 1 -/
 theorem α₄_mul_α₅_eq_one : α₄ * α₅ = 1 := by
