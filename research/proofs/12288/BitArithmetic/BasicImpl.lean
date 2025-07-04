@@ -78,7 +78,6 @@ theorem xor_byte_bound (a b : ByteValue) : a.val ^^^ b.val < ByteSize := by
 theorem xorBytes_valid (a b : ByteValue) : 
   (xorBytes a b).val = a.val ^^^ b.val := by
   simp [xorBytes]
-  -- The sorry in xorBytes can be filled with xor_byte_bound
   rfl
 
 /-- Verify XOR preserves position bounds when both positions are in same page -/

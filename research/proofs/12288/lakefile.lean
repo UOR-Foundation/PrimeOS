@@ -8,7 +8,7 @@ lean_lib «PrimeOS12288» where
   -- add library configuration options here
   srcDir := "."
   roots := #[`Axioms, `Constants, `Properties, `Relations, `Basic, `Structure,
-            `Computational, `BitArithmetic]
+            `Computational, `BitArithmetic, `Conservation, `Resonance, `Uniqueness]
 
 require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git" @ "v4.8.0"

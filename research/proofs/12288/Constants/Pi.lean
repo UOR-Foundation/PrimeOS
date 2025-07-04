@@ -24,10 +24,11 @@ theorem π_approx : |π - 3.14159| < 0.00001 := by
 
 /-- π/2 is positive -/
 theorem π_div_two_pos : 0 < π / 2 := by
-  sorry
+  apply div_pos π_pos
+  exact two_pos
 
 /-- Euler's identity: e^(iπ) + 1 = 0 -/
 theorem euler_identity : Real.exp (Complex.I * ↑π) + 1 = 0 := by
   sorry
 
-end PrimeOS.Constants
+end PrimeOS12288.Constants
