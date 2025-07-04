@@ -1,0 +1,12 @@
+{
+  "uniqueCount": 96,
+  "duplicationPattern": {
+    "2": 64,
+    "4": 32
+  },
+  "collisionXORs": {
+    "1": 128,
+    "48": 64,
+    "49": 64
+  }
+}

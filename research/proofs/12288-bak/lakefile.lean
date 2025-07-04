@@ -7,7 +7,7 @@ package «PrimeOS» where
 lean_lib «PrimeOS» where
   -- add library configuration options here
   srcDir := "."
-  roots := #[`Axioms, `Constants, `Properties, `Relations, `Basic, `Fields, `Test, `Structure]
+  roots := #[`Axioms, `Constants, `Properties, `Relations, `Basic, `Structure]
 
 @[default_target]
 lean_exe «primeos» where

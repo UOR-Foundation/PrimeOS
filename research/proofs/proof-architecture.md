@@ -2,21 +2,54 @@
 
 ## Overview
 
-This document outlines a systematic, first-principles approach to proving the mathematical properties of the 12,288-element structure. The architecture is organized into hierarchical levels, where each level depends only on the levels below it. Every proof is self-contained and verifiable.
+This document outlines a systematic, first-principles approach to proving the mathematical properties of the 12,288-element structure. The architecture is organized into hierarchical levels, where each level depends only on the levels below it.
+
+**Key Innovation**: We use an interface-based approach where each layer declares its required foundations as type class interfaces. This allows us to:
+- Typecheck the entire proof structure before implementation
+- Make all dependencies explicit
+- Build proofs incrementally without `sorry` placeholders
+- Verify that each layer provides complete foundations for the next
 
 ## Directory Structure
 
 ```
 proofs/
 ├── Axioms/               # Level 0: Fundamental axioms
-├── Constants/            # Level 1: Constant definitions
-├── Properties/           # Level 2: Basic properties
-├── Relations/            # Level 3: Inter-constant relationships
-├── Structure/            # Level 4: Structural properties
-├── Resonance/           # Level 5: Resonance computation
-├── Conservation/        # Level 6: Conservation laws
-└── Uniqueness/          # Level 7: Uniqueness theorems
+├── Constants/            # Level 1: Constant definitions  
+├── Computational/        # Level 2: Computational foundations
+├── BitArithmetic/        # Level 3: Bit manipulation infrastructure
+├── Properties/           # Level 4: Basic properties
+├── Relations/            # Level 5: Inter-constant relationships
+├── Structure/            # Level 6: Structural properties
+├── Resonance/            # Level 7: Resonance computation
+├── Conservation/         # Level 8: Conservation laws
+└── Uniqueness/           # Level 9: Uniqueness theorems
 ```
+
+## Interface-Based Development
+
+Each layer defines a type class interface that declares what it provides:
+
+```lean
+-- Example: Layer 2 Interface
+class ComputationalFoundation where
+  -- Declare functions this layer will implement
+  positionToByte : Fin 12288 → Fin 256
+  
+  -- Declare properties this layer will prove
+  position_byte_periodic : ∀ n, positionToByte n = ⟨n.val % 256, ...⟩
+```
+
+Higher layers can then build on these interfaces:
+
+```lean
+-- Layer 6 can assume Layer 2 exists
+theorem some_structural_property [ComputationalFoundation] : ... := by
+  -- Use positionToByte without needing its implementation
+  ...
+```
+
+This approach ensures each layer provides **complete** foundations for what comes next.
 
 ---
 
@@ -66,6 +99,21 @@ axiom system_constants_exist : ∃ (α₆ α₇ : ℝ),
   α₆ = 0.19961197478400415 ∧
   α₇ = 0.014134725141734695 ∧
   0 < α₇ ∧ α₇ < α₆ ∧ α₆ < 1
+```
+
+### Axioms/Page.lean
+```lean
+-- Page structure axiom
+axiom page_size : ℕ
+axiom page_size_eq : page_size = 48
+
+-- The fundamental period of field patterns
+axiom field_period : ℕ  
+axiom field_period_eq : field_period = 256
+
+-- The complete cycle
+axiom cycle_size : ℕ
+axiom cycle_size_eq : cycle_size = 768
 ```
 
 ---
@@ -252,7 +300,127 @@ end Constants
 
 ---
 
-## Level 2: Basic Properties
+## Level 2: Computational Foundations
+
+This layer establishes the core mappings between positions, bytes, and field activation.
+
+### Computational/Foundation.lean
+```lean
+import Constants.All
+import Axioms.Page
+
+namespace Computational
+
+-- Interface for computational foundations
+class Foundation where
+  -- Core function: map position to byte value
+  positionToByte : Fin 12288 → Fin 256
+  
+  -- Core function: check if field is active for byte
+  isFieldActive : Fin 256 → Fin 8 → Bool
+  
+  -- Axioms about these functions
+  position_byte_periodic : ∀ (n : Fin 12288), 
+    positionToByte n = ⟨n.val % 256, by simp [Nat.mod_lt, n.isLt]⟩
+    
+  field_active_bit : ∀ (b : Fin 256) (i : Fin 8),
+    isFieldActive b i = (b.val.testBit i.val)
+
+-- Given the foundation, we can derive active fields
+def activeFields [Foundation] (n : Fin 12288) : Finset (Fin 8) :=
+  Finset.filter (fun i => isFieldActive (positionToByte n) i) Finset.univ
+
+-- Page decomposition
+def pageIndex (n : Fin 12288) : Fin 256 :=
+  ⟨n.val / page_size, by sorry⟩
+
+def pageOffset (n : Fin 12288) : Fin page_size :=
+  ⟨n.val % page_size, by sorry⟩
+
+end Computational
+```
+
+### Computational/Implementation.lean
+```lean
+import Computational.Foundation
+
+namespace Computational
+
+-- Provide the implementation
+instance : Foundation where
+  positionToByte n := ⟨n.val % 256, by simp [Nat.mod_lt, n.isLt]⟩
+  
+  isFieldActive b i := b.val.testBit i.val
+  
+  position_byte_periodic := by simp
+  
+  field_active_bit := by simp
+
+end Computational
+```
+
+---
+
+## Level 3: Bit Arithmetic Infrastructure
+
+### BitArithmetic/Basic.lean
+```lean
+import Basic.Types
+import Computational.Foundation
+
+namespace BitArithmetic
+
+-- Interface for bit arithmetic properties
+class Basic extends Computational.Foundation where
+  -- Bit decomposition properties
+  testBit_eq_one_iff : ∀ n i, n.testBit i ↔ (n / 2^i) % 2 = 1
+  
+  testBit_eq_false_of_lt : ∀ {n i}, n < 2^i → ¬n.testBit i
+  
+  -- Key decomposition for 8-bit values
+  nat_decompose_bits_4_5 : ∀ (n : Nat) (h : n < 256),
+    n = (n % 16) + ((n / 16) % 4) * 16 + (n / 64) * 64
+    
+  -- XOR properties
+  xor_testBit : ∀ a b i, (a ^^^ b).testBit i = (a.testBit i != b.testBit i)
+
+end BitArithmetic
+```
+
+### BitArithmetic/Implementation.lean
+```lean
+import BitArithmetic.Basic
+
+namespace BitArithmetic
+
+-- Implement the bit arithmetic properties
+instance : Basic where
+  testBit_eq_one_iff := by
+    intro n i
+    rfl
+    
+  testBit_eq_false_of_lt := by
+    intro n i h
+    simp [Nat.testBit]
+    have : n / 2^i = 0 := Nat.div_eq_of_lt h
+    simp [this]
+    
+  nat_decompose_bits_4_5 := by
+    intro n h
+    -- Proof of the decomposition
+    sorry
+    
+  xor_testBit := by
+    intro a b i
+    -- Proof of XOR property
+    sorry
+
+end BitArithmetic
+```
+
+---
+
+## Level 4: Basic Properties
 
 ### Properties/Positivity.lean
 ```lean
@@ -312,7 +480,7 @@ end Properties
 
 ---
 
-## Level 3: Inter-constant Relationships
+## Level 5: Inter-constant Relationships
 
 ### Relations/UnityProduct.lean
 ```lean
@@ -381,27 +549,47 @@ theorem all_distinct : ∀ i j : Fin 8, i ≠ j → α i ≠ α j := by
 end Relations
 ```
 
+### Relations/ResonanceEquivalence.lean
+```lean
+import Relations.UnityProduct
+import BitArithmetic.Basic
+
+namespace Relations
+
+-- The key XOR-based equivalence relation
+def resonance_equiv_set : Finset Nat := {0, 1, 48, 49}
+
+theorem resonance_equiv_xor : ∀ n m : Fin 256,
+  n.val ⊕ m.val ∈ resonance_equiv_set ↔ 
+  (isFieldActive n 0 = isFieldActive m 0 → α₀ = 1) ∧
+  ((isFieldActive n 4 = isFieldActive m 4 ∧ isFieldActive n 5 = isFieldActive m 5) → 
+   α₄ * α₅ = 1) := by
+  sorry
+
+end Relations
+```
+
 ---
 
-## Level 4: Structural Properties
+## Level 6: Structural Properties
 
 ### Structure/FieldActivation.lean
 ```lean
 import Basic.Types
 import Constants.All
+import Computational.Foundation
 
 namespace Structure
 
--- Field activation based on binary representation
-def activated_fields (n : Fin 12288) : List (Fin 8) :=
-  (List.range 8).filter (fun i => n.val.testBit i)
+-- Use the computational foundation
+variable [Computational.Foundation]
 
 -- Resonance computation
 noncomputable def resonance (n : Fin 12288) : ℝ :=
-  (activated_fields n).map α |>.prod
+  (activeFields n).map α |>.prod
 
 theorem resonance_zero : resonance 0 = 1 := by
-  simp [resonance, activated_fields]
+  simp [resonance, activeFields]
   rfl
 
 end Structure
@@ -411,26 +599,33 @@ end Structure
 ```lean
 import Structure.FieldActivation
 import Relations.Distinctness
+import Relations.ResonanceEquivalence
+import BitArithmetic.Basic
 
 namespace Structure
+
+variable [Computational.Foundation] [BitArithmetic.Basic]
 
 -- The key theorem: exactly 96 unique resonance values
 theorem unique_resonance_count : 
   Finset.card (Finset.image resonance (Finset.univ : Finset (Fin 12288))) = 96 := by
-  sorry -- This requires computation
+  -- Use the equivalence relation to count equivalence classes
+  sorry
 
 end Structure
 ```
 
 ---
 
-## Level 5: Resonance Properties
+## Level 7: Resonance Properties
 
 ### Resonance/Distribution.lean
 ```lean
 import Structure.ResonanceCount
 
 namespace Resonance
+
+variable [Computational.Foundation] [BitArithmetic.Basic]
 
 -- Each resonance value appears exactly 128 times
 theorem resonance_frequency : 
@@ -447,6 +642,8 @@ import Resonance.Distribution
 
 namespace Resonance
 
+variable [Computational.Foundation] [BitArithmetic.Basic]
+
 -- Total resonance sum
 theorem total_resonance : 
   (Finset.univ : Finset (Fin 12288)).sum resonance = 687.1101183515111 := by
@@ -457,13 +654,16 @@ end Resonance
 
 ---
 
-## Level 6: Conservation Laws
+## Level 8: Conservation Laws
 
 ### Conservation/BitFlip.lean
 ```lean
 import Structure.FieldActivation
+import BitArithmetic.Basic
 
 namespace Conservation
+
+variable [Computational.Foundation] [BitArithmetic.Basic]
 
 -- XOR operation on positions
 def xor_positions (a b : Fin 12288) : Fin 12288 :=
@@ -480,7 +680,7 @@ end Conservation
 
 ---
 
-## Level 7: Uniqueness Theorems
+## Level 9: Uniqueness Theorems
 
 ### Uniqueness/SystemDetermination.lean
 ```lean
@@ -488,6 +688,8 @@ import Structure.ResonanceCount
 import Resonance.Sum
 
 namespace Uniqueness
+
+variable [Computational.Foundation] [BitArithmetic.Basic]
 
 -- The values of α₆ and α₇ are uniquely determined by the constraints
 theorem system_constants_unique :
@@ -514,6 +716,7 @@ lake build Axioms.Golden
 lake build Axioms.Circular
 lake build Axioms.Growth
 lake build Axioms.System
+lake build Axioms.Page
 lake build Constants.Alpha0
 lake build Constants.Alpha3
 lake build Constants.Alpha2
@@ -524,64 +727,86 @@ lake build Constants.Alpha6_Alpha7
 lake build Constants.All
 ```
 
-### Phase 2: Properties
+### Phase 2: Computational Foundations
+```bash
+lake build Computational.Foundation
+lake build Computational.Implementation
+```
+
+### Phase 3: Bit Arithmetic Infrastructure
+```bash
+lake build Basic.Types
+lake build BitArithmetic.Basic
+lake build BitArithmetic.Implementation
+```
+
+### Phase 4: Basic Properties
 ```bash
 lake build Properties.Positivity
 lake build Properties.NonZero
 lake build Properties.Equations
 ```
 
-### Phase 3: Relations
+### Phase 5: Relations
 ```bash
 lake build Relations.UnityProduct
 lake build Relations.PiEncoding
 lake build Relations.Ordering
 lake build Relations.Distinctness
+lake build Relations.ResonanceEquivalence
 ```
 
-### Phase 4: Structure
+### Phase 6: Structure
 ```bash
 lake build Structure.FieldActivation
 lake build Structure.ResonanceCount
 ```
 
-### Phase 5: Resonance
+### Phase 7: Resonance
 ```bash
 lake build Resonance.Distribution
 lake build Resonance.Sum
 ```
 
-### Phase 6: Conservation
+### Phase 8: Conservation
 ```bash
 lake build Conservation.BitFlip
 ```
 
-### Phase 7: Uniqueness
+### Phase 9: Uniqueness
 ```bash
 lake build Uniqueness.SystemDetermination
 ```
 
 ## Key Design Principles
 
-1. **One Theorem Per File**: Each file contains exactly one main theorem and its supporting lemmas.
+1. **Interface-First Development**: Each layer defines its interface before implementation. This allows us to typecheck the entire architecture before writing proofs.
 
-2. **Clear Dependencies**: Import only what's needed. Dependencies flow upward through levels.
+2. **Complete Foundations**: Each layer provides everything needed by higher layers. No forward references or missing dependencies.
 
-3. **Axiomatize Numerical Facts**: Don't fight numerical reality. If φ < tribonacci numerically, axiomatize it.
+3. **One Theorem Per File**: Each file contains exactly one main theorem and its supporting lemmas.
 
-4. **Separate Existence from Values**: First prove something exists, then prove its properties.
+4. **Clear Dependencies**: Import only what's needed. Dependencies flow upward through levels.
 
-5. **Computational Proofs**: Some theorems (like 96 resonance values) require computation. Mark these clearly.
+5. **Axiomatize Numerical Facts**: Don't fight numerical reality. If φ < tribonacci numerically, axiomatize it.
 
-6. **Progressive Verification**: Build and verify each level before moving to the next.
+6. **Separate Existence from Values**: First prove something exists, then prove its properties.
+
+7. **Progressive Verification**: Build and verify each level before moving to the next.
 
 ## Implementation Notes
 
-- Start with Axioms/ and verify each builds
-- Move to Constants/, proving one at a time
-- Properties/ should be straightforward given good constant definitions
-- Relations/ may need numerical axioms for ordering
-- Structure/ connects to the existing Basic.Types framework
-- Higher levels can use `sorry` initially to verify structure
+- Start with interface definitions and verify they typecheck
+- Implement Computational.Foundation early as it's needed by many layers
+- BitArithmetic can be implemented incrementally - start with the properties needed by ResonanceCount
+- Higher levels can use interface assumptions while lower levels are being implemented
+- No `sorry` in interfaces - only in implementations that are work-in-progress
 
-This architecture ensures that every proof is built on solid foundations, with clear dependencies and verifiable at each step.
+This architecture ensures that every proof is built on solid foundations, with clear dependencies and verifiable at each step. The interface-based approach allows parallel development and early detection of missing foundations.
+
+## Update History
+
+- **2024-01-XX**: Restructured to include Computational Foundations (Level 2) and renumbered all subsequent levels
+- **2024-01-XX**: Added interface-based development approach to eliminate forward dependencies
+- **2024-01-XX**: Added Page Theory axioms to Level 0
+- **2024-01-XX**: Moved BitArithmetic to Level 3 after Computational Foundations

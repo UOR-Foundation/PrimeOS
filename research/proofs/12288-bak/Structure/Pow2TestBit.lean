@@ -33,22 +33,24 @@ private theorem div_eq_zero_of_lt {a b : Nat} (h : a < b) : a / b = 0 := by
     apply Nat.div_eq_of_lt h
 
 -- Powers of 2 have exactly one bit set
-theorem pow2_testBit (i j : Nat) : (2^i).testBit j = (i = j) := by
+theorem pow2_testBit (i j : Nat) : Basic.Nat.testBit (2^i) j = decide (i = j) := by
   -- Unfold the definition of testBit
-  unfold Nat.testBit
+  unfold Basic.Nat.testBit
   -- Split on whether i = j
   by_cases h : i = j
   · -- Case: i = j
     subst h
-    -- Show (2^j >>> j) % 2 = 1 = true
+    -- Show (2^i >>> i) % 2 = 1 = true and decide (i = i) = true
+    simp only []
     rw [Nat.shiftRight_eq_div_pow]
-    -- 2^j / 2^j = 1
-    have h_pos : 0 < 2^j := Nat.pow_pos (by decide : 0 < 2)
+    -- 2^i / 2^i = 1
+    have h_pos : 0 < 2^i := Nat.pow_pos (by decide : 0 < 2)
     rw [Nat.div_self h_pos]
-    -- 1 % 2 = 1, and (1 = 1) = true
+    -- 1 % 2 = 1
     decide
   · -- Case: i ≠ j
-    -- We need to show ((2^i >>> j) % 2 = 1) = false
+    -- We need to show ((2^i >>> j) % 2 = 1) = false = decide (i = j)
+    simp only [h]
     -- First show (2^i >>> j) % 2 = 0
     have h_eq_zero : (2^i >>> j) % 2 = 0 := by
       rw [Nat.shiftRight_eq_div_pow]
@@ -59,13 +61,12 @@ theorem pow2_testBit (i j : Nat) : (2^i).testBit j = (i = j) := by
         have h_lt : 2^i < 2^j := Nat.pow_lt_pow_right (by decide : 1 < 2) hij
         -- So 2^i / 2^j = 0
         rw [div_eq_zero_of_lt h_lt]
-        decide
       | inr hji =>
         -- j ≤ i and j ≠ i, so j < i
         have hji' : j < i := Nat.lt_of_le_of_ne hji (Ne.symm h)
         -- Write i = j + (i - j)
         have hi_eq : i = j + (i - j) := by
-          rw [← Nat.add_sub_of_le (Nat.le_of_lt hji')]
+          omega
         rw [hi_eq, Nat.pow_add]
         -- (2^j * 2^(i-j)) / 2^j = 2^(i-j)
         have h_pos : 0 < 2^j := Nat.pow_pos (by decide : 0 < 2)
@@ -77,9 +78,8 @@ theorem pow2_testBit (i j : Nat) : (2^i).testBit j = (i = j) := by
         rw [hk, Nat.pow_succ]
         -- 2^k * 2 % 2 = 0
         exact mul_mod_self_left 2 (2^k)
-    -- Now show (0 = 1) = false
+    -- Now show that (0 = 1) = false
     rw [h_eq_zero]
-    -- (0 = 1) = false and false = (i = j) when i ≠ j
-    simp [h]
+    simp
 
 end Structure
