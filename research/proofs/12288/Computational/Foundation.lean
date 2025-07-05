@@ -17,16 +17,16 @@ open PrimeOS12288
 class Foundation where
   /-- Core function: map position to byte value -/
   positionToByte : Position → ByteValue
-  
+
   /-- Core function: check if field is active for byte -/
   isFieldActive : ByteValue → FieldIndex → Bool
-  
+
   /-- Axiom: position to byte mapping is periodic with period 256 -/
-  position_byte_periodic : ∀ (n : Position), 
+  position_byte_periodic : ∀ (n : Position),
     positionToByte n = ⟨n.val % ByteSize, by
       simp [ByteSize]
       exact Nat.mod_lt n.val (by norm_num : 0 < 256)⟩
-    
+
   /-- Axiom: field activation is determined by bit testing -/
   field_active_bit : ∀ (b : ByteValue) (i : FieldIndex),
     isFieldActive b i = b.val.testBit i.val

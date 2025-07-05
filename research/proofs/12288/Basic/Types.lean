@@ -1,11 +1,3 @@
-/-!
-# Basic Type Definitions for PrimeOS 12288 Proofs
-
-This file contains fundamental type definitions used throughout the proof system.
-It has no dependencies on other project files and provides the basic types needed
-by all levels of the proof architecture.
--/
-
 import Mathlib.Data.Fin.Basic
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Real.Basic
