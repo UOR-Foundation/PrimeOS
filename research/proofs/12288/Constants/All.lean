@@ -1,11 +1,11 @@
-import PrimeOS12288.Constants.Alpha0
-import PrimeOS12288.Constants.Alpha1
-import PrimeOS12288.Constants.Alpha2
-import PrimeOS12288.Constants.Alpha3
-import PrimeOS12288.Constants.Pi
-import PrimeOS12288.Constants.Alpha4_Alpha5
-import PrimeOS12288.Constants.Alpha6_Alpha7
-import PrimeOS12288.Constants.Distinctness
+import Constants.Alpha0
+import Constants.Alpha1
+import Constants.Alpha2
+import Constants.Alpha3
+import Constants.Pi
+import Constants.Alpha4_Alpha5
+import Constants.Alpha6_Alpha7
+import Constants.Distinctness
 
 namespace PrimeOS12288.Constants
 
@@ -32,26 +32,33 @@ theorem fieldConstant_pos (i : Fin 8) : 0 < fieldConstant i := by
   · exact α₆_pos
   · exact α₇_pos
 
+/-- All field constants are positive (alternative name) -/
+theorem all_positive (i : Fin 8) : 0 < fieldConstant i := fieldConstant_pos i
+
+/-- All field constants are nonzero -/
+theorem all_nonzero (i : Fin 8) : fieldConstant i ≠ 0 := by
+  have h := fieldConstant_pos i
+  linarith
+
 /-- Field constants satisfy their defining properties -/
 theorem fieldConstant_properties : 
   fieldConstant 0 = 1 ∧ 
   fieldConstant 1 ^ 3 = fieldConstant 1 ^ 2 + fieldConstant 1 + 1 ∧
   fieldConstant 2 ^ 2 = fieldConstant 2 + 1 ∧
-  fieldConstant 3 = 1/2 := by
+  fieldConstant 3 = 2⁻¹ := by
   simp [fieldConstant]
-  exact ⟨α₀_value, α₁_value, α₂_value, α₃_value⟩
+  refine ⟨α₀_eq_one, α₁_equation, α₂_equation, ?_⟩
+  rw [α₃_eq_half]
+  norm_num
 
-/-- Field constants 4-7 are all less than 1 -/
-theorem fieldConstant_lt_one (i : Fin 8) (hi : 3 < i.val) : fieldConstant i < 1 := by
-  interval_cases i.val
-  · simp [fieldConstant]
-    exact α₄_lt_one
-  · simp [fieldConstant]
-    exact α₅_lt_one
-  · simp [fieldConstant]
-    exact α₆_lt_one
-  · simp [fieldConstant]
-    exact α₇_lt_one
+/-- Field constants 4, 6, 7 are all less than 1, while 5 is greater -/
+theorem fieldConstant_lt_one_except_5 (i : Fin 8) : 
+  (i = 4 ∨ i = 6 ∨ i = 7) → fieldConstant i < 1 := by
+  intro hi
+  rcases hi with (h4 | h6 | h7)
+  · rw [h4]; simp [fieldConstant]; exact α₄_lt_one
+  · rw [h6]; simp [fieldConstant]; exact α₆_lt_one
+  · rw [h7]; simp [fieldConstant]; exact α₇_lt_one
 
 /-- Distinct field constants are different -/
 theorem fieldConstant_injective : Function.Injective fieldConstant := by
@@ -121,24 +128,34 @@ theorem fieldConstant_complete :
   encode π 5 (fieldConstant 5) ∧
   ∀ x : ℝ, (x = 1 ∨ x = α₁ ∨ x = α₂ ∨ x = 1/2) → 
     ∃ i : Fin 8, fieldConstant i = x := by
-  use fun r i c => c = fieldConstant i ∧ (i = 4 ∨ i = 5 → ∃ (P : ℝ → ℝ → Prop), P r c)
+  -- Define encode to capture that fieldConstant 4 and 5 are related to π
+  use fun r i c => (i = 4 → c = 1/(2*r)) ∧ (i = 5 → c = 2*r)
   constructor
-  · simp [fieldConstant]
-    use fun r c => c = α₄
-    rfl
+  · -- encode π 4 (fieldConstant 4)
+    constructor
+    · intro _
+      simp only [fieldConstant, α₄]
+    · intro h
+      -- 4 = 5 is false, so this case is vacuous
+      cases h
   · constructor
-    · simp [fieldConstant]
-      use fun r c => c = α₅
-      rfl
-    · intro x hx
+    · -- encode π 5 (fieldConstant 5)
+      constructor
+      · intro h
+        -- 5 = 4 is false, so this case is vacuous
+        cases h
+      · intro _
+        simp only [fieldConstant, α₅]
+    · -- All basic constants can be found
+      intro x hx
       rcases hx with (h1 | h2 | h3 | h4)
       · use 0
-        simp [fieldConstant, ← h1, α₀_value]
+        simp [fieldConstant, ← h1, α₀_eq_one]
       · use 1
         simp [fieldConstant, h2]
       · use 2
         simp [fieldConstant, h3]
       · use 3
-        simp [fieldConstant, ← h4, α₃_value]
+        simp [fieldConstant, ← h4, α₃_eq_half]
 
-end PrimeOS.Constants
+end PrimeOS12288.Constants

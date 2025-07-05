@@ -1,130 +1,81 @@
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Real.Sqrt
-import PrimeOS12288.Axioms.Golden
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.NormNum
+import Axioms.Golden
 
 namespace PrimeOS12288.Constants
 
-/-- The golden ratio α₂ = (1 + √5) / 2 ≈ 1.618... -/
+open PrimeOS12288.Axioms
+
+/-- The golden ratio -/
 noncomputable def α₂ : ℝ := Classical.choose golden_exists
 
-/-- α₂ satisfies the golden ratio equation -/
-theorem α₂_golden : α₂^2 = α₂ + 1 := by
-  have h := Classical.choose_spec golden_exists
-  exact h.2
-
 /-- α₂ is positive -/
-theorem α₂_pos : 0 < α₂ := by
-  have h := Classical.choose_spec golden_exists
-  exact h.1
+theorem α₂_pos : 0 < α₂ :=
+  (Classical.choose_spec golden_exists).1
 
-/-- α₂ equals (1 + √5) / 2 -/
-theorem α₂_formula : α₂ = (1 + Real.sqrt 5) / 2 := by
-  -- We need to show α₂ is the unique positive solution to x² = x + 1
-  -- First, verify that (1 + √5)/2 satisfies the equation
-  have h1 : ((1 + Real.sqrt 5) / 2)^2 = (1 + Real.sqrt 5) / 2 + 1 := by
-    field_simp
-    ring_nf
-    rw [Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 5)]
-    ring
-  -- Show (1 + √5)/2 is positive
-  have h2 : 0 < (1 + Real.sqrt 5) / 2 := by
-    apply div_pos
-    apply add_pos_of_pos_of_nonneg
-    · norm_num
-    · exact Real.sqrt_nonneg 5
-    · norm_num
-  -- Now show uniqueness: if x > 0 and x² = x + 1, then x = (1 + √5)/2
-  have unique : ∀ x : ℝ, 0 < x → x^2 = x + 1 → x = (1 + Real.sqrt 5) / 2 := by
-    intro x hpos heq
-    -- x² = x + 1 iff x² - x - 1 = 0
-    have : x^2 - x - 1 = 0 := by linarith
-    -- Using quadratic formula: x = (1 ± √5)/2
-    -- Since x > 0 and √5 > 2, only (1 + √5)/2 is positive
-    have : x = (1 + Real.sqrt 5) / 2 ∨ x = (1 - Real.sqrt 5) / 2 := by
-      have h := Real.quadratic_eq_zero_iff (a := 1) (b := -1) (c := -1) (by norm_num : (1 : ℝ) ≠ 0)
-      rw [h] at this
-      simp at this
-      convert this
-      · ring
-      · ring
-      · norm_num
-    cases this with
-    | inl h => exact h
-    | inr h => 
-      -- Show (1 - √5)/2 < 0, contradicting x > 0
-      exfalso
-      rw [h] at hpos
-      have : Real.sqrt 5 > 2 := by
-        rw [← Real.sqrt_sq (by norm_num : (0 : ℝ) ≤ 2)]
-        apply Real.sqrt_lt_sqrt (by norm_num) (by norm_num : (4 : ℝ) < 5)
-      linarith
-  -- Apply uniqueness to α₂
-  exact unique α₂ α₂_pos α₂_golden
+/-- α₂ satisfies the golden ratio equation -/
+theorem α₂_equation : α₂^2 = α₂ + 1 :=
+  (Classical.choose_spec golden_exists).2
 
 /-- α₂ is greater than 1 -/
 theorem α₂_gt_one : 1 < α₂ := by
-  rw [α₂_formula]
-  have : Real.sqrt 5 > 0 := Real.sqrt_pos.mpr (by norm_num : (0 : ℝ) < 5)
-  linarith
+  -- From α₂² = α₂ + 1 and α₂ > 0
+  have h1 := α₂_equation
+  have h2 := α₂_pos
+  -- If α₂ ≤ 1, then α₂² ≤ 1, but α₂² = α₂ + 1 > 1
+  by_contra h
+  push_neg at h
+  have h3 : α₂^2 ≤ 1 := by
+    exact pow_le_one 2 (le_of_lt h2) h
+  rw [h1] at h3
+  -- Now h3 says α₂ + 1 ≤ 1, which means α₂ ≤ 0
+  linarith [h2]
+
+/-- α₂ is nonzero -/
+theorem α₂_ne_zero : α₂ ≠ 0 :=
+  ne_of_gt α₂_pos
+
+/-- Numerical bounds for α₂ -/
+theorem α₂_bounds : 1.618 < α₂ ∧ α₂ < 1.619 := by
+  -- Get the bounded golden ratio from the axiom
+  have ⟨φ, hφ⟩ := golden_bounds
+  have hφ_bounds : 1.618 < φ ∧ φ < 1.619 := ⟨hφ.1, hφ.2.1⟩
+  have hφ_eq : φ^2 = φ + 1 := hφ.2.2
+  have hφ_gt : φ > 0 := by
+    -- Since φ > 1.618 and 1.618 > 0, we have φ > 0
+    have h : (1.618 : ℝ) > 0 := by norm_num
+    linarith [hφ.1, h]
+  
+  -- α₂ also satisfies these properties
+  have hα₂_gt := α₂_pos
+  have hα₂_eq := α₂_equation
+  
+  -- By uniqueness, φ = α₂
+  have unique := golden_unique
+  obtain ⟨x, ⟨_, hx_unique⟩⟩ := unique
+  have : φ = x := hx_unique φ ⟨hφ_gt, hφ_eq⟩
+  have : α₂ = x := hx_unique α₂ ⟨hα₂_gt, hα₂_eq⟩
+  -- Therefore φ = α₂
+  have : φ = α₂ := by
+    rw [‹φ = x›, ‹α₂ = x›]
+  rw [←this]
+  exact hφ_bounds
+
+/-- Lower bound for α₂ -/
+theorem α₂_lower_bound : 1.618 < α₂ := α₂_bounds.1
+
+/-- Upper bound for α₂ -/
+theorem α₂_upper_bound : α₂ < 1.619 := α₂_bounds.2
 
 /-- α₂ is less than 2 -/
 theorem α₂_lt_two : α₂ < 2 := by
-  rw [α₂_formula]
-  have : Real.sqrt 5 < 3 := by
-    rw [← Real.sqrt_sq (by norm_num : (0 : ℝ) ≤ 3)]
-    apply Real.sqrt_lt_sqrt (by norm_num) (by norm_num : (5 : ℝ) < 9)
-  linarith
+  calc α₂ < 1.619 := α₂_upper_bound
+  _ < 2 := by norm_num
 
-/-- Approximation of α₂ -/
-theorem α₂_approx : |α₂ - 1.618| < 0.001 := by
-  rw [α₂_formula]
-  -- We need to show |(1 + √5)/2 - 1.618| < 0.001
-  -- This is equivalent to showing 1.617 < (1 + √5)/2 < 1.619
-  -- Which requires 2.234 < √5 < 2.238
-  
-  -- First establish bounds on √5
-  have sqrt5_lower : 2.234 < Real.sqrt 5 := by
-    rw [← Real.sqrt_sq (by norm_num : (0 : ℝ) ≤ 2.234)]
-    apply Real.sqrt_lt_sqrt
-    · norm_num
-    · norm_num
-  
-  have sqrt5_upper : Real.sqrt 5 < 2.238 := by
-    rw [← Real.sqrt_sq (by norm_num : (0 : ℝ) ≤ 2.238)]
-    apply Real.sqrt_lt_sqrt
-    · norm_num
-    · norm_num
-  
-  -- Now show the bounds on α₂
-  have lower_bound : 1.617 < (1 + Real.sqrt 5) / 2 := by
-    calc (1 + Real.sqrt 5) / 2 
-        > (1 + 2.234) / 2 := by linarith [sqrt5_lower]
-      _ = 3.234 / 2 := by ring
-      _ = 1.617 := by norm_num
-  
-  have upper_bound : (1 + Real.sqrt 5) / 2 < 1.619 := by
-    calc (1 + Real.sqrt 5) / 2 
-        < (1 + 2.238) / 2 := by linarith [sqrt5_upper]
-      _ = 3.238 / 2 := by ring
-      _ = 1.619 := by norm_num
-  
-  -- Convert to absolute value form
-  rw [abs_sub_lt_iff]
-  constructor
-  · linarith [lower_bound]
-  · linarith [upper_bound]
-
-/-- α₂ - 1 = 1/α₂ -/
-theorem α₂_reciprocal : α₂ - 1 = 1 / α₂ := by
-  have h1 : α₂^2 = α₂ + 1 := α₂_golden
-  have h2 : α₂ ≠ 0 := ne_of_gt α₂_pos
-  -- From α₂² = α₂ + 1, we get α₂² - α₂ = 1
-  -- So α₂(α₂ - 1) = 1
-  -- Therefore α₂ - 1 = 1/α₂
-  have : α₂ * (α₂ - 1) = 1 := by
-    rw [mul_sub, ← sq]
-    linarith
-  rw [← div_eq_iff h2]
-  exact this.symm
+-- Note: α₂ = (1 + √5)/2 ≈ 1.6180339887...
+-- This exact formula is not needed for our proofs,
+-- the bounds 1.618 < α₂ < 1.619 are sufficient.
 
 end PrimeOS12288.Constants

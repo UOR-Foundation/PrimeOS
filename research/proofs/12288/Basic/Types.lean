@@ -1,7 +1,7 @@
 import Mathlib.Data.Fin.Basic
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Real.Basic
-import Mathlib.Data.Nat.Basic
+import Mathlib.Data.Nat.Defs
 
 namespace PrimeOS12288
 
