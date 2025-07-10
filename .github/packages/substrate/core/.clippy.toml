@@ -1,0 +1,8 @@
+# Clippy configuration for PrimeOS codec
+
+msrv = "1.65"
+warn-on-all-wildcard-imports = true
+allow-expect-in-tests = true
+allow-unwrap-in-tests = true
+allow-dbg-in-tests = true
+allow-print-in-tests = true

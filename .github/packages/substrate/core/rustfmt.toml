@@ -1,0 +1,18 @@
+# Rust formatting configuration for PrimeOS codec
+
+edition = "2021"
+max_width = 100
+use_small_heuristics = "Default"
+tab_spaces = 4
+indent_style = "Block"
+use_field_init_shorthand = true
+reorder_imports = true
+reorder_modules = true
+remove_nested_parens = true
+match_block_trailing_comma = true
+use_try_shorthand = true
+normalize_comments = true
+wrap_comments = true
+format_code_in_doc_comments = true
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"

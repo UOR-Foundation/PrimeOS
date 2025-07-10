@@ -1,0 +1,25 @@
+[package]
+name = "primeos-codec"
+version = "0.1.0"
+edition = "2021"
+authors = ["PrimeOS Contributors"]
+description = "Pure Rust implementation of the PrimeOS codec for encoding/decoding arbitrary bit streams using the 12,288-element mathematical universe"
+repository = "https://github.com/primeos/primeos"
+license = "MIT OR Apache-2.0"
+keywords = ["codec", "encoding", "primeos", "resonance", "bijective"]
+categories = ["encoding", "algorithms", "mathematics"]
+
+[dependencies]
+bitvec = "1.0"
+thiserror = "1.0"
+lazy_static = "1.4"
+hex = "0.4"
+
+[dev-dependencies]
+proptest = "1.0"
+criterion = { version = "0.5", features = ["html_reports"] }
+rand = "0.8"
+
+[[bench]]
+name = "codec_benchmarks"
+harness = false
