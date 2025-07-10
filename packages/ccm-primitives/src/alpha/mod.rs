@@ -63,7 +63,7 @@ impl<P: Float> AlphaVec<P> {
 
         let product = values[n - 2] * values[n - 1];
         let one = P::one();
-        let epsilon = <P as num_traits::Float>::epsilon();
+        let epsilon = P::epsilon();
 
         // Check relative tolerance: |product - 1| / |1| ≤ epsilon
         let relative_error = ((product - one) / one).abs();
@@ -83,11 +83,21 @@ impl<P: Float> AlphaVec<P> {
             return Err(AlphaError::InvalidLength(n));
         }
 
-        // Check all values are positive
+        // Check all values meet constraints: 0 < αᵢ ≤ 2^128 and |log₂ αᵢ| ≤ 20
         for (i, &value) in values.iter().enumerate() {
+            // Check positive
             if value <= P::zero() {
                 return Err(AlphaError::NonPositiveValue(i));
             }
+
+            // Check |log₂ αᵢ| ≤ 20 (which implicitly bounds the value)
+            let log2_value = value.log2();
+            if log2_value.abs() > P::from(20.0).unwrap() {
+                return Err(AlphaError::NonPositiveValue(i));
+            }
+
+            // Note: 2^20 < 2^128, so the log constraint is actually more restrictive
+            // than the 2^128 bound, making an explicit check unnecessary
         }
 
         // Validate unity constraint
@@ -130,9 +140,8 @@ impl<P: Float> core::ops::Deref for AlphaVec<P> {
     }
 }
 
-// Float trait implementations for common types
-impl Float for f32 {}
-
+// Float trait implementations for types that meet CCM precision requirements
+// f32 is explicitly NOT implemented as it lacks sufficient precision
 impl Float for f64 {}
 
 #[cfg(test)]

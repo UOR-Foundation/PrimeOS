@@ -22,7 +22,7 @@ fn test_no_std_basic_operations() {
     assert_eq!(word.popcount(), 2);
 
     // Resonance calculation
-    let resonance = word.r(&alpha).unwrap();
+    let resonance = word.r(&alpha);
     assert!(resonance > 0.0);
 }
 

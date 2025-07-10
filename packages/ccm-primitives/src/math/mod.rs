@@ -2,6 +2,9 @@
 
 use crate::Float;
 
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 /// Compute log₂ of a value
 pub fn log2<P: Float>(x: P) -> P {
     x.ln() / <P as num_traits::FromPrimitive>::from_f64(core::f64::consts::LN_2).unwrap()

@@ -2,6 +2,11 @@
 
 use crate::{AlphaVec, BitWord, CcmError, Float, Resonance};
 
+#[cfg(feature = "alloc")]
+use alloc::vec;
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 /// Search for the bit pattern with minimum resonance
 pub fn search_b_min<P: Float, const N: usize>(
     target: &BitWord<N>,
@@ -27,19 +32,15 @@ pub fn search_b_min<P: Float, const N: usize>(
     let mut best_candidate = candidates[0];
 
     for candidate in candidates {
-        match candidate.r(alpha) {
-            Ok(resonance) => {
-                if resonance < min_resonance {
-                    min_resonance = resonance;
-                    best_candidate = candidate;
-                } else if resonance == min_resonance {
-                    // Tie-break: choose lexicographically smallest
-                    if candidate.to_usize() < best_candidate.to_usize() {
-                        best_candidate = candidate;
-                    }
-                }
+        let resonance = candidate.r(alpha);
+        if resonance < min_resonance {
+            min_resonance = resonance;
+            best_candidate = candidate;
+        } else if resonance == min_resonance {
+            // Tie-break: choose lexicographically smallest
+            if candidate.to_usize() < best_candidate.to_usize() {
+                best_candidate = candidate;
             }
-            Err(_) => continue,
         }
     }
 
@@ -69,14 +70,10 @@ pub mod strategies {
         for i in 0..max_iterations.min(1_000_000) {
             let candidate = BitWord::<N>::from(i as u64);
 
-            match candidate.r(alpha) {
-                Ok(resonance) => {
-                    let diff = (resonance - target_resonance).abs();
-                    if diff <= tolerance {
-                        return Ok(candidate);
-                    }
-                }
-                Err(_) => continue,
+            let resonance = candidate.r(alpha);
+            let diff = (resonance - target_resonance).abs();
+            if diff <= tolerance {
+                return Ok(candidate);
             }
         }
 
@@ -90,11 +87,11 @@ pub mod strategies {
         target: P,
     ) -> Result<BitWord<N>, CcmError> {
         let mut current = start;
-        let mut current_resonance = current.r(alpha)?;
+        let mut current_resonance = current.r(alpha);
 
         // Simple hill-climbing approach
         for _ in 0..100 {
-            if (current_resonance - target).abs() < <P as num_traits::Float>::epsilon() {
+            if (current_resonance - target).abs() < P::epsilon() {
                 return Ok(current);
             }
 
@@ -106,19 +103,18 @@ pub mod strategies {
                 let mut candidate = current;
                 candidate.set_bit(bit_idx, !candidate.bit(bit_idx));
 
-                if let Ok(new_resonance) = candidate.r(alpha) {
-                    let improvement = (new_resonance - target).abs();
-                    if improvement < best_improvement {
-                        best_improvement = improvement;
-                        best_flip = Some(bit_idx);
-                    }
+                let new_resonance = candidate.r(alpha);
+                let improvement = (new_resonance - target).abs();
+                if improvement < best_improvement {
+                    best_improvement = improvement;
+                    best_flip = Some(bit_idx);
                 }
             }
 
             match best_flip {
                 Some(bit_idx) => {
                     current.set_bit(bit_idx, !current.bit(bit_idx));
-                    current_resonance = current.r(alpha)?;
+                    current_resonance = current.r(alpha);
                 }
                 None => break,
             }
@@ -141,7 +137,7 @@ mod tests {
         let result = search_b_min(&target, &alpha, None).unwrap();
 
         // Should find one of the Klein group transformations
-        let klein_values = vec![
+        let klein_values = [
             target.to_usize(),
             target.to_usize() ^ 1,
             target.to_usize() ^ 48,

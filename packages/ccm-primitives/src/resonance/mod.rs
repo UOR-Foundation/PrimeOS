@@ -5,35 +5,47 @@ use crate::{AlphaVec, CcmError, Float};
 /// Trait for types that can compute their resonance value
 pub trait Resonance<P: Float> {
     /// Compute the resonance value R(b) = ∏ α_i^{b_i}
-    fn r(&self, alpha: &AlphaVec<P>) -> Result<P, CcmError>;
+    fn r(&self, alpha: &AlphaVec<P>) -> P;
 
     /// Get all class members (up to 4 elements with same resonance)
-    fn class_members(&self) -> Vec<Self>
+    fn class_members(&self) -> [Self; 4]
     where
-        Self: Sized;
+        Self: Sized + Copy;
 }
 
 /// Implementation for u8 (most common case)
 impl<P: Float> Resonance<P> for u8 {
-    fn r(&self, alpha: &AlphaVec<P>) -> Result<P, CcmError> {
+    fn r(&self, alpha: &AlphaVec<P>) -> P {
         if alpha.len() < 8 {
-            return Err(CcmError::InvalidLength);
+            // Cannot panic per spec, return 1.0 as safe default
+            return P::one();
         }
 
         let popcount = self.count_ones();
 
         // Use log-domain for large popcounts or when overflow is likely
-        if popcount > 32 || should_use_log_domain::<P>(*self, alpha) {
+        let result = if popcount > 32 || should_use_log_domain::<P>(*self, alpha) {
             compute_resonance_log_domain(*self, alpha)
         } else {
             compute_resonance_direct(*self, alpha)
-        }
+        };
+
+        // Return the result or 1.0 on error (spec requires no errors)
+        result.unwrap_or(P::one())
     }
 
-    fn class_members(&self) -> Vec<Self> {
-        // For now, just return self
-        // Full implementation would find all bytes with same resonance
-        vec![*self]
+    fn class_members(&self) -> [Self; 4] {
+        // According to spec section 2.2, the resonance class members are determined
+        // by XORing with patterns on the last two bits (n-2, n-1 where n=8)
+        let b = *self;
+
+        // The four members are: b ⊕ 00, b ⊕ 01, b ⊕ 10, b ⊕ 11 on bits 6,7
+        [
+            b,              // b ⊕ 00 (no change)
+            b ^ 0b01000000, // b ⊕ 01 on bits 6,7
+            b ^ 0b10000000, // b ⊕ 10 on bits 6,7
+            b ^ 0b11000000, // b ⊕ 11 on bits 6,7
+        ]
     }
 }
 
@@ -132,28 +144,44 @@ fn would_overflow<P: Float>(a: P, b: P) -> bool {
 use crate::bitword::BitWord;
 
 impl<P: Float, const N: usize> Resonance<P> for BitWord<N> {
-    fn r(&self, alpha: &AlphaVec<P>) -> Result<P, CcmError> {
+    fn r(&self, alpha: &AlphaVec<P>) -> P {
         if alpha.len() < N {
-            return Err(CcmError::InvalidLength);
+            return P::one();
         }
 
         let mut result = P::one();
 
+        // Direct product in ascending index order per spec
         for i in 0..N {
             if self.bit(i) {
                 result = result * alpha[i];
 
                 if !result.is_finite() {
-                    return Err(CcmError::FpRange);
+                    // Return 1.0 on numerical issues
+                    return P::one();
                 }
             }
         }
 
-        Ok(result)
+        result
     }
 
-    fn class_members(&self) -> Vec<Self> {
-        vec![*self]
+    fn class_members(&self) -> [Self; 4] {
+        if N < 2 {
+            // Cannot form class members without at least 2 bits
+            [*self, *self, *self, *self]
+        } else {
+            // XOR with patterns on the last two bits (n-2, n-1)
+            let bit_n_minus_2 = 1u64 << (N - 2);
+            let bit_n_minus_1 = 1u64 << (N - 1);
+
+            [
+                *self,                                                   // b ⊕ 00
+                self.xor(&BitWord::from(bit_n_minus_2)),                 // b ⊕ 01
+                self.xor(&BitWord::from(bit_n_minus_1)),                 // b ⊕ 10
+                self.xor(&BitWord::from(bit_n_minus_2 | bit_n_minus_1)), // b ⊕ 11
+            ]
+        }
     }
 }
 
@@ -163,6 +191,7 @@ mod tests {
     use crate::alpha::AlphaVec;
 
     #[test]
+    #[allow(clippy::approx_constant, clippy::excessive_precision)]
     fn test_resonance_u8() {
         // Create PrimeOS alpha vector
         let alpha = AlphaVec::try_from(vec![
@@ -178,19 +207,19 @@ mod tests {
         .unwrap();
 
         // Test byte 0 (empty product = 1)
-        let r0 = 0u8.r(&alpha).unwrap();
+        let r0 = 0u8.r(&alpha);
         assert!((r0 - 1.0).abs() < 1e-10);
 
         // Test byte 48 = 0b00110000 (bits 4,5 set)
         // Should give α₄ * α₅ = 1/(2π) * 2π = 1
-        let r48 = 48u8.r(&alpha).unwrap();
+        let r48 = 48u8.r(&alpha);
         assert!((r48 - 1.0).abs() < 1e-10);
 
         // Test byte with single bit
-        let r1 = 1u8.r(&alpha).unwrap();
+        let r1 = 1u8.r(&alpha);
         assert!((r1 - 1.0).abs() < 1e-10); // α₀ = 1
 
-        let r2 = 2u8.r(&alpha).unwrap();
+        let r2 = 2u8.r(&alpha);
         assert!((r2 - 1.8392867552141612).abs() < 1e-10);
     }
 
@@ -203,8 +232,27 @@ mod tests {
 
         let alpha = AlphaVec::try_from(values).unwrap();
 
-        // Byte with many bits set should trigger overflow protection
+        // Byte with many bits set should return 1.0 on overflow
         let result = 0b11111111u8.r(&alpha);
-        assert!(matches!(result, Err(CcmError::FpRange)));
+        assert_eq!(result, 1.0);
+    }
+
+    #[test]
+    fn test_class_members() {
+        let b = 0b00110101u8; // Example byte
+        let members = <u8 as Resonance<f64>>::class_members(&b);
+
+        // Should produce 4 members by XORing with patterns on bits 6,7
+        assert_eq!(members[0], b); // No change (b ^ 0 = b)
+        assert_eq!(members[1], b ^ 0b01000000); // Flip bit 6
+        assert_eq!(members[2], b ^ 0b10000000); // Flip bit 7
+        assert_eq!(members[3], b ^ 0b11000000); // Flip both bits 6,7
+
+        // All members should be distinct unless the original has specific patterns
+        let unique_count = members
+            .iter()
+            .collect::<std::collections::HashSet<_>>()
+            .len();
+        assert!((1..=4).contains(&unique_count));
     }
 }

@@ -26,9 +26,12 @@ pub enum CcmError {
     /// Search exhausted without finding valid encoding
     SearchExhausted,
 
-    /// I/O error (only available with std feature)
+    /// I/O error
     #[cfg(feature = "std")]
-    IoError(String), // Store error message instead of the error itself
+    IoError(String),
+
+    #[cfg(not(feature = "std"))]
+    IoError(core::fmt::Error),
 
     /// Custom error with static string message
     Custom(&'static str),
@@ -50,6 +53,8 @@ impl fmt::Display for CcmError {
             Self::SearchExhausted => write!(f, "Search exhausted without finding valid encoding"),
             #[cfg(feature = "std")]
             Self::IoError(msg) => write!(f, "I/O error: {msg}"),
+            #[cfg(not(feature = "std"))]
+            Self::IoError(_) => write!(f, "I/O error"),
             Self::Custom(msg) => write!(f, "{msg}"),
         }
     }
@@ -78,6 +83,8 @@ impl PartialEq for CcmError {
             (Self::SearchExhausted, Self::SearchExhausted) => true,
             #[cfg(feature = "std")]
             (Self::IoError(a), Self::IoError(b)) => a == b,
+            #[cfg(not(feature = "std"))]
+            (Self::IoError(_), Self::IoError(_)) => true, // core::fmt::Error has no PartialEq
             (Self::Custom(a), Self::Custom(b)) => a == b,
             _ => false,
         }

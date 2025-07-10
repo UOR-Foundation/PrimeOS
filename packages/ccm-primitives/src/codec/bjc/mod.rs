@@ -5,6 +5,8 @@ use crate::page::page_of;
 use crate::{AlphaVec, BitWord, CcmError, Float, Resonance};
 
 #[cfg(feature = "alloc")]
+use alloc::vec;
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
 /// BJC packet structure
@@ -58,8 +60,15 @@ pub fn encode_bjc<P: FloatEncoding, const N: usize>(
     // Step 2: Find b_min with minimum resonance
     let b_min = find_minimum_resonance(raw, alpha)?;
 
-    // Step 3: Compute flips (XOR restricted to last 2 bits)
-    let flips = (raw.to_usize() ^ b_min.to_usize()) as u8 & 0b11;
+    // Step 3: Compute flips (XOR restricted to last 2 bits n-2, n-1)
+    let bit_mask = if N >= 2 {
+        0b11 << (N - 2) // Mask for bits n-2 and n-1
+    } else {
+        0b11
+    };
+    let flips_full = (raw.to_usize() ^ b_min.to_usize()) & bit_mask;
+    // Store flips in bits 0,1 of the flip byte
+    let flips = ((flips_full >> (N - 2)) & 0b11) as u8;
 
     // Step 4: Compute page (if k > 1)
     let page_data = if k > 1 {
@@ -70,7 +79,7 @@ pub fn encode_bjc<P: FloatEncoding, const N: usize>(
     };
 
     // Step 5: Encode r_min
-    let r_min_value = b_min.r(alpha)?;
+    let r_min_value = b_min.r(alpha);
     let r_min_bytes = encode_float(r_min_value)?;
 
     // Step 6: Compute hash if requested
@@ -119,18 +128,22 @@ pub fn decode_bjc<P: FloatEncoding, const N: usize>(
     let r_min_value: P = decode_float(&packet.r_min)?;
 
     // Find b_min by searching for the resonance value
-    let b_min = find_by_resonance(r_min_value, alpha, N)?;
+    let b_min: BitWord<N> = find_by_resonance(r_min_value, alpha, N)?;
 
     // Verify resonance matches within tolerance
-    let computed_r = b_min.r(alpha)?;
+    let computed_r = b_min.r(alpha);
     if !resonance_matches(computed_r, r_min_value) {
         return Err(CcmError::Custom("Resonance mismatch"));
     }
 
     // Apply flips to recover original
-    let mut raw = b_min;
-    let flips_mask = packet.flips as u64;
-    raw = BitWord::from(raw.to_usize() as u64 ^ flips_mask);
+    // Flips are stored in bits 0,1 of the flip byte, but apply to bits n-2,n-1
+    let flips_mask = if N >= 2 {
+        ((packet.flips & 0b11) as u64) << (N - 2)
+    } else {
+        packet.flips as u64
+    };
+    let raw = BitWord::from(b_min.to_usize() as u64 ^ flips_mask);
 
     // Verify hash if present
     if let Some(expected_hash) = &packet.hash {
@@ -152,24 +165,21 @@ fn find_minimum_resonance<P: FloatEncoding, const N: usize>(
     raw: &BitWord<N>,
     alpha: &AlphaVec<P>,
 ) -> Result<BitWord<N>, CcmError> {
-    let klein_group = [0u64, 1, 48, 49]; // V₄ = {0, 1, 48, 49}
-    let raw_value = raw.to_usize() as u64;
+    // Generate class members using XOR on the last two bits (n-2, n-1)
+    let class_members = <BitWord<N> as Resonance<P>>::class_members(raw);
 
     let mut min_resonance = P::infinity();
-    let mut b_min = *raw;
+    let mut b_min = class_members[0];
 
-    for &mask in &klein_group {
-        let candidate_value = raw_value ^ (mask & 0b11); // Restrict to last 2 bits
-        let candidate = BitWord::<N>::from(candidate_value);
-
-        let resonance = candidate.r(alpha)?;
+    for &candidate in &class_members {
+        let resonance = candidate.r(alpha);
 
         if resonance < min_resonance {
             min_resonance = resonance;
             b_min = candidate;
         } else if resonance == min_resonance {
-            // Tie-breaking: choose numerically smallest
-            if candidate_value < b_min.to_usize() as u64 {
+            // Tie-breaking: choose numerically smallest (big-endian per spec)
+            if candidate.to_usize() < b_min.to_usize() {
                 b_min = candidate;
             }
         }
@@ -182,22 +192,13 @@ fn find_minimum_resonance<P: FloatEncoding, const N: usize>(
 fn find_by_resonance<P: FloatEncoding, const N: usize>(
     target: P,
     alpha: &AlphaVec<P>,
-    n: usize,
+    _n: usize,
 ) -> Result<BitWord<N>, CcmError> {
-    // In a real implementation, this would use the search module
-    // For now, brute force search
-    let max = if n == 64 { !0u64 } else { (1u64 << n) - 1 };
+    use crate::codec::search::strategies::binary_search;
 
-    for i in 0..=max {
-        let candidate = BitWord::<N>::from(i);
-        let resonance = candidate.r(alpha)?;
-
-        if resonance_matches(resonance, target) {
-            return Ok(candidate);
-        }
-    }
-
-    Err(CcmError::SearchExhausted)
+    // Use the search module's binary search strategy
+    let tolerance = P::epsilon() * target.abs();
+    binary_search::<P, N>(target, alpha, tolerance)
 }
 
 /// Check if two resonance values match within tolerance
@@ -206,10 +207,9 @@ fn resonance_matches<P: FloatEncoding>(a: P, b: P) -> bool {
 
     // 2 ulp for f64, 1 ulp for binary128
     let tolerance = if cfg!(feature = "binary128") {
-        <P as num_traits::Float>::epsilon()
+        P::epsilon()
     } else {
-        <P as num_traits::Float>::epsilon()
-            * <P as num_traits::FromPrimitive>::from_f64(2.0).unwrap()
+        P::epsilon() * <P as num_traits::FromPrimitive>::from_f64(2.0).unwrap()
     };
 
     approx_eq(a, b, tolerance)
@@ -221,24 +221,12 @@ pub trait FloatEncoding: Float {
     fn decode_bytes(bytes: &[u8]) -> Result<Self, CcmError>;
 }
 
-impl FloatEncoding for f32 {
-    fn encode_bytes(&self) -> Vec<u8> {
-        self.to_le_bytes().to_vec()
-    }
-
-    fn decode_bytes(bytes: &[u8]) -> Result<Self, CcmError> {
-        if bytes.len() != 4 {
-            return Err(CcmError::Custom("Invalid f32 encoding"));
-        }
-        let mut arr = [0u8; 4];
-        arr.copy_from_slice(bytes);
-        Ok(f32::from_le_bytes(arr))
-    }
-}
+// f32 is not implemented as it lacks sufficient precision for CCM
 
 impl FloatEncoding for f64 {
     fn encode_bytes(&self) -> Vec<u8> {
-        self.to_le_bytes().to_vec()
+        // Network order (big-endian) as per spec section 4.1
+        self.to_be_bytes().to_vec()
     }
 
     fn decode_bytes(bytes: &[u8]) -> Result<Self, CcmError> {
@@ -247,7 +235,8 @@ impl FloatEncoding for f64 {
         }
         let mut arr = [0u8; 8];
         arr.copy_from_slice(bytes);
-        Ok(f64::from_le_bytes(arr))
+        // Network order (big-endian) as per spec section 4.1
+        Ok(f64::from_be_bytes(arr))
     }
 }
 
@@ -262,13 +251,21 @@ fn decode_float<P: FloatEncoding>(bytes: &[u8]) -> Result<P, CcmError> {
 }
 
 /// Encode page index for multi-channel
-fn encode_page(page: usize, _k: usize) -> Result<Vec<u8>, CcmError> {
-    // Simple encoding: store page as variable-length integer
-    let mut bytes = Vec::new();
+fn encode_page(page: usize, k: usize) -> Result<Vec<u8>, CcmError> {
+    // Spec section 4.3: encode page ∈ ℤ/k as big-endian integer (⌈log₂k/8⌉ bytes)
+    if k <= 1 {
+        return Ok(Vec::new());
+    }
+
+    let log2_k = <f64 as num_traits::Float>::log2(k as f64).ceil() as u32;
+    let num_bytes = log2_k.div_ceil(8) as usize;
+
+    let mut bytes = vec![0u8; num_bytes];
     let mut value = page;
 
-    while value > 0 {
-        bytes.push((value & 0xFF) as u8);
+    // Write as big-endian
+    for i in (0..num_bytes).rev() {
+        bytes[i] = (value & 0xFF) as u8;
         value >>= 8;
     }
 

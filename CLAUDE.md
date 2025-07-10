@@ -8,6 +8,8 @@ PrimeOS is the reference implementation of Coherence-Centric Mathematics (CCM). 
 
 # Development
 
+- This is a production system. All code must be production-ready.
+
 - Any changes to packages/ require the modified package to be:
   1. Typechecked: `cargo check --all-features`
   2. Linted: `cargo clippy --all-features`
@@ -17,6 +19,8 @@ PrimeOS is the reference implementation of Coherence-Centric Mathematics (CCM). 
   4. `cargo test`
 
 - Do not run tests on code with placeholders or simplifications, as they will fail.
+
+- No fallbacks are allowed if they shortcut any of the specifications. 
 
 
 ---

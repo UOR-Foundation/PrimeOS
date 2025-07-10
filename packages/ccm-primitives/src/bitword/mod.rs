@@ -50,6 +50,11 @@ impl<const N: usize> BitWord<N> {
             }
         }
     }
+
+    /// XOR with another BitWord (required by spec)
+    pub fn xor(&self, rhs: &Self) -> Self {
+        *self ^ *rhs
+    }
 }
 
 impl<const N: usize> From<u64> for BitWord<N> {

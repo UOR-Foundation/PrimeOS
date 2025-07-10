@@ -14,29 +14,31 @@ pub trait Coherence<P: Float> {
 }
 
 /// Grade decomposition trait for multivectors
-pub trait Graded {
+pub trait Graded<P: Float> {
     /// Get the grade-k component
     fn grade(&self, k: usize) -> Self;
 
     /// Get the maximum grade
     fn max_grade(&self) -> usize;
+
+    /// Get the L2 norm squared of the grade-k component
+    fn grade_norm_sq(&self, k: usize) -> P;
 }
 
 /// Blanket implementation for types with grade decomposition
 impl<T, P> Coherence<P> for T
 where
-    T: Graded + Clone,
+    T: Graded<P> + Clone,
     P: Float,
 {
     fn coherence_norm_sq(&self) -> P {
         let mut sum = P::zero();
 
-        // Sum over all grades
+        // According to spec section 2.4:
+        // ‖x‖²_c = Σ_k ‖x_k‖²_ℓ²
         for k in 0..=self.max_grade() {
-            let _grade_k = self.grade(k);
-            // In the actual implementation, we would compute the inner product
-            // For now, this is a placeholder
-            sum = sum + P::one(); // Placeholder
+            let grade_k_norm_sq = self.grade_norm_sq(k);
+            sum = sum + grade_k_norm_sq;
         }
 
         sum
@@ -54,7 +56,7 @@ mod tests {
         grades: Vec<usize>,
     }
 
-    impl Graded for SimpleMultivector {
+    impl Graded<f64> for SimpleMultivector {
         fn grade(&self, k: usize) -> Self {
             let mut filtered_components = Vec::new();
             let mut filtered_grades = Vec::new();
@@ -75,6 +77,16 @@ mod tests {
         fn max_grade(&self) -> usize {
             *self.grades.iter().max().unwrap_or(&0)
         }
+
+        fn grade_norm_sq(&self, k: usize) -> f64 {
+            let mut sum = 0.0;
+            for (i, &grade) in self.grades.iter().enumerate() {
+                if grade == k {
+                    sum += self.components[i] * self.components[i];
+                }
+            }
+            sum
+        }
     }
 
     #[test]
@@ -85,6 +97,25 @@ mod tests {
         };
 
         // This will use the blanket implementation
-        let _norm_sq: f64 = mv.coherence_norm_sq();
+        let norm_sq: f64 = mv.coherence_norm_sq();
+        // Each component contributes its square: 1² + 2² + 3² = 1 + 4 + 9 = 14
+        assert_eq!(norm_sq, 14.0);
+
+        let norm = mv.coherence_norm();
+        assert!((norm - 14.0_f64.sqrt()).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_grade_orthogonality() {
+        // Test that different grades contribute independently to coherence norm
+        let mv = SimpleMultivector {
+            components: vec![3.0, 4.0, 0.0, 0.0],
+            grades: vec![0, 0, 1, 1],
+        };
+
+        // Grade 0: 3² + 4² = 9 + 16 = 25
+        // Grade 1: 0² + 0² = 0
+        let norm_sq: f64 = mv.coherence_norm_sq();
+        assert_eq!(norm_sq, 25.0);
     }
 }

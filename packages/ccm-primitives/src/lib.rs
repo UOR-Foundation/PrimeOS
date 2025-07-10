@@ -31,6 +31,9 @@ pub use error::CcmError;
 pub use page::{inject_page, page_of};
 pub use resonance::Resonance;
 
+#[cfg(feature = "sha2")]
+pub use hash::{sha256, verify_sha256};
+
 // Common trait bounds used throughout the crate
 pub trait Float:
     num_traits::Float + num_traits::FromPrimitive + core::fmt::Debug + core::fmt::Display + Copy
