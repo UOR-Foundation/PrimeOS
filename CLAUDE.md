@@ -4,6 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+PrimeOS is the reference implementation of Coherence-Centric Mathematics (CCM). PrimeOS leverages CCM as the basis of its operating system API. 
+
+# Development
+
+- Any changes to packages/ require the modified package to be:
+  1. Typechecked: `cargo check --all-features`
+  2. Linted: `cargo clippy --all-features`
+  3. Formatted: `cargo fmt --all`
+
+- Any placeholders or simplifications must be replaced with their corrected implementation before testing:
+  4. `cargo test`
+
+- Do not run tests on code with placeholders or simplifications, as they will fail.
+
+
+---
+
 ## 0 · Notational preamble
 
 * `ℝ, ℂ, ℕ, ℕ+` – real, complex, natural, positive naturals
