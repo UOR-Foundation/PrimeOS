@@ -30,7 +30,7 @@ version         = "1.0.0"
 edition         = "2021"
 license         = "MIT"
 description     = "Core primitives for Coherence‑Centric Mathematics (CCM)."
-repository      = "https://git.example.org/ccm/ccm-primitives"
+repository      = "https://github.com/UOR-Foundation/PrimeOS"
 
 [features]
 default   = ["std", "sha2"]

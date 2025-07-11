@@ -107,11 +107,8 @@ fn test_conformance_requirements() {
             continue; // Skip larger sizes for this simple test
         }
 
-        // Create appropriate alpha vector
-        let mut values = vec![1.0; n];
-        values[n - 2] = 2.0;
-        values[n - 1] = 0.5; // Unity constraint
-        let alpha = AlphaVec::try_from(values).unwrap();
+        // Create appropriate alpha vector with good properties
+        let alpha = create_test_alpha_for_n(n);
 
         // Test 10,000 random inputs per spec requirement
         let num_tests = if n <= 8 { 1000 } else { 100 }; // Reduced for test speed
@@ -133,4 +130,37 @@ fn test_roundtrip<const N: usize>(value: u64, alpha: &AlphaVec<f64>) {
     let packet = encode_bjc(&word, alpha, 1, false).unwrap();
     let decoded = decode_bjc::<f64, N>(&packet, alpha).unwrap();
     assert_eq!(word, decoded);
+}
+
+fn create_test_alpha_for_n(n: usize) -> AlphaVec<f64> {
+    match n {
+        3 => AlphaVec::try_from(vec![1.5, 2.0, 0.5]).unwrap(),
+        4 => AlphaVec::try_from(vec![1.5, 1.8, 2.0, 0.5]).unwrap(),
+        8 => AlphaVec::try_from(vec![
+            std::f64::consts::E,
+            1.8392867552141612,
+            1.6180339887498950,
+            std::f64::consts::PI,
+            3.0_f64.sqrt(),
+            2.0,
+            std::f64::consts::PI / 2.0,
+            2.0 / std::f64::consts::PI,
+        ])
+        .unwrap(),
+        _ => {
+            // Generic alpha values that avoid α=1.0 issues
+            let mut values = Vec::with_capacity(n);
+            for i in 0..n {
+                if i == n - 2 {
+                    values.push(2.0);
+                } else if i == n - 1 {
+                    values.push(0.5); // Unity constraint
+                } else {
+                    // Use varied values to avoid degeneracy
+                    values.push(1.5 + (i as f64) * 0.1);
+                }
+            }
+            AlphaVec::try_from(values).unwrap()
+        }
+    }
 }

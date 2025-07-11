@@ -15,7 +15,19 @@ pub fn search_b_min<P: Float, const N: usize>(
 ) -> Result<BitWord<N>, CcmError> {
     let candidates = search_space.unwrap_or_else(|| {
         // Default: search Klein group transformations
-        let klein_masks = vec![0u64, 1, 48, 49];
+        // For N-bit words, Klein group is formed by XORing bits N-2 and N-1
+        let klein_masks = if N >= 2 {
+            let bit_n_minus_2 = 1u64 << (N - 2);
+            let bit_n_minus_1 = 1u64 << (N - 1);
+            vec![
+                0,                             // 00
+                bit_n_minus_2,                 // 01
+                bit_n_minus_1,                 // 10
+                bit_n_minus_2 | bit_n_minus_1, // 11
+            ]
+        } else {
+            vec![0]
+        };
         let target_value = target.to_usize() as u64;
 
         klein_masks
@@ -130,18 +142,28 @@ mod tests {
 
     #[test]
     fn test_search_b_min() {
-        let alpha =
-            AlphaVec::try_from(vec![1.0, 1.618, 0.618, 1.414, 0.707, 1.0, 0.5, 2.0]).unwrap();
+        let alpha = AlphaVec::try_from(vec![
+            std::f64::consts::E,        // e
+            1.8392867552141612,         // Tribonacci
+            1.6180339887498950,         // Golden ratio
+            std::f64::consts::PI,       // π
+            3.0_f64.sqrt(),             // √3
+            2.0,                        // 2
+            std::f64::consts::PI / 2.0, // π/2
+            2.0 / std::f64::consts::PI, // 2/π (unity)
+        ])
+        .unwrap();
 
         let target = BitWord::<8>::from(0b10110010u8);
         let result = search_b_min(&target, &alpha, None).unwrap();
 
         // Should find one of the Klein group transformations
+        // For 8-bit, Klein group uses bits 6 and 7
         let klein_values = [
             target.to_usize(),
-            target.to_usize() ^ 1,
-            target.to_usize() ^ 48,
-            target.to_usize() ^ 49,
+            target.to_usize() ^ 0b01000000, // bit 6
+            target.to_usize() ^ 0b10000000, // bit 7
+            target.to_usize() ^ 0b11000000, // bits 6 and 7
         ];
 
         assert!(klein_values.contains(&result.to_usize()));

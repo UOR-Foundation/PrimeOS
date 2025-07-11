@@ -60,6 +60,15 @@ pub fn encode_bjc<P: FloatEncoding, const N: usize>(
     // Step 2: Find b_min with minimum resonance
     let b_min = find_minimum_resonance(raw, alpha)?;
 
+    // Debug output
+    if N == 8 && raw.to_usize() == 0x28 {
+        eprintln!(
+            "DEBUG encode 0x28: b_min={}, resonance={}",
+            b_min.to_usize(),
+            b_min.r(alpha)
+        );
+    }
+
     // Step 3: Compute flips (XOR restricted to last 2 bits n-2, n-1)
     let bit_mask = if N >= 2 {
         0b11 << (N - 2) // Mask for bits n-2 and n-1
@@ -127,14 +136,14 @@ pub fn decode_bjc<P: FloatEncoding, const N: usize>(
     // Decode r_min
     let r_min_value: P = decode_float(&packet.r_min)?;
 
-    // Find b_min by searching for the resonance value
-    let b_min: BitWord<N> = find_by_resonance(r_min_value, alpha, N)?;
+    // The BJC spec requires deterministic encoding/decoding
+    // When multiple Klein groups have the same minimum resonance,
+    // the encoder uses the first valid b_min (in lexicographic order)
+    // that can produce the input through valid flips.
+    // The decoder must use the same logic.
 
-    // Verify resonance matches within tolerance
-    let computed_r = b_min.r(alpha);
-    if !resonance_matches(computed_r, r_min_value) {
-        return Err(CcmError::Custom("Resonance mismatch"));
-    }
+    // Find all possible b_min values with the target resonance
+    let b_min_candidates: Vec<BitWord<N>> = find_all_by_resonance(r_min_value, alpha, N)?;
 
     // Apply flips to recover original
     // Flips are stored in bits 0,1 of the flip byte, but apply to bits n-2,n-1
@@ -143,21 +152,61 @@ pub fn decode_bjc<P: FloatEncoding, const N: usize>(
     } else {
         packet.flips as u64
     };
-    let raw = BitWord::from(b_min.to_usize() as u64 ^ flips_mask);
 
-    // Verify hash if present
-    if let Some(expected_hash) = &packet.hash {
-        let mut data = Vec::new();
-        data.push(packet.n_bits);
-        data.push(packet.log2_k);
-        data.extend_from_slice(&packet.r_min);
-        data.push(packet.flips);
-        data.extend_from_slice(&packet.page);
+    // Try all candidates and collect valid decodings
+    let mut valid_decodings: Vec<BitWord<N>> = Vec::new();
 
-        verify_sha256(&data, expected_hash)?;
+    for b_min in b_min_candidates {
+        // Apply flips to get the candidate original value
+        let candidate_raw = BitWord::from(b_min.to_usize() as u64 ^ flips_mask);
+
+        // Check if this b_min is valid for the candidate
+        // by verifying it's the minimum in candidate's Klein group
+        let class_members = <BitWord<N> as Resonance<P>>::class_members(&candidate_raw);
+
+        let mut min_resonance = P::infinity();
+        let mut min_member = class_members[0];
+
+        for &member in &class_members {
+            let r = member.r(alpha);
+            if r < min_resonance
+                || (r == min_resonance && member.to_usize() < min_member.to_usize())
+            {
+                min_resonance = r;
+                min_member = member;
+            }
+        }
+
+        // Check if b_min is the minimum member
+        if min_member == b_min {
+            // Valid decoding found!
+            valid_decodings.push(candidate_raw);
+        }
     }
 
-    Ok(raw)
+    // If we found valid decodings, return the lexicographically smallest one
+    // (This ensures deterministic decoding when there are ties)
+    if !valid_decodings.is_empty() {
+        valid_decodings.sort_by_key(|b| b.to_usize());
+        let raw = valid_decodings[0];
+
+        // Verify hash if present
+        if let Some(expected_hash) = &packet.hash {
+            let mut data = Vec::new();
+            data.push(packet.n_bits);
+            data.push(packet.log2_k);
+            data.extend_from_slice(&packet.r_min);
+            data.push(packet.flips);
+            data.extend_from_slice(&packet.page);
+
+            verify_sha256(&data, expected_hash)?;
+        }
+
+        return Ok(raw);
+    }
+
+    // If no valid candidate found, return error
+    Err(CcmError::Custom("No valid decoding found"))
 }
 
 /// Find the Klein group element with minimum resonance
@@ -165,9 +214,13 @@ fn find_minimum_resonance<P: FloatEncoding, const N: usize>(
     raw: &BitWord<N>,
     alpha: &AlphaVec<P>,
 ) -> Result<BitWord<N>, CcmError> {
-    // Generate class members using XOR on the last two bits (n-2, n-1)
+    // For bijectivity, we need a deterministic way to choose b_min
+    // when multiple Klein groups have the same minimum resonance.
+
+    // The input is in exactly one Klein group
     let class_members = <BitWord<N> as Resonance<P>>::class_members(raw);
 
+    // Find the member with minimum resonance in this Klein group
     let mut min_resonance = P::infinity();
     let mut b_min = class_members[0];
 
@@ -178,41 +231,93 @@ fn find_minimum_resonance<P: FloatEncoding, const N: usize>(
             min_resonance = resonance;
             b_min = candidate;
         } else if resonance == min_resonance {
-            // Tie-breaking: choose numerically smallest (big-endian per spec)
+            // Tie-breaking: choose numerically smallest
             if candidate.to_usize() < b_min.to_usize() {
                 b_min = candidate;
             }
         }
     }
 
+    // Return the b_min from this Klein group
+    // The flips will encode which member of the Klein group we started from
     Ok(b_min)
 }
 
-/// Find a BitWord with the given resonance value
-fn find_by_resonance<P: FloatEncoding, const N: usize>(
+/// Find all BitWords that are minimum in their Klein group with the given resonance
+fn find_all_by_resonance<P: FloatEncoding, const N: usize>(
     target: P,
     alpha: &AlphaVec<P>,
     _n: usize,
-) -> Result<BitWord<N>, CcmError> {
-    use crate::codec::search::strategies::binary_search;
+) -> Result<Vec<BitWord<N>>, CcmError> {
+    // Search for the specific b_min that was encoded
+    // This must be the Klein group member with:
+    // 1. Minimum resonance in its Klein group
+    // 2. Resonance matching the target
+    // 3. Lexicographically smallest among all such candidates
 
-    // Use the search module's binary search strategy
-    let tolerance = P::epsilon() * target.abs();
-    binary_search::<P, N>(target, alpha, tolerance)
-}
-
-/// Check if two resonance values match within tolerance
-fn resonance_matches<P: FloatEncoding>(a: P, b: P) -> bool {
-    use crate::math::approx_eq;
-
-    // 2 ulp for f64, 1 ulp for binary128
-    let tolerance = if cfg!(feature = "binary128") {
-        P::epsilon()
+    let tolerance = if target.abs() > P::epsilon() {
+        P::epsilon() * target.abs()
     } else {
-        P::epsilon() * <P as num_traits::FromPrimitive>::from_f64(2.0).unwrap()
+        P::epsilon()
     };
 
-    approx_eq(a, b, tolerance)
+    // If N < 2, there's only one possible value per resonance
+    if N < 2 {
+        for i in 0u64..(1u64 << N) {
+            let candidate = BitWord::<N>::from(i);
+            let resonance = candidate.r(alpha);
+            if (resonance - target).abs() <= tolerance {
+                return Ok(vec![candidate]);
+            }
+        }
+        return Err(CcmError::SearchExhausted);
+    }
+
+    // For N >= 2, we need to find all Klein groups where the minimum resonance matches target
+    let num_base_bits = N.saturating_sub(2);
+    let num_representatives = 1u64 << num_base_bits;
+
+    let mut candidates: Vec<BitWord<N>> = Vec::new();
+
+    for base in 0..num_representatives {
+        // For this base pattern (bits 0 through N-3), check all 4 Klein group members
+        let representative = BitWord::<N>::from(base);
+        let class_members = <BitWord<N> as Resonance<P>>::class_members(&representative);
+
+        // Find the member with minimum resonance in this Klein group
+        let mut min_resonance = P::infinity();
+        let mut min_member = class_members[0];
+
+        for &member in &class_members {
+            let r = member.r(alpha);
+            if r < min_resonance
+                || (r == min_resonance && member.to_usize() < min_member.to_usize())
+            {
+                min_resonance = r;
+                min_member = member;
+            }
+        }
+
+        // Check if this Klein group's minimum resonance matches our target
+        let diff = (min_resonance - target).abs();
+        if diff <= tolerance {
+            // Debug output (disabled)
+            // if target.abs() < P::from(0.71).unwrap() && target.abs() > P::from(0.70).unwrap() {
+            //     eprintln!("DEBUG: Klein group {:?} has min_member={}, min_resonance={}",
+            //              class_members.iter().map(|m| m.to_usize()).collect::<Vec<_>>(),
+            //              min_member.to_usize(), min_resonance);
+            // }
+            candidates.push(min_member);
+        }
+    }
+
+    // Return all candidates
+    if !candidates.is_empty() {
+        candidates.sort_by_key(|b| b.to_usize());
+        return Ok(candidates);
+    }
+
+    Err(CcmError::SearchExhausted)
 }
 
 /// Trait for types that can be encoded/decoded as bytes
@@ -278,8 +383,17 @@ mod tests {
 
     #[test]
     fn test_encode_decode_roundtrip() {
-        let alpha =
-            AlphaVec::try_from(vec![1.0, 1.618, 0.618, 1.414, 0.707, 1.0, 0.5, 2.0]).unwrap();
+        let alpha = AlphaVec::try_from(vec![
+            std::f64::consts::E,        // e
+            1.8392867552141612,         // Tribonacci
+            1.6180339887498950,         // Golden ratio
+            std::f64::consts::PI,       // π
+            3.0_f64.sqrt(),             // √3
+            2.0,                        // 2
+            std::f64::consts::PI / 2.0, // π/2
+            2.0 / std::f64::consts::PI, // 2/π (unity)
+        ])
+        .unwrap();
 
         let raw = BitWord::<8>::from(0b10110010u8);
         let packet = encode_bjc(&raw, &alpha, 1, false).unwrap();

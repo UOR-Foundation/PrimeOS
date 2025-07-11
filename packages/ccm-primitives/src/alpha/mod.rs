@@ -1,7 +1,8 @@
 //! Alpha vector representation and validation
 
 use crate::{error::CcmError, Float};
-use core::convert::TryFrom;
+
+pub mod constants;
 
 #[cfg(feature = "alloc")]
 use alloc::{boxed::Box, vec::Vec};
@@ -117,7 +118,7 @@ impl<P: Float> AlphaVec<P> {
     }
 }
 
-#[cfg(feature = "alloc")]
+#[cfg(any(feature = "alloc", feature = "std"))]
 impl<P: Float> TryFrom<Vec<P>> for AlphaVec<P> {
     type Error = AlphaError;
 
@@ -173,14 +174,17 @@ mod tests {
         let result = AlphaVec::<f64>::new(values);
         assert!(matches!(result, Err(AlphaError::InvalidLength(2))));
 
-        // Too long (without binary128 feature)
+        // Too long
+        let max_len = AlphaVec::<f64>::max_len();
         let mut values = Vec::new();
-        for i in 0..65 {
+        for i in 0..(max_len + 1) {
             values.push((i + 1) as f64);
         }
-        values[63] = 1.0;
-        values[64] = 1.0; // Ensure unity constraint
+        // Ensure unity constraint for last two values
+        let n = values.len();
+        values[n - 2] = 2.0;
+        values[n - 1] = 0.5;
         let result = AlphaVec::new(values.into_boxed_slice());
-        assert!(matches!(result, Err(AlphaError::InvalidLength(65))));
+        assert!(matches!(result, Err(AlphaError::InvalidLength(_))));
     }
 }

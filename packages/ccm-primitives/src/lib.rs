@@ -21,9 +21,13 @@ pub mod resonance;
 #[cfg(test)]
 mod tests;
 
+pub mod test_vectors;
+
 // Re-export core types and functions
 pub use alpha::{AlphaError, AlphaVec};
-pub use bitword::{BitWord, BitWordDyn};
+pub use bitword::BitWord;
+#[cfg(feature = "alloc")]
+pub use bitword::BitWordDyn;
 pub use codec::bjc::{decode_bjc, encode_bjc, BjcPacket, FloatEncoding};
 pub use codec::search::search_b_min;
 pub use coherence::Coherence;

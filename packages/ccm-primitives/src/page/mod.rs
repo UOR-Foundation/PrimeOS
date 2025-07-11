@@ -4,29 +4,19 @@ use crate::bitword::BitWord;
 
 /// Get the page index for a given bit pattern
 /// Page = lexicographic position among patterns with same popcount
-/// Uses combinatorial ranking algorithm for O(n) complexity
+///
+/// For a k-combination represented by positions c_1 < c_2 < ... < c_k,
+/// the rank is: sum(C(c_i, i)) for i = 1..k
 pub fn page_of<const N: usize>(word: BitWord<N>) -> usize {
-    let popcount = word.popcount() as usize;
-    if popcount == 0 {
-        return 0;
-    }
-
-    // Combinatorial ranking: count patterns with same popcount that come before this one
     let mut rank = 0;
-    let mut remaining_ones = popcount;
+    let mut k = 1; // 1-indexed for standard formula
 
-    // Process bits from most significant to least significant
-    for i in (0..N).rev() {
-        if word.bit(i) {
-            // This bit is set. Count all patterns with a 0 here
-            if remaining_ones > 0 && i >= remaining_ones - 1 {
-                rank += binomial(i, remaining_ones - 1);
-            }
-            remaining_ones -= 1;
-
-            if remaining_ones == 0 {
-                break;
-            }
+    // Find positions of set bits in ascending order
+    for pos in 0..N {
+        if word.bit(pos) {
+            // Add C(pos, k) to rank
+            rank += binomial(pos, k);
+            k += 1;
         }
     }
 
@@ -35,7 +25,9 @@ pub fn page_of<const N: usize>(word: BitWord<N>) -> usize {
 
 /// Inject a page index to create a bit pattern
 /// Inverse of page_of - creates the nth pattern with given popcount
-/// Uses combinatorial unranking algorithm for O(n) complexity
+///
+/// Finds the k-combination with the given rank using the inverse
+/// of the combinatorial number system
 pub fn inject_page<const N: usize>(page: usize, popcount: usize) -> Option<BitWord<N>> {
     if popcount > N {
         return None;
@@ -50,29 +42,22 @@ pub fn inject_page<const N: usize>(page: usize, popcount: usize) -> Option<BitWo
         return None;
     }
 
-    // Combinatorial unranking: build the bit pattern from the rank
     let mut result = 0u64;
-    let mut remaining_rank = page;
-    let mut remaining_ones = popcount;
+    let mut rank = page;
 
-    // Process positions from most significant to least significant
-    for i in (0..N).rev() {
-        if remaining_ones == 0 {
-            break;
+    // Find positions for each of the k bits
+    for i in (1..=popcount).rev() {
+        // Find largest c such that C(c, i) <= rank
+        let mut c = i - 1;
+        while c < N && binomial(c + 1, i) <= rank {
+            c += 1;
         }
 
-        // Check if we should set this bit
-        if i >= remaining_ones - 1 {
-            let count_if_zero = binomial(i, remaining_ones - 1);
+        // Set bit at position c
+        result |= 1u64 << c;
 
-            if remaining_rank >= count_if_zero {
-                // Set this bit to 1
-                result |= 1u64 << i;
-                remaining_rank -= count_if_zero;
-                remaining_ones -= 1;
-            }
-            // else bit remains 0
-        }
+        // Subtract C(c, i) from rank
+        rank -= binomial(c, i);
     }
 
     Some(BitWord::from(result))
@@ -131,6 +116,15 @@ mod tests {
         // All patterns with popcount 0 have page 0
         assert_eq!(page_of(BitWord::<8>::from(0b00000000u8)), 0);
 
+        // Debug: print rankings for patterns with popcount 1
+        println!("\nPatterns with popcount 1:");
+        for i in 0..8 {
+            let pattern = 1u8 << i;
+            let word = BitWord::<8>::from(pattern);
+            let page = page_of(word);
+            println!("  0b{:08b} (bit {} set) -> page {}", pattern, i, page);
+        }
+
         // First pattern with popcount 1
         assert_eq!(page_of(BitWord::<8>::from(0b00000001u8)), 0);
 
@@ -143,6 +137,14 @@ mod tests {
 
     #[test]
     fn test_inject_page() {
+        // Debug: print patterns with popcount 2
+        println!("\nPatterns with popcount 2:");
+        for page in 0..10 {
+            if let Some(pattern) = inject_page::<8>(page, 2) {
+                println!("  page {} -> 0b{:08b}", page, pattern.to_usize());
+            }
+        }
+
         // Get the first pattern with popcount 2
         let pattern = inject_page::<8>(0, 2).unwrap();
         assert_eq!(pattern.to_usize(), 0b00000011);

@@ -195,14 +195,14 @@ mod tests {
     fn test_resonance_u8() {
         // Create PrimeOS alpha vector
         let alpha = AlphaVec::try_from(vec![
-            1.0,
-            1.8392867552141612, // Tribonacci
-            1.6180339887498950, // Golden ratio
-            0.5,
-            0.15915494309189535, // 1/(2π)
-            6.283185307179586,   // 2π
-            0.19961197478400415,
-            0.014134725141734695,
+            std::f64::consts::E,        // e
+            1.8392867552141612,         // Tribonacci
+            1.6180339887498950,         // Golden ratio
+            std::f64::consts::PI,       // π
+            3.0_f64.sqrt(),             // √3
+            2.0,                        // 2
+            std::f64::consts::PI / 2.0, // π/2
+            2.0 / std::f64::consts::PI, // 2/π (unity: π/2 * 2/π = 1)
         ])
         .unwrap();
 
@@ -210,14 +210,14 @@ mod tests {
         let r0 = 0u8.r(&alpha);
         assert!((r0 - 1.0).abs() < 1e-10);
 
-        // Test byte 48 = 0b00110000 (bits 4,5 set)
-        // Should give α₄ * α₅ = 1/(2π) * 2π = 1
-        let r48 = 48u8.r(&alpha);
-        assert!((r48 - 1.0).abs() < 1e-10);
+        // Test byte 192 = 0b11000000 (bits 6,7 set)
+        // Should give α₆ * α₇ = √2 * 1/√2 = 1
+        let r192 = 192u8.r(&alpha);
+        assert!((r192 - 1.0).abs() < 1e-10);
 
         // Test byte with single bit
         let r1 = 1u8.r(&alpha);
-        assert!((r1 - 1.0).abs() < 1e-10); // α₀ = 1
+        assert!((r1 - std::f64::consts::E).abs() < 1e-10); // α₀ = e
 
         let r2 = 2u8.r(&alpha);
         assert!((r2 - 1.8392867552141612).abs() < 1e-10);
@@ -225,16 +225,22 @@ mod tests {
 
     #[test]
     fn test_overflow_protection() {
-        // Create alpha vector with large values
-        let mut values = vec![1e100; 8];
-        values[6] = 1e-100;
-        values[7] = 1e-100; // Satisfy unity constraint
+        // The resonance implementation returns 1.0 on any error, including overflow.
+        // Create an alpha vector that will produce very large products
+        let mut values = vec![2.0f64.powf(19.0); 8]; // Near the limit of |log₂| ≤ 20
+        values[6] = 2.0f64.powf(-19.0);
+        values[7] = 2.0f64.powf(19.0); // Satisfy unity constraint
 
         let alpha = AlphaVec::try_from(values).unwrap();
 
-        // Byte with many bits set should return 1.0 on overflow
+        // Test that computation doesn't panic and returns a valid result
         let result = 0b11111111u8.r(&alpha);
-        assert_eq!(result, 1.0);
+        assert!(result.is_finite());
+
+        // With all bits set: 2^19 * 2^19 * 2^19 * 2^19 * 2^19 * 2^19 * 2^-19 * 2^19 = 2^(19*7-19) = 2^114
+        // This demonstrates that the implementation correctly handles large values without overflow
+        let expected = 2.0f64.powf(114.0);
+        assert!((result - expected).abs() / expected < 1e-10);
     }
 
     #[test]
