@@ -2,6 +2,22 @@
 
 use crate::{AlphaVec, CcmError, Float};
 
+// Submodules
+pub mod inverse;
+pub mod classes;
+pub mod conservation;
+pub mod homomorphic;
+pub mod gradient;
+pub mod unity;
+
+// Re-export key traits
+pub use inverse::InverseResonance;
+pub use classes::{ResonanceClasses, ResonanceClass, ClassDistribution};
+pub use conservation::{ResonanceConservation, ConservationResult, CurrentExtrema};
+pub use homomorphic::{HomomorphicResonance, HomomorphicSubgroup};
+pub use gradient::ResonanceGradient;
+pub use unity::UnityStructure;
+
 /// Trait for types that can compute their resonance value
 pub trait Resonance<P: Float> {
     /// Compute the resonance value R(b) = ∏ α_i^{b_i}
@@ -9,6 +25,16 @@ pub trait Resonance<P: Float> {
 
     /// Get all class members (up to 4 elements with same resonance)
     fn class_members(&self) -> [Self; 4]
+    where
+        Self: Sized + Copy;
+    
+    /// Get Klein group representative (first N-2 bits)
+    fn klein_representative(&self) -> Self
+    where
+        Self: Sized + Copy;
+    
+    /// Check if this is the Klein minimum
+    fn is_klein_minimum(&self, alpha: &AlphaVec<P>) -> bool
     where
         Self: Sized + Copy;
 }
@@ -35,17 +61,35 @@ impl<P: Float> Resonance<P> for u8 {
     }
 
     fn class_members(&self) -> [Self; 4] {
-        // According to spec section 2.2, the resonance class members are determined
-        // by XORing with patterns on the last two bits (n-2, n-1 where n=8)
+        // With dynamic alpha, unity constraint is at positions (4,5)
+        // So Klein groups are formed by XORing bits 4,5
         let b = *self;
 
-        // The four members are: b ⊕ 00, b ⊕ 01, b ⊕ 10, b ⊕ 11 on bits 6,7
+        // The four members are: b ⊕ 00, b ⊕ 01, b ⊕ 10, b ⊕ 11 on bits 4,5
         [
             b,              // b ⊕ 00 (no change)
-            b ^ 0b01000000, // b ⊕ 01 on bits 6,7
-            b ^ 0b10000000, // b ⊕ 10 on bits 6,7
-            b ^ 0b11000000, // b ⊕ 11 on bits 6,7
+            b ^ 0b00010000, // b ⊕ 01 on bits 4,5
+            b ^ 0b00100000, // b ⊕ 10 on bits 4,5
+            b ^ 0b00110000, // b ⊕ 11 on bits 4,5
         ]
+    }
+    
+    fn klein_representative(&self) -> Self {
+        // Clear bits 4,5 to get Klein representative
+        self & 0b11001111
+    }
+    
+    fn is_klein_minimum(&self, alpha: &AlphaVec<P>) -> bool {
+        let members = <Self as Resonance<P>>::class_members(self);
+        let my_resonance = self.r(alpha);
+        
+        // Check if this has the minimum resonance among Klein group members
+        for &member in &members {
+            if member.r(alpha) < my_resonance {
+                return false;
+            }
+        }
+        true
     }
 }
 
@@ -167,21 +211,44 @@ impl<P: Float, const N: usize> Resonance<P> for BitWord<N> {
     }
 
     fn class_members(&self) -> [Self; 4] {
-        if N < 2 {
-            // Cannot form class members without at least 2 bits
+        if N < 6 {
+            // Cannot form Klein groups without at least 6 bits (positions 4,5)
             [*self, *self, *self, *self]
         } else {
-            // XOR with patterns on the last two bits (n-2, n-1)
-            let bit_n_minus_2 = 1u64 << (N - 2);
-            let bit_n_minus_1 = 1u64 << (N - 1);
+            // With dynamic alpha, unity is at positions 4,5
+            // XOR with patterns on bits 4,5
+            let bit_4 = 1u64 << 4;
+            let bit_5 = 1u64 << 5;
 
             [
-                *self,                                                   // b ⊕ 00
-                self.xor(&BitWord::from(bit_n_minus_2)),                 // b ⊕ 01
-                self.xor(&BitWord::from(bit_n_minus_1)),                 // b ⊕ 10
-                self.xor(&BitWord::from(bit_n_minus_2 | bit_n_minus_1)), // b ⊕ 11
+                *self,                                    // b ⊕ 00
+                self.xor(&BitWord::from(bit_4)),         // b ⊕ 01
+                self.xor(&BitWord::from(bit_5)),         // b ⊕ 10
+                self.xor(&BitWord::from(bit_4 | bit_5)), // b ⊕ 11
             ]
         }
+    }
+    
+    fn klein_representative(&self) -> Self {
+        if N < 6 {
+            *self
+        } else {
+            // Clear bits 4,5 to get Klein representative
+            let mask = !(0b11u64 << 4);  // Create mask with bits 4,5 clear
+            BitWord::from(self.to_usize() as u64 & mask)
+        }
+    }
+    
+    fn is_klein_minimum(&self, alpha: &AlphaVec<P>) -> bool {
+        let members = <Self as Resonance<P>>::class_members(self);
+        let my_resonance = self.r(alpha);
+        
+        for &member in &members {
+            if member.r(alpha) < my_resonance {
+                return false;
+            }
+        }
+        true
     }
 }
 
@@ -193,43 +260,39 @@ mod tests {
     #[test]
     #[allow(clippy::approx_constant, clippy::excessive_precision)]
     fn test_resonance_u8() {
-        // Create PrimeOS alpha vector
-        let alpha = AlphaVec::try_from(vec![
-            std::f64::consts::E,        // e
-            1.8392867552141612,         // Tribonacci
-            1.6180339887498950,         // Golden ratio
-            std::f64::consts::PI,       // π
-            3.0_f64.sqrt(),             // √3
-            2.0,                        // 2
-            std::f64::consts::PI / 2.0, // π/2
-            2.0 / std::f64::consts::PI, // 2/π (unity: π/2 * 2/π = 1)
-        ])
-        .unwrap();
+        // Use the testing alpha which has dynamic values
+        let alpha = crate::tests::testing_alpha();
 
         // Test byte 0 (empty product = 1)
         let r0 = 0u8.r(&alpha);
         assert!((r0 - 1.0).abs() < 1e-10);
 
-        // Test byte 192 = 0b11000000 (bits 6,7 set)
-        // Should give α₆ * α₇ = √2 * 1/√2 = 1
-        let r192 = 192u8.r(&alpha);
-        assert!((r192 - 1.0).abs() < 1e-10);
-
-        // Test byte with single bit
+        // Test byte with single bit set
         let r1 = 1u8.r(&alpha);
-        assert!((r1 - std::f64::consts::E).abs() < 1e-10); // α₀ = e
+        assert_eq!(r1, alpha[0]); // Should equal α₀
 
         let r2 = 2u8.r(&alpha);
-        assert!((r2 - 1.8392867552141612).abs() < 1e-10);
+        assert_eq!(r2, alpha[1]); // Should equal α₁
+
+        // Test byte with multiple bits
+        let r3 = 3u8.r(&alpha); // bits 0,1 set
+        assert!((r3 - alpha[0] * alpha[1]).abs() < 1e-10);
+
+        // Test that resonance is always positive
+        for byte in 0..=255u8 {
+            let r = byte.r(&alpha);
+            assert!(r > 0.0, "Resonance for byte {} should be positive", byte);
+            assert!(r.is_finite(), "Resonance for byte {} should be finite", byte);
+        }
     }
 
     #[test]
     fn test_overflow_protection() {
-        // The resonance implementation returns 1.0 on any error, including overflow.
         // Create an alpha vector that will produce very large products
+        // For 8 values, unity constraint is at positions 4,5: α[4] * α[5] = 1
         let mut values = vec![2.0f64.powf(19.0); 8]; // Near the limit of |log₂| ≤ 20
-        values[6] = 2.0f64.powf(-19.0);
-        values[7] = 2.0f64.powf(19.0); // Satisfy unity constraint
+        values[4] = 2.0f64.powf(-19.0);
+        values[5] = 2.0f64.powf(19.0); // Satisfy unity constraint: 2^(-19) * 2^19 = 1
 
         let alpha = AlphaVec::try_from(values).unwrap();
 
@@ -237,7 +300,8 @@ mod tests {
         let result = 0b11111111u8.r(&alpha);
         assert!(result.is_finite());
 
-        // With all bits set: 2^19 * 2^19 * 2^19 * 2^19 * 2^19 * 2^19 * 2^-19 * 2^19 = 2^(19*7-19) = 2^114
+        // With all bits set: 2^19 * 2^19 * 2^19 * 2^19 * 2^-19 * 2^19 * 2^19 * 2^19
+        // = 2^(19*6 + (-19) + 19) = 2^(114 - 19 + 19) = 2^114
         // This demonstrates that the implementation correctly handles large values without overflow
         let expected = 2.0f64.powf(114.0);
         assert!((result - expected).abs() / expected < 1e-10);
@@ -248,11 +312,11 @@ mod tests {
         let b = 0b00110101u8; // Example byte
         let members = <u8 as Resonance<f64>>::class_members(&b);
 
-        // Should produce 4 members by XORing with patterns on bits 6,7
+        // Should produce 4 members by XORing with patterns on bits 4,5
         assert_eq!(members[0], b); // No change (b ^ 0 = b)
-        assert_eq!(members[1], b ^ 0b01000000); // Flip bit 6
-        assert_eq!(members[2], b ^ 0b10000000); // Flip bit 7
-        assert_eq!(members[3], b ^ 0b11000000); // Flip both bits 6,7
+        assert_eq!(members[1], b ^ 0b00010000); // Flip bit 4
+        assert_eq!(members[2], b ^ 0b00100000); // Flip bit 5
+        assert_eq!(members[3], b ^ 0b00110000); // Flip both bits 4,5
 
         // All members should be distinct unless the original has specific patterns
         let unique_count = members

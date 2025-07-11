@@ -256,19 +256,10 @@ fn test_resonance_properties() {
     }
 }
 
-/// Create test alpha vector with proper properties
+/// Create test alpha vector using dynamic generation
 fn create_test_alpha() -> AlphaVec<f64> {
-    AlphaVec::try_from(vec![
-        std::f64::consts::E,        // e ≈ 2.718
-        1.8392867552141612,         // Tribonacci
-        1.6180339887498950,         // Golden ratio
-        std::f64::consts::PI,       // π
-        3.0_f64.sqrt(),             // √3
-        2.0,                        // 2
-        std::f64::consts::PI / 2.0, // π/2
-        2.0 / std::f64::consts::PI, // 2/π (unity constraint)
-    ])
-    .unwrap()
+    // Use the standard testing alpha which has dynamic values
+    crate::tests::testing_alpha()
 }
 
 /// Test edge cases

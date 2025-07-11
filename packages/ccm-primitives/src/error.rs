@@ -35,6 +35,9 @@ pub enum CcmError {
 
     /// Custom error with static string message
     Custom(&'static str),
+    
+    /// Invalid input parameters
+    InvalidInput,
 }
 
 impl fmt::Display for CcmError {
@@ -56,6 +59,7 @@ impl fmt::Display for CcmError {
             #[cfg(not(feature = "std"))]
             Self::IoError(_) => write!(f, "I/O error"),
             Self::Custom(msg) => write!(f, "{msg}"),
+            Self::InvalidInput => write!(f, "Invalid input parameters"),
         }
     }
 }
@@ -86,6 +90,7 @@ impl PartialEq for CcmError {
             #[cfg(not(feature = "std"))]
             (Self::IoError(_), Self::IoError(_)) => true, // core::fmt::Error has no PartialEq
             (Self::Custom(a), Self::Custom(b)) => a == b,
+            (Self::InvalidInput, Self::InvalidInput) => true,
             _ => false,
         }
     }

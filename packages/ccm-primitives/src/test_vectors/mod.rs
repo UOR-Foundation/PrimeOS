@@ -216,8 +216,8 @@ pub mod standard_alphas {
     }
 
     /// Create standard alpha vector for n=8
-    pub fn alpha_n8<P: Float>() -> AlphaVec<P> {
-        crate::alpha::constants::standard_alpha()
+    pub fn alpha_n8<P: Float + num_traits::FromPrimitive>() -> AlphaVec<P> {
+        AlphaVec::for_bit_length(8).expect("Valid alpha for n=8")
     }
 
     /// Create standard alpha vector for n=10
@@ -375,7 +375,7 @@ pub mod standard_alphas {
     }
 
     /// Get standard alpha for any supported n
-    pub fn get_standard_alpha<P: Float>(n: u8) -> Option<AlphaVec<P>> {
+    pub fn get_standard_alpha<P: Float + num_traits::FromPrimitive>(n: u8) -> Option<AlphaVec<P>> {
         match n {
             3 => Some(alpha_n3()),
             4 => Some(alpha_n4()),

@@ -2,7 +2,7 @@
 
 use crate::{error::CcmError, Float};
 
-pub mod constants;
+pub mod generator;
 
 #[cfg(feature = "alloc")]
 use alloc::{boxed::Box, vec::Vec};
@@ -58,11 +58,20 @@ impl<P: Float> AlphaVec<P> {
     /// Validate the unity constraint: α[n-2] * α[n-1] = 1
     fn validate_unity_constraint(values: &[P]) -> Result<(), AlphaError> {
         let n = values.len();
-        if n < 2 {
+        if n < 3 {
+            // We need at least 3 values for unity constraint
             return Err(AlphaError::InvalidLength(n));
         }
 
-        let product = values[n - 2] * values[n - 1];
+        // According to CCM spec, unity constraint is on last two values: α[n-2] * α[n-1] = 1
+        // However, for 8-bit standard (n=8), it's specifically α[4] * α[5] = 1
+        let (u1, u2) = if n == 8 {
+            (4, 5)  // Standard 8-bit case uses positions 4,5
+        } else {
+            (n - 2, n - 1)  // General case uses last two positions
+        };
+        
+        let product = values[u1] * values[u2];
         let one = P::one();
         let epsilon = P::epsilon();
 
@@ -115,6 +124,25 @@ impl<P: Float> AlphaVec<P> {
     /// Check if the vector is empty (always false for valid AlphaVec)
     pub fn is_empty(&self) -> bool {
         false // Valid AlphaVec always has at least 3 elements
+    }
+    
+    /// Generate alpha values dynamically for N-bit inputs
+    #[cfg(any(feature = "alloc", feature = "std"))]
+    pub fn for_bit_length(n: usize) -> Result<Self, AlphaError>
+    where
+        P: num_traits::FromPrimitive,
+    {
+        let config = generator::AlphaConfig::for_bits(n);
+        generator::generate_alpha(config)
+    }
+    
+    /// Generate alpha values using mathematical constants
+    #[cfg(any(feature = "alloc", feature = "std"))]
+    pub fn mathematical(bit_length: usize) -> Result<Self, AlphaError>
+    where
+        P: num_traits::FromPrimitive,
+    {
+        generator::generate_mathematical_alpha(bit_length)
     }
 }
 

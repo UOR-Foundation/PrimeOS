@@ -69,15 +69,15 @@ pub fn encode_bjc<P: FloatEncoding, const N: usize>(
         );
     }
 
-    // Step 3: Compute flips (XOR restricted to last 2 bits n-2, n-1)
-    let bit_mask = if N >= 2 {
-        0b11 << (N - 2) // Mask for bits n-2 and n-1
+    // Step 3: Compute flips (XOR restricted to bits 4,5 for Klein groups)
+    let bit_mask = if N >= 6 {
+        0b11 << 4 // Mask for bits 4,5
     } else {
-        0b11
+        0 // No Klein groups for N < 6
     };
     let flips_full = (raw.to_usize() ^ b_min.to_usize()) & bit_mask;
     // Store flips in bits 0,1 of the flip byte
-    let flips = ((flips_full >> (N - 2)) & 0b11) as u8;
+    let flips = ((flips_full >> 4) & 0b11) as u8;
 
     // Step 4: Compute page (if k > 1)
     let page_data = if k > 1 {
@@ -146,11 +146,11 @@ pub fn decode_bjc<P: FloatEncoding, const N: usize>(
     let b_min_candidates: Vec<BitWord<N>> = find_all_by_resonance(r_min_value, alpha, N)?;
 
     // Apply flips to recover original
-    // Flips are stored in bits 0,1 of the flip byte, but apply to bits n-2,n-1
-    let flips_mask = if N >= 2 {
-        ((packet.flips & 0b11) as u64) << (N - 2)
+    // Flips are stored in bits 0,1 of the flip byte, but apply to bits 4,5
+    let flips_mask = if N >= 6 {
+        ((packet.flips & 0b11) as u64) << 4
     } else {
-        packet.flips as u64
+        0 // No Klein groups for N < 6
     };
 
     // Try all candidates and collect valid decodings
@@ -249,75 +249,8 @@ fn find_all_by_resonance<P: FloatEncoding, const N: usize>(
     alpha: &AlphaVec<P>,
     _n: usize,
 ) -> Result<Vec<BitWord<N>>, CcmError> {
-    // Search for the specific b_min that was encoded
-    // This must be the Klein group member with:
-    // 1. Minimum resonance in its Klein group
-    // 2. Resonance matching the target
-    // 3. Lexicographically smallest among all such candidates
-
-    let tolerance = if target.abs() > P::epsilon() {
-        P::epsilon() * target.abs()
-    } else {
-        P::epsilon()
-    };
-
-    // If N < 2, there's only one possible value per resonance
-    if N < 2 {
-        for i in 0u64..(1u64 << N) {
-            let candidate = BitWord::<N>::from(i);
-            let resonance = candidate.r(alpha);
-            if (resonance - target).abs() <= tolerance {
-                return Ok(vec![candidate]);
-            }
-        }
-        return Err(CcmError::SearchExhausted);
-    }
-
-    // For N >= 2, we need to find all Klein groups where the minimum resonance matches target
-    let num_base_bits = N.saturating_sub(2);
-    let num_representatives = 1u64 << num_base_bits;
-
-    let mut candidates: Vec<BitWord<N>> = Vec::new();
-
-    for base in 0..num_representatives {
-        // For this base pattern (bits 0 through N-3), check all 4 Klein group members
-        let representative = BitWord::<N>::from(base);
-        let class_members = <BitWord<N> as Resonance<P>>::class_members(&representative);
-
-        // Find the member with minimum resonance in this Klein group
-        let mut min_resonance = P::infinity();
-        let mut min_member = class_members[0];
-
-        for &member in &class_members {
-            let r = member.r(alpha);
-            if r < min_resonance
-                || (r == min_resonance && member.to_usize() < min_member.to_usize())
-            {
-                min_resonance = r;
-                min_member = member;
-            }
-        }
-
-        // Check if this Klein group's minimum resonance matches our target
-        let diff = (min_resonance - target).abs();
-        if diff <= tolerance {
-            // Debug output (disabled)
-            // if target.abs() < P::from(0.71).unwrap() && target.abs() > P::from(0.70).unwrap() {
-            //     eprintln!("DEBUG: Klein group {:?} has min_member={}, min_resonance={}",
-            //              class_members.iter().map(|m| m.to_usize()).collect::<Vec<_>>(),
-            //              min_member.to_usize(), min_resonance);
-            // }
-            candidates.push(min_member);
-        }
-    }
-
-    // Return all candidates
-    if !candidates.is_empty() {
-        candidates.sort_by_key(|b| b.to_usize());
-        return Ok(candidates);
-    }
-
-    Err(CcmError::SearchExhausted)
+    // Use the optimal decoder which leverages CCM/COC principles
+    self::optimal_decoder::find_candidates_optimal(target, alpha)
 }
 
 /// Trait for types that can be encoded/decoded as bytes
@@ -376,6 +309,13 @@ fn encode_page(page: usize, k: usize) -> Result<Vec<u8>, CcmError> {
 
     Ok(bytes)
 }
+
+#[cfg(test)]
+pub(crate) mod optimal_decoder;
+#[cfg(not(test))]
+mod optimal_decoder;
+
+pub mod dynamic;
 
 #[cfg(test)]
 mod tests {

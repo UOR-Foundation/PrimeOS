@@ -29,11 +29,17 @@ pub use bitword::BitWord;
 #[cfg(feature = "alloc")]
 pub use bitword::BitWordDyn;
 pub use codec::bjc::{decode_bjc, encode_bjc, BjcPacket, FloatEncoding};
+pub use codec::bjc::dynamic::{encode_bjc_dynamic, decode_bjc_dynamic, DynamicBjcCodec, DynamicCodecConfig, AlphaStrategy};
 pub use codec::search::search_b_min;
 pub use coherence::Coherence;
 pub use error::CcmError;
 pub use page::{inject_page, page_of};
-pub use resonance::Resonance;
+pub use resonance::{
+    Resonance, InverseResonance, ResonanceClasses, ResonanceClass, ClassDistribution,
+    ResonanceConservation, ConservationResult, CurrentExtrema,
+    HomomorphicResonance, HomomorphicSubgroup,
+    ResonanceGradient, UnityStructure
+};
 
 #[cfg(feature = "sha2")]
 pub use hash::{sha256, verify_sha256};
