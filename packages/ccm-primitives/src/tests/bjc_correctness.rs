@@ -9,10 +9,10 @@ fn test_encoder_algorithm_steps() {
     let alpha = create_test_alpha();
 
     // Test a specific input to trace through the algorithm
-    let input = BitWord::<8>::from(0x42u8); // 01000010
+    let input = BitWord::from_u8(0x42u8); // 01000010
 
     // Step 1: Generate Klein group (XOR with 00,01,10,11 on bits 6,7)
-    let class_members = <BitWord<8> as Resonance<f64>>::class_members(&input);
+    let class_members = <BitWord as Resonance<f64>>::class_members(&input);
     println!("Klein group members:");
     for (i, m) in class_members.iter().enumerate() {
         println!("  [{}] 0x{:02X} = {:08b}", i, m.to_usize(), m.to_usize());
@@ -45,7 +45,7 @@ fn test_encoder_algorithm_steps() {
         .iter()
         .min_by_key(|&&i| class_members[i].to_usize())
         .unwrap();
-    let b_min = class_members[*b_min_idx];
+    let b_min = class_members[*b_min_idx].clone();
 
     // Step 3: Calculate flips (restricted to last 2 bits)
     let flips_full = input.to_usize() ^ b_min.to_usize();
@@ -74,7 +74,7 @@ fn test_encoder_algorithm_steps() {
 #[test]
 fn test_decoder_algorithm_steps() {
     let alpha = create_test_alpha();
-    let input = BitWord::<8>::from(0x42u8);
+    let input = BitWord::from_u8(0x42u8);
 
     // First encode
     let packet = encode_bjc(&input, &alpha, 1, false).unwrap();
@@ -91,7 +91,7 @@ fn test_decoder_algorithm_steps() {
     // instead of constraining to Klein group members
 
     // Step 3: Apply flips to recover original
-    let decoded = decode_bjc::<f64, 8>(&packet, &alpha).unwrap();
+    let decoded = decode_bjc::<f64>(&packet, &alpha).unwrap();
 
     // Verify bijectivity
     assert_eq!(input, decoded, "Decoder failed to recover original input");
@@ -104,9 +104,9 @@ fn test_complete_bijectivity() {
     let mut failures = Vec::new();
 
     for i in 0..=255u8 {
-        let input = BitWord::<8>::from(i);
+        let input = BitWord::from_u8(i);
         let packet = encode_bjc(&input, &alpha, 1, false).unwrap();
-        let decoded = decode_bjc::<f64, 8>(&packet, &alpha).unwrap();
+        let decoded = decode_bjc::<f64>(&packet, &alpha).unwrap();
 
         if input != decoded {
             failures.push((i, decoded.to_usize()));
@@ -116,7 +116,7 @@ fn test_complete_bijectivity() {
             println!("  Decoded as: 0x{:02X}", decoded.to_usize());
 
             // Check Klein group
-            let members = <BitWord<8> as Resonance<f64>>::class_members(&input);
+            let members = <BitWord as Resonance<f64>>::class_members(&input);
             println!("  Klein group of input:");
             for (j, m) in members.iter().enumerate() {
                 println!("    [{}] 0x{:02X}: R = {}", j, m.to_usize(), m.r(&alpha));
@@ -151,8 +151,8 @@ fn test_klein_group_structure() {
             continue;
         }
 
-        let base = BitWord::<8>::from(i);
-        let members = <BitWord<8> as Resonance<f64>>::class_members(&base);
+        let base = BitWord::from_u8(i);
+        let members = <BitWord as Resonance<f64>>::class_members(&base);
 
         // Debug first few Klein groups
         if i <= 2 {
@@ -236,7 +236,7 @@ fn test_resonance_properties() {
     // (except for Klein group members)
     let mut resonance_map = std::collections::HashMap::new();
     for i in 0..=255u8 {
-        let word = BitWord::<8>::from(i);
+        let word = BitWord::from_u8(i);
         let resonance = word.r(&alpha);
         resonance_map
             .entry(format!("{:.10}", resonance))
@@ -268,20 +268,20 @@ fn test_edge_cases() {
     let alpha = create_test_alpha();
 
     // Test all-zeros
-    let input = BitWord::<8>::from(0x00u8);
+    let input = BitWord::from_u8(0x00u8);
     let packet = encode_bjc(&input, &alpha, 1, false).unwrap();
-    let decoded = decode_bjc::<f64, 8>(&packet, &alpha).unwrap();
+    let decoded = decode_bjc::<f64>(&packet, &alpha).unwrap();
     assert_eq!(input, decoded);
 
     // Test all-ones
-    let input = BitWord::<8>::from(0xFFu8);
+    let input = BitWord::from_u8(0xFFu8);
     let packet = encode_bjc(&input, &alpha, 1, false).unwrap();
-    let decoded = decode_bjc::<f64, 8>(&packet, &alpha).unwrap();
+    let decoded = decode_bjc::<f64>(&packet, &alpha).unwrap();
     assert_eq!(input, decoded);
 
     // Test alternating bits
-    let input = BitWord::<8>::from(0xAAu8);
+    let input = BitWord::from_u8(0xAAu8);
     let packet = encode_bjc(&input, &alpha, 1, false).unwrap();
-    let decoded = decode_bjc::<f64, 8>(&packet, &alpha).unwrap();
+    let decoded = decode_bjc::<f64>(&packet, &alpha).unwrap();
     assert_eq!(input, decoded);
 }

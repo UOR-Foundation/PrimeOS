@@ -112,7 +112,7 @@ fn generate_exhaustive<P: Float + FloatEncoding>(n: u8, alpha: &AlphaVec<P>) -> 
         // Create test vector
         match n {
             3 => {
-                let word = BitWord::<3>::from(input[0] & 0b111);
+                let word = BitWord::from_u64((input[0] & 0b111) as u64, 3);
                 if let Ok(packet) = encode_bjc(&word, alpha, 1, false) {
                     vectors.push(TestVector {
                         n,
@@ -125,7 +125,7 @@ fn generate_exhaustive<P: Float + FloatEncoding>(n: u8, alpha: &AlphaVec<P>) -> 
                 }
             }
             4 => {
-                let word = BitWord::<4>::from(input[0] & 0b1111);
+                let word = BitWord::from_u64((input[0] & 0b1111) as u64, 4);
                 if let Ok(packet) = encode_bjc(&word, alpha, 1, false) {
                     vectors.push(TestVector {
                         n,
@@ -138,7 +138,7 @@ fn generate_exhaustive<P: Float + FloatEncoding>(n: u8, alpha: &AlphaVec<P>) -> 
                 }
             }
             8 => {
-                let word = BitWord::<8>::from(input[0]);
+                let word = BitWord::from_u8(input[0]);
                 if let Ok(packet) = encode_bjc(&word, alpha, 1, false) {
                     vectors.push(TestVector {
                         n,
@@ -169,7 +169,7 @@ fn generate_single_vector<P: Float + FloatEncoding>(
     // Encode based on n value
     match n {
         3 => {
-            let word = BitWord::<3>::from(pattern[0] & 0b111);
+            let word = BitWord::from_u64((pattern[0] & 0b111) as u64, 3);
             encode_bjc(&word, alpha, 1, false)
                 .ok()
                 .map(|packet| TestVector {
@@ -182,7 +182,7 @@ fn generate_single_vector<P: Float + FloatEncoding>(
                 })
         }
         4 => {
-            let word = BitWord::<4>::from(pattern[0] & 0b1111);
+            let word = BitWord::from_u64((pattern[0] & 0b1111) as u64, 4);
             encode_bjc(&word, alpha, 1, false)
                 .ok()
                 .map(|packet| TestVector {
@@ -195,7 +195,7 @@ fn generate_single_vector<P: Float + FloatEncoding>(
                 })
         }
         8 => {
-            let word = BitWord::<8>::from(pattern[0]);
+            let word = BitWord::from_u8(pattern[0]);
             encode_bjc(&word, alpha, 1, false)
                 .ok()
                 .map(|packet| TestVector {
@@ -210,7 +210,7 @@ fn generate_single_vector<P: Float + FloatEncoding>(
         10 => {
             let value =
                 u16::from_le_bytes([pattern[0], pattern.get(1).copied().unwrap_or(0)]) & 0x3FF;
-            let word = BitWord::<10>::from(value as u64);
+            let word = BitWord::from_u64(value as u64, 10);
             encode_bjc(&word, alpha, 1, false)
                 .ok()
                 .map(|packet| TestVector {
@@ -224,7 +224,7 @@ fn generate_single_vector<P: Float + FloatEncoding>(
         }
         16 => {
             let value = u16::from_le_bytes([pattern[0], pattern.get(1).copied().unwrap_or(0)]);
-            let word = BitWord::<16>::from(value as u64);
+            let word = BitWord::from_u64(value as u64, 16);
             encode_bjc(&word, alpha, 1, false)
                 .ok()
                 .map(|packet| TestVector {
@@ -243,7 +243,7 @@ fn generate_single_vector<P: Float + FloatEncoding>(
                 pattern.get(2).copied().unwrap_or(0),
                 pattern.get(3).copied().unwrap_or(0),
             ]);
-            let word = BitWord::<32>::from(value);
+            let word = BitWord::from_u32(value);
             encode_bjc(&word, alpha, 1, false)
                 .ok()
                 .map(|packet| TestVector {
@@ -266,7 +266,7 @@ fn generate_single_vector<P: Float + FloatEncoding>(
                 pattern.get(6).copied().unwrap_or(0),
                 pattern.get(7).copied().unwrap_or(0),
             ]);
-            let word = BitWord::<64>::from(value);
+            let word = BitWord::from_u64(value, 64);
             encode_bjc(&word, alpha, 1, false)
                 .ok()
                 .map(|packet| TestVector {

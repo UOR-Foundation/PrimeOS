@@ -22,6 +22,8 @@ PrimeOS is the reference implementation of Coherence-Centric Mathematics (CCM). 
 
 - No fallbacks are allowed if they shortcut any of the specifications. 
 
+- No backwards compatibility when refactoring.W
+
 
 ---
 

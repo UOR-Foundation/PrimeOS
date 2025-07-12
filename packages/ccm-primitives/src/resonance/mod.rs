@@ -3,19 +3,19 @@
 use crate::{AlphaVec, CcmError, Float};
 
 // Submodules
-pub mod inverse;
 pub mod classes;
 pub mod conservation;
-pub mod homomorphic;
 pub mod gradient;
+pub mod homomorphic;
+pub mod inverse;
 pub mod unity;
 
 // Re-export key traits
-pub use inverse::InverseResonance;
-pub use classes::{ResonanceClasses, ResonanceClass, ClassDistribution};
-pub use conservation::{ResonanceConservation, ConservationResult, CurrentExtrema};
-pub use homomorphic::{HomomorphicResonance, HomomorphicSubgroup};
+pub use classes::{ClassDistribution, ResonanceClass, ResonanceClasses};
+pub use conservation::{ConservationResult, CurrentExtrema, ResonanceConservation};
 pub use gradient::ResonanceGradient;
+pub use homomorphic::{HomomorphicResonance, HomomorphicSubgroup};
+pub use inverse::InverseResonance;
 pub use unity::UnityStructure;
 
 /// Trait for types that can compute their resonance value
@@ -24,19 +24,21 @@ pub trait Resonance<P: Float> {
     fn r(&self, alpha: &AlphaVec<P>) -> P;
 
     /// Get all class members (up to 4 elements with same resonance)
-    fn class_members(&self) -> [Self; 4]
+    #[cfg(feature = "alloc")]
+    fn class_members(&self) -> alloc::vec::Vec<Self>
     where
-        Self: Sized + Copy;
-    
+        Self: Sized + Clone;
+
     /// Get Klein group representative (first N-2 bits)
     fn klein_representative(&self) -> Self
     where
-        Self: Sized + Copy;
-    
+        Self: Sized + Clone;
+
     /// Check if this is the Klein minimum
+    #[cfg(feature = "alloc")]
     fn is_klein_minimum(&self, alpha: &AlphaVec<P>) -> bool
     where
-        Self: Sized + Copy;
+        Self: Sized + Clone;
 }
 
 /// Implementation for u8 (most common case)
@@ -60,29 +62,31 @@ impl<P: Float> Resonance<P> for u8 {
         result.unwrap_or(P::one())
     }
 
-    fn class_members(&self) -> [Self; 4] {
-        // With dynamic alpha, unity constraint is at positions (4,5)
-        // So Klein groups are formed by XORing bits 4,5
+    #[cfg(feature = "alloc")]
+    fn class_members(&self) -> alloc::vec::Vec<Self> {
+        // Klein groups are formed by XORing the last two bits
+        // These correspond to unity constraint positions (N-2, N-1)
         let b = *self;
 
-        // The four members are: b ⊕ 00, b ⊕ 01, b ⊕ 10, b ⊕ 11 on bits 4,5
-        [
+        // For u8 (N=8), Klein group uses bits 6,7
+        alloc::vec![
             b,              // b ⊕ 00 (no change)
-            b ^ 0b00010000, // b ⊕ 01 on bits 4,5
-            b ^ 0b00100000, // b ⊕ 10 on bits 4,5
-            b ^ 0b00110000, // b ⊕ 11 on bits 4,5
+            b ^ 0b01000000, // b ⊕ 01 on bits 6,7
+            b ^ 0b10000000, // b ⊕ 10 on bits 6,7
+            b ^ 0b11000000, // b ⊕ 11 on bits 6,7
         ]
     }
-    
+
     fn klein_representative(&self) -> Self {
-        // Clear bits 4,5 to get Klein representative
-        self & 0b11001111
+        // Clear bits 6,7 to get Klein representative (N-2, N-1 for N=8)
+        self & 0b00111111
     }
-    
+
+    #[cfg(feature = "alloc")]
     fn is_klein_minimum(&self, alpha: &AlphaVec<P>) -> bool {
         let members = <Self as Resonance<P>>::class_members(self);
         let my_resonance = self.r(alpha);
-        
+
         // Check if this has the minimum resonance among Klein group members
         for &member in &members {
             if member.r(alpha) < my_resonance {
@@ -93,7 +97,7 @@ impl<P: Float> Resonance<P> for u8 {
     }
 }
 
-/// Direct product computation (ascending index order)
+/// Direct product computation for u8 (ascending index order)
 fn compute_resonance_direct<P: Float>(byte: u8, alpha: &AlphaVec<P>) -> Result<P, CcmError> {
     let mut result = P::one();
 
@@ -118,7 +122,7 @@ fn compute_resonance_direct<P: Float>(byte: u8, alpha: &AlphaVec<P>) -> Result<P
     Ok(result)
 }
 
-/// Log-domain computation for better numerical stability
+/// Log-domain computation for u8 for better numerical stability
 fn compute_resonance_log_domain<P: Float>(byte: u8, alpha: &AlphaVec<P>) -> Result<P, CcmError> {
     let mut log_sum = P::zero();
 
@@ -148,13 +152,101 @@ fn compute_resonance_log_domain<P: Float>(byte: u8, alpha: &AlphaVec<P>) -> Resu
     Ok(result)
 }
 
-/// Heuristic to determine if log-domain computation should be used
+/// Heuristic to determine if log-domain computation should be used for u8
 fn should_use_log_domain<P: Float>(byte: u8, alpha: &AlphaVec<P>) -> bool {
     // Estimate the log magnitude of the result
     let mut log_estimate = P::zero();
 
     for i in 0..8 {
         if (byte >> i) & 1 == 1 {
+            let val = alpha[i];
+            if val > P::one() {
+                log_estimate = log_estimate + val.ln();
+            } else if val < P::one() {
+                log_estimate = log_estimate - (-val.ln());
+            }
+        }
+    }
+
+    // Use log domain if the result might be very large or very small
+    log_estimate.abs() > <P as num_traits::FromPrimitive>::from_f64(100.0).unwrap()
+}
+
+/// Direct product computation for BitWord (ascending index order)
+#[cfg(feature = "alloc")]
+fn compute_resonance_direct_bitword<P: Float>(word: &BitWord, alpha: &AlphaVec<P>) -> Result<P, CcmError> {
+    let mut result = P::one();
+    let max_bits = word.len().min(alpha.len());
+
+    for i in 0..max_bits {
+        if word.bit(i) {
+            let factor = alpha[i];
+
+            // Check for overflow before multiplication
+            if would_overflow(result, factor) {
+                return Err(CcmError::FpRange);
+            }
+
+            result = result * factor;
+
+            // Check for underflow/overflow after multiplication
+            if !result.is_finite() {
+                return Err(CcmError::FpRange);
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// Log-domain computation for BitWord for better numerical stability
+#[cfg(feature = "alloc")]
+fn compute_resonance_log_domain_bitword<P: Float>(word: &BitWord, alpha: &AlphaVec<P>) -> Result<P, CcmError> {
+    let mut log_sum = P::zero();
+    let max_bits = word.len().min(alpha.len());
+
+    for i in 0..max_bits {
+        if word.bit(i) {
+            let log_alpha = alpha[i].ln();
+
+            if !log_alpha.is_finite() {
+                return Err(CcmError::FpRange);
+            }
+
+            log_sum = log_sum + log_alpha;
+        }
+    }
+
+    // Check if result would be in valid range
+    if log_sum.abs() > <P as num_traits::FromPrimitive>::from_f64(1024.0).unwrap() {
+        return Err(CcmError::FpRange);
+    }
+
+    let result = log_sum.exp();
+
+    if !result.is_finite() || result <= P::zero() {
+        return Err(CcmError::FpRange);
+    }
+
+    Ok(result)
+}
+
+/// Heuristic to determine if log-domain computation should be used for BitWord
+#[cfg(feature = "alloc")]
+fn should_use_log_domain_bitword<P: Float>(word: &BitWord, alpha: &AlphaVec<P>) -> bool {
+    let popcount = word.popcount();
+    
+    // Use log domain for large popcounts
+    if popcount > 32 {
+        return true;
+    }
+    
+    // Estimate the log magnitude of the result
+    let mut log_estimate = P::zero();
+    let max_bits = word.len().min(alpha.len());
+
+    for i in 0..max_bits {
+        if word.bit(i) {
             let val = alpha[i];
             if val > P::one() {
                 log_estimate = log_estimate + val.ln();
@@ -187,63 +279,77 @@ fn would_overflow<P: Float>(a: P, b: P) -> bool {
 /// Extension for BitWord types
 use crate::bitword::BitWord;
 
-impl<P: Float, const N: usize> Resonance<P> for BitWord<N> {
+
+/// Implementation for BitWord (arbitrary size)
+#[cfg(feature = "alloc")]
+impl<P: Float> Resonance<P> for BitWord {
     fn r(&self, alpha: &AlphaVec<P>) -> P {
-        if alpha.len() < N {
+        if alpha.len() < self.len() {
+            // Cannot panic per spec, return 1.0 as safe default
             return P::one();
         }
 
-        let mut result = P::one();
+        let popcount = self.popcount();
 
-        // Direct product in ascending index order per spec
-        for i in 0..N {
-            if self.bit(i) {
-                result = result * alpha[i];
+        // Use log-domain for large popcounts or when overflow is likely
+        let result = if popcount > 32 || should_use_log_domain_bitword::<P>(self, alpha) {
+            compute_resonance_log_domain_bitword(self, alpha)
+        } else {
+            compute_resonance_direct_bitword(self, alpha)
+        };
 
-                if !result.is_finite() {
-                    // Return 1.0 on numerical issues
-                    return P::one();
-                }
-            }
-        }
-
-        result
+        // Return the result or 1.0 on error (spec requires no errors)
+        result.unwrap_or(P::one())
     }
 
-    fn class_members(&self) -> [Self; 4] {
-        if N < 6 {
-            // Cannot form Klein groups without at least 6 bits (positions 4,5)
-            [*self, *self, *self, *self]
+    fn class_members(&self) -> alloc::vec::Vec<Self> {
+        let n = self.len();
+        if n < 2 {
+            // Cannot form Klein groups without at least 2 bits
+            alloc::vec![self.clone()]
         } else {
-            // With dynamic alpha, unity is at positions 4,5
-            // XOR with patterns on bits 4,5
-            let bit_4 = 1u64 << 4;
-            let bit_5 = 1u64 << 5;
+            // Klein groups are formed by XORing the last two bits (n-2, n-1)
+            let mut member1 = self.clone();
+            let mut member2 = self.clone();
+            let mut member3 = self.clone();
 
-            [
-                *self,                                    // b ⊕ 00
-                self.xor(&BitWord::from(bit_4)),         // b ⊕ 01
-                self.xor(&BitWord::from(bit_5)),         // b ⊕ 10
-                self.xor(&BitWord::from(bit_4 | bit_5)), // b ⊕ 11
+            // Flip bit n-2
+            member1.set_bit(n - 2, !self.bit(n - 2));
+
+            // Flip bit n-1
+            member2.set_bit(n - 1, !self.bit(n - 1));
+
+            // Flip both bits n-2 and n-1
+            member3.set_bit(n - 2, !self.bit(n - 2));
+            member3.set_bit(n - 1, !self.bit(n - 1));
+
+            alloc::vec![
+                self.clone(), // b ⊕ 00
+                member1,      // b ⊕ 01
+                member2,      // b ⊕ 10
+                member3,      // b ⊕ 11
             ]
         }
     }
-    
+
     fn klein_representative(&self) -> Self {
-        if N < 6 {
-            *self
+        let n = self.len();
+        if n < 2 {
+            self.clone()
         } else {
-            // Clear bits 4,5 to get Klein representative
-            let mask = !(0b11u64 << 4);  // Create mask with bits 4,5 clear
-            BitWord::from(self.to_usize() as u64 & mask)
+            // Clear the last two bits (n-2, n-1) to get Klein representative
+            let mut repr = self.clone();
+            repr.set_bit(n - 2, false);
+            repr.set_bit(n - 1, false);
+            repr
         }
     }
-    
+
     fn is_klein_minimum(&self, alpha: &AlphaVec<P>) -> bool {
         let members = <Self as Resonance<P>>::class_members(self);
         let my_resonance = self.r(alpha);
-        
-        for &member in &members {
+
+        for member in &members {
             if member.r(alpha) < my_resonance {
                 return false;
             }
@@ -282,7 +388,11 @@ mod tests {
         for byte in 0..=255u8 {
             let r = byte.r(&alpha);
             assert!(r > 0.0, "Resonance for byte {} should be positive", byte);
-            assert!(r.is_finite(), "Resonance for byte {} should be finite", byte);
+            assert!(
+                r.is_finite(),
+                "Resonance for byte {} should be finite",
+                byte
+            );
         }
     }
 
@@ -312,11 +422,11 @@ mod tests {
         let b = 0b00110101u8; // Example byte
         let members = <u8 as Resonance<f64>>::class_members(&b);
 
-        // Should produce 4 members by XORing with patterns on bits 4,5
+        // Should produce 4 members by XORing with patterns on bits 6,7
         assert_eq!(members[0], b); // No change (b ^ 0 = b)
-        assert_eq!(members[1], b ^ 0b00010000); // Flip bit 4
-        assert_eq!(members[2], b ^ 0b00100000); // Flip bit 5
-        assert_eq!(members[3], b ^ 0b00110000); // Flip both bits 4,5
+        assert_eq!(members[1], b ^ 0b01000000); // Flip bit 6
+        assert_eq!(members[2], b ^ 0b10000000); // Flip bit 7
+        assert_eq!(members[3], b ^ 0b11000000); // Flip both bits 6,7
 
         // All members should be distinct unless the original has specific patterns
         let unique_count = members
@@ -324,5 +434,146 @@ mod tests {
             .collect::<std::collections::HashSet<_>>()
             .len();
         assert!((1..=4).contains(&unique_count));
+    }
+
+    #[test]
+    fn test_resonance_large_bit_lengths() {
+        // Test that resonance calculation works for large N values
+        for n in [64, 128, 256, 512, 1024, 2048, 4096] {
+            // Generate alpha values for N bits
+            let alpha = AlphaVec::<f64>::for_bit_length(n).unwrap();
+            test_resonance_n(n, &alpha);
+        }
+    }
+
+    fn test_resonance_n(n: usize, alpha: &AlphaVec<f64>) {
+        // Test empty value (all bits 0)
+        let zero = BitWord::from_u64(0u64, n);
+        let r_zero = zero.r(alpha);
+        assert_eq!(r_zero, 1.0, "Empty product should be 1.0 for n={}", n);
+
+        // Test single bit set at position 0
+        let one = BitWord::from_u64(1u64, n);
+        let r_one = one.r(alpha);
+        assert_eq!(r_one, alpha[0], "Single bit 0 should give α₀ for n={}", n);
+
+        // Test Klein group formation for n >= 2
+        if n >= 2 {
+            let test_val = BitWord::from_u64(42u64, n);
+            let members = <BitWord as Resonance<f64>>::class_members(&test_val);
+
+            // Verify Klein group has 4 members
+            assert_eq!(
+                members.len(),
+                4,
+                "Klein group should have 4 members for n={}",
+                n
+            );
+
+            // Verify Klein group uses bits (n-2, n-1)
+            if n <= 64 {
+                let bit_n_minus_2 = 1u64 << (n - 2);
+                let bit_n_minus_1 = 1u64 << (n - 1);
+
+                assert_eq!(members[0].to_usize(), test_val.to_usize());
+                assert_eq!(
+                    members[1].to_usize(),
+                    test_val.to_usize() ^ bit_n_minus_2 as usize
+                );
+                assert_eq!(
+                    members[2].to_usize(),
+                    test_val.to_usize() ^ bit_n_minus_1 as usize
+                );
+                assert_eq!(
+                    members[3].to_usize(),
+                    test_val.to_usize() ^ (bit_n_minus_2 | bit_n_minus_1) as usize
+                );
+            }
+
+            // Verify unity constraint positions create unity resonance
+            let mut unity_val = BitWord::new(n);
+            unity_val.set_bit(n - 2, true);
+            unity_val.set_bit(n - 1, true);
+            let r_unity = unity_val.r(alpha);
+            assert!(
+                (r_unity - 1.0).abs() < 1e-10,
+                "Unity positions ({},{}) should give resonance 1.0 for n={}, got {}",
+                n - 2,
+                n - 1,
+                n,
+                r_unity
+            );
+        }
+
+        // Test that resonance is always positive and finite
+        for i in 0..10 {
+            let test_val = BitWord::from_u64((i * 137u64) % (1u64 << n.min(64)), n);
+            let r = test_val.r(alpha);
+            assert!(
+                r > 0.0 && r.is_finite(),
+                "Resonance should be positive and finite for n={}",
+                n
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_bitword_large_resonance() {
+        // Test BitWord with various sizes including large ones
+        for n in [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096] {
+            let alpha = AlphaVec::<f64>::for_bit_length(n).unwrap();
+
+            // Test empty value (all bits 0)
+            let zero = BitWord::new(n);
+            let r_zero = zero.r(&alpha);
+            assert_eq!(r_zero, 1.0, "Empty product should be 1.0 for n={}", n);
+
+            // Test single bit set at position 0
+            let mut one = BitWord::new(n);
+            one.set_bit(0, true);
+            let r_one = one.r(&alpha);
+            assert_eq!(r_one, alpha[0], "Single bit 0 should give α₀ for n={}", n);
+
+            // Test Klein group formation for n >= 2
+            if n >= 2 {
+                let test_val = BitWord::from_u64(42, n);
+                let members = <BitWord as Resonance<f64>>::class_members(&test_val);
+
+                // Verify Klein group has 4 members
+                assert_eq!(
+                    members.len(),
+                    4,
+                    "Klein group should have 4 members for n={}",
+                    n
+                );
+
+                // Verify unity constraint positions create unity resonance
+                let mut unity_val = BitWord::new(n);
+                unity_val.set_bit(n - 2, true);
+                unity_val.set_bit(n - 1, true);
+                let r_unity = unity_val.r(&alpha);
+                assert!(
+                    (r_unity - 1.0).abs() < 1e-10,
+                    "Unity positions ({},{}) should give resonance 1.0 for n={}, got {}",
+                    n - 2,
+                    n - 1,
+                    n,
+                    r_unity
+                );
+            }
+
+            // Test that resonance is always positive and finite
+            for i in 0..10.min(n) {
+                let mut test_val = BitWord::new(n);
+                test_val.set_bit(i, true);
+                let r = test_val.r(&alpha);
+                assert!(
+                    r > 0.0 && r.is_finite(),
+                    "Resonance should be positive and finite for n={}",
+                    n
+                );
+            }
+        }
     }
 }

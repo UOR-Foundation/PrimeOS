@@ -21,42 +21,45 @@ fn arb_alpha_vec() -> impl Strategy<Value = AlphaVec<f64>> {
     })
 }
 
-/// Generate arbitrary BitWord
-fn arb_bitword<const N: usize>() -> impl Strategy<Value = BitWord<N>> {
-    (0u64..=(if N == 64 { !0u64 } else { (1u64 << N) - 1 })).prop_map(BitWord::from)
+/// Generate arbitrary BitWord with given size
+fn arb_bitword(n: usize) -> impl Strategy<Value = BitWord> {
+    (0u64..=(if n >= 64 { !0u64 } else { (1u64 << n) - 1 }))
+        .prop_map(move |val| BitWord::from_u64(val, n))
 }
 
 proptest! {
     #[test]
     fn test_roundtrip_property(
         alpha in arb_alpha_vec(),
-        word in arb_bitword::<8>(),
+        val in 0u64..=255u64,
         k in 1usize..=4usize,
         include_hash in any::<bool>()
     ) {
         // Only test with compatible sizes
         if alpha.len() >= 8 {
+            let word = BitWord::from_u8(val as u8);
             let packet = encode_bjc(&word, &alpha, k, include_hash)?;
-            let decoded = decode_bjc::<f64, 8>(&packet, &alpha)?;
-            prop_assert_eq!(word, decoded);
+            let decoded = decode_bjc::<f64>(&packet, &alpha)?;
+            prop_assert_eq!(word.to_usize(), decoded.to_usize());
         }
     }
 
     #[test]
     fn test_resonance_minimum_property(
         alpha in arb_alpha_vec(),
-        word in arb_bitword::<8>()
+        val in 0u64..=255u64
     ) {
         if alpha.len() >= 8 {
+            let word = BitWord::from_u8(val as u8);
             // The encoded b_min should have minimum resonance among Klein group
             let packet = encode_bjc(&word, &alpha, 1, false)?;
 
             // The class members are determined by XORing with patterns on last two bits
-            let class_members = <BitWord<8> as Resonance<f64>>::class_members(&word);
+            let class_members = <BitWord as Resonance<f64>>::class_members(&word);
 
             // Find which has minimum resonance
             let mut min_resonance = f64::INFINITY;
-            for &member in &class_members {
+            for member in &class_members {
                 let resonance = member.r(&alpha);
                 min_resonance = min_resonance.min(resonance);
             }
@@ -69,15 +72,16 @@ proptest! {
     #[test]
     fn test_hash_integrity(
         alpha in arb_alpha_vec(),
-        word in arb_bitword::<8>()
+        val in 0u64..=255u64
     ) {
         if alpha.len() >= 8 {
+            let word = BitWord::from_u8(val as u8);
             let packet = encode_bjc(&word, &alpha, 1, true)?;
             prop_assert!(packet.hash.is_some());
 
             // Decoding should succeed
-            let decoded = decode_bjc::<f64, 8>(&packet, &alpha)?;
-            prop_assert_eq!(word, decoded);
+            let decoded = decode_bjc::<f64>(&packet, &alpha)?;
+            prop_assert_eq!(word.to_usize(), decoded.to_usize());
         }
     }
 
@@ -115,20 +119,15 @@ fn test_conformance_requirements() {
 
         for i in 0..num_tests {
             let value = i as u64 % (1u64 << n);
-            match n {
-                3 => test_roundtrip::<3>(value, &alpha),
-                4 => test_roundtrip::<4>(value, &alpha),
-                8 => test_roundtrip::<8>(value, &alpha),
-                _ => {}
-            }
+            test_roundtrip(value, n, &alpha);
         }
     }
 }
 
-fn test_roundtrip<const N: usize>(value: u64, alpha: &AlphaVec<f64>) {
-    let word = BitWord::<N>::from(value);
+fn test_roundtrip(value: u64, n: usize, alpha: &AlphaVec<f64>) {
+    let word = BitWord::from_u64(value, n);
     let packet = encode_bjc(&word, alpha, 1, false).unwrap();
-    let decoded = decode_bjc::<f64, N>(&packet, alpha).unwrap();
+    let decoded = decode_bjc::<f64>(&packet, alpha).unwrap();
     assert_eq!(word, decoded);
 }
 

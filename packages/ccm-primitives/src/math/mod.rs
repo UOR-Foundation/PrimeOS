@@ -15,19 +15,6 @@ pub fn exp2<P: Float>(x: P) -> P {
     (x * <P as num_traits::FromPrimitive>::from_f64(core::f64::consts::LN_2).unwrap()).exp()
 }
 
-/// Compute resonance in log domain: R(b) = exp(Σ log(αᵢ) * bᵢ)
-pub fn log_r<P: Float>(byte: u8, alpha_logs: &[P]) -> P {
-    let mut sum = P::zero();
-
-    for (i, &log_alpha) in alpha_logs.iter().enumerate().take(8) {
-        if (byte >> i) & 1 == 1 {
-            sum = sum + log_alpha;
-        }
-    }
-
-    sum.exp()
-}
-
 /// Precompute logarithms of alpha values
 pub fn precompute_logs<P: Float>(alpha: &[P]) -> Vec<P> {
     alpha.iter().map(|&a| a.ln()).collect()

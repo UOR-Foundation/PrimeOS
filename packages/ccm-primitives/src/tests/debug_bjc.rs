@@ -32,7 +32,7 @@ fn debug_bjc_round_trip_0xab() {
 
     // Test input that's failing
     let input_byte = 0xAB_u8;
-    let input = BitWord::<8>::new(input_byte as u64);
+    let input = BitWord::from_u8(input_byte);
     println!("\n=== ENCODING 0xAB ===");
     println!("Input byte: 0xAB = {:08b} = {}", input_byte, input_byte);
     println!("BitWord value: {}", input.to_usize());
@@ -89,7 +89,7 @@ fn debug_bjc_round_trip_0xab() {
 
     // Decode
     println!("\n=== DECODING ===");
-    let decoded = decode_bjc::<f64, 8>(&packet, &alpha).unwrap();
+    let decoded = decode_bjc::<f64>(&packet, &alpha).unwrap();
     println!("Decoded BitWord value: {}", decoded.to_usize());
     let decoded_byte = decoded.to_usize() as u8;
     println!(

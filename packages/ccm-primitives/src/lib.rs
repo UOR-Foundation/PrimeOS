@@ -21,24 +21,24 @@ pub mod resonance;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
 pub mod test_vectors;
 
 // Re-export core types and functions
 pub use alpha::{AlphaError, AlphaVec};
 pub use bitword::BitWord;
-#[cfg(feature = "alloc")]
-pub use bitword::BitWordDyn;
+pub use codec::bjc::dynamic::{
+    decode_bjc_dynamic, encode_bjc_dynamic, AlphaStrategy, DynamicBjcCodec, DynamicCodecConfig,
+};
 pub use codec::bjc::{decode_bjc, encode_bjc, BjcPacket, FloatEncoding};
-pub use codec::bjc::dynamic::{encode_bjc_dynamic, decode_bjc_dynamic, DynamicBjcCodec, DynamicCodecConfig, AlphaStrategy};
 pub use codec::search::search_b_min;
 pub use coherence::Coherence;
 pub use error::CcmError;
 pub use page::{inject_page, page_of};
 pub use resonance::{
-    Resonance, InverseResonance, ResonanceClasses, ResonanceClass, ClassDistribution,
-    ResonanceConservation, ConservationResult, CurrentExtrema,
-    HomomorphicResonance, HomomorphicSubgroup,
-    ResonanceGradient, UnityStructure
+    ClassDistribution, ConservationResult, CurrentExtrema, HomomorphicResonance,
+    HomomorphicSubgroup, InverseResonance, Resonance, ResonanceClass, ResonanceClasses,
+    ResonanceConservation, ResonanceGradient, UnityStructure,
 };
 
 #[cfg(feature = "sha2")]

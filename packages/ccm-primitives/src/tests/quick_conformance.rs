@@ -77,7 +77,7 @@ mod tests {
     }
 
     fn test_vector_n8(vector: &crate::test_vectors::TestVector<f64>) -> Result<(), String> {
-        let word = BitWord::<8>::from(vector.input[0]);
+        let word = BitWord::from_u8(vector.input[0]);
 
         // Encode
         let packet = encode_bjc(
@@ -89,7 +89,7 @@ mod tests {
         .map_err(|e| format!("Encode failed: {:?}", e))?;
 
         // Decode
-        let decoded = decode_bjc::<f64, 8>(&packet, &vector.alpha)
+        let decoded = decode_bjc::<f64>(&packet, &vector.alpha)
             .map_err(|e| format!("Decode failed: {:?}", e))?;
 
         // Verify bijectivity

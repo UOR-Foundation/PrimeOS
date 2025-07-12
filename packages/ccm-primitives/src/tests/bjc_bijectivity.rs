@@ -19,7 +19,7 @@ fn test_bjc_bijectivity_comprehensive() {
 
     // Test all 256 possible byte values
     for i in 0..=255u8 {
-        let input = BitWord::<8>::from(i);
+        let input = BitWord::from_u8(i);
 
         // Add debug for first few cases
         if i <= 2 {
@@ -41,7 +41,7 @@ fn test_bjc_bijectivity_comprehensive() {
             );
         }
 
-        let decoded = match decode_bjc::<f64, 8>(&packet, &alpha) {
+        let decoded = match decode_bjc::<f64>(&packet, &alpha) {
             Ok(d) => d,
             Err(e) => {
                 use crate::Resonance;
@@ -49,7 +49,7 @@ fn test_bjc_bijectivity_comprehensive() {
                 println!("  Input resonance: {}", input.r(&alpha));
 
                 // Check Klein group members
-                let input_members = <BitWord<8> as Resonance<f64>>::class_members(&input);
+                let input_members = <BitWord as Resonance<f64>>::class_members(&input);
                 println!(
                     "  Input Klein members: {:?}",
                     input_members
@@ -77,7 +77,7 @@ fn test_bjc_bijectivity_comprehensive() {
             println!("  Decoded resonance: {}", decoded.r(&alpha));
             println!("  Packet flips: 0x{:02X}", packet.flips);
 
-            let input_members = <BitWord<8> as Resonance<f64>>::class_members(&input);
+            let input_members = <BitWord as Resonance<f64>>::class_members(&input);
             println!("  Input class members:");
             for m in input_members.iter() {
                 println!("    0x{:02X}: R = {}", m.to_usize(), m.r(&alpha));
@@ -112,9 +112,9 @@ fn test_problematic_values() {
     let test_cases = vec![0xAAu8, 0xABu8, 0x00u8, 0x01u8, 0xFFu8];
 
     for &value in &test_cases {
-        let input = BitWord::<8>::from(value);
+        let input = BitWord::from_u8(value);
         let packet = encode_bjc(&input, &alpha, 1, true).unwrap();
-        let decoded = decode_bjc::<f64, 8>(&packet, &alpha).unwrap();
+        let decoded = decode_bjc::<f64>(&packet, &alpha).unwrap();
 
         assert_eq!(input, decoded, "Failed for 0x{:02X}", value);
     }

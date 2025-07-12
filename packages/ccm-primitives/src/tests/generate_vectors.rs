@@ -116,14 +116,14 @@ mod tests {
 
         // Test a sample of vectors
         for (i, vector) in test_set.vectors.iter().take(20).enumerate() {
-            let word = BitWord::<8>::from(vector.input[0]);
+            let word = BitWord::from_u8(vector.input[0]);
 
             // Encode
             let packet = encode_bjc(&word, &vector.alpha, 1, false)
                 .expect(&format!("Failed to encode vector {}", i));
 
             // Decode
-            let decoded = decode_bjc::<f64, 8>(&packet, &vector.alpha)
+            let decoded = decode_bjc::<f64>(&packet, &vector.alpha)
                 .expect(&format!("Failed to decode vector {}", i));
 
             // Verify bijectivity

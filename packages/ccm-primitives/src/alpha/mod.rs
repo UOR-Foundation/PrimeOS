@@ -36,23 +36,18 @@ pub struct AlphaVec<P: Float> {
 }
 
 impl<P: Float> AlphaVec<P> {
-    /// Maximum length without binary128 feature
-    pub const MAX_LEN_STANDARD: usize = 64;
+    /// Maximum length for performance testing
+    /// Note: The implementation supports arbitrary sizes, but for
+    /// practical testing we may limit to smaller values
+    pub const MAX_LEN_TESTING: usize = 4096;
 
-    /// Maximum length with binary128 feature
-    #[cfg(feature = "binary128")]
-    pub const MAX_LEN_EXTENDED: usize = 512;
-
-    /// Get the maximum allowed length based on features
+    /// Get the maximum allowed length
+    /// This is not a hard limit of the implementation, but a practical
+    /// limit for testing and validation purposes
     pub fn max_len() -> usize {
-        #[cfg(feature = "binary128")]
-        {
-            Self::MAX_LEN_EXTENDED
-        }
-        #[cfg(not(feature = "binary128"))]
-        {
-            Self::MAX_LEN_STANDARD
-        }
+        // In principle, AlphaVec can support arbitrary sizes
+        // Limited only by available memory and numerical precision
+        usize::MAX
     }
 
     /// Validate the unity constraint: α[n-2] * α[n-1] = 1
@@ -63,14 +58,9 @@ impl<P: Float> AlphaVec<P> {
             return Err(AlphaError::InvalidLength(n));
         }
 
-        // According to CCM spec, unity constraint is on last two values: α[n-2] * α[n-1] = 1
-        // However, for 8-bit standard (n=8), it's specifically α[4] * α[5] = 1
-        let (u1, u2) = if n == 8 {
-            (4, 5)  // Standard 8-bit case uses positions 4,5
-        } else {
-            (n - 2, n - 1)  // General case uses last two positions
-        };
-        
+        // Unity constraint is always at positions (n-2, n-1) for Klein groups
+        let (u1, u2) = (n - 2, n - 1);
+
         let product = values[u1] * values[u2];
         let one = P::one();
         let epsilon = P::epsilon();
@@ -125,7 +115,7 @@ impl<P: Float> AlphaVec<P> {
     pub fn is_empty(&self) -> bool {
         false // Valid AlphaVec always has at least 3 elements
     }
-    
+
     /// Generate alpha values dynamically for N-bit inputs
     #[cfg(any(feature = "alloc", feature = "std"))]
     pub fn for_bit_length(n: usize) -> Result<Self, AlphaError>
@@ -135,7 +125,7 @@ impl<P: Float> AlphaVec<P> {
         let config = generator::AlphaConfig::for_bits(n);
         generator::generate_alpha(config)
     }
-    
+
     /// Generate alpha values using mathematical constants
     #[cfg(any(feature = "alloc", feature = "std"))]
     pub fn mathematical(bit_length: usize) -> Result<Self, AlphaError>
@@ -202,17 +192,7 @@ mod tests {
         let result = AlphaVec::<f64>::new(values);
         assert!(matches!(result, Err(AlphaError::InvalidLength(2))));
 
-        // Too long
-        let max_len = AlphaVec::<f64>::max_len();
-        let mut values = Vec::new();
-        for i in 0..(max_len + 1) {
-            values.push((i + 1) as f64);
-        }
-        // Ensure unity constraint for last two values
-        let n = values.len();
-        values[n - 2] = 2.0;
-        values[n - 1] = 0.5;
-        let result = AlphaVec::new(values.into_boxed_slice());
-        assert!(matches!(result, Err(AlphaError::InvalidLength(_))));
+        // Since we support arbitrary sizes limited only by memory,
+        // we can't test "too long" without causing overflow
     }
 }

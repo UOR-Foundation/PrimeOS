@@ -35,7 +35,7 @@ pub enum CcmError {
 
     /// Custom error with static string message
     Custom(&'static str),
-    
+
     /// Invalid input parameters
     InvalidInput,
 }

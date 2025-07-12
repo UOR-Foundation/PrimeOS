@@ -18,8 +18,8 @@ fn test_klein_group_minimum_uniqueness() {
             continue;
         }
 
-        let base = BitWord::<8>::from(i);
-        let members = <BitWord<8> as Resonance<f64>>::class_members(&base);
+        let base = BitWord::from_u8(i);
+        let members = <BitWord as Resonance<f64>>::class_members(&base);
 
         // Mark all members as checked
         for m in &members {
@@ -28,13 +28,13 @@ fn test_klein_group_minimum_uniqueness() {
 
         // Find minimum resonance in this group
         let mut min_resonance = f64::INFINITY;
-        let mut min_member = members[0];
+        let mut min_member = members[0].clone();
 
-        for &m in &members {
+        for m in &members {
             let r = m.r(&alpha);
             if r < min_resonance || (r == min_resonance && m.to_usize() < min_member.to_usize()) {
                 min_resonance = r;
-                min_member = m;
+                min_member = m.clone();
             }
         }
 

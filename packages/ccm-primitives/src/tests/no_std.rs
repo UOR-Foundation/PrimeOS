@@ -18,7 +18,7 @@ fn test_no_std_basic_operations() {
     let alpha = AlphaVec::new(values).unwrap();
 
     // Basic BitWord operations
-    let word = BitWord::<3>::from(0b101u8);
+    let word = BitWord::from_u8(0b101);
     assert_eq!(word.popcount(), 2);
 
     // Resonance calculation
@@ -29,15 +29,15 @@ fn test_no_std_basic_operations() {
 #[test]
 fn test_no_heap_operations() {
     // These operations should work without any heap allocation
-    let word1 = BitWord::<8>::from(0x42u8);
-    let word2 = BitWord::<8>::from(0x18u8);
+    let word1 = BitWord::from_u8(0x42);
+    let word2 = BitWord::from_u8(0x18);
 
     // XOR operation
     let result = word1 ^ word2;
     assert_eq!(result.to_usize(), 0x5A);
 
     // Bit manipulation
-    let mut word = BitWord::<8>::zero();
+    let mut word = BitWord::new(8);
     word.set_bit(3, true);
     word.set_bit(7, true);
     assert_eq!(word.to_usize(), 0x88);

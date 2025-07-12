@@ -13,21 +13,21 @@ fn check_alpha_uniqueness(alpha: &AlphaVec<f64>) -> (bool, Vec<(String, Vec<Vec<
             continue;
         }
 
-        let base = BitWord::<8>::from(i);
-        let members = <BitWord<8> as Resonance<f64>>::class_members(&base);
+        let base = BitWord::from_u8(i);
+        let members = <BitWord as Resonance<f64>>::class_members(&base);
 
         for m in &members {
             checked[m.to_usize()] = true;
         }
 
         let mut min_resonance = f64::INFINITY;
-        let mut min_member = members[0];
+        let mut min_member = members[0].clone();
 
-        for &m in &members {
+        for m in &members {
             let r = m.r(alpha);
             if r < min_resonance || (r == min_resonance && m.to_usize() < min_member.to_usize()) {
                 min_resonance = r;
-                min_member = m;
+                min_member = m.clone();
             }
         }
 
@@ -257,8 +257,8 @@ fn analyze_problem_pattern() {
 
     println!("\nResonance analysis:");
     for (a, b) in group1.iter().zip(&group2) {
-        let wa = BitWord::<8>::from(*a);
-        let wb = BitWord::<8>::from(*b);
+        let wa = BitWord::from_u8(*a);
+        let wb = BitWord::from_u8(*b);
         println!(
             "  R({:3}) = {:.10}, R({:3}) = {:.10}",
             a,

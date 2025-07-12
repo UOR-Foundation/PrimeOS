@@ -24,21 +24,21 @@ fn test_known_vectors() {
     let alpha = test_alpha();
 
     // Test vector 1: Simple byte
-    let input1 = BitWord::<8>::from(0x42u8);
+    let input1 = BitWord::from_u8(0x42u8);
     let packet1 = encode_bjc(&input1, &alpha, 1, false).unwrap();
-    let decoded1 = decode_bjc::<f64, 8>(&packet1, &alpha).unwrap();
+    let decoded1 = decode_bjc::<f64>(&packet1, &alpha).unwrap();
     assert_eq!(input1, decoded1);
 
     // Test vector 2: Klein group member
-    let input2 = BitWord::<8>::from(48u8); // Binary: 00110000
+    let input2 = BitWord::from_u8(48u8); // Binary: 00110000
     let packet2 = encode_bjc(&input2, &alpha, 1, false).unwrap();
-    let decoded2 = decode_bjc::<f64, 8>(&packet2, &alpha).unwrap();
+    let decoded2 = decode_bjc::<f64>(&packet2, &alpha).unwrap();
     assert_eq!(input2, decoded2);
 
     // Test vector 3: All bits set
-    let input3 = BitWord::<8>::from(0xFFu8);
+    let input3 = BitWord::from_u8(0xFFu8);
     let packet3 = encode_bjc(&input3, &alpha, 1, false).unwrap();
-    let decoded3 = decode_bjc::<f64, 8>(&packet3, &alpha).unwrap();
+    let decoded3 = decode_bjc::<f64>(&packet3, &alpha).unwrap();
     assert_eq!(input3, decoded3);
 }
 
@@ -55,14 +55,14 @@ fn test_unity_constraint_vectors() {
     let unity_bytes = vec![0u8, 64, 128, 192]; // Klein four-group
 
     for &byte in &unity_bytes {
-        let word = BitWord::<8>::from(byte);
+        let word = BitWord::from_u8(byte);
         let _resonance = word.r(&alpha);
 
         // Klein group members should have specific resonance patterns
         // For our alpha values, Klein group members don't all have resonance 1
         // Just verify they form a valid Klein group
         let packet = encode_bjc(&word, &alpha, 1, false).unwrap();
-        let decoded = decode_bjc::<f64, 8>(&packet, &alpha).unwrap();
+        let decoded = decode_bjc::<f64>(&packet, &alpha).unwrap();
         assert_eq!(
             word, decoded,
             "Klein group member {} failed round-trip",
@@ -75,14 +75,14 @@ fn test_unity_constraint_vectors() {
 fn test_hash_verification() {
     let alpha = test_alpha();
 
-    let input = BitWord::<8>::from(0xABu8);
+    let input = BitWord::from_u8(0xABu8);
 
     // Encode with hash
     let packet_with_hash = encode_bjc(&input, &alpha, 1, true).unwrap();
     assert!(packet_with_hash.hash.is_some());
 
     // Decode should verify hash automatically
-    let decoded = decode_bjc::<f64, 8>(&packet_with_hash, &alpha).unwrap();
+    let decoded = decode_bjc::<f64>(&packet_with_hash, &alpha).unwrap();
     assert_eq!(input, decoded);
 
     // Corrupt the packet
@@ -90,7 +90,7 @@ fn test_hash_verification() {
     corrupted.flips ^= 1; // Flip a bit
 
     // Decoding should fail due to hash mismatch
-    let result = decode_bjc::<f64, 8>(&corrupted, &alpha);
+    let result = decode_bjc::<f64>(&corrupted, &alpha);
     assert!(result.is_err());
 }
 
@@ -100,9 +100,9 @@ fn test_edge_cases() {
 
     // Minimum valid size (n=3 for alpha vector)
     let small_alpha = AlphaVec::try_from(vec![1.5, 2.0, 0.5]).unwrap();
-    let small_input = BitWord::<3>::from(0b101u8);
+    let small_input = BitWord::from_u64(0b101, 3);
     let small_packet = encode_bjc(&small_input, &small_alpha, 1, false).unwrap();
-    let small_decoded = decode_bjc::<f64, 3>(&small_packet, &small_alpha).unwrap();
+    let small_decoded = decode_bjc::<f64>(&small_packet, &small_alpha).unwrap();
     assert_eq!(small_input, small_decoded);
 }
 
@@ -119,7 +119,7 @@ fn test_spec_conformance_vectors() {
 
     // Test that n=3 encoding/decoding works for all possible values
     for i in 0u8..8 {
-        let word = BitWord::<3>::from(i);
+        let word = BitWord::from_u64(i as u64, 3);
         let packet = encode_bjc(&word, &n3_alpha, 1, false).unwrap();
 
         // Verify packet structure
@@ -128,7 +128,7 @@ fn test_spec_conformance_vectors() {
         assert_eq!(packet.r_min.len(), 8); // f64 encoding
 
         // Verify round-trip
-        let decoded = decode_bjc::<f64, 3>(&packet, &n3_alpha).unwrap();
+        let decoded = decode_bjc::<f64>(&packet, &n3_alpha).unwrap();
         assert_eq!(word, decoded, "Round-trip failed for input {:03b}", i);
     }
 }
@@ -139,9 +139,9 @@ fn test_exhaustive_small_n() {
     let alpha = AlphaVec::try_from(vec![1.5, 2.0, 0.5]).unwrap();
 
     for i in 0u8..8 {
-        let word = BitWord::<3>::from(i);
+        let word = BitWord::from_u64(i as u64, 3);
         let packet = encode_bjc(&word, &alpha, 1, false).unwrap();
-        let decoded = decode_bjc::<f64, 3>(&packet, &alpha).unwrap();
+        let decoded = decode_bjc::<f64>(&packet, &alpha).unwrap();
 
         assert_eq!(word, decoded, "Round-trip failed for {i:03b}");
 
@@ -161,7 +161,7 @@ fn test_exhaustive_small_n() {
 #[cfg(feature = "sha2")]
 fn test_packet_structure_with_hash() {
     let alpha = test_alpha();
-    let word = BitWord::<8>::from(0x42u8);
+    let word = BitWord::from_u8(0x42u8);
 
     // Test with hash
     let packet = encode_bjc(&word, &alpha, 1, true).unwrap();
@@ -174,7 +174,7 @@ fn test_packet_structure_with_hash() {
     assert_eq!(packet.hash.as_ref().unwrap().len(), 32); // SHA-256 is 32 bytes
 
     // Verify the packet can be decoded
-    let decoded = decode_bjc::<f64, 8>(&packet, &alpha).unwrap();
+    let decoded = decode_bjc::<f64>(&packet, &alpha).unwrap();
     // Just verify it decodes successfully
     assert!(decoded.to_usize() <= 255);
 }
