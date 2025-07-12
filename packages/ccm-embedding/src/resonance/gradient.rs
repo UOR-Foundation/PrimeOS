@@ -290,7 +290,7 @@ pub mod advanced {
             Err(CcmError::SearchExhausted)
         }
     }
-    
+
     /// Compute Hessian matrix for BitWord (second derivatives)
     #[cfg(feature = "alloc")]
     pub fn resonance_hessian_bitword<P: Float + FromPrimitive>(
@@ -348,7 +348,7 @@ pub mod advanced {
         for i in 0..n {
             let mut flipped = current.clone();
             flipped.flip_bit(i);
-            
+
             let new_r = flipped.r(alpha);
             let new_error = (new_r - target).abs();
             let reduction = error.abs() - new_error;
@@ -381,10 +381,10 @@ pub mod advanced {
         if n > 20 {
             // Sample from different regions of the space
             let mut seed = 0x2A65C3F5u64;
-            
+
             for _ in 0..n_starts {
                 seed = seed.wrapping_mul(1103515245).wrapping_add(12345);
-                
+
                 let mut start = BitWord::new(n);
                 // Set bits based on pseudo-random pattern
                 for i in 0..n.min(64) {
@@ -392,7 +392,7 @@ pub mod advanced {
                         start.set_bit(i, true);
                     }
                 }
-                
+
                 if let Ok(result) = BitWord::gradient_search(start, target, alpha, 50) {
                     let error = (result.r(alpha) - target).abs();
                     if error < best_error {
@@ -403,8 +403,12 @@ pub mod advanced {
             }
         } else {
             // For small n, try evenly distributed starting points
-            let step = if n <= 20 { (1usize << n) / n_starts.max(1) } else { 1 };
-            
+            let step = if n <= 20 {
+                (1usize << n) / n_starts.max(1)
+            } else {
+                1
+            };
+
             for i in (0..(1usize << n)).step_by(step.max(1)).take(n_starts) {
                 let mut start = BitWord::new(n);
                 for bit in 0..n {

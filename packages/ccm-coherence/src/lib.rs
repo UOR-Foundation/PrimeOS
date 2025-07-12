@@ -10,32 +10,23 @@
 extern crate alloc;
 
 // Import core types
-use ccm_core::{CcmError, Float};
 
-// Include the existing coherence module
+// Include existing modules
 mod coherence;
 pub use coherence::{Coherence, Graded};
 
-// Additional modules to be implemented
+// Core modules
 pub mod clifford;
+pub mod element;
+pub mod embedding;
 pub mod grade;
 pub mod metric;
 
-/// Clifford algebra structure for n dimensions
-pub struct CliffordAlgebra<P: Float> {
-    dimension: usize,
-    _phantom: core::marker::PhantomData<P>,
-}
-
-impl<P: Float> CliffordAlgebra<P> {
-    /// Generate Clifford algebra for n dimensions
-    pub fn generate(n: usize) -> Result<Self, CcmError> {
-        Ok(Self {
-            dimension: n,
-            _phantom: core::marker::PhantomData,
-        })
-    }
-}
+// Re-export key types
+pub use clifford::CliffordAlgebra;
+pub use element::{CliffordElement, Section};
+pub use embedding::{bitword_to_clifford, embed_with_resonance, u8_to_clifford};
+pub use metric::{coherence_norm, coherence_product};
 
 #[cfg(test)]
 mod tests {
@@ -44,6 +35,6 @@ mod tests {
     #[test]
     fn test_clifford_generation() {
         let algebra = CliffordAlgebra::<f64>::generate(8).unwrap();
-        assert_eq!(algebra.dimension, 8);
+        assert_eq!(algebra.dimension(), 8);
     }
 }

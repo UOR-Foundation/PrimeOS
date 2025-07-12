@@ -24,7 +24,7 @@ impl<P: Float> PartialEq for OrdFloat<P> {
         let abs_diff = (self.0 - other.0).abs();
         let max_val = self.0.abs().max(other.0.abs()).max(P::one());
         let relative_epsilon = epsilon * max_val;
-        
+
         abs_diff <= relative_epsilon
     }
 }
@@ -89,7 +89,7 @@ impl<P: Float + FromPrimitive> PageStructure<P> {
         // Split into separate vectors (already sorted from BTreeMap)
         let mut resonance_values = Vec::new();
         let mut representatives = Vec::new();
-        
+
         for (resonance, pattern) in resonance_pattern_pairs {
             resonance_values.push(resonance);
             representatives.push(pattern);
@@ -247,7 +247,7 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
         // Only two patterns: 0 and 1
         let word0 = BitWord::new(1);
         resonance_patterns.insert(OrdFloat(P::one()), word0); // 0
-        
+
         let mut word1 = BitWord::new(1);
         word1.set_bit(0, true);
         resonance_patterns.insert(OrdFloat(alpha[0]), word1); // 1
@@ -255,8 +255,12 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
         // Four patterns, no unity constraint yet
         for i in 0..4u8 {
             let mut word = BitWord::new(2);
-            if i & 1 != 0 { word.set_bit(0, true); }
-            if i & 2 != 0 { word.set_bit(1, true); }
+            if i & 1 != 0 {
+                word.set_bit(0, true);
+            }
+            if i & 2 != 0 {
+                word.set_bit(1, true);
+            }
             let r = word.r(alpha);
             resonance_patterns.insert(OrdFloat(r), word);
         }
@@ -297,29 +301,33 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
                         // Find Klein minimum among all variants with this resonance
                         let mut min_pattern = pattern.clone();
                         let mut min_r = r;
-                        
+
                         // Check all Klein variants to find minimum
                         for k2 in 0..4u8 {
                             let mut test_pattern = BitWord::new(n);
-                            
+
                             // Copy base bits
                             for bit in 0..(n - 2) {
                                 if base.bit(bit) {
                                     test_pattern.set_bit(bit, true);
                                 }
                             }
-                            
+
                             // Set Klein bits
-                            if k2 & 1 != 0 { test_pattern.set_bit(n - 2, true); }
-                            if k2 & 2 != 0 { test_pattern.set_bit(n - 1, true); }
-                            
+                            if k2 & 1 != 0 {
+                                test_pattern.set_bit(n - 2, true);
+                            }
+                            if k2 & 2 != 0 {
+                                test_pattern.set_bit(n - 1, true);
+                            }
+
                             let test_r = test_pattern.r(alpha);
                             if OrdFloat(test_r) == ord_r && test_r < min_r {
                                 min_r = test_r;
                                 min_pattern = test_pattern;
                             }
                         }
-                        
+
                         resonance_patterns.insert(ord_r, min_pattern);
                     }
                 }
@@ -327,7 +335,7 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
         } else {
             // For large n, use a strategic sampling approach
             // Focus on patterns likely to produce diverse resonance values
-            
+
             // Start with key patterns
             let zero_pattern = BitWord::new(n);
             resonance_patterns.insert(OrdFloat(P::one()), zero_pattern);
@@ -345,7 +353,7 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
 
             // Add two-bit patterns for alpha products
             for i in 0..n.min(32) {
-                for j in (i+1)..n.min(32) {
+                for j in (i + 1)..n.min(32) {
                     let mut pattern = BitWord::new(n);
                     pattern.set_bit(i, true);
                     pattern.set_bit(j, true);
@@ -360,27 +368,27 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
             // Add patterns with varying popcount
             let mut rng_state = 0x2A65C3F5u64;
             let target_samples = 5000; // Reduced for efficiency
-            
+
             for popcount in 1..=n.min(15) {
                 let samples_per_popcount = target_samples / n.min(15);
-                
+
                 for _ in 0..samples_per_popcount {
                     rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
-                    
+
                     let mut pattern = BitWord::new(n);
                     let mut bits_set = 0;
-                    
+
                     // Set exactly `popcount` bits
                     while bits_set < popcount {
                         let bit_pos = (rng_state as usize) % n;
                         rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
-                        
+
                         if !pattern.bit(bit_pos) {
                             pattern.set_bit(bit_pos, true);
                             bits_set += 1;
                         }
                     }
-                    
+
                     let r = pattern.r(alpha);
                     let ord_r = OrdFloat(r);
                     if !resonance_patterns.contains_key(&ord_r) {
@@ -392,7 +400,10 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
     }
 
     // Convert to sorted vector of (resonance, pattern) pairs
-    Ok(resonance_patterns.into_iter().map(|(ord_r, pattern)| (ord_r.0, pattern)).collect())
+    Ok(resonance_patterns
+        .into_iter()
+        .map(|(ord_r, pattern)| (ord_r.0, pattern))
+        .collect())
 }
 
 /// Implementation for BitWord
@@ -569,13 +580,13 @@ mod tests {
         // but not necessarily the theoretical 3 × 2^(n-2)
         assert!(!structure.resonance_values.is_empty());
         assert!(structure.resonance_values.len() > 10); // Should have decent coverage
-        
+
         // Total pages = resonance classes × 4 Klein orbits
         assert_eq!(structure.total_pages, structure.resonance_values.len() * 4);
-        
+
         // Verify resonance values are sorted
         for i in 1..structure.resonance_values.len() {
-            assert!(structure.resonance_values[i] >= structure.resonance_values[i-1]);
+            assert!(structure.resonance_values[i] >= structure.resonance_values[i - 1]);
         }
     }
 
@@ -598,24 +609,31 @@ mod tests {
 
         // Test that Klein transforms work correctly structurally
         // Note: With dynamic alpha, Klein group members may not have identical resonance
-        
+
         let mut resonances = Vec::new();
-        
+
         for klein in 0..4 {
             let transformed = <u8 as IntrinsicPages<f64>>::apply_klein_transform(&byte, klein);
             let resonance = transformed.r(&alpha);
             let orbit = <u8 as IntrinsicPages<f64>>::klein_orbit_position(&transformed);
-            
+
             resonances.push(resonance);
-            
+
             // Verify Klein orbit position matches the transform
-            assert_eq!(orbit, klein, "Klein orbit position should match transform index");
+            assert_eq!(
+                orbit, klein,
+                "Klein orbit position should match transform index"
+            );
         }
-        
+
         // Just verify that all resonances are positive and finite
         for (i, &r) in resonances.iter().enumerate() {
-            assert!(r > 0.0 && r.is_finite(), 
-                "Klein transform {} gave invalid resonance {}", i, r);
+            assert!(
+                r > 0.0 && r.is_finite(),
+                "Klein transform {} gave invalid resonance {}",
+                i,
+                r
+            );
         }
     }
 
@@ -623,9 +641,9 @@ mod tests {
     fn test_resonance_enumeration() {
         // Test that we get reasonable resonance counts for small cases
         // Note: With dynamic alpha, exact theoretical counts may not hold
-        
+
         // Skip n=2 since AlphaVec requires at least 3 elements for unity constraint
-        
+
         let alpha3 = AlphaVec::<f64>::for_bit_length(3).unwrap();
         let resonances3 = enumerate_resonance_classes(3, &alpha3).unwrap();
         assert!(!resonances3.is_empty());
@@ -635,11 +653,14 @@ mod tests {
         let resonances4 = enumerate_resonance_classes(4, &alpha4).unwrap();
         assert!(!resonances4.is_empty());
         assert!(resonances4.len() >= 4); // Should have reasonable coverage
-        
+
         // Verify they're sorted and unique
         for resonances in [&resonances3, &resonances4] {
             for i in 1..resonances.len() {
-                assert!(resonances[i].0 > resonances[i-1].0, "Resonances should be sorted and unique");
+                assert!(
+                    resonances[i].0 > resonances[i - 1].0,
+                    "Resonances should be sorted and unique"
+                );
             }
         }
     }

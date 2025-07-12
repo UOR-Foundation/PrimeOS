@@ -23,7 +23,7 @@
 //! ### Large n (> 40 bits)
 //! - **Algorithms**: Multiple heuristic approaches
 //!   - Gradient-guided search from random starts
-//!   - Sample-based approximation 
+//!   - Sample-based approximation
 //!   - Branch-and-bound with pruning
 //! - **Complexity**: Varies by method
 //! - **Guarantee**: May not find all solutions
@@ -36,7 +36,7 @@
 //!
 //! let alpha = AlphaVec::<f64>::for_bit_length(32).unwrap();
 //! let target = 100.0;
-//! 
+//!
 //! // Find patterns with resonance near 100
 //! let patterns = BitWord::find_by_resonance(target, &alpha, 0.1).unwrap();
 //! ```
@@ -169,7 +169,7 @@ impl<P: Float + FromPrimitive> InverseResonance<P> for u8 {
 #[cfg(feature = "alloc")]
 pub mod algorithms {
     use super::*;
-    
+
     /// Approximation algorithm for very large n using sampling
     pub fn sample_based_inverse<P: Float + FromPrimitive>(
         target: P,
@@ -180,38 +180,40 @@ pub mod algorithms {
         let mut results = Vec::new();
         let n = alpha.len();
         let mut seed = 0x2A65C3F5u64;
-        
+
         // Use importance sampling based on log-resonance decomposition
         let target_log = target.ln();
         let log_alphas: Vec<P> = alpha.values.iter().map(|&a| a.ln()).collect();
-        
+
         // Find most significant bits (largest log values)
-        let mut indexed_logs: Vec<(usize, P)> = log_alphas.iter()
+        let mut indexed_logs: Vec<(usize, P)> = log_alphas
+            .iter()
             .enumerate()
             .map(|(i, &log_a)| (i, log_a))
             .collect();
         indexed_logs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        
+
         for _ in 0..samples {
             seed = seed.wrapping_mul(1103515245).wrapping_add(12345);
-            
+
             let mut word = BitWord::new(n);
             let mut current_log_sum = P::zero();
-            
+
             // Greedy construction guided by target
             for &(idx, log_a) in &indexed_logs {
-                if (current_log_sum + log_a - target_log).abs() < 
-                   (current_log_sum - target_log).abs() {
+                if (current_log_sum + log_a - target_log).abs()
+                    < (current_log_sum - target_log).abs()
+                {
                     word.set_bit(idx, true);
                     current_log_sum = current_log_sum + log_a;
                 }
-                
+
                 // Early termination if close enough
                 if (current_log_sum - target_log).abs() < tolerance {
                     break;
                 }
             }
-            
+
             // Refine with local search
             for _ in 0..10 {
                 let r = word.r(alpha);
@@ -221,23 +223,24 @@ pub mod algorithms {
                     }
                     break;
                 }
-                
+
                 // Try flipping bits to improve
                 let mut best_flip = None;
                 let mut best_error = (r - target).abs();
-                
-                for i in 0..n.min(64) { // Focus on most significant bits
+
+                for i in 0..n.min(64) {
+                    // Focus on most significant bits
                     let mut test = word.clone();
                     test.flip_bit(i);
                     let test_r = test.r(alpha);
                     let test_error = (test_r - target).abs();
-                    
+
                     if test_error < best_error {
                         best_error = test_error;
                         best_flip = Some(i);
                     }
                 }
-                
+
                 if let Some(flip_idx) = best_flip {
                     word.flip_bit(flip_idx);
                 } else {
@@ -245,14 +248,14 @@ pub mod algorithms {
                 }
             }
         }
-        
+
         if results.is_empty() {
             Err(CcmError::SearchExhausted)
         } else {
             Ok(results)
         }
     }
-    
+
     /// Branch and bound algorithm for exact solutions
     pub fn branch_and_bound<P: Float + FromPrimitive>(
         target: P,
@@ -262,19 +265,19 @@ pub mod algorithms {
     ) -> Result<Vec<BitWord>, CcmError> {
         let n = alpha.len();
         let mut results = Vec::new();
-        
+
         // Precompute cumulative bounds
         let mut cumulative_max = vec![P::zero(); n + 1];
         let mut cumulative_min = vec![P::zero(); n + 1];
-        
+
         for i in (0..n).rev() {
             cumulative_max[i] = cumulative_max[i + 1] + alpha[i];
             cumulative_min[i] = cumulative_min[i + 1];
         }
-        
+
         // Stack for DFS
         let mut stack = vec![(BitWord::new(n), P::one(), 0)];
-        
+
         while let Some((mut word, current_r, depth)) = stack.pop() {
             if depth == n {
                 // Complete solution
@@ -286,24 +289,24 @@ pub mod algorithms {
                 }
                 continue;
             }
-            
+
             // Bounds check
             let lower_bound = current_r * cumulative_min[depth];
             let upper_bound = current_r * cumulative_max[depth];
-            
+
             if lower_bound > target + tolerance || upper_bound < target - tolerance {
                 continue; // Prune this branch
             }
-            
+
             // Try both options for current bit
             // Option 1: bit not set
             stack.push((word.clone(), current_r, depth + 1));
-            
+
             // Option 2: bit set
             word.set_bit(depth, true);
             stack.push((word, current_r * alpha[depth], depth + 1));
         }
-        
+
         if results.is_empty() {
             Err(CcmError::SearchExhausted)
         } else {
@@ -341,7 +344,7 @@ impl<P: Float + FromPrimitive> InverseResonance<P> for BitWord {
 
             for i in 0..num_klein_reps {
                 let mut klein_repr = BitWord::new(n);
-                
+
                 // Set bits based on index i
                 for bit in 0..(n.saturating_sub(2)) {
                     if (i >> bit) & 1 == 1 {
@@ -369,10 +372,11 @@ impl<P: Float + FromPrimitive> InverseResonance<P> for BitWord {
             }
         } else {
             // For larger N, use multiple strategies
-            
+
             // Strategy 1: Resonance factorization
             if let Ok(factorizations) = Self::factor_resonance(target, alpha) {
-                for indices in factorizations.into_iter().take(100) { // Limit results
+                for indices in factorizations.into_iter().take(100) {
+                    // Limit results
                     let mut candidate = BitWord::new(n);
                     for &idx in &indices {
                         if idx < n {
@@ -389,15 +393,15 @@ impl<P: Float + FromPrimitive> InverseResonance<P> for BitWord {
                     }
                 }
             }
-            
+
             // Strategy 2: Gradient-based search from multiple starting points
             use crate::ResonanceGradient;
             let num_starts = 10;
             let mut seed = 0x2A65C3F5u64;
-            
+
             for _ in 0..num_starts {
                 seed = seed.wrapping_mul(1103515245).wrapping_add(12345);
-                
+
                 let mut start = BitWord::new(n);
                 // Random initialization
                 for i in 0..n.min(64) {
@@ -405,7 +409,7 @@ impl<P: Float + FromPrimitive> InverseResonance<P> for BitWord {
                         start.set_bit(i, true);
                     }
                 }
-                
+
                 if let Ok(candidate) = BitWord::gradient_search(start, target, alpha, 100) {
                     if candidate.is_klein_minimum(alpha) {
                         let r = candidate.r(alpha);
@@ -445,11 +449,11 @@ impl<P: Float + FromPrimitive> InverseResonance<P> for BitWord {
 
         // Choose algorithm based on problem size
         let dp_threshold = if cfg!(feature = "std") { 24 } else { 20 };
-        
+
         if n <= dp_threshold {
             // Exhaustive search for small n
             let max_iterations = 1usize << n;
-            
+
             for i in 0..max_iterations {
                 let mut sum = P::zero();
                 let mut indices = Vec::new();
@@ -468,17 +472,17 @@ impl<P: Float + FromPrimitive> InverseResonance<P> for BitWord {
         } else {
             // Dynamic programming approach for larger n
             // We'll use a meet-in-the-middle strategy to handle larger instances
-            
+
             let mid = n / 2;
             let first_half = &log_alphas[..mid];
             let second_half = &log_alphas[mid..];
-            
+
             // Generate all subset sums for first half
             let mut first_sums = Vec::new();
             for mask in 0..(1usize << mid) {
                 let mut sum = P::zero();
                 let mut indices = Vec::new();
-                
+
                 for (i, &log_alpha) in first_half.iter().enumerate() {
                     if (mask >> i) & 1 == 1 {
                         sum = sum + log_alpha;
@@ -487,40 +491,40 @@ impl<P: Float + FromPrimitive> InverseResonance<P> for BitWord {
                 }
                 first_sums.push((sum, indices));
             }
-            
+
             // Sort first half sums for binary search
             first_sums.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-            
+
             // Check all subsets of second half
             for mask in 0..(1usize << (n - mid)) {
                 let mut sum = P::zero();
                 let mut indices = Vec::new();
-                
+
                 for (i, &log_alpha) in second_half.iter().enumerate() {
                     if (mask >> i) & 1 == 1 {
                         sum = sum + log_alpha;
                         indices.push(mid + i);
                     }
                 }
-                
+
                 let needed = target_log - sum;
-                
+
                 // Binary search for matching sum in first half
-                let pos = first_sums.binary_search_by(|probe| {
-                    probe.0.partial_cmp(&needed).unwrap()
-                });
-                
+                let pos =
+                    first_sums.binary_search_by(|probe| probe.0.partial_cmp(&needed).unwrap());
+
                 match pos {
                     Ok(idx) => {
                         // Exact match found
                         let mut full_indices = first_sums[idx].1.clone();
                         full_indices.extend(&indices);
                         solutions.push(full_indices);
-                        
+
                         // Check neighbors for additional matches within tolerance
                         let mut check_idx = idx.saturating_sub(1);
-                        while check_idx < first_sums.len() && 
-                              (first_sums[check_idx].0 - needed).abs() <= tolerance {
+                        while check_idx < first_sums.len()
+                            && (first_sums[check_idx].0 - needed).abs() <= tolerance
+                        {
                             if check_idx != idx {
                                 let mut full_indices = first_sums[check_idx].1.clone();
                                 full_indices.extend(&indices);
@@ -532,8 +536,9 @@ impl<P: Float + FromPrimitive> InverseResonance<P> for BitWord {
                     Err(idx) => {
                         // Check nearby values within tolerance
                         for check_idx in idx.saturating_sub(1)..=(idx + 1).min(first_sums.len()) {
-                            if check_idx < first_sums.len() && 
-                               (first_sums[check_idx].0 - needed).abs() <= tolerance {
+                            if check_idx < first_sums.len()
+                                && (first_sums[check_idx].0 - needed).abs() <= tolerance
+                            {
                                 let mut full_indices = first_sums[check_idx].1.clone();
                                 full_indices.extend(&indices);
                                 solutions.push(full_indices);
@@ -542,7 +547,7 @@ impl<P: Float + FromPrimitive> InverseResonance<P> for BitWord {
                     }
                 }
             }
-            
+
             // Limit solutions to prevent memory explosion
             solutions.truncate(1000);
         }
@@ -563,7 +568,7 @@ mod tests {
         // First, find a byte that's actually a Klein minimum
         let test_byte = 0b00100101u8; // 37, with bits 6,7 = 00 (Klein representative)
         let klein_members = <u8 as Resonance<f64>>::class_members(&test_byte);
-        
+
         // Find the actual Klein minimum and its resonance
         let mut min_resonance = test_byte.r(&alpha);
         for &member in &klein_members {
@@ -572,26 +577,36 @@ mod tests {
                 min_resonance = r;
             }
         }
-        
+
         // Now test finding this minimum resonance
         let candidates = u8::find_by_resonance(min_resonance, &alpha, 1e-9).unwrap();
-        
+
         // Should find at least one Klein minimum
-        assert!(!candidates.is_empty(), "Should find at least one Klein minimum");
-        
+        assert!(
+            !candidates.is_empty(),
+            "Should find at least one Klein minimum"
+        );
+
         // Verify all found values have correct resonance
         for &byte in &candidates {
             let r = byte.r(&alpha);
-            assert!((r - min_resonance).abs() < 1e-9, 
-                "Found byte {} with resonance {} instead of target {}", 
-                byte, r, min_resonance);
+            assert!(
+                (r - min_resonance).abs() < 1e-9,
+                "Found byte {} with resonance {} instead of target {}",
+                byte,
+                r,
+                min_resonance
+            );
         }
-        
+
         // Verify Klein minimum property
         for &candidate in &candidates {
-            assert!(candidate.is_klein_minimum(&alpha),
-                "Candidate {} should be a Klein minimum", candidate);
-            
+            assert!(
+                candidate.is_klein_minimum(&alpha),
+                "Candidate {} should be a Klein minimum",
+                candidate
+            );
+
             // Check that it's in the right Klein group
             let klein_repr = candidate & 0b00111111;
             let expected_members = [
@@ -600,23 +615,30 @@ mod tests {
                 klein_repr | 0b10000000,
                 klein_repr | 0b11000000,
             ];
-            
-            assert!(expected_members.contains(&candidate),
-                "Candidate {} not in expected Klein group", candidate);
+
+            assert!(
+                expected_members.contains(&candidate),
+                "Candidate {} not in expected Klein group",
+                candidate
+            );
         }
-        
+
         // Test with a non-Klein-representative to ensure we still find the minimum
         let test_byte2 = 0b11100101u8; // Same as above but with bits 6,7 = 11
         let klein_members = <u8 as Resonance<f64>>::class_members(&test_byte2);
-        
+
         // Find the Klein minimum's resonance
-        let min_resonance = klein_members.iter()
+        let min_resonance = klein_members
+            .iter()
             .map(|&b| b.r(&alpha))
             .min_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap();
-        
+
         let candidates2 = u8::find_by_resonance(min_resonance, &alpha, 1e-9).unwrap();
-        assert!(!candidates2.is_empty(), "Should find Klein minimum for non-representative");
+        assert!(
+            !candidates2.is_empty(),
+            "Should find Klein minimum for non-representative"
+        );
     }
 
     #[test]

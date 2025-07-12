@@ -46,12 +46,12 @@ pub fn inject_page<P: Float + FromPrimitive>(
 
     // Get the current Klein orbit of the representative
     let current_orbit = <BitWord as IntrinsicPages<P>>::klein_orbit_position(representative);
-    
+
     // To transform from current_orbit to klein_orbit, we need to XOR with the difference
     // Since Klein group is Z/2Z × Z/2Z with XOR operation
     let transform = current_orbit ^ klein_orbit;
     let result = <BitWord as IntrinsicPages<P>>::apply_klein_transform(representative, transform);
-    
+
     Ok(result)
 }
 
@@ -81,22 +81,25 @@ mod tests {
 
         // Test Klein group orbit functionality
         // With dynamic alpha, Klein members may be in different resonance classes
-        
+
         for i in 0..4 {
             let member = <BitWord as IntrinsicPages<f64>>::apply_klein_transform(&word, i);
             let member_page = page_of(&member, &alpha, &structure).unwrap();
-            
+
             // Klein orbit should match the transform index
             let klein_orbit = member_page & 0b11;
             assert_eq!(klein_orbit, i as usize);
-            
+
             // Page should be valid
             assert!(member_page < structure.total_pages);
-            
+
             // Verify consistency: applying the same transform should give same result
             let member2 = <BitWord as IntrinsicPages<f64>>::apply_klein_transform(&word, i);
             let member_page2 = page_of(&member2, &alpha, &structure).unwrap();
-            assert_eq!(member_page, member_page2, "Klein transform should be deterministic");
+            assert_eq!(
+                member_page, member_page2,
+                "Klein transform should be deterministic"
+            );
         }
     }
 
@@ -112,7 +115,7 @@ mod tests {
         let count_4 = page_count(4, &alpha_4).unwrap();
         assert!(count_4 > 0);
         assert!(count_4 % 4 == 0); // Should be multiple of 4 (Klein orbits)
-        
+
         // Larger bit length should generally have more pages
         let alpha_6 = AlphaVec::<f64>::for_bit_length(6).unwrap();
         let count_6 = page_count(6, &alpha_6).unwrap();

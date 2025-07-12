@@ -35,7 +35,7 @@
 //! use ccm_core::BitWord;
 //!
 //! let alpha = AlphaVec::<f64>::for_bit_length(10).unwrap();
-//! 
+//!
 //! // Get unique resonance values
 //! let spectrum = BitWord::resonance_spectrum(&alpha);
 //! assert_eq!(spectrum.len(), 3 * (1 << 8)); // 3 × 2^{10-2} = 768
@@ -54,9 +54,9 @@ use std::{collections::BTreeMap, vec::Vec};
 /// Resonance equivalence class information
 #[derive(Debug, Clone)]
 pub struct ResonanceClass<P: Float> {
-    pub id: usize,         // Class ID (no longer limited to u8)
-    pub representative: P, // Canonical resonance value
-    pub size: usize,       // Number of Klein groups
+    pub id: usize,             // Class ID (no longer limited to u8)
+    pub representative: P,     // Canonical resonance value
+    pub size: usize,           // Number of Klein groups
     pub members: Vec<BitWord>, // Klein group representatives (now BitWord)
 }
 
@@ -251,7 +251,7 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
         } else if n <= 20 {
             // Small enough for exhaustive search through Klein representatives
             let num_klein_representatives = 1usize << (n - 2);
-            
+
             for i in 0..num_klein_representatives {
                 let mut repr = BitWord::new(n);
                 // Set bits based on i, but only the first n-2 bits
@@ -260,7 +260,7 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
                         repr.set_bit(bit, true);
                     }
                 }
-                
+
                 // Get Klein minimum resonance
                 let members = <BitWord as Resonance<P>>::class_members(&repr);
                 let min_resonance = members
@@ -268,26 +268,26 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
                     .map(|m| m.r(alpha))
                     .min_by(|a, b| a.partial_cmp(b).unwrap())
                     .unwrap();
-                
+
                 unique_resonances.insert(crate::page::coherence::OrdFloat(min_resonance), ());
             }
         } else {
             // Large n: use mathematical sampling
             // We know there are 3 × 2^(n-2) unique values
             let expected_count = 3 * (1usize << (n - 2).min(62));
-            
+
             // Strategic sampling to find diverse resonance values
             // 1. Empty pattern (all zeros)
             let zero = BitWord::new(n);
             unique_resonances.insert(crate::page::coherence::OrdFloat(zero.r(alpha)), ());
-            
+
             // 2. Single bit patterns
             for i in 0..n.min(64) {
                 let mut word = BitWord::new(n);
                 word.set_bit(i, true);
                 unique_resonances.insert(crate::page::coherence::OrdFloat(word.r(alpha)), ());
             }
-            
+
             // 3. Unity positions
             if n >= 2 {
                 let mut unity = BitWord::new(n);
@@ -295,14 +295,14 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
                 unity.set_bit(n - 1, true);
                 unique_resonances.insert(crate::page::coherence::OrdFloat(unity.r(alpha)), ());
             }
-            
+
             // 4. Random sampling with deterministic seed
             let mut seed = 0x2A65C3F5u64;
             let samples_needed = expected_count.min(10000);
-            
+
             while unique_resonances.len() < samples_needed {
                 seed = seed.wrapping_mul(1103515245).wrapping_add(12345);
-                
+
                 let mut word = BitWord::new(n);
                 // Set bits based on pseudo-random pattern
                 for i in 0..n.min(64) {
@@ -310,7 +310,7 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
                         word.set_bit(i, true);
                     }
                 }
-                
+
                 // For bits beyond 64, use additional random iterations
                 if n > 64 {
                     let mut extra_seed = seed;
@@ -321,14 +321,17 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
                         }
                     }
                 }
-                
+
                 let r = word.r(alpha);
                 unique_resonances.insert(crate::page::coherence::OrdFloat(r), ());
             }
         }
-        
+
         // Convert to sorted vector
-        unique_resonances.into_keys().map(|ord_float| ord_float.0).collect()
+        unique_resonances
+            .into_keys()
+            .map(|ord_float| ord_float.0)
+            .collect()
     }
 
     fn resonance_class(r: P, alpha: &AlphaVec<P>) -> Option<ResonanceClass<P>> {
@@ -336,7 +339,7 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
         let n = alpha.len();
         let mut class_members = Vec::new();
         let mut class_id = 0usize;
-        
+
         if n < 2 {
             // Special case
             let word = BitWord::new(n);
@@ -357,7 +360,7 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
                 }
                 Err(_) => return None,
             }
-            
+
             // Assign a class ID based on sorted position
             let spectrum = Self::resonance_spectrum(alpha);
             class_id = spectrum
@@ -365,7 +368,7 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
                 .position(|&spec_r| (spec_r - r).abs() <= tolerance)
                 .unwrap_or(0);
         }
-        
+
         if class_members.is_empty() {
             None
         } else {
@@ -375,20 +378,23 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
             } else {
                 let repr = &class_members[0];
                 let klein_members = <BitWord as Resonance<P>>::class_members(repr);
-                
+
                 // Count unique resonances in Klein group
                 let mut unique_resonances = Vec::new();
                 for member in &klein_members {
                     let res = member.r(alpha);
-                    if !unique_resonances.iter().any(|&ur| (res - ur).abs() <= tolerance) {
+                    if !unique_resonances
+                        .iter()
+                        .any(|&ur| (res - ur).abs() <= tolerance)
+                    {
                         unique_resonances.push(res);
                     }
                 }
-                
+
                 // Size is 4 / number of unique resonances
                 4 / unique_resonances.len()
             };
-            
+
             Some(ResonanceClass {
                 id: class_id,
                 representative: r,
@@ -400,7 +406,7 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
 
     fn class_distribution(alpha: &AlphaVec<P>) -> ClassDistribution {
         let n = alpha.len();
-        
+
         if n < 2 {
             // Special case
             ClassDistribution {
@@ -412,11 +418,11 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
         } else {
             // Mathematical formula: 3 × 2^(n-2) total classes
             let total = 3 * (1usize << (n - 2).min(62));
-            
+
             // From theory: 2/3 are size 2, 1/3 are size 4
             let size_4 = total / 3;
             let size_2 = total - size_4;
-            
+
             ClassDistribution {
                 total_classes: total,
                 size_2_count: size_2,
@@ -428,7 +434,7 @@ impl<P: Float + FromPrimitive> ResonanceClasses<P> for BitWord {
 
     fn verify_class_count(alpha: &AlphaVec<P>, expected: usize) -> bool {
         let n = alpha.len();
-        
+
         if n < 2 {
             expected == 1
         } else {

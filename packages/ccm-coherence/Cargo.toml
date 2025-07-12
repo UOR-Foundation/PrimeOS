@@ -10,10 +10,11 @@ repository = "https://github.com/UOR-Foundation/PrimeOS"
 [dependencies]
 ccm-core = { path = "../ccm-core" }
 num-traits = { version = "0.2", default-features = false }
+num-complex = { version = "0.4", default-features = false }
 
 [features]
 default = ["std"]
-std = ["ccm-core/std", "num-traits/std"]
-alloc = ["ccm-core/alloc"]
+std = ["ccm-core/std", "num-traits/std", "num-complex/std"]
+alloc = ["ccm-core/alloc", "num-complex/libm"]
 
 [dev-dependencies]

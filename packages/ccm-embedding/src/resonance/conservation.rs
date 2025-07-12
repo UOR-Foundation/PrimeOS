@@ -113,14 +113,14 @@ impl<P: Float + FromPrimitive> ResonanceConservation<P> for BitWord {
     fn resonance_sum(start: usize, count: usize, alpha: &AlphaVec<P>) -> P {
         let mut sum = P::zero();
         let n = alpha.len();
-        
+
         // For large n, we can't enumerate all values
         // Instead, use mathematical properties
         if n > 20 && count > (1 << 20) {
             // Use sampling approach for very large cycles
             let sample_size = (1 << 20).min(count); // Sample at most 2^20 values
             let step = count / sample_size;
-            
+
             for i in 0..sample_size {
                 let pos = start + i * step;
                 let word = helpers::index_to_bitword(pos, n);
@@ -172,7 +172,7 @@ impl<P: Float + FromPrimitive> ResonanceConservation<P> for BitWord {
 
     fn resonance_current(idx: usize, alpha: &AlphaVec<P>) -> P {
         let n = alpha.len();
-        
+
         let current = helpers::index_to_bitword(idx, n);
         let next = helpers::index_to_bitword(idx + 1, n);
 
@@ -186,7 +186,11 @@ impl<P: Float + FromPrimitive> ResonanceConservation<P> for BitWord {
         let mut min_position = 0;
 
         // For large ranges, use sampling
-        let step = if range > (1 << 20) { range / (1 << 20) } else { 1 };
+        let step = if range > (1 << 20) {
+            range / (1 << 20)
+        } else {
+            1
+        };
 
         for i in (0..range).step_by(step.max(1)) {
             let current = Self::resonance_current(i, alpha);
@@ -217,18 +221,18 @@ impl<P: Float + FromPrimitive> ResonanceConservation<P> for BitWord {
 mod helpers {
     use super::*;
     use crate::ResonanceClasses;
-    
+
     /// Convert an index to a BitWord pattern
     pub fn index_to_bitword(idx: usize, n: usize) -> BitWord {
         let mut word = BitWord::new(n);
-        
+
         // Set bits based on the index
         for bit in 0..n.min(64) {
             if (idx >> bit) & 1 == 1 {
                 word.set_bit(bit, true);
             }
         }
-        
+
         // For bits beyond 64, use modular arithmetic
         if n > 64 {
             let mut shifted_idx = idx;
@@ -239,26 +243,30 @@ mod helpers {
                 }
             }
         }
-        
+
         word
     }
-    
+
     /// Calculate theoretical conservation sum
     pub fn calculate_theoretical_sum<P: Float + FromPrimitive>(n: usize, alpha: &AlphaVec<P>) -> P {
         // Get all unique resonance values
         let spectrum = <BitWord as ResonanceClasses<P>>::resonance_spectrum(alpha);
-        
+
         // For n bits: each resonance appears 2^n / (unique resonances) times
         // Over 3 cycles: 3 * 2^n total values
-        let total_values = if n <= 20 { 3 * (1usize << n) } else { 3 * (1usize << 20) };
+        let total_values = if n <= 20 {
+            3 * (1usize << n)
+        } else {
+            3 * (1usize << 20)
+        };
         let appearances_per_resonance = total_values / spectrum.len();
-        
+
         // Sum = Σ(resonance * appearances)
         let mut sum = P::zero();
         for &resonance in &spectrum {
             sum = sum + resonance * P::from(appearances_per_resonance).unwrap();
         }
-        
+
         sum
     }
 }
@@ -268,21 +276,22 @@ pub mod properties {
     use super::*;
 
     /// Verify nk-conservation property for arbitrary n
-    pub fn verify_nk_conservation<P: Float + FromPrimitive>(
-        alpha: &AlphaVec<P>, 
-        k: usize
-    ) -> bool {
+    pub fn verify_nk_conservation<P: Float + FromPrimitive>(alpha: &AlphaVec<P>, k: usize) -> bool {
         let n = alpha.len();
         let base_count = n.min(8);
-        
+
         let sum_base = BitWord::resonance_sum(0, base_count, alpha);
         let sum_nk = BitWord::resonance_sum(0, base_count * k, alpha);
 
         // Expected scaling based on resonance count
-        let unique_resonances = if n >= 2 { 3 * (1 << (n - 2).min(20)) } else { 1 };
-        let expected = sum_base * P::from(k).unwrap() * P::from(unique_resonances).unwrap() 
+        let unique_resonances = if n >= 2 {
+            3 * (1 << (n - 2).min(20))
+        } else {
+            1
+        };
+        let expected = sum_base * P::from(k).unwrap() * P::from(unique_resonances).unwrap()
             / P::from(base_count).unwrap();
-        
+
         let error = (sum_nk - expected).abs();
         let tolerance = P::epsilon() * P::from(100.0).unwrap() * P::from(n).unwrap();
 
@@ -291,8 +300,8 @@ pub mod properties {
 
     /// Check telescoping property of currents for arbitrary bit lengths
     pub fn verify_telescoping_general<P: Float + FromPrimitive>(
-        alpha: &AlphaVec<P>, 
-        range: usize
+        alpha: &AlphaVec<P>,
+        range: usize,
     ) -> bool {
         let n = alpha.len();
         let mut sum = P::zero();
@@ -311,7 +320,8 @@ pub mod properties {
             end_word.r(alpha) - start_word.r(alpha)
         };
 
-        (sum - expected).abs() < P::epsilon() * P::from(100.0).unwrap() * P::from(range).unwrap().sqrt()
+        (sum - expected).abs()
+            < P::epsilon() * P::from(100.0).unwrap() * P::from(range).unwrap().sqrt()
     }
 }
 

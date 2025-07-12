@@ -74,7 +74,7 @@ impl<P: Float + FromPrimitive> HomomorphicResonance<P> for u8 {
                 // Single bit generates order-2 subgroup
                 let mut generator = BitWord::from_u8(0);
                 generator.set_bit(i, true);
-                
+
                 subgroups.push(HomomorphicSubgroup {
                     generator: generator.clone(),
                     elements: vec![BitWord::from_u8(0), generator],
@@ -88,10 +88,10 @@ impl<P: Float + FromPrimitive> HomomorphicResonance<P> for u8 {
             if i != j {
                 let mut gen1 = BitWord::from_u8(0);
                 gen1.set_bit(i, true);
-                
+
                 let mut gen2 = BitWord::from_u8(0);
                 gen2.set_bit(j, true);
-                
+
                 let mut gen_both = BitWord::from_u8(0);
                 gen_both.set_bit(i, true);
                 gen_both.set_bit(j, true);
@@ -154,7 +154,7 @@ impl<P: Float + FromPrimitive> HomomorphicResonance<P> for u8 {
                 let r_a = a.to_usize() as u8;
                 let r_b = b.to_usize() as u8;
                 let r_xor = xor_result.to_usize() as u8;
-                
+
                 let res_a = r_a.r(alpha);
                 let res_b = r_b.r(alpha);
                 let res_xor = r_xor.r(alpha);
@@ -218,7 +218,7 @@ impl<P: Float + FromPrimitive> HomomorphicResonance<P> for BitWord {
                 // Single bit generates order-2 subgroup
                 let mut generator = BitWord::new(n);
                 generator.set_bit(i, true);
-                
+
                 subgroups.push(HomomorphicSubgroup {
                     generator: generator.clone(),
                     elements: vec![BitWord::new(n), generator],
@@ -232,10 +232,10 @@ impl<P: Float + FromPrimitive> HomomorphicResonance<P> for BitWord {
             if i != j {
                 let mut gen1 = BitWord::new(n);
                 gen1.set_bit(i, true);
-                
+
                 let mut gen2 = BitWord::new(n);
                 gen2.set_bit(j, true);
-                
+
                 let mut gen_both = BitWord::new(n);
                 gen_both.set_bit(i, true);
                 gen_both.set_bit(j, true);
@@ -249,12 +249,7 @@ impl<P: Float + FromPrimitive> HomomorphicResonance<P> for BitWord {
 
                 // Check if we can form Klein four-group
                 if Self::is_homomorphic_subset(&[i, j], alpha) {
-                    let elements = vec![
-                        BitWord::new(n),
-                        gen1.clone(),
-                        gen2.clone(),
-                        &gen1 ^ &gen2,
-                    ];
+                    let elements = vec![BitWord::new(n), gen1.clone(), gen2.clone(), &gen1 ^ &gen2];
 
                     // Verify it's truly homomorphic
                     if helpers::verify_subgroup_homomorphism(&elements, alpha) {
@@ -300,7 +295,7 @@ impl<P: Float + FromPrimitive> HomomorphicResonance<P> for BitWord {
         for a in &elements {
             for b in &elements {
                 let xor_result = a ^ b;
-                
+
                 let r_a = a.r(alpha);
                 let r_b = b.r(alpha);
                 let r_xor = xor_result.r(alpha);
@@ -330,7 +325,7 @@ mod helpers {
         for a in elements {
             for b in elements {
                 let xor_result = a ^ b;
-                
+
                 let r_a = a.r(alpha);
                 let r_b = b.r(alpha);
                 let r_xor = xor_result.r(alpha);
@@ -395,7 +390,7 @@ pub mod properties {
             if sg.order != 4 {
                 return false;
             }
-            
+
             // Check if it contains the equivalent of {0, 1, 48, 49}
             let expected = [
                 BitWord::from_u8(0),
@@ -403,7 +398,7 @@ pub mod properties {
                 BitWord::from_u8(48),
                 BitWord::from_u8(49),
             ];
-            
+
             expected.iter().all(|e| sg.elements.contains(e))
         })
     }

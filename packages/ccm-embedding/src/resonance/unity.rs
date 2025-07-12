@@ -79,10 +79,10 @@ impl UnityStructure for BitWord {
         let mut positions = Vec::new();
         let tolerance = P::epsilon() * P::from(100.0).unwrap();
         let n = alpha.len();
-        
+
         // For n >= 2, unity positions come from the Klein structure
         // The unity constraint α[n-2] × α[n-1] = 1 means certain bit patterns yield resonance = 1
-        
+
         if n < 2 {
             // Special case: check each position directly
             for i in 0..range {
@@ -94,7 +94,7 @@ impl UnityStructure for BitWord {
         } else {
             // First, identify which Klein group elements have unity resonance
             let mut unity_klein_elements = Vec::new();
-            
+
             // Check all 4 Klein group elements (based on last two bits)
             for klein in 0..4u8 {
                 let mut test_word = BitWord::new(n);
@@ -104,37 +104,37 @@ impl UnityStructure for BitWord {
                 if klein & 2 != 0 {
                     test_word.set_bit(n - 1, true);
                 }
-                
+
                 let r = test_word.r(alpha);
                 if Self::is_near_unity(r, tolerance) {
                     unity_klein_elements.push(klein);
                 }
             }
-            
+
             // If no Klein elements have unity resonance, we still need to check all positions
             // because unity can come from other bit combinations, not just Klein elements
-            
+
             // Now find all positions that have actual unity resonance
             // For small n, we can enumerate
             if n <= 20 {
                 let max_check = range.min(1usize << n);
-                
+
                 for i in 0..max_check {
                     // Convert index to bit pattern
                     let word = index_to_bitword_unity(i, n);
-                    
+
                     // Check actual resonance value
                     let r = word.r(alpha);
                     if Self::is_near_unity(r, tolerance) {
                         positions.push(i);
                     }
                 }
-                
+
                 // For ranges beyond 2^n, positions repeat cyclically
                 if range > max_check {
                     let cycle_length = 1usize << n;
                     let base_positions = positions.clone();
-                    
+
                     for cycle in 1..(range / cycle_length + 1) {
                         for &base_pos in &base_positions {
                             let pos = cycle * cycle_length + base_pos;
@@ -147,14 +147,18 @@ impl UnityStructure for BitWord {
             } else {
                 // For large n, we can't enumerate all positions
                 // Use sampling approach to find unity positions
-                
+
                 let sample_size = range.min(1 << 20);
-                let step = if range > sample_size { range / sample_size } else { 1 };
-                
+                let step = if range > sample_size {
+                    range / sample_size
+                } else {
+                    1
+                };
+
                 for i in (0..range).step_by(step) {
                     let word = index_to_bitword_unity(i, n);
                     let r = word.r(alpha);
-                    
+
                     if Self::is_near_unity(r, tolerance) {
                         positions.push(i);
                     }
@@ -174,14 +178,14 @@ impl UnityStructure for BitWord {
 #[cfg(feature = "alloc")]
 fn index_to_bitword_unity(idx: usize, n: usize) -> BitWord {
     let mut word = BitWord::new(n);
-    
+
     // Set bits based on the binary representation of idx
     for bit in 0..n.min(64) {
         if (idx >> bit) & 1 == 1 {
             word.set_bit(bit, true);
         }
     }
-    
+
     // For bits beyond 64, we need a deterministic mapping
     // This uses a linear congruential generator for reproducibility
     if n > 64 {
@@ -194,7 +198,7 @@ fn index_to_bitword_unity(idx: usize, n: usize) -> BitWord {
             state >>= 1;
         }
     }
-    
+
     word
 }
 
@@ -297,7 +301,7 @@ pub mod analysis {
         let positions = u8::unity_positions(alpha, range);
         positions.len() as f64 / range as f64
     }
-    
+
     /// Analyze unity spacing for arbitrary bit lengths
     #[cfg(feature = "alloc")]
     pub fn analyze_unity_spacing_bitword<P: Float + FromPrimitive>(
@@ -332,17 +336,17 @@ pub mod analysis {
             is_periodic,
         }
     }
-    
+
     /// Unity density for arbitrary bit lengths
     #[cfg(feature = "alloc")]
     pub fn unity_density_bitword<P: Float + FromPrimitive>(
-        alpha: &AlphaVec<P>, 
-        range: usize
+        alpha: &AlphaVec<P>,
+        range: usize,
     ) -> f64 {
         let positions = BitWord::unity_positions(alpha, range);
         positions.len() as f64 / range as f64
     }
-    
+
     /// Count positions per Klein group that have unity
     /// Returns distribution of unity counts: how many Klein groups have 0, 1, 2, 3, or 4 unity positions
     #[cfg(feature = "alloc")]
@@ -352,42 +356,43 @@ pub mod analysis {
     ) -> [usize; 5] {
         let n = alpha.len();
         let mut distribution = [0usize; 5]; // Index is count of unity positions in Klein group
-        
+
         if n < 2 || range == 0 {
             return distribution;
         }
-        
+
         let tolerance = P::epsilon() * P::from(100.0).unwrap();
-        
+
         // Track seen Klein representatives
         #[cfg(feature = "std")]
         let mut seen = std::collections::HashSet::new();
         #[cfg(all(feature = "alloc", not(feature = "std")))]
         let mut seen = alloc::collections::BTreeSet::new();
-        
+
         // Check Klein groups up to range
         let max_check = range.min(if n <= 20 { 1usize << n } else { 1 << 20 });
-        
+
         for i in 0..max_check {
             let word = super::helpers::index_to_bitword(i, n);
             let repr = <BitWord as Resonance<P>>::klein_representative(&word);
-            
+
             // Convert to key for tracking
             let key = super::helpers::bitword_to_key(&repr);
             if seen.contains(&key) {
                 continue;
             }
             seen.insert(key);
-            
+
             // Count unity positions in this Klein group
             let members = <BitWord as Resonance<P>>::class_members(&repr);
-            let unity_count = members.iter()
+            let unity_count = members
+                .iter()
                 .filter(|&m| <BitWord as UnityStructure>::is_near_unity(m.r(alpha), tolerance))
                 .count();
-            
+
             distribution[unity_count] += 1;
         }
-        
+
         distribution
     }
 }
@@ -407,30 +412,30 @@ pub mod klein_unity {
     ) -> Vec<Vec<BitWord>> {
         let mut unity_groups = Vec::new();
         let tolerance = P::epsilon() * P::from(100.0).unwrap();
-        
+
         // Track which Klein representatives we've seen
         #[cfg(feature = "std")]
         let mut seen = std::collections::HashSet::new();
         #[cfg(all(feature = "alloc", not(feature = "std")))]
         let mut seen = alloc::collections::BTreeSet::new();
-        
+
         // For small n, check all Klein representatives
         if n <= 20 {
             let max_check = range.min(1usize << n);
-            
+
             for i in 0..max_check {
                 let word = helpers::index_to_bitword(i, n);
-                
+
                 // Get Klein representative (zero out last 2 bits)
                 let repr = <BitWord as Resonance<P>>::klein_representative(&word);
-                
+
                 // Skip if we've already seen this representative
                 let repr_key = helpers::bitword_to_key(&repr);
                 if seen.contains(&repr_key) {
                     continue;
                 }
                 seen.insert(repr_key);
-                
+
                 // Check if representative has unity resonance
                 let r = repr.r(alpha);
                 if <BitWord as UnityStructure>::is_near_unity(r, tolerance) {
@@ -439,7 +444,7 @@ pub mod klein_unity {
                 }
             }
         }
-        
+
         unity_groups
     }
 
@@ -450,9 +455,9 @@ pub mod klein_unity {
         if n < 2 {
             return false;
         }
-        
+
         let tolerance = P::epsilon() * P::from(100.0).unwrap();
-        
+
         // Check all 4 Klein elements formed by last 2 bits
         for klein in 0..4u8 {
             let mut word = BitWord::new(n);
@@ -462,13 +467,13 @@ pub mod klein_unity {
             if klein & 2 != 0 {
                 word.set_bit(n - 1, true);
             }
-            
+
             let r = word.r(alpha);
             if !<BitWord as UnityStructure>::is_near_unity(r, tolerance) {
                 return false;
             }
         }
-        
+
         true
     }
 
@@ -514,18 +519,18 @@ pub mod klein_unity {
 #[cfg(feature = "alloc")]
 mod helpers {
     use super::*;
-    
+
     /// Convert an index to a BitWord pattern
     pub fn index_to_bitword(idx: usize, n: usize) -> BitWord {
         let mut word = BitWord::new(n);
-        
+
         // Set bits based on the index
         for bit in 0..n.min(64) {
             if (idx >> bit) & 1 == 1 {
                 word.set_bit(bit, true);
             }
         }
-        
+
         // For bits beyond 64, use modular arithmetic
         if n > 64 {
             let mut shifted_idx = idx;
@@ -536,10 +541,10 @@ mod helpers {
                 }
             }
         }
-        
+
         word
     }
-    
+
     /// Convert BitWord to a hashable key (first 64 bits)
     #[cfg(any(feature = "std", feature = "alloc"))]
     pub fn bitword_to_key(word: &BitWord) -> u64 {
@@ -597,7 +602,10 @@ mod tests {
 
         // With dynamic alpha, the exact count may vary
         // but we should find some unity positions
-        assert!(!spacing.positions.is_empty(), "Should find some unity positions");
+        assert!(
+            !spacing.positions.is_empty(),
+            "Should find some unity positions"
+        );
 
         // Check spacing pattern exists
         if spacing.positions.len() > 1 {
