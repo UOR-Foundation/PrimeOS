@@ -1,0 +1,18 @@
+[package]
+name = "ccm-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["UOR Contributors"]
+description = "Core types and unified API for Coherence-Centric Mathematics"
+license = "MIT"
+repository = "https://github.com/UOR-Foundation/PrimeOS"
+
+[dependencies]
+num-traits = { version = "0.2", default-features = false }
+
+[features]
+default = ["std", "alloc"]
+std = ["num-traits/std", "alloc"]
+alloc = []
+
+[dev-dependencies]

@@ -1,0 +1,19 @@
+[package]
+name = "ccm-embedding"
+version = "0.1.0"
+edition = "2021"
+authors = ["UOR Contributors"]
+description = "Minimal embedding and resonance algebra for CCM"
+license = "MIT"
+repository = "https://github.com/UOR-Foundation/PrimeOS"
+
+[dependencies]
+ccm-core = { path = "../ccm-core" }
+num-traits = { version = "0.2", default-features = false }
+
+[features]
+default = ["std", "alloc"]
+std = ["ccm-core/std", "num-traits/std", "alloc"]
+alloc = ["ccm-core/alloc"]
+
+[dev-dependencies]

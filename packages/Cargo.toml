@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = [
+    "ccm-core",
+    "ccm-embedding", 
+    "ccm-coherence",
+    "ccm-symmetry",
+    "ccm-applications/bjc-codec",
+    "ccm-primitives"  # Keep for now during transition
+]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["UOR Contributors"]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/UOR-Foundation/PrimeOS"
+
+[workspace.dependencies]
+num-traits = { version = "0.2", default-features = false }
+sha2 = { version = "0.10", default-features = false }

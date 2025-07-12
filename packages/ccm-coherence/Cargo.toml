@@ -1,0 +1,19 @@
+[package]
+name = "ccm-coherence"
+version = "0.1.0"
+edition = "2021"
+authors = ["UOR Contributors"]
+description = "Clifford algebra and coherence metric for CCM"
+license = "MIT"
+repository = "https://github.com/UOR-Foundation/PrimeOS"
+
+[dependencies]
+ccm-core = { path = "../ccm-core" }
+num-traits = { version = "0.2", default-features = false }
+
+[features]
+default = ["std"]
+std = ["ccm-core/std", "num-traits/std"]
+alloc = ["ccm-core/alloc"]
+
+[dev-dependencies]

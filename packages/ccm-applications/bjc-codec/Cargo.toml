@@ -1,0 +1,25 @@
+[package]
+name = "bjc-codec"
+version = "1.0.0"
+edition = "2021"
+authors = ["UOR Contributors"]
+description = "BJC-1.0 codec implementation using CCM principles"
+license = "MIT"
+repository = "https://github.com/UOR-Foundation/PrimeOS"
+
+[dependencies]
+ccm-core = { path = "../../ccm-core" }
+ccm-embedding = { path = "../../ccm-embedding" }
+ccm-coherence = { path = "../../ccm-coherence" }
+ccm-symmetry = { path = "../../ccm-symmetry" }
+num-traits = { version = "0.2", default-features = false }
+sha2 = { version = "0.10", optional = true }
+
+[features]
+default = ["std", "sha2"]
+std = ["ccm-core/std", "ccm-embedding/std", "num-traits/std"]
+alloc = ["ccm-core/alloc", "ccm-embedding/alloc"]
+dynamic = []
+binary128 = []
+
+[dev-dependencies]
