@@ -5,8 +5,7 @@ members = [
     "ccm-embedding", 
     "ccm-coherence",
     "ccm-symmetry",
-    "ccm-applications/bjc-codec",
-    "ccm-primitives"  # Keep for now during transition
+    "ccm-applications/bjc-codec"
 ]
 
 [workspace.package]

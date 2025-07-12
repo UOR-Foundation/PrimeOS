@@ -16,6 +16,16 @@
 //! - **Unity constraint**: α_{n-2} × α_{n-1} = 1 enables special properties
 //! - **Conservation laws**: Resonance sums are conserved over specific cycles
 //!
+//! ## Klein Group Structure
+//!
+//! For n-bit patterns, Klein groups are formed by XORing bits at positions (n-2, n-1):
+//!
+//! - Each Klein group contains exactly 4 members: {b, b⊕01, b⊕10, b⊕11}
+//! - The unity constraint ensures these positions have special algebraic properties
+//! - For 8-bit values, this corresponds to bits 6,7
+//! - The Klein minimum is the member with the smallest resonance value
+//! - All resonance operations preserve Klein group membership
+//!
 //! ## Submodules
 //!
 //! - [`classes`]: Resonance equivalence classes and spectrum analysis
@@ -40,7 +50,7 @@
 //! println!("Resonance: {}", r);
 //!
 //! // Find Klein group members
-//! let members = word.class_members();
+//! let members = <BitWord as Resonance<f64>>::class_members(&word);
 //! assert_eq!(members.len(), 4);
 //! ```
 //!
@@ -386,14 +396,14 @@ impl<P: Float + FromPrimitive> Resonance<P> for BitWord {
             let mut member3 = self.clone();
 
             // Flip bit n-2
-            member1.set_bit(n - 2, !self.bit(n - 2));
+            member1.flip_bit(n - 2);
 
             // Flip bit n-1
-            member2.set_bit(n - 1, !self.bit(n - 1));
+            member2.flip_bit(n - 1);
 
             // Flip both bits n-2 and n-1
-            member3.set_bit(n - 2, !self.bit(n - 2));
-            member3.set_bit(n - 1, !self.bit(n - 1));
+            member3.flip_bit(n - 2);
+            member3.flip_bit(n - 1);
 
             alloc::vec![
                 self.clone(), // b ⊕ 00
@@ -471,10 +481,10 @@ mod tests {
     #[test]
     fn test_overflow_protection() {
         // Create an alpha vector that will produce very large products
-        // For 8 values, unity constraint is at positions 4,5: α[4] * α[5] = 1
+        // For 8 values, unity constraint is at positions 6,7 (n-2, n-1)
         let mut values = vec![2.0f64.powf(19.0); 8]; // Near the limit of |log₂| ≤ 20
-        values[4] = 2.0f64.powf(-19.0);
-        values[5] = 2.0f64.powf(19.0); // Satisfy unity constraint: 2^(-19) * 2^19 = 1
+        values[6] = 2.0f64.powf(-19.0);
+        values[7] = 2.0f64.powf(19.0); // Satisfy unity constraint: 2^(-19) * 2^19 = 1
 
         let alpha = AlphaVec::try_from(values).unwrap();
 
@@ -482,8 +492,8 @@ mod tests {
         let result = 0b11111111u8.r(&alpha);
         assert!(result.is_finite());
 
-        // With all bits set: 2^19 * 2^19 * 2^19 * 2^19 * 2^-19 * 2^19 * 2^19 * 2^19
-        // = 2^(19*6 + (-19) + 19) = 2^(114 - 19 + 19) = 2^114
+        // With all bits set: 2^19 * 2^19 * 2^19 * 2^19 * 2^19 * 2^19 * 2^-19 * 2^19
+        // = 2^(19*7 + (-19)) = 2^(133 - 19) = 2^114
         // This demonstrates that the implementation correctly handles large values without overflow
         let expected = 2.0f64.powf(114.0);
         assert!((result - expected).abs() / expected < 1e-10);
@@ -579,7 +589,19 @@ mod tests {
 
         // Test that resonance is always positive and finite
         for i in 0..10 {
-            let test_val = BitWord::from_u64((i * 137u64) % (1u64 << n.min(64)), n);
+            let test_val = if n < 64 {
+                BitWord::from_u64((i * 137u64) % (1u64 << n), n)
+            } else {
+                // For n >= 64, create a pattern without causing shift overflow
+                let mut word = BitWord::new(n);
+                // Set some bits in a pattern
+                for j in 0..n.min(10) {
+                    if (i + j as u64) % 3 == 0 {
+                        word.set_bit(j, true);
+                    }
+                }
+                word
+            };
             let r = test_val.r(alpha);
             assert!(
                 r > 0.0 && r.is_finite(),

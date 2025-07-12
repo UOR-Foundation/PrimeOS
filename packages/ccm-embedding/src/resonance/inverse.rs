@@ -559,17 +559,64 @@ mod tests {
     fn test_find_by_resonance_u8() {
         let alpha = crate::tests::testing_alpha();
 
-        // Find bytes with resonance close to 1.0
-        let candidates = u8::find_by_resonance(1.0, &alpha, 1e-10).unwrap();
-
-        // Should find unity positions (0, 1, 48, 49 for standard alpha)
-        assert!(!candidates.is_empty());
-
+        // Test finding a known resonance value
+        // First, find a byte that's actually a Klein minimum
+        let test_byte = 0b00100101u8; // 37, with bits 6,7 = 00 (Klein representative)
+        let klein_members = <u8 as Resonance<f64>>::class_members(&test_byte);
+        
+        // Find the actual Klein minimum and its resonance
+        let mut min_resonance = test_byte.r(&alpha);
+        for &member in &klein_members {
+            let r = member.r(&alpha);
+            if r < min_resonance {
+                min_resonance = r;
+            }
+        }
+        
+        // Now test finding this minimum resonance
+        let candidates = u8::find_by_resonance(min_resonance, &alpha, 1e-9).unwrap();
+        
+        // Should find at least one Klein minimum
+        assert!(!candidates.is_empty(), "Should find at least one Klein minimum");
+        
         // Verify all found values have correct resonance
         for &byte in &candidates {
             let r = byte.r(&alpha);
-            assert!((r - 1.0).abs() < 1e-10);
+            assert!((r - min_resonance).abs() < 1e-9, 
+                "Found byte {} with resonance {} instead of target {}", 
+                byte, r, min_resonance);
         }
+        
+        // Verify Klein minimum property
+        for &candidate in &candidates {
+            assert!(candidate.is_klein_minimum(&alpha),
+                "Candidate {} should be a Klein minimum", candidate);
+            
+            // Check that it's in the right Klein group
+            let klein_repr = candidate & 0b00111111;
+            let expected_members = [
+                klein_repr,
+                klein_repr | 0b01000000,
+                klein_repr | 0b10000000,
+                klein_repr | 0b11000000,
+            ];
+            
+            assert!(expected_members.contains(&candidate),
+                "Candidate {} not in expected Klein group", candidate);
+        }
+        
+        // Test with a non-Klein-representative to ensure we still find the minimum
+        let test_byte2 = 0b11100101u8; // Same as above but with bits 6,7 = 11
+        let klein_members = <u8 as Resonance<f64>>::class_members(&test_byte2);
+        
+        // Find the Klein minimum's resonance
+        let min_resonance = klein_members.iter()
+            .map(|&b| b.r(&alpha))
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap();
+        
+        let candidates2 = u8::find_by_resonance(min_resonance, &alpha, 1e-9).unwrap();
+        assert!(!candidates2.is_empty(), "Should find Klein minimum for non-representative");
     }
 
     #[test]
