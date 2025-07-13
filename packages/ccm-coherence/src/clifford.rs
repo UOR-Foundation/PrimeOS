@@ -21,10 +21,25 @@ pub struct CliffordAlgebra<P: Float> {
 
 impl<P: Float> CliffordAlgebra<P> {
     /// Generate Euclidean Clifford algebra Cl(n) with positive definite metric
+    /// 
+    /// # Note
+    /// Default limit is 12 dimensions for safety. Use `generate_with_limit` for larger dimensions.
     pub fn generate(n: usize) -> Result<Self, CcmError> {
-        if n > 12 {
-            // Practical limit to avoid excessive memory usage
-            // 2^12 = 4096 basis elements
+        Self::generate_with_limit(n, 12)
+    }
+    
+    /// Generate Euclidean Clifford algebra with custom dimension limit
+    /// 
+    /// # Safety
+    /// Large dimensions require exponential memory: 2^n basis elements.
+    /// Ensure sufficient memory before using large dimensions.
+    pub fn generate_with_limit(n: usize, max_dimension: usize) -> Result<Self, CcmError> {
+        if n > max_dimension {
+            return Err(CcmError::InvalidInput);
+        }
+        
+        // Prevent overflow in 2^n calculation
+        if n >= core::mem::size_of::<usize>() * 8 {
             return Err(CcmError::InvalidInput);
         }
 
@@ -36,9 +51,22 @@ impl<P: Float> CliffordAlgebra<P> {
     }
 
     /// Generate Clifford algebra with specified metric signature
+    /// 
+    /// # Note
+    /// Default limit is 12 dimensions for safety. Use `with_signature_limit` for larger dimensions.
     pub fn with_signature(p: usize, q: usize, r: usize) -> Result<Self, CcmError> {
+        Self::with_signature_limit(p, q, r, 12)
+    }
+    
+    /// Generate Clifford algebra with specified metric signature and custom limit
+    pub fn with_signature_limit(p: usize, q: usize, r: usize, max_dimension: usize) -> Result<Self, CcmError> {
         let n = p + q + r;
-        if n > 12 {
+        if n > max_dimension {
+            return Err(CcmError::InvalidInput);
+        }
+        
+        // Prevent overflow
+        if n >= core::mem::size_of::<usize>() * 8 {
             return Err(CcmError::InvalidInput);
         }
 

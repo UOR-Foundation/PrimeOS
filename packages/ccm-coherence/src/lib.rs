@@ -17,10 +17,22 @@ pub use coherence::{Coherence, Graded};
 
 // Core modules
 pub mod clifford;
+pub mod coherence_gradient;
 pub mod element;
 pub mod embedding;
 pub mod grade;
+pub mod lazy;
 pub mod metric;
+pub mod optimization;
+pub mod rotor;
+pub mod sparse;
+pub mod arbitrary_support;
+
+#[cfg(test)]
+mod arbitrary_tests;
+
+#[cfg(test)]
+mod grade_orthogonality_test;
 
 // Re-export key types
 pub use clifford::CliffordAlgebra;

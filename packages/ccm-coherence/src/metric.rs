@@ -3,6 +3,7 @@
 use crate::element::CliffordElement;
 use ccm_core::{CcmError, Float};
 use num_complex::Complex;
+#[allow(unused_imports)]
 use num_traits::{One, Zero};
 
 /// Compute the coherence inner product ⟨⟨a, b⟩⟩
@@ -19,8 +20,9 @@ pub fn coherence_product<P: Float>(a: &CliffordElement<P>, b: &CliffordElement<P
 
     let mut result = Complex::zero();
 
-    // Sum over all components, but grade orthogonality is built-in
-    // Only components of the same grade contribute
+    // Grade orthogonality: only components of the same grade contribute
+    // This is already enforced because components at index i have grade = count_ones(i)
+    // When we do component-wise multiplication, we automatically get grade orthogonality
     for i in 0..a.components.len() {
         // Complex inner product: conj(a) * b
         result = result + a.components[i].conj() * b.components[i];

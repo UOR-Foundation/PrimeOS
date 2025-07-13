@@ -18,3 +18,23 @@ std = ["ccm-core/std", "num-traits/std", "num-complex/std"]
 alloc = ["ccm-core/alloc", "num-complex/libm"]
 
 [dev-dependencies]
+
+[[example]]
+name = "basic_usage"
+path = "examples/basic_usage.rs"
+required-features = ["std"]
+
+[[example]]
+name = "rotors"
+path = "examples/rotors.rs"
+required-features = ["std"]
+
+[[example]]
+name = "optimization"
+path = "examples/optimization.rs"
+required-features = ["std"]
+
+[[example]]
+name = "arbitrary_dimension"
+path = "examples/arbitrary_dimension.rs"
+required-features = ["std"]
