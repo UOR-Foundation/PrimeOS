@@ -57,7 +57,10 @@ dependencies = [
 name = "ccm-symmetry"
 version = "0.1.0"
 dependencies = [
+ "ccm-coherence",
  "ccm-core",
+ "ccm-embedding",
+ "num-complex",
  "num-traits",
 ]
 

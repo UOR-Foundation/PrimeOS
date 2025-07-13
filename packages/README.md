@@ -40,12 +40,6 @@ Implements Axiom A3: Group actions preserving CCM structure.
 - **Orbit Analysis**: Orbit-stabilizer decomposition
 - **Invariant Theory**: Preserved quantities under group action
 
-### Applications
-
-#### ccm-primitives (Legacy)
-Original monolithic package - being refactored into the above structure.
-Currently contains the BJC codec which will move to ccm-applications.
-
 ## Mathematical Unity
 
 The key insight of CCM is that these three structures are not independent:
@@ -61,11 +55,10 @@ The ccm-core package provides the unified interface where these three mathematic
 
 ## Development Status
 
-- ✅ **ccm-core**: Foundational types implemented
+- ✅ **ccm-core**: Foundational types and unified API complete
 - ✅ **ccm-embedding**: Alpha generator and resonance algebra complete
-- 🚧 **ccm-coherence**: Basic structure, needs Clifford algebra implementation
-- ❌ **ccm-symmetry**: Structure defined, implementation pending
-- 🔄 **ccm-primitives**: Being refactored into the above packages
+- ✅ **ccm-coherence**: Clifford algebra, coherence metric, and optimization complete
+- ✅ **ccm-symmetry**: Group actions, Lie algebra, and invariant theory complete
 
 ## Usage
 
