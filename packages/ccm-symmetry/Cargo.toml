@@ -9,7 +9,10 @@ repository = "https://github.com/UOR-Foundation/PrimeOS"
 
 [dependencies]
 ccm-core = { path = "../ccm-core" }
+ccm-coherence = { path = "../ccm-coherence" }
+ccm-embedding = { path = "../ccm-embedding" }
 num-traits = { version = "0.2", default-features = false }
+num-complex = { version = "0.4", default-features = false }
 
 [features]
 default = ["std"]

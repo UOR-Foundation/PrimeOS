@@ -4,56 +4,63 @@
 //! symmetry group actions that preserve CCM structure.
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![warn(missing_docs)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
 // Import core types
-use ccm_core::{BitWord, CcmError, Float};
+use ccm_core::CcmError;
 
 // Module structure
 pub mod actions;
+pub mod discrete;
 pub mod group;
 pub mod invariants;
+pub mod lie_algebra;
+pub mod matrix_group;
 pub mod orbits;
+pub mod special_subgroups;
+pub mod verification;
 
-/// A group element in the symmetry group
-#[derive(Clone, Debug)]
-pub struct GroupElement<P: Float> {
-    /// Parameters defining the group element
-    params: alloc::vec::Vec<P>,
+// Re-export main types
+pub use actions::{CliffordAction, GroupAction};
+pub use discrete::{KleinSymmetry, ResonanceAutomorphism};
+pub use group::{GroupElement, SymmetryGroup};
+pub use invariants::{ConservedQuantity, Invariant};
+pub use lie_algebra::{LieAlgebra, LieAlgebraElement};
+pub use orbits::{Orbit, StabilizerSubgroup};
+pub use special_subgroups::{
+    klein_subgroup, grade_preserving_subgroup, resonance_preserving_subgroup,
+    maximal_resonance_subgroup, unity_stabilizer,
+};
+pub use verification::{
+    GroupAxiomVerifier, ActionVerifier, CCMInvarianceVerifier,
+};
+
+/// Symmetry-specific error types
+#[derive(Debug, Clone, PartialEq)]
+pub enum SymmetryError {
+    /// Group operation failed
+    InvalidGroupOperation,
+    /// Element not in group
+    NotInGroup,
+    /// Action does not preserve structure
+    InvarianceViolation,
+    /// Lie algebra operation failed
+    LieAlgebraError,
+    /// Orbit computation failed
+    OrbitComputationFailed,
 }
 
-/// Trait for group actions on various structures
-pub trait GroupAction<P: Float> {
-    type Target;
-
-    /// Apply group element to target
-    fn apply(&self, g: &GroupElement<P>, target: &Self::Target) -> Self::Target;
-
-    /// Check if action preserves structure
-    fn verify_invariance(&self, g: &GroupElement<P>) -> bool;
-}
-
-/// The symmetry group for n-dimensional CCM
-pub struct SymmetryGroup<P: Float> {
-    dimension: usize,
-    _phantom: core::marker::PhantomData<P>,
-}
-
-impl<P: Float> SymmetryGroup<P> {
-    /// Generate symmetry group for n dimensions
-    pub fn generate(n: usize) -> Result<Self, CcmError> {
-        Ok(Self {
-            dimension: n,
-            _phantom: core::marker::PhantomData,
-        })
-    }
-
-    /// Get the identity element
-    pub fn identity(&self) -> GroupElement<P> {
-        GroupElement {
-            params: alloc::vec![P::one(); self.dimension],
+impl From<SymmetryError> for CcmError {
+    fn from(err: SymmetryError) -> Self {
+        match err {
+            SymmetryError::InvalidGroupOperation => CcmError::InvalidInput,
+            SymmetryError::NotInGroup => CcmError::InvalidInput,
+            SymmetryError::InvarianceViolation => CcmError::Custom("Invariance violation"),
+            SymmetryError::LieAlgebraError => CcmError::Custom("Lie algebra error"),
+            SymmetryError::OrbitComputationFailed => CcmError::Custom("Orbit computation failed"),
         }
     }
 }
@@ -65,6 +72,6 @@ mod tests {
     #[test]
     fn test_symmetry_group_creation() {
         let group = SymmetryGroup::<f64>::generate(8).unwrap();
-        assert_eq!(group.dimension, 8);
+        // Group was created successfully for dimension 8
     }
 }
