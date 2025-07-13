@@ -2,10 +2,9 @@
 
 use crate::SymmetryError;
 use ccm_core::{CcmError, Float};
-use num_traits::One;
 
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
+use alloc::{vec, vec::Vec};
 
 /// A group element in the symmetry group
 #[derive(Clone, Debug)]
@@ -21,12 +20,14 @@ impl<P: Float> GroupElement<P> {
             params: vec![P::one(); dimension],
         }
     }
-    
+
     /// Check if this is the identity element
     pub fn is_identity(&self) -> bool {
-        self.params.iter().all(|&p| (p - P::one()).abs() < P::epsilon())
+        self.params
+            .iter()
+            .all(|&p| (p - P::one()).abs() < P::epsilon())
     }
-    
+
     /// Get dimension
     pub fn dimension(&self) -> usize {
         self.params.len()
@@ -55,45 +56,51 @@ impl<P: Float> SymmetryGroup<P> {
         if n == 0 {
             return Err(SymmetryError::InvalidGroupOperation.into());
         }
-        
+
         // Start with empty generators - will be populated based on specific group
         Ok(Self {
             dimension: n,
             generators: Vec::new(),
         })
     }
-    
+
     /// Get the identity element
     pub fn identity(&self) -> GroupElement<P> {
         GroupElement::identity(self.dimension)
     }
-    
+
     /// Get group element from parameters
     pub fn element(&self, params: &[P]) -> Result<GroupElement<P>, CcmError> {
         if params.len() != self.dimension {
             return Err(SymmetryError::InvalidGroupOperation.into());
         }
-        
+
         Ok(GroupElement {
             params: params.to_vec(),
         })
     }
-    
+
     /// Compute group product g * h
-    pub fn multiply(&self, g: &GroupElement<P>, h: &GroupElement<P>) -> Result<GroupElement<P>, CcmError> {
+    pub fn multiply(
+        &self,
+        g: &GroupElement<P>,
+        h: &GroupElement<P>,
+    ) -> Result<GroupElement<P>, CcmError> {
         if g.dimension() != self.dimension || h.dimension() != self.dimension {
             return Err(SymmetryError::InvalidGroupOperation.into());
         }
-        
+
         // Delegate to appropriate representation
         match self.get_representation() {
             GroupRepresentation::Matrix(n) => {
                 let matrix_group = crate::matrix_group::MatrixGroup::<P>::new(n);
                 matrix_group.multiply(g, h)
-            },
+            }
             GroupRepresentation::Abstract => {
                 // Default component-wise for abstract groups
-                let params: Vec<P> = g.params.iter()
+                let params: Vec<P> = g
+                    .params
+                    .iter()
                     .zip(&h.params)
                     .map(|(&a, &b)| a * b)
                     .collect();
@@ -101,22 +108,24 @@ impl<P: Float> SymmetryGroup<P> {
             }
         }
     }
-    
+
     /// Compute inverse of group element
     pub fn inverse(&self, g: &GroupElement<P>) -> Result<GroupElement<P>, CcmError> {
         if g.dimension() != self.dimension {
             return Err(SymmetryError::InvalidGroupOperation.into());
         }
-        
+
         // Delegate to appropriate representation
         match self.get_representation() {
             GroupRepresentation::Matrix(n) => {
                 let matrix_group = crate::matrix_group::MatrixGroup::<P>::new(n);
                 matrix_group.inverse(g)
-            },
+            }
             GroupRepresentation::Abstract => {
                 // Default component-wise for abstract groups
-                let params: Result<Vec<P>, _> = g.params.iter()
+                let params: Result<Vec<P>, _> = g
+                    .params
+                    .iter()
                     .map(|&p| {
                         if p.abs() < P::epsilon() {
                             Err(SymmetryError::InvalidGroupOperation)
@@ -129,7 +138,7 @@ impl<P: Float> SymmetryGroup<P> {
             }
         }
     }
-    
+
     /// Get the group representation type
     fn get_representation(&self) -> GroupRepresentation {
         // Heuristic: if dimension is a perfect square, assume matrix group
@@ -140,22 +149,22 @@ impl<P: Float> SymmetryGroup<P> {
             GroupRepresentation::Abstract
         }
     }
-    
+
     /// Add a generator to the group
     pub fn add_generator(&mut self, g: GroupElement<P>) -> Result<(), CcmError> {
         if g.dimension() != self.dimension {
             return Err(SymmetryError::InvalidGroupOperation.into());
         }
-        
+
         self.generators.push(g);
         Ok(())
     }
-    
+
     /// Get the generators
     pub fn generators(&self) -> &[GroupElement<P>] {
         &self.generators
     }
-    
+
     /// Check if element is in the group (simplified)
     pub fn contains(&self, g: &GroupElement<P>) -> bool {
         g.dimension() == self.dimension

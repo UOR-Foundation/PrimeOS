@@ -38,7 +38,7 @@ pub enum CcmError {
 
     /// Invalid input parameters
     InvalidInput,
-    
+
     /// Feature not implemented
     NotImplemented,
 }

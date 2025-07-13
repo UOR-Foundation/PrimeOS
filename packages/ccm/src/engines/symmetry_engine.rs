@@ -1,12 +1,9 @@
 //! Symmetry engine wrapper for ccm-symmetry functionality
 
-use ccm_core::{BitWord, CcmError, Float};
 use ccm_coherence::CliffordElement;
-use ccm_symmetry::{
-    SymmetryGroup, GroupElement, GroupAction, CliffordAction,
-    KleinSymmetry,
-};
+use ccm_core::{BitWord, CcmError, Float};
 use ccm_embedding::AlphaVec;
+use ccm_symmetry::{CliffordAction, GroupAction, GroupElement, KleinSymmetry, SymmetryGroup};
 
 /// Engine for symmetry operations (Axiom A3)
 pub struct SymmetryEngine<P: Float> {
@@ -53,7 +50,7 @@ impl<P: Float + num_traits::FromPrimitive> SymmetryEngine<P> {
         // Apply XOR with Klein generator (bits n-2 and n-1)
         let n = b.len();
         let mut result = b.clone();
-        
+
         match generator {
             1 => result.flip_bit(n - 2), // Flip bit n-2
             2 => result.flip_bit(n - 1), // Flip bit n-1
@@ -63,7 +60,7 @@ impl<P: Float + num_traits::FromPrimitive> SymmetryEngine<P> {
             }
             _ => {} // Identity
         }
-        
+
         result
     }
 
@@ -75,11 +72,11 @@ impl<P: Float + num_traits::FromPrimitive> SymmetryEngine<P> {
         alpha: &AlphaVec<P>,
     ) -> bool {
         use ccm_embedding::Resonance;
-        
+
         let original_resonance = test_word.r(alpha);
         let transformed = transform(test_word);
         let new_resonance = transformed.r(alpha);
-        
+
         (original_resonance - new_resonance).abs() < P::epsilon()
     }
 

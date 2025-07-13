@@ -31,12 +31,10 @@ pub use invariants::{ConservedQuantity, Invariant};
 pub use lie_algebra::{LieAlgebra, LieAlgebraElement};
 pub use orbits::{Orbit, StabilizerSubgroup};
 pub use special_subgroups::{
-    klein_subgroup, grade_preserving_subgroup, resonance_preserving_subgroup,
-    maximal_resonance_subgroup, unity_stabilizer,
+    grade_preserving_subgroup, klein_subgroup, maximal_resonance_subgroup,
+    resonance_preserving_subgroup, unity_stabilizer,
 };
-pub use verification::{
-    GroupAxiomVerifier, ActionVerifier, CCMInvarianceVerifier,
-};
+pub use verification::{ActionVerifier, CCMInvarianceVerifier, GroupAxiomVerifier};
 
 /// Symmetry-specific error types
 #[derive(Debug, Clone, PartialEq)]

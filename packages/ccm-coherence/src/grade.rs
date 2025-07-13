@@ -197,7 +197,7 @@ pub trait Graded<P: Float> {
 
     /// Maximum grade in the element
     fn max_grade(&self) -> usize;
-    
+
     /// Get the L2 norm squared of the grade-k component
     fn grade_norm_sq(&self, k: usize) -> P;
 }
@@ -215,17 +215,17 @@ impl<P: Float> Graded<P> for CliffordElement<P> {
     fn max_grade(&self) -> usize {
         self.max_grade()
     }
-    
+
     fn grade_norm_sq(&self, k: usize) -> P {
         let mut sum = P::zero();
-        
+
         // Sum the squared norms of all components of grade k
         for i in 0..self.components.len() {
             if Self::grade_of_index(i) == k {
                 sum = sum + self.components[i].norm_sqr();
             }
         }
-        
+
         sum
     }
 }

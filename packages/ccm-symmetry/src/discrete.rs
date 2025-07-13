@@ -22,25 +22,20 @@ impl KleinSymmetry {
             unity_positions: (n - 2, n - 1),
         })
     }
-    
+
     /// Get the four Klein group elements for a given BitWord
     pub fn klein_group(&self, b: &BitWord) -> Result<[BitWord; 4], CcmError> {
-        let mut result = [
-            b.clone(),
-            b.clone(),
-            b.clone(),
-            b.clone(),
-        ];
-        
+        let mut result = [b.clone(), b.clone(), b.clone(), b.clone()];
+
         // Apply XOR with 01, 10, 11 on last two bits
         result[1].flip_bit(self.unity_positions.1);
         result[2].flip_bit(self.unity_positions.0);
         result[3].flip_bit(self.unity_positions.0);
         result[3].flip_bit(self.unity_positions.1);
-        
+
         Ok(result)
     }
-    
+
     /// Check if two elements are in the same Klein group
     pub fn same_klein_group(&self, a: &BitWord, b: &BitWord) -> Result<bool, CcmError> {
         let group_a = self.klein_group(a)?;
@@ -71,60 +66,68 @@ impl ResonanceAutomorphism {
             offset_256: 0,
         }
     }
-    
+
     /// Apply automorphism to a value
     pub fn apply(&self, value: usize) -> usize {
         let page = value / 256;
         let byte = value % 256;
-        
-        let new_page = ((page as u32 * self.factor_48 as u32 + self.offset_48 as u32) % 48) as usize;
-        let new_byte = ((byte as u32 * self.factor_256 as u32 + self.offset_256 as u32) % 256) as usize;
-        
+
+        let new_page =
+            ((page as u32 * self.factor_48 as u32 + self.offset_48 as u32) % 48) as usize;
+        let new_byte =
+            ((byte as u32 * self.factor_256 as u32 + self.offset_256 as u32) % 256) as usize;
+
         new_page * 256 + new_byte
     }
-    
+
     /// Compose two automorphisms
     pub fn compose(&self, other: &Self) -> Self {
         Self {
             factor_48: ((self.factor_48 as u32 * other.factor_48 as u32) % 48) as u8,
             factor_256: ((self.factor_256 as u32 * other.factor_256 as u32) % 256) as u8,
-            offset_48: ((self.factor_48 as u32 * other.offset_48 as u32 + self.offset_48 as u32) % 48) as u8,
-            offset_256: ((self.factor_256 as u32 * other.offset_256 as u32 + self.offset_256 as u32) % 256) as u8,
+            offset_48: ((self.factor_48 as u32 * other.offset_48 as u32 + self.offset_48 as u32)
+                % 48) as u8,
+            offset_256: ((self.factor_256 as u32 * other.offset_256 as u32
+                + self.offset_256 as u32)
+                % 256) as u8,
         }
     }
-    
+
     /// Check if this preserves resonance
-    pub fn preserves_resonance<P: Float + num_traits::FromPrimitive>(&self, alpha: &ccm_embedding::AlphaVec<P>) -> bool {
+    pub fn preserves_resonance<P: Float + num_traits::FromPrimitive>(
+        &self,
+        alpha: &ccm_embedding::AlphaVec<P>,
+    ) -> bool {
         use ccm_core::BitWord;
         use ccm_embedding::Resonance;
-        
+
         // Identity and pure translations preserve resonance
         if self.factor_48 == 1 && self.factor_256 == 1 {
             return true;
         }
-        
+
         // Test on representative values
         let test_values = [0, 48, 256, 304, 512, 768];
-        
+
         for &val in &test_values {
             if val < 48 * 256 {
                 // Extract byte value
                 let byte_val = (val % 256) as u8;
                 let b = BitWord::from_u8(byte_val);
                 let r_original = b.r(alpha);
-                
+
                 // Apply automorphism
                 let transformed = self.apply(val);
                 let byte_transformed = (transformed % 256) as u8;
                 let b_transformed = BitWord::from_u8(byte_transformed);
                 let r_transformed = b_transformed.r(alpha);
-                
+
                 if (r_original - r_transformed).abs() > P::epsilon() {
                     return false;
                 }
             }
         }
-        
+
         true
     }
 }
@@ -133,10 +136,10 @@ impl ResonanceAutomorphism {
 #[cfg(feature = "alloc")]
 pub fn resonance_preserving_automorphisms() -> Vec<ResonanceAutomorphism> {
     let mut result = Vec::new();
-    
+
     // Identity always preserves resonance
     result.push(ResonanceAutomorphism::identity());
-    
+
     // Translation automorphisms preserve resonance
     for offset_48 in 0..48 {
         for offset_256 in 0..=255 {
@@ -150,43 +153,43 @@ pub fn resonance_preserving_automorphisms() -> Vec<ResonanceAutomorphism> {
             }
         }
     }
-    
+
     result
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_klein_symmetry() {
         let klein = KleinSymmetry::new(8).unwrap();
         let b = BitWord::from_bytes(&[0b10101010]);
         let group = klein.klein_group(&b).unwrap();
-        
+
         // Check we get 4 distinct elements
         for i in 0..4 {
-            for j in i+1..4 {
+            for j in i + 1..4 {
                 assert_ne!(group[i], group[j]);
             }
         }
-        
+
         // Check Klein group property: any two non-identity elements give the third
         // This is the key property of V₄
     }
-    
+
     #[test]
     fn test_resonance_automorphism() {
         let id = ResonanceAutomorphism::identity();
         assert_eq!(id.apply(100), 100);
-        
+
         let translation = ResonanceAutomorphism {
             factor_48: 1,
             factor_256: 1,
             offset_48: 1,
             offset_256: 10,
         };
-        
+
         // 100 = 0*256 + 100
         // -> (0+1)%48 * 256 + (100+10)%256 = 1*256 + 110 = 366
         assert_eq!(translation.apply(100), 366);

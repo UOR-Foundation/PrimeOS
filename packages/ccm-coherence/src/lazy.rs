@@ -13,7 +13,7 @@ use core::cell::RefCell;
 use alloc::collections::BTreeMap;
 
 /// Lazy basis generator for Clifford algebras
-/// 
+///
 /// Generates basis elements on demand rather than pre-computing all 2^n elements
 pub struct LazyBasis<P: Float> {
     /// The dimension of the underlying vector space
@@ -34,7 +34,7 @@ impl<P: Float> LazyBasis<P> {
     /// Create a new lazy basis generator
     pub fn new(algebra: CliffordAlgebra<P>) -> Self {
         let dimension = algebra.dimension();
-        
+
         Self {
             dimension,
             #[cfg(feature = "alloc")]
@@ -46,13 +46,13 @@ impl<P: Float> LazyBasis<P> {
             _algebra: algebra,
         }
     }
-    
+
     /// Get a basis element by index, computing it if necessary
     pub fn get(&self, index: usize) -> Result<CliffordElement<P>, CcmError> {
         if index >= (1usize << self.dimension) {
             return Err(CcmError::InvalidInput);
         }
-        
+
         // Check cache first
         #[cfg(feature = "alloc")]
         {
@@ -60,7 +60,7 @@ impl<P: Float> LazyBasis<P> {
                 return Ok(element.clone());
             }
         }
-        
+
         #[cfg(not(feature = "alloc"))]
         {
             let cache = self.cache.borrow();
@@ -72,21 +72,21 @@ impl<P: Float> LazyBasis<P> {
                 }
             }
         }
-        
+
         // Compute the basis element
         let element = self.compute_basis_element(index)?;
-        
+
         // Store in cache
         #[cfg(feature = "alloc")]
         {
             self.cache.borrow_mut().insert(index, element.clone());
         }
-        
+
         #[cfg(not(feature = "alloc"))]
         {
             let mut cache = self.cache.borrow_mut();
             let mut cache_size = self.cache_size.borrow_mut();
-            
+
             if *cache_size < 64 {
                 cache[*cache_size] = (index, Some(element.clone()));
                 *cache_size += 1;
@@ -98,23 +98,27 @@ impl<P: Float> LazyBasis<P> {
                 cache[63] = (index, Some(element.clone()));
             }
         }
-        
+
         Ok(element)
     }
-    
+
     /// Compute a basis element from its index
     fn compute_basis_element(&self, index: usize) -> Result<CliffordElement<P>, CcmError> {
         let mut element = CliffordElement::zero(self.dimension);
         element.set_component(index, Complex::one())?;
         Ok(element)
     }
-    
+
     /// Get basis element by grade and position within that grade
-    pub fn get_by_grade(&self, grade: usize, position: usize) -> Result<CliffordElement<P>, CcmError> {
+    pub fn get_by_grade(
+        &self,
+        grade: usize,
+        position: usize,
+    ) -> Result<CliffordElement<P>, CcmError> {
         if grade > self.dimension {
             return Err(CcmError::InvalidInput);
         }
-        
+
         // Find the position-th element of the given grade
         let mut count = 0;
         for i in 0..(1usize << self.dimension) {
@@ -125,10 +129,10 @@ impl<P: Float> LazyBasis<P> {
                 count += 1;
             }
         }
-        
+
         Err(CcmError::InvalidInput)
     }
-    
+
     /// Iterate over all basis elements of a given grade
     pub fn grade_iterator(&self, grade: usize) -> GradeIterator<P> {
         GradeIterator {
@@ -138,27 +142,27 @@ impl<P: Float> LazyBasis<P> {
             max: 1usize << self.dimension,
         }
     }
-    
+
     /// Clear the cache to free memory
     pub fn clear_cache(&self) {
         #[cfg(feature = "alloc")]
         {
             self.cache.borrow_mut().clear();
         }
-        
+
         #[cfg(not(feature = "alloc"))]
         {
             *self.cache_size.borrow_mut() = 0;
         }
     }
-    
+
     /// Get the number of cached elements
     pub fn cache_size(&self) -> usize {
         #[cfg(feature = "alloc")]
         {
             self.cache.borrow().len()
         }
-        
+
         #[cfg(not(feature = "alloc"))]
         {
             *self.cache_size.borrow()
@@ -176,17 +180,17 @@ pub struct GradeIterator<'a, P: Float> {
 
 impl<'a, P: Float> Iterator for GradeIterator<'a, P> {
     type Item = Result<CliffordElement<P>, CcmError>;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         while self.current < self.max {
             let index = self.current;
             self.current += 1;
-            
+
             if index.count_ones() as usize == self.grade {
                 return Some(self.basis.get(index));
             }
         }
-        
+
         None
     }
 }
@@ -204,20 +208,20 @@ impl<P: Float> LazyCliffordAlgebra<P> {
     pub fn generate(n: usize) -> Result<Self, CcmError> {
         let algebra = CliffordAlgebra::generate(n)?;
         let basis = LazyBasis::new(algebra.clone());
-        
+
         Ok(Self { algebra, basis })
     }
-    
+
     /// Get the dimension
     pub fn dimension(&self) -> usize {
         self.algebra.dimension()
     }
-    
+
     /// Get a basis element lazily
     pub fn basis_element(&self, index: usize) -> Result<CliffordElement<P>, CcmError> {
         self.basis.get(index)
     }
-    
+
     /// Create a basis blade lazily
     pub fn basis_blade(&self, indices: &[usize]) -> Result<CliffordElement<P>, CcmError> {
         // Convert indices to bit pattern
@@ -231,15 +235,15 @@ impl<P: Float> LazyCliffordAlgebra<P> {
             }
             bit_pattern |= 1 << i;
         }
-        
+
         self.basis_element(bit_pattern)
     }
-    
+
     /// Iterate over basis elements of a specific grade
     pub fn grade_elements(&self, grade: usize) -> GradeIterator<P> {
         self.basis.grade_iterator(grade)
     }
-    
+
     /// Geometric product using lazy evaluation
     pub fn geometric_product(
         &self,
@@ -248,7 +252,7 @@ impl<P: Float> LazyCliffordAlgebra<P> {
     ) -> Result<CliffordElement<P>, CcmError> {
         self.algebra.geometric_product(a, b)
     }
-    
+
     /// Get memory usage statistics
     pub fn memory_stats(&self) -> MemoryStats {
         MemoryStats {
@@ -281,10 +285,10 @@ impl MemoryStats {
         let bytes_per_element = self.total_basis_elements * 16;
         let total_bytes = self.total_basis_elements * bytes_per_element;
         let cached_bytes = self.cached_elements * bytes_per_element;
-        
+
         total_bytes.saturating_sub(cached_bytes)
     }
-    
+
     /// Percentage of basis elements that are cached
     pub fn cache_percentage(&self) -> f64 {
         if self.total_basis_elements == 0 {
@@ -298,60 +302,60 @@ impl MemoryStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_lazy_basis_generation() {
         let algebra = CliffordAlgebra::<f64>::generate(4).unwrap();
         let lazy_basis = LazyBasis::new(algebra);
-        
+
         // Should start with empty cache
         assert_eq!(lazy_basis.cache_size(), 0);
-        
+
         // Get a basis element
         let e0 = lazy_basis.get(1).unwrap(); // e₀
         assert_eq!(e0.component(1), Some(Complex::one()));
-        
+
         // Cache should now have one element
         assert_eq!(lazy_basis.cache_size(), 1);
-        
+
         // Getting the same element should use cache
         let e0_again = lazy_basis.get(1).unwrap();
         assert_eq!(e0.component(1), e0_again.component(1));
         assert_eq!(lazy_basis.cache_size(), 1);
     }
-    
+
     #[test]
     fn test_grade_iterator() {
         let algebra = CliffordAlgebra::<f64>::generate(3).unwrap();
         let lazy_basis = LazyBasis::new(algebra);
-        
+
         // Iterate over grade 2 elements
         let grade2_elements: Vec<_> = lazy_basis.grade_iterator(2).collect();
-        
+
         // Should have C(3,2) = 3 elements
         assert_eq!(grade2_elements.len(), 3);
-        
+
         // All should be grade 2
         for result in grade2_elements {
             let elem = result.unwrap();
             let non_zero_indices: Vec<_> = (0..8)
                 .filter(|&i| elem.component(i).unwrap().norm() > 1e-10)
                 .collect();
-            
+
             assert_eq!(non_zero_indices.len(), 1);
             let idx = non_zero_indices[0];
             assert_eq!(idx.count_ones(), 2);
         }
     }
-    
+
     #[test]
     fn test_lazy_algebra() {
         let lazy_algebra = LazyCliffordAlgebra::<f64>::generate(5).unwrap();
-        
+
         // Should be able to get basis elements without pre-computing all 32
         let e01 = lazy_algebra.basis_blade(&[0, 1]).unwrap();
         assert_eq!(e01.component(3), Some(Complex::one())); // binary 011 = 3
-        
+
         // Check memory stats
         let stats = lazy_algebra.memory_stats();
         assert_eq!(stats.dimension, 5);
@@ -359,22 +363,22 @@ mod tests {
         assert_eq!(stats.cached_elements, 1);
         assert!(stats.cache_percentage() < 5.0);
     }
-    
+
     #[test]
     fn test_memory_savings() {
         let lazy_algebra = LazyCliffordAlgebra::<f64>::generate(8).unwrap();
-        
+
         // Get a few basis elements
         lazy_algebra.basis_element(0).unwrap();
         lazy_algebra.basis_element(1).unwrap();
         lazy_algebra.basis_element(15).unwrap();
-        
+
         let stats = lazy_algebra.memory_stats();
-        
+
         // Should have saved significant memory
         let saved = stats.memory_saved_bytes();
         let total = 256 * 256 * 16; // 256 elements, each with 256 complex numbers
-        
+
         assert!(saved > total * 90 / 100); // Saved more than 90%
     }
 }

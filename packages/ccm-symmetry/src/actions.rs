@@ -1,9 +1,8 @@
 //! Group actions on various structures
 
 use crate::group::GroupElement;
-use ccm_core::{BitWord, CcmError, Float};
 use ccm_coherence::{CliffordAlgebra, CliffordElement};
-
+use ccm_core::{BitWord, CcmError, Float};
 
 /// Trait for group actions on various structures
 pub trait GroupAction<P: Float> {
@@ -35,7 +34,7 @@ impl<P: Float> GroupAction<P> for BitWordAction {
 
     fn apply(&self, g: &GroupElement<P>, target: &Self::Target) -> Result<Self::Target, CcmError> {
         let mut result = target.clone();
-        
+
         // Group element params encode which bits to flip
         // param[i] < 0 means flip bit i
         for (i, &param) in g.params.iter().enumerate() {
@@ -43,7 +42,7 @@ impl<P: Float> GroupAction<P> for BitWordAction {
                 result.flip_bit(i);
             }
         }
-        
+
         Ok(result)
     }
 
@@ -64,21 +63,24 @@ impl<P: Float> CliffordAction<P> {
     pub fn new(algebra: CliffordAlgebra<P>) -> Self {
         Self { algebra }
     }
-    
+
     /// Convert group element parameters to a rotor
-    fn params_to_rotor(&self, g: &GroupElement<P>) -> Result<ccm_coherence::rotor::Rotor<P>, CcmError> {
+    fn params_to_rotor(
+        &self,
+        g: &GroupElement<P>,
+    ) -> Result<ccm_coherence::rotor::Rotor<P>, CcmError> {
         use ccm_coherence::rotor::Rotor;
         use num_complex::Complex;
-        
+
         let dim = self.algebra.dimension();
-        
+
         // Build bivector from parameters
         // For n dimensions, we have n(n-1)/2 bivector components
         let mut bivector = CliffordElement::zero(dim);
-        
+
         let mut param_idx = 0;
         for i in 0..dim {
-            for j in i+1..dim {
+            for j in i + 1..dim {
                 if param_idx < g.params.len() {
                     // Basis bivector e_i ∧ e_j has index 2^i + 2^j
                     let index = (1 << i) | (1 << j);
@@ -87,7 +89,7 @@ impl<P: Float> CliffordAction<P> {
                 }
             }
         }
-        
+
         // Create rotor as exp(B/2)
         Rotor::from_bivector(&bivector, &self.algebra)
     }
@@ -98,16 +100,16 @@ impl<P: Float> GroupAction<P> for CliffordAction<P> {
 
     fn apply(&self, g: &GroupElement<P>, x: &Self::Target) -> Result<Self::Target, CcmError> {
         // Apply transformation using rotors (elements of Spin group)
-        
+
         // Identity transformation
         if g.is_identity() {
             return Ok(x.clone());
         }
-        
+
         // Construct rotor from group element parameters
         // Parameters encode bivector components for rotation
         let rotor = self.params_to_rotor(g)?;
-        
+
         // Apply rotor transformation: x' = R x R†
         rotor.apply(x, &self.algebra)
     }
@@ -117,12 +119,12 @@ impl<P: Float> GroupAction<P> for CliffordAction<P> {
         // 1. Coherence inner product
         // 2. Grade structure
         // 3. Minimal embeddings
-        
+
         // For identity, this is always true
         if g.is_identity() {
             return true;
         }
-        
+
         // More complex verification would go here
         true
     }

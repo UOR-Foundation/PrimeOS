@@ -16,6 +16,7 @@ mod coherence;
 pub use coherence::{Coherence, Graded};
 
 // Core modules
+pub mod arbitrary_support;
 pub mod clifford;
 pub mod coherence_gradient;
 pub mod element;
@@ -26,7 +27,6 @@ pub mod metric;
 pub mod optimization;
 pub mod rotor;
 pub mod sparse;
-pub mod arbitrary_support;
 
 #[cfg(test)]
 mod arbitrary_tests;

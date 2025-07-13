@@ -297,7 +297,7 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
                     let r = pattern.r(alpha);
                     // Only keep Klein minimum for each unique resonance
                     let ord_r = OrdFloat(r);
-                    if !resonance_patterns.contains_key(&ord_r) {
+                    resonance_patterns.entry(ord_r).or_insert_with(|| {
                         // Find Klein minimum among all variants with this resonance
                         let mut min_pattern = pattern.clone();
                         let mut min_r = r;
@@ -328,8 +328,8 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
                             }
                         }
 
-                        resonance_patterns.insert(ord_r, min_pattern);
-                    }
+                        min_pattern
+                    });
                 }
             }
         } else {
@@ -346,9 +346,7 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
                 pattern.set_bit(i, true);
                 let r = pattern.r(alpha);
                 let ord_r = OrdFloat(r);
-                if !resonance_patterns.contains_key(&ord_r) {
-                    resonance_patterns.insert(ord_r, pattern);
-                }
+                resonance_patterns.entry(ord_r).or_insert(pattern);
             }
 
             // Add two-bit patterns for alpha products
@@ -359,9 +357,7 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
                     pattern.set_bit(j, true);
                     let r = pattern.r(alpha);
                     let ord_r = OrdFloat(r);
-                    if !resonance_patterns.contains_key(&ord_r) {
-                        resonance_patterns.insert(ord_r, pattern);
-                    }
+                    resonance_patterns.entry(ord_r).or_insert(pattern);
                 }
             }
 
@@ -391,9 +387,7 @@ fn enumerate_resonance_classes<P: Float + FromPrimitive>(
 
                     let r = pattern.r(alpha);
                     let ord_r = OrdFloat(r);
-                    if !resonance_patterns.contains_key(&ord_r) {
-                        resonance_patterns.insert(ord_r, pattern);
-                    }
+                    resonance_patterns.entry(ord_r).or_insert(pattern);
                 }
             }
         }

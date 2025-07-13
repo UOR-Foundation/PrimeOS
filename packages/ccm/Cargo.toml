@@ -20,6 +20,13 @@ ccm-symmetry = { path = "../ccm-symmetry", default-features = false }
 num-traits = { version = "0.2", default-features = false }
 num-complex = { version = "0.4", default-features = false }
 
+# Cache implementation
+lru = { version = "0.12", default-features = false }
+
+# Optional dependencies for no_std environments
+spin = { version = "0.9", default-features = false, features = ["rwlock"], optional = true }
+hashbrown = { version = "0.14", default-features = false, features = ["ahash"], optional = true }
+
 [features]
 default = ["std", "alloc"]
 std = [
@@ -35,7 +42,14 @@ alloc = [
     "ccm-core/alloc",
     "ccm-embedding/alloc",
     "ccm-coherence/alloc", 
-    "ccm-symmetry/alloc"
+    "ccm-symmetry/alloc",
+    "spin",
+    "hashbrown"
 ]
 
 [dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "cache_benchmarks"
+harness = false

@@ -1,12 +1,16 @@
 //! Coherence engine wrapper for ccm-coherence functionality
 
-use ccm_core::{CcmError, Float};
+use crate::cache::CcmCache;
 use ccm_coherence::{
-    CliffordAlgebra, CliffordElement,
     coherence_norm, coherence_product,
-    optimization::{minimize_coherence, MinimizationOptions, Constraint},
+    optimization::{minimize_coherence, Constraint, MinimizationOptions},
+    CliffordAlgebra, CliffordElement,
 };
+use ccm_core::{CcmError, Float};
 use num_complex::Complex;
+
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
 
 /// Engine for coherence operations (Axiom A1)
 pub struct CoherenceEngine<P: Float> {
@@ -22,7 +26,7 @@ impl<P: Float> CoherenceEngine<P> {
         } else {
             None // Use lazy evaluation for large dimensions
         };
-        
+
         Ok(Self { algebra, dimension })
     }
 
@@ -31,8 +35,7 @@ impl<P: Float> CoherenceEngine<P> {
         if self.algebra.is_none() && self.dimension <= 12 {
             self.algebra = Some(CliffordAlgebra::generate(self.dimension)?);
         }
-        self.algebra.as_ref()
-            .ok_or(CcmError::NotImplemented)
+        self.algebra.as_ref().ok_or(CcmError::NotImplemented)
     }
 
     /// Get the algebra if it exists (const method)
@@ -51,7 +54,7 @@ impl<P: Float> CoherenceEngine<P> {
         let mut indices = Vec::new();
         let mut idx = index;
         let mut bit_pos = 0;
-        
+
         while idx > 0 {
             if idx & 1 == 1 {
                 indices.push(bit_pos);
@@ -59,7 +62,7 @@ impl<P: Float> CoherenceEngine<P> {
             idx >>= 1;
             bit_pos += 1;
         }
-        
+
         CliffordElement::basis_blade(&indices, self.dimension)
     }
 
@@ -81,8 +84,7 @@ impl<P: Float> CoherenceEngine<P> {
     ) -> Result<CliffordElement<P>, CcmError> {
         if let Some(c) = constraint {
             let options = MinimizationOptions::default();
-            minimize_coherence(initial, c, options)
-                .map(|result| result.minimizer)
+            minimize_coherence(initial, c, options).map(|result| result.minimizer)
         } else {
             // No constraint - just return the input
             Ok(initial.clone())
@@ -92,5 +94,25 @@ impl<P: Float> CoherenceEngine<P> {
     /// Get dimension
     pub fn dimension(&self) -> usize {
         self.dimension
+    }
+
+    /// Create a Clifford element from basis index with caching
+    pub fn basis_element_cached(
+        &self,
+        index: usize,
+        cache: &CcmCache<P>,
+    ) -> Result<CliffordElement<P>, CcmError> {
+        // Check cache first
+        if let Some(cached_element) = cache.get_basis_element(self.dimension, index) {
+            return Ok(cached_element);
+        }
+
+        // Create basis element
+        let element = self.basis_element(index)?;
+
+        // Store in cache
+        cache.put_basis_element(self.dimension, index, element.clone());
+
+        Ok(element)
     }
 }
