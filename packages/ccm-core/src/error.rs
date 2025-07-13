@@ -38,6 +38,9 @@ pub enum CcmError {
 
     /// Invalid input parameters
     InvalidInput,
+    
+    /// Feature not implemented
+    NotImplemented,
 }
 
 impl fmt::Display for CcmError {
@@ -60,6 +63,7 @@ impl fmt::Display for CcmError {
             Self::IoError(_) => write!(f, "I/O error"),
             Self::Custom(msg) => write!(f, "{msg}"),
             Self::InvalidInput => write!(f, "Invalid input parameters"),
+            Self::NotImplemented => write!(f, "Feature not implemented"),
         }
     }
 }
@@ -91,6 +95,7 @@ impl PartialEq for CcmError {
             (Self::IoError(_), Self::IoError(_)) => true, // core::fmt::Error has no PartialEq
             (Self::Custom(a), Self::Custom(b)) => a == b,
             (Self::InvalidInput, Self::InvalidInput) => true,
+            (Self::NotImplemented, Self::NotImplemented) => true,
             _ => false,
         }
     }

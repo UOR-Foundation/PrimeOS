@@ -5,6 +5,7 @@ members = [
     "ccm-embedding", 
     "ccm-coherence",
     "ccm-symmetry",
+    "ccm",
     "ccm-applications/bjc-codec"
 ]
 

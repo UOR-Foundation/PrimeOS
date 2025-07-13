@@ -1,0 +1,41 @@
+[package]
+name = "ccm"
+version = "0.1.0"
+edition = "2021"
+authors = ["UOR Contributors"]
+description = "Complete integrated implementation of Coherence-Centric Mathematics"
+license = "MIT"
+repository = "https://github.com/UOR-Foundation/PrimeOS"
+
+[dependencies]
+# Core types and traits
+ccm-core = { path = "../ccm-core", default-features = false }
+
+# Mathematical components (three axioms)
+ccm-embedding = { path = "../ccm-embedding", default-features = false }
+ccm-coherence = { path = "../ccm-coherence", default-features = false }
+ccm-symmetry = { path = "../ccm-symmetry", default-features = false }
+
+# Numeric traits
+num-traits = { version = "0.2", default-features = false }
+num-complex = { version = "0.4", default-features = false }
+
+[features]
+default = ["std", "alloc"]
+std = [
+    "ccm-core/std",
+    "ccm-embedding/std", 
+    "ccm-coherence/std",
+    "ccm-symmetry/std",
+    "num-traits/std",
+    "num-complex/std",
+    "alloc"
+]
+alloc = [
+    "ccm-core/alloc",
+    "ccm-embedding/alloc",
+    "ccm-coherence/alloc", 
+    "ccm-symmetry/alloc"
+]
+
+[dev-dependencies]

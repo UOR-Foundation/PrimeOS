@@ -40,6 +40,15 @@ Implements Axiom A3: Group actions preserving CCM structure.
 - **Orbit Analysis**: Orbit-stabilizer decomposition
 - **Invariant Theory**: Preserved quantities under group action
 
+### Integrated Implementation
+
+#### ccm
+The complete integrated CCM implementation that applications should use.
+- **StandardCCM**: Unified implementation combining all three axioms
+- **Engine Integration**: Coordinates embedding, coherence, and symmetry operations
+- **Scale-Adaptive Algorithms**: Optimal strategies for different problem sizes
+- **Extended API**: Advanced features like symmetry operations and resonance search
+
 ## Mathematical Unity
 
 The key insight of CCM is that these three structures are not independent:
@@ -59,17 +68,29 @@ The ccm-core package provides the unified interface where these three mathematic
 - ✅ **ccm-embedding**: Alpha generator and resonance algebra complete
 - ✅ **ccm-coherence**: Clifford algebra, coherence metric, and optimization complete
 - ✅ **ccm-symmetry**: Group actions, Lie algebra, and invariant theory complete
+- ✅ **ccm**: Integrated implementation bringing all three axioms together
 
 ## Usage
 
-Applications should depend on `ccm-core` and use the unified `CCMCore` trait to access all mathematical operations. The individual mathematical packages (embedding, coherence, symmetry) are implementation details that applications typically won't need to reference directly.
+Applications should depend on the `ccm` package to get the complete CCM implementation:
 
 ```rust
-use ccm_core::{CCMCore, StandardCCM};
+use ccm::{StandardCCM, CCMCore};
+use ccm::prelude::*;
 
-let ccm = StandardCCM::new();
+// Create CCM instance
+let ccm = StandardCCM::<f64>::new(8)?;
+
+// Generate alpha values
+let alpha = ccm.generate_alpha()?;
+
 // Use unified interface for all operations
+let input = BitWord::from_u8(42);
+let section = ccm.embed(&input, &alpha)?;
+let norm = ccm.coherence_norm(&section);
 ```
+
+The `ccm-core` package only provides the trait definitions and basic types. For actual functionality, use the `ccm` package.
 
 ## References
 

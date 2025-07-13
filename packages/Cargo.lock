@@ -30,6 +30,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ccm"
+version = "0.1.0"
+dependencies = [
+ "ccm-coherence",
+ "ccm-core",
+ "ccm-embedding",
+ "ccm-symmetry",
+ "num-complex",
+ "num-traits",
+]
+
+[[package]]
 name = "ccm-coherence"
 version = "0.1.0"
 dependencies = [

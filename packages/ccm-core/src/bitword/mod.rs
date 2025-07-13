@@ -149,6 +149,11 @@ impl BitWord {
         Self::from_u64(value as u64, 32)
     }
 
+    /// Create from a usize value with appropriate bit length
+    pub fn from_usize(value: usize) -> Self {
+        Self::from_u64(value as u64, 64)
+    }
+
     /// Flip bit at position i
     pub fn flip_bit(&mut self, i: usize) {
         if i < self.len {
