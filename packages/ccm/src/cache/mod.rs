@@ -42,11 +42,10 @@ use spin::RwLock;
 #[cfg(feature = "std")]
 use std::sync::RwLock;
 
-#[cfg(feature = "std")]
-use std::collections::HashMap;
 #[cfg(not(feature = "std"))]
 use hashbrown::HashMap;
-
+#[cfg(feature = "std")]
+use std::collections::HashMap;
 
 #[cfg(all(not(feature = "std"), feature = "alloc"))]
 use alloc::vec::Vec;
