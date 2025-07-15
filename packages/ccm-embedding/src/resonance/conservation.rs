@@ -1,4 +1,8 @@
 //! Resonance conservation laws and currents
+//!
+//! Conservation laws are inherent mathematical properties of the resonance algebra,
+//! not imposed constraints. They emerge naturally from the unity constraint and
+//! Klein group structure.
 
 use crate::{AlphaVec, Resonance};
 use ccm_core::Float;
@@ -22,6 +26,16 @@ pub struct CurrentExtrema {
     pub min_value: f64,
 }
 
+/// Result of decomposition conservation verification
+#[derive(Debug)]
+pub struct DecompositionConservationResult<P: Float> {
+    pub conserved: bool,
+    pub whole_resonance: P,
+    pub parts_sum: P,
+    pub absolute_error: P,
+    pub relative_error: P,
+}
+
 /// Trait for resonance conservation operations
 pub trait ResonanceConservation<P: Float> {
     /// Compute sum over a contiguous block
@@ -35,6 +49,15 @@ pub trait ResonanceConservation<P: Float> {
 
     /// Find current extrema
     fn current_extrema(alpha: &AlphaVec<P>, range: usize) -> CurrentExtrema;
+    
+    /// Verify that a decomposition preserves resonance conservation
+    fn verify_decomposition_conservation(
+        whole: &Self,
+        parts: &[Self],
+        alpha: &AlphaVec<P>,
+    ) -> DecompositionConservationResult<P>
+    where
+        Self: Sized + Resonance<P>;
 }
 
 /// Implementation for u8
@@ -101,6 +124,39 @@ impl<P: Float + FromPrimitive> ResonanceConservation<P> for u8 {
             max_value,
             min_position,
             min_value,
+        }
+    }
+    
+    fn verify_decomposition_conservation(
+        whole: &Self,
+        parts: &[Self],
+        alpha: &AlphaVec<P>,
+    ) -> DecompositionConservationResult<P>
+    where
+        Self: Sized + Resonance<P>,
+    {
+        let whole_resonance = whole.r(alpha);
+        let parts_sum: P = parts.iter()
+            .map(|p| p.r(alpha))
+            .fold(P::zero(), |a, b| a + b);
+        
+        let absolute_error = (whole_resonance - parts_sum).abs();
+        let relative_error = if whole_resonance != P::zero() {
+            absolute_error / whole_resonance
+        } else {
+            P::zero()
+        };
+        
+        // Conservation is satisfied if relative error is within tolerance
+        let tolerance = P::epsilon() * P::from(1000.0).unwrap();
+        let conserved = relative_error < tolerance;
+        
+        DecompositionConservationResult {
+            conserved,
+            whole_resonance,
+            parts_sum,
+            absolute_error,
+            relative_error,
         }
     }
 }
@@ -212,6 +268,39 @@ impl<P: Float + FromPrimitive> ResonanceConservation<P> for BitWord {
             max_value,
             min_position,
             min_value,
+        }
+    }
+    
+    fn verify_decomposition_conservation(
+        whole: &Self,
+        parts: &[Self],
+        alpha: &AlphaVec<P>,
+    ) -> DecompositionConservationResult<P>
+    where
+        Self: Sized + Resonance<P>,
+    {
+        let whole_resonance = whole.r(alpha);
+        let parts_sum: P = parts.iter()
+            .map(|p| p.r(alpha))
+            .fold(P::zero(), |a, b| a + b);
+        
+        let absolute_error = (whole_resonance - parts_sum).abs();
+        let relative_error = if whole_resonance != P::zero() {
+            absolute_error / whole_resonance
+        } else {
+            P::zero()
+        };
+        
+        // Conservation is satisfied if relative error is within tolerance
+        let tolerance = P::epsilon() * P::from(1000.0).unwrap();
+        let conserved = relative_error < tolerance;
+        
+        DecompositionConservationResult {
+            conserved,
+            whole_resonance,
+            parts_sum,
+            absolute_error,
+            relative_error,
         }
     }
 }

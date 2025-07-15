@@ -70,6 +70,7 @@ use num_traits::FromPrimitive;
 // Submodules
 pub mod classes;
 pub mod conservation;
+pub mod decomposition;
 pub mod gradient;
 pub mod homomorphic;
 pub mod inverse;
@@ -80,7 +81,8 @@ pub mod bitword_tests;
 
 // Re-export key traits
 pub use classes::{ClassDistribution, ResonanceClass, ResonanceClasses};
-pub use conservation::{ConservationResult, CurrentExtrema, ResonanceConservation};
+pub use conservation::{ConservationResult, CurrentExtrema, ResonanceConservation, DecompositionConservationResult};
+pub use decomposition::{ResonanceDecomposable, KleinPartition, ResonanceBoundary, ResonanceBoundaryType};
 pub use gradient::ResonanceGradient;
 pub use homomorphic::{HomomorphicResonance, HomomorphicSubgroup};
 pub use inverse::InverseResonance;
