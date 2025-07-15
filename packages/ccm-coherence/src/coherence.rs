@@ -1,6 +1,7 @@
 //! Coherence norm implementation
 
 use ccm_core::Float;
+use crate::grade::Graded;
 
 /// Trait for types that have a coherence norm
 pub trait Coherence<P: Float> {
@@ -11,18 +12,6 @@ pub trait Coherence<P: Float> {
     fn coherence_norm(&self) -> P {
         self.coherence_norm_sq().sqrt()
     }
-}
-
-/// Grade decomposition trait for multivectors
-pub trait Graded<P: Float> {
-    /// Get the grade-k component
-    fn grade(&self, k: usize) -> Self;
-
-    /// Get the maximum grade
-    fn max_grade(&self) -> usize;
-
-    /// Get the L2 norm squared of the grade-k component
-    fn grade_norm_sq(&self, k: usize) -> P;
 }
 
 /// Blanket implementation for types with grade decomposition
@@ -56,7 +45,7 @@ mod tests {
         grades: Vec<usize>,
     }
 
-    impl Graded<f64> for SimpleMultivector {
+    impl crate::grade::Graded<f64> for SimpleMultivector {
         fn grade(&self, k: usize) -> Self {
             let mut filtered_components = Vec::new();
             let mut filtered_grades = Vec::new();
@@ -72,6 +61,12 @@ mod tests {
                 components: filtered_components,
                 grades: filtered_grades,
             }
+        }
+
+        #[cfg(feature = "alloc")]
+        fn grade_decomposition(&self) -> Vec<Self> {
+            let max_g = self.max_grade();
+            (0..=max_g).map(|k| self.grade(k)).collect()
         }
 
         fn max_grade(&self) -> usize {

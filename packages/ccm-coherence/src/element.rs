@@ -58,6 +58,23 @@ impl<P: Float> CliffordElement<P> {
     pub fn dimension(&self) -> usize {
         self.dimension
     }
+    
+    /// Check if this element is zero
+    pub fn is_zero(&self) -> bool {
+        for component in self.components.iter() {
+            if component.norm_sqr() > P::epsilon() {
+                return false;
+            }
+        }
+        true
+    }
+    
+    /// Compute coherence inner product with another element
+    pub fn coherence_inner_product(&self, other: &Self) -> P {
+        let complex_result = crate::metric::coherence_product(self, other);
+        // For real-valued Clifford elements, the inner product is real
+        complex_result.re
+    }
 
     /// Get the number of components (2^n)
     pub fn num_components(&self) -> usize {

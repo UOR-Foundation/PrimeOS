@@ -13,12 +13,14 @@ extern crate alloc;
 
 // Include existing modules
 mod coherence;
-pub use coherence::{Coherence, Graded};
+pub use coherence::Coherence;
+pub use grade::Graded;
 
 // Core modules
 pub mod arbitrary_support;
 pub mod clifford;
 pub mod coherence_gradient;
+pub mod decomposition;
 pub mod element;
 pub mod embedding;
 pub mod grade;
@@ -36,6 +38,7 @@ mod grade_orthogonality_test;
 
 // Re-export key types
 pub use clifford::CliffordAlgebra;
+pub use decomposition::{CoherentDecomposition, GradeComponent, CoherenceBoundary, CoherenceBoundaryType};
 pub use element::{CliffordElement, Section};
 pub use embedding::{bitword_to_clifford, embed_with_resonance, u8_to_clifford};
 pub use metric::{coherence_norm, coherence_product};
