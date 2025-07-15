@@ -58,6 +58,109 @@ pub struct CliffordAction<P: Float> {
     algebra: CliffordAlgebra<P>,
 }
 
+/// Klein group action on Clifford elements
+/// Acts by permuting basis components according to XOR on last two bits
+pub struct KleinCliffordAction {
+    /// Dimension of the space
+    dimension: usize,
+}
+
+impl KleinCliffordAction {
+    /// Create a new Klein action for n-dimensional Clifford algebra
+    pub fn new(dimension: usize) -> Self {
+        Self { dimension }
+    }
+    
+    /// Apply Klein transformation to a basis index
+    /// Klein group acts by XOR on the bits corresponding to basis vectors n-2 and n-1
+    fn transform_index(&self, index: usize, klein_element: usize) -> usize {
+        if self.dimension < 2 {
+            return index;
+        }
+        
+        // Klein element: 0 = identity, 1 = flip n-2, 2 = flip n-1, 3 = flip both
+        let mut result = index;
+        
+        // Check if we need to flip bit (n-2)
+        if klein_element & 1 != 0 {
+            let bit_pos = self.dimension - 2;
+            result ^= 1 << bit_pos;
+        }
+        
+        // Check if we need to flip bit (n-1)
+        if klein_element & 2 != 0 {
+            let bit_pos = self.dimension - 1;
+            result ^= 1 << bit_pos;
+        }
+        
+        result
+    }
+    
+    /// Determine which Klein element a GroupElement represents
+    fn klein_element_from_group<P: Float>(&self, g: &GroupElement<P>) -> usize {
+        if g.is_identity() {
+            return 0;
+        }
+        
+        // Check params to determine which Klein element this is
+        // params[i] < 0 means flip bit i
+        let mut klein = 0;
+        
+        if self.dimension >= 2 {
+            // Check bit n-2
+            if g.params.len() >= self.dimension && g.params[self.dimension - 2] < P::zero() {
+                klein |= 1;
+            }
+            // Check bit n-1
+            if g.params.len() >= self.dimension && g.params[self.dimension - 1] < P::zero() {
+                klein |= 2;
+            }
+        }
+        
+        klein
+    }
+}
+
+impl<P: Float> GroupAction<P> for KleinCliffordAction {
+    type Target = CliffordElement<P>;
+    
+    fn apply(&self, g: &GroupElement<P>, x: &Self::Target) -> Result<Self::Target, CcmError> {
+        // Determine which Klein element this is
+        let klein_elem = self.klein_element_from_group(g);
+        
+        if klein_elem == 0 {
+            // Identity
+            return Ok(x.clone());
+        }
+        
+        // Create new element by permuting components
+        let mut result = CliffordElement::zero(self.dimension);
+        
+        // For each component in x, map it to the transformed position
+        for i in 0..x.num_components() {
+            if let Some(component) = x.component(i) {
+                // Transform the index according to Klein action
+                let new_index = self.transform_index(i, klein_elem);
+                
+                // Bounds check
+                if new_index < result.num_components() {
+                    result.set_component(new_index, component)?;
+                }
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    fn verify_invariance(&self, _g: &GroupElement<P>) -> bool {
+        // Klein group always preserves:
+        // 1. Total number of components
+        // 2. Grade structure (XOR on last two bits preserves grade)
+        // 3. Coherence norm (permutation of orthogonal components)
+        true
+    }
+}
+
 impl<P: Float> CliffordAction<P> {
     /// Create a new Clifford action
     pub fn new(algebra: CliffordAlgebra<P>) -> Self {

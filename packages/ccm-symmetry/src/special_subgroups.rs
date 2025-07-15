@@ -23,7 +23,7 @@ pub fn resonance_preserving_subgroup<P: Float>(
         let mut params = vec![P::one(); n];
         // Translation generator in direction i
         params[i] = P::from(2.0).unwrap(); // Small translation
-        let generator = GroupElement { params };
+        let generator = GroupElement { params, cached_order: None };
         group.add_generator(generator)?;
     }
 
@@ -45,7 +45,7 @@ pub fn grade_preserving_subgroup<P: Float>(dimension: usize) -> Result<SymmetryG
     for i in 0..dimension {
         scalar_gen[i * dimension + i] = scalar_value;
     }
-    group.add_generator(GroupElement { params: scalar_gen })?;
+    group.add_generator(GroupElement { params: scalar_gen, cached_order: None })?;
 
     // Add rotation generators for SO(n)
     // For each pair (i,j), add a rotation in that plane
@@ -75,12 +75,12 @@ pub fn klein_subgroup<P: Float>(n: usize) -> Result<SymmetryGroup<P>, CcmError> 
     // Generator a: flip bit n-1
     let mut gen_a = vec![P::one(); 4];
     gen_a[0] = -P::one(); // Represents bit flip
-    group.add_generator(GroupElement { params: gen_a })?;
+    group.add_generator(GroupElement { params: gen_a, cached_order: Some(2) })?;
 
     // Generator b: flip bit n-2
     let mut gen_b = vec![P::one(); 4];
     gen_b[1] = -P::one(); // Represents bit flip
-    group.add_generator(GroupElement { params: gen_b })?;
+    group.add_generator(GroupElement { params: gen_b, cached_order: Some(2) })?;
 
     Ok(group)
 }
@@ -120,6 +120,7 @@ pub fn maximal_resonance_subgroup<P: Float>(
     translation[0] = P::from(256.0).unwrap(); // Page translation
     group.add_generator(GroupElement {
         params: translation,
+        cached_order: None,
     })?;
 
     Ok(group)

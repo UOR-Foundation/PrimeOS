@@ -14,7 +14,6 @@ use alloc::collections::BTreeSet;
 #[cfg(feature = "std")]
 use std::collections::BTreeSet;
 
-
 /// Orbit of an element under group action
 #[derive(Debug, Clone)]
 pub struct Orbit<P: Float, T> {
@@ -244,7 +243,6 @@ pub fn count_orbits<P: Float, T: Clone + PartialEq>(
 
     Ok(orbit_count)
 }
-
 
 #[cfg(test)]
 mod tests {

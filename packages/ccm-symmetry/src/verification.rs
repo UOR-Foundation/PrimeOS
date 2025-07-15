@@ -140,10 +140,7 @@ pub struct ActionVerifier<P: Float, T> {
 impl<P: Float, T: Clone + PartialEq> ActionVerifier<P, T> {
     /// Create a new action verifier
     pub fn new(group: SymmetryGroup<P>, action: Box<dyn GroupAction<P, Target = T>>) -> Self {
-        Self {
-            group,
-            action,
-        }
+        Self { group, action }
     }
 
     /// Verify identity action: e · x = x

@@ -11,9 +11,8 @@ mod group_tests {
         assert_eq!(elem.dimension(), 4);
         assert!(elem.is_identity());
 
-        let non_identity = GroupElement {
-            params: vec![1.0, 2.0, 3.0, 4.0],
-        };
+        let group = SymmetryGroup::<f64>::generate(4).unwrap();
+        let non_identity = group.element(&[1.0, 2.0, 3.0, 4.0]).unwrap();
         assert!(!non_identity.is_identity());
     }
 
@@ -38,16 +37,13 @@ mod group_tests {
         let mut group = SymmetryGroup::<f64>::generate(2).unwrap();
         assert_eq!(group.generators().len(), 0);
 
-        let gen = GroupElement {
-            params: vec![2.0, 3.0],
-        };
+        let gen = group.element(&[2.0, 3.0]).unwrap();
         group.add_generator(gen.clone()).unwrap();
         assert_eq!(group.generators().len(), 1);
 
         // Wrong dimension should fail
-        let bad_gen = GroupElement {
-            params: vec![1.0, 2.0, 3.0],
-        };
+        let wrong_group = SymmetryGroup::<f64>::generate(3).unwrap();
+        let bad_gen = wrong_group.element(&[1.0, 2.0, 3.0]).unwrap();
         assert!(group.add_generator(bad_gen).is_err());
     }
 }
@@ -217,11 +213,13 @@ mod orbit_tests {
 
     #[test]
     fn test_stabilizer_construction() {
-        let mut stabilizer = StabilizerSubgroup::<f64>::new();
+        let mut stabilizer = StabilizerSubgroup::<f64> {
+            generators: Vec::new(),
+        };
         assert_eq!(stabilizer.generators.len(), 0);
 
         let g = GroupElement::identity(3);
-        stabilizer.add_generator(g);
+        stabilizer.generators.push(g);
         assert_eq!(stabilizer.generators.len(), 1);
     }
 }

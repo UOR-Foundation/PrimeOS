@@ -13,10 +13,14 @@ ccm-coherence = { path = "../ccm-coherence" }
 ccm-embedding = { path = "../ccm-embedding" }
 num-traits = { version = "0.2", default-features = false }
 num-complex = { version = "0.4", default-features = false }
+serde = { version = "1.0", default-features = false, optional = true, features = ["derive"] }
 
 [features]
 default = ["std"]
-std = ["ccm-core/std", "num-traits/std"]
-alloc = ["ccm-core/alloc"]
+std = ["ccm-core/std", "num-traits/std", "serde?/std"]
+alloc = ["ccm-core/alloc", "serde?/alloc"]
+serde = ["dep:serde"]
 
 [dev-dependencies]
+serde_json = "1.0"
+hashbrown = "0.15"

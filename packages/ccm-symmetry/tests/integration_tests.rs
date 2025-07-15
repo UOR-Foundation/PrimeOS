@@ -220,7 +220,8 @@ mod performance_tests {
         for i in 0..5 {
             let mut params = vec![1.0; 16];
             params[i] = 1.5;
-            group.add_generator(GroupElement { params }).unwrap();
+            let elem = group.element(&params).unwrap();
+            group.add_generator(elem).unwrap();
         }
 
         let action = BitWordAction::new(8);

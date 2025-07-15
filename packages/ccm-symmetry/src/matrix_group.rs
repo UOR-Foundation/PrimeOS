@@ -48,7 +48,7 @@ impl<P: Float> MatrixGroup<P> {
             }
         }
 
-        Ok(GroupElement { params: result })
+        Ok(GroupElement { params: result, cached_order: None })
     }
 
     /// Compute matrix inverse
@@ -69,6 +69,7 @@ impl<P: Float> MatrixGroup<P> {
                 }
                 Ok(GroupElement {
                     params: vec![P::one() / det],
+                    cached_order: None,
                 })
             }
             2 => {
@@ -86,6 +87,7 @@ impl<P: Float> MatrixGroup<P> {
                 let inv_det = P::one() / det;
                 Ok(GroupElement {
                     params: vec![d * inv_det, -b * inv_det, -c * inv_det, a * inv_det],
+                    cached_order: None,
                 })
             }
             3 => {
@@ -104,6 +106,7 @@ impl<P: Float> MatrixGroup<P> {
 
                 // Calculate cofactor matrix and transpose
                 Ok(GroupElement {
+                    cached_order: None,
                     params: vec![
                         (m[4] * m[8] - m[5] * m[7]) * inv_det,
                         (m[2] * m[7] - m[1] * m[8]) * inv_det,
@@ -163,7 +166,7 @@ impl<P: Float> MatrixGroup<P> {
             }
         }
 
-        GroupElement { params: result }
+        GroupElement { params: result, cached_order: None }
     }
 
     /// Create identity matrix
@@ -175,7 +178,7 @@ impl<P: Float> MatrixGroup<P> {
             params[i * n + i] = P::one();
         }
 
-        GroupElement { params }
+        GroupElement { params, cached_order: Some(1) }
     }
 }
 
@@ -263,9 +266,11 @@ mod tests {
         // Test 2x2 matrix multiplication
         let a = GroupElement {
             params: vec![1.0, 2.0, 3.0, 4.0],
+            cached_order: None,
         };
         let b = GroupElement {
             params: vec![5.0, 6.0, 7.0, 8.0],
+            cached_order: None,
         };
 
         let c = group.multiply(&a, &b).unwrap();
@@ -282,6 +287,7 @@ mod tests {
         // Test 2x2 matrix inverse
         let a = GroupElement {
             params: vec![4.0, 7.0, 2.0, 6.0],
+            cached_order: None,
         };
         let a_inv = group.inverse(&a).unwrap();
 
