@@ -9,6 +9,7 @@
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use crate::group::{GroupElement, SymmetryGroup, GroupType};
+use crate::group::continuous::ContinuousGroup;
 use crate::SymmetryError;
 use ccm_core::CcmError;
 
@@ -81,9 +82,6 @@ pub trait GeneratorManagement<P: Float> {
     /// Find minimal generating set
     fn minimal_generators(&self) -> Vec<GroupElement<P>>;
     
-    /// Get relations between generators (for presentations)
-    fn generator_relations(&self) -> Vec<String>;
-    
     /// Express element as word in generators
     fn express_as_word(&self, element: &GroupElement<P>) -> Option<Vec<(usize, i32)>>;
 }
@@ -102,60 +100,6 @@ impl<P: Float> GeneratorManagement<P> for SymmetryGroup<P> {
     /// Find minimal generating set
     fn minimal_generators(&self) -> Vec<GroupElement<P>> {
         self.minimal_generators()
-    }
-    
-    /// Get relations between generators (for presentations)
-    fn generator_relations(&self) -> Vec<String> {
-        // Extract relations based on group type and structure
-        let mut relations = Vec::new();
-        
-        match &self.group_type {
-            GroupType::Finite { .. } => {
-                // For finite groups, find relations by computing products
-                for (i, gen) in self.generators.iter().enumerate() {
-                    // Find order of generator
-                    if let Some(order) = self.element_order(gen) {
-                        if order > 1 {
-                            relations.push(format!("g{}^{} = e", i, order));
-                        }
-                    }
-                }
-                
-                // Find commutation relations
-                for i in 0..self.generators.len() {
-                    for j in i+1..self.generators.len() {
-                        if let (Ok(ab), Ok(ba)) = (
-                            self.multiply(&self.generators[i], &self.generators[j]),
-                            self.multiply(&self.generators[j], &self.generators[i])
-                        ) {
-                            if self.elements_equal(&ab, &ba) {
-                                relations.push(format!("[g{}, g{}] = e", i, j));
-                            }
-                        }
-                    }
-                }
-            }
-            GroupType::DiscreteInfinite => {
-                // For infinite groups, use known structure
-                if self.generators.len() == 1 {
-                    // Infinite cyclic group has no relations
-                    relations.push("Free group on one generator".to_string());
-                } else if self.is_free_abelian() {
-                    // Free abelian groups have commutation relations
-                    for i in 0..self.generators.len() {
-                        for j in i+1..self.generators.len() {
-                            relations.push(format!("[g{}, g{}] = e", i, j));
-                        }
-                    }
-                }
-            }
-            GroupType::Continuous => {
-                // For Lie groups, describe Lie algebra structure
-                relations.push(format!("Lie group of dimension {}", self.generators.len()));
-            }
-        }
-        
-        relations
     }
     
     /// Express element as word in generators
@@ -179,6 +123,7 @@ impl<P: Float> SymmetryGroup<P> {
             generators,
             group_type: GroupType::Continuous, // Will be determined later
             cached_order: None,
+            presentation: None,
         })
     }
     
@@ -235,9 +180,297 @@ impl<P: Float> SymmetryGroup<P> {
     /// 
     /// This is a computationally hard problem in general.
     pub fn minimal_generators(&self) -> Vec<GroupElement<P>> {
-        // For now, return the current generators
-        // A proper implementation would try to reduce the generator set
-        self.generators.clone()
+        if self.generators.is_empty() {
+            return Vec::new();
+        }
+        
+        match &self.group_type {
+            GroupType::Finite { .. } => {
+                // For finite groups, use elimination algorithm
+                self.minimal_generators_finite()
+            }
+            GroupType::DiscreteInfinite => {
+                // For discrete infinite groups, use dependency analysis
+                self.minimal_generators_discrete_infinite()
+            }
+            GroupType::Continuous => {
+                // For continuous groups, use Lie algebra rank
+                self.minimal_generators_continuous()
+            }
+        }
+    }
+    
+    /// Find minimal generators for finite groups
+    fn minimal_generators_finite(&self) -> Vec<GroupElement<P>> {
+        let mut minimal = Vec::new();
+        let mut remaining = self.generators.clone();
+        
+        // Greedy algorithm: add generators that increase the generated subgroup
+        while !remaining.is_empty() {
+            let mut best_idx = 0;
+            let mut best_new_elements = 0;
+            
+            // Current subgroup size
+            let current_size = self.subgroup_size(&minimal);
+            
+            // Try each remaining generator
+            for (idx, gen) in remaining.iter().enumerate() {
+                let mut test_gens = minimal.clone();
+                test_gens.push(gen.clone());
+                
+                let new_size = self.subgroup_size(&test_gens);
+                let new_elements = new_size.saturating_sub(current_size);
+                
+                if new_elements > best_new_elements {
+                    best_new_elements = new_elements;
+                    best_idx = idx;
+                }
+            }
+            
+            if best_new_elements > 0 {
+                // This generator extends the group
+                minimal.push(remaining.remove(best_idx));
+            } else {
+                // This generator is redundant
+                remaining.remove(best_idx);
+            }
+            
+            // Early exit if we've generated the full group
+            if self.is_generating_set(&minimal) {
+                break;
+            }
+        }
+        
+        minimal
+    }
+    
+    /// Find minimal generators for discrete infinite groups
+    fn minimal_generators_discrete_infinite(&self) -> Vec<GroupElement<P>> {
+        // Use linear algebra to find dependencies
+        let n = self.generators.len();
+        if n <= 1 {
+            return self.generators.clone();
+        }
+        
+        // Build dependency matrix
+        let mut dependencies = vec![vec![false; n]; n];
+        
+        for i in 0..n {
+            for j in 0..n {
+                if i != j {
+                    // Check if generator i can be expressed using generators excluding j
+                    let mut test_gens = self.generators.clone();
+                    test_gens.remove(j);
+                    
+                    if let Some(_word) = self.express_element_with_generators(&self.generators[i], &test_gens) {
+                        dependencies[i][j] = true;
+                    }
+                }
+            }
+        }
+        
+        // Find minimal set using dependency analysis
+        let mut minimal_indices = Vec::new();
+        let mut covered = vec![false; n];
+        
+        // Greedy selection: pick generators that cover the most uncovered generators
+        while covered.iter().any(|&c| !c) {
+            let mut best_idx = 0;
+            let mut best_coverage = 0;
+            
+            for i in 0..n {
+                if !minimal_indices.contains(&i) {
+                    let mut coverage = 0;
+                    for j in 0..n {
+                        if !covered[j] && (i == j || dependencies[j][i]) {
+                            coverage += 1;
+                        }
+                    }
+                    
+                    if coverage > best_coverage {
+                        best_coverage = coverage;
+                        best_idx = i;
+                    }
+                }
+            }
+            
+            minimal_indices.push(best_idx);
+            
+            // Mark covered generators
+            for j in 0..n {
+                if best_idx == j || dependencies[j][best_idx] {
+                    covered[j] = true;
+                }
+            }
+        }
+        
+        minimal_indices.iter()
+            .map(|&i| self.generators[i].clone())
+            .collect()
+    }
+    
+    /// Find minimal generators for continuous groups
+    fn minimal_generators_continuous(&self) -> Vec<GroupElement<P>> {
+        // Use Lie algebra rank computation
+        let lie_dim = self.lie_algebra_dimension();
+        
+        if lie_dim == 0 || lie_dim >= self.generators.len() {
+            return self.generators.clone();
+        }
+        
+        // Select linearly independent generators in the Lie algebra
+        let mut minimal = Vec::new();
+        let mut lie_basis = Vec::new();
+        
+        for gen in &self.generators {
+            // Convert to Lie algebra element
+            if let Some(lie_elem) = self.to_lie_algebra_element(gen) {
+                // Check linear independence
+                if self.is_linearly_independent(&lie_elem, &lie_basis) {
+                    minimal.push(gen.clone());
+                    lie_basis.push(lie_elem);
+                    
+                    if lie_basis.len() >= lie_dim {
+                        break;
+                    }
+                }
+            }
+        }
+        
+        minimal
+    }
+    
+    /// Compute the size of the subgroup generated by given generators
+    fn subgroup_size(&self, generators: &[GroupElement<P>]) -> usize {
+        if generators.is_empty() {
+            return 1; // Just identity
+        }
+        
+        let mut subgroup = vec![self.identity()];
+        let mut to_process = generators.to_vec();
+        
+        while let Some(elem) = to_process.pop() {
+            if !subgroup.iter().any(|g| self.elements_equal(g, &elem)) {
+                subgroup.push(elem.clone());
+                
+                // Generate new elements
+                for existing in subgroup.clone() {
+                    // Product
+                    if let Ok(product) = self.multiply(&elem, &existing) {
+                        if !subgroup.iter().any(|g| self.elements_equal(g, &product)) {
+                            to_process.push(product);
+                        }
+                    }
+                    
+                    // Inverse
+                    if let Ok(inv) = self.inverse(&elem) {
+                        if !subgroup.iter().any(|g| self.elements_equal(g, &inv)) {
+                            to_process.push(inv);
+                        }
+                    }
+                }
+                
+                // Limit search for large groups
+                if subgroup.len() > 1000 {
+                    break;
+                }
+            }
+        }
+        
+        subgroup.len()
+    }
+    
+    /// Express element using a specific set of generators
+    fn express_element_with_generators(
+        &self,
+        element: &GroupElement<P>,
+        generators: &[GroupElement<P>]
+    ) -> Option<Vec<(usize, i32)>> {
+        // Limited BFS search
+        let mut visited = Vec::new();
+        let mut queue = std::collections::VecDeque::new();
+        
+        let identity = self.identity();
+        queue.push_back((identity.clone(), vec![]));
+        visited.push(identity);
+        
+        let max_depth = 10;
+        
+        while let Some((current, word)) = queue.pop_front() {
+            if self.elements_equal(&current, element) {
+                return Some(word);
+            }
+            
+            if word.len() >= max_depth {
+                continue;
+            }
+            
+            for (i, gen) in generators.iter().enumerate() {
+                // Forward
+                if let Ok(next) = self.multiply(&current, gen) {
+                    if !visited.iter().any(|v| self.elements_equal(v, &next)) {
+                        visited.push(next.clone());
+                        let mut new_word = word.clone();
+                        new_word.push((i, 1));
+                        queue.push_back((next, new_word));
+                    }
+                }
+                
+                // Inverse
+                if let Ok(inv) = self.inverse(gen) {
+                    if let Ok(next) = self.multiply(&current, &inv) {
+                        if !visited.iter().any(|v| self.elements_equal(v, &next)) {
+                            visited.push(next.clone());
+                            let mut new_word = word.clone();
+                            new_word.push((i, -1));
+                            queue.push_back((next, new_word));
+                        }
+                    }
+                }
+            }
+        }
+        
+        None
+    }
+    
+    /// Convert group element to Lie algebra element
+    fn to_lie_algebra_element(&self, elem: &GroupElement<P>) -> Option<Vec<P>> {
+        // Use logarithm map from ContinuousGroup trait
+        <Self as ContinuousGroup<P>>::logarithm_map(self, elem)
+    }
+    
+    /// Check if Lie algebra element is linearly independent from basis
+    fn is_linearly_independent(&self, elem: &[P], basis: &[Vec<P>]) -> bool {
+        if basis.is_empty() {
+            // Check if elem is non-zero
+            return elem.iter().any(|&x| x.abs() > P::epsilon());
+        }
+        
+        // Use Gram-Schmidt process to check independence
+        let mut projection = elem.to_vec();
+        
+        for basis_vec in basis {
+            // Compute dot product
+            let dot: P = elem.iter()
+                .zip(basis_vec.iter())
+                .map(|(&a, &b)| a * b)
+                .fold(P::zero(), |acc, x| acc + x);
+            
+            let basis_norm_sq: P = basis_vec.iter()
+                .map(|&x| x * x)
+                .fold(P::zero(), |acc, x| acc + x);
+            
+            if basis_norm_sq > P::epsilon() {
+                // Subtract projection
+                let scale = dot / basis_norm_sq;
+                for (p, &b) in projection.iter_mut().zip(basis_vec.iter()) {
+                    *p = *p - scale * b;
+                }
+            }
+        }
+        
+        // Check if remainder is non-zero
+        projection.iter().any(|&x| x.abs() > P::epsilon())
     }
     
     /// Express an element as a word in the generators
@@ -761,13 +994,29 @@ impl<P: Float> SymmetryGroup<P> {
         
         let mut tangent_vectors = Vec::new();
         
+        // Check if this is a matrix group
+        let n = (self.dimension as f64).sqrt();
+        let is_matrix_group = n.floor() == n && n > 0.0;
+        let matrix_dim = n as usize;
+        
         for gen in generators {
-            // For matrix groups, this would be the logarithm of the matrix
-            // For now, we use a simplified approach: the direction from identity
-            let tangent = gen.params.iter()
-                .zip(self.identity().params.iter())
-                .map(|(g, e)| *g - *e)
-                .collect();
+            let tangent = if is_matrix_group && matrix_dim * matrix_dim == self.dimension {
+                // For matrix groups, compute the matrix logarithm
+                self.matrix_logarithm(&gen.params, matrix_dim)
+                    .unwrap_or_else(|| {
+                        // Fallback to first-order approximation if log fails
+                        gen.params.iter()
+                            .zip(self.identity().params.iter())
+                            .map(|(g, e)| *g - *e)
+                            .collect()
+                    })
+            } else {
+                // For non-matrix groups, use the direction from identity
+                gen.params.iter()
+                    .zip(self.identity().params.iter())
+                    .map(|(g, e)| *g - *e)
+                    .collect()
+            };
             
             tangent_vectors.push(tangent);
         }
@@ -804,6 +1053,57 @@ impl<P: Float> SymmetryGroup<P> {
         
         true
     }
+    
+    /// Compute matrix logarithm
+    /// 
+    /// For a matrix M close to identity, log(M) can be computed using:
+    /// log(M) = log(I + A) = A - A²/2 + A³/3 - A⁴/4 + ...
+    /// where A = M - I
+    fn matrix_logarithm(&self, matrix: &[P], n: usize) -> Option<Vec<P>> {
+        if matrix.len() != n * n {
+            return None;
+        }
+        
+        // Check if matrix is close enough to identity for series to converge
+        // The series converges when ||A|| < 1 where A = M - I
+        let identity = self.identity();
+        let mut a_matrix = vec![P::zero(); n * n];
+        let mut max_entry = P::zero();
+        
+        for i in 0..n * n {
+            a_matrix[i] = matrix[i] - identity.params[i];
+            if a_matrix[i].abs() > max_entry {
+                max_entry = a_matrix[i].abs();
+            }
+        }
+        
+        // For matrices far from identity, use advanced methods
+        if max_entry > P::from(0.5).unwrap() {
+            return self.matrix_logarithm_advanced(matrix, n);
+        }
+        
+        // Use power series: log(I + A) = A - A²/2 + A³/3 - ...
+        let mut log_m = a_matrix.clone();
+        let mut a_power = a_matrix.clone();
+        let mut sign = P::from(-1.0).unwrap();
+        
+        // Compute up to 10 terms for good accuracy
+        for k in 2..=10 {
+            // a_power = a_power * a_matrix
+            a_power = self.matrix_multiply(&a_power, &a_matrix, n)?;
+            
+            // Add term: sign * a_power / k
+            let coeff = sign / P::from(k).unwrap();
+            for i in 0..n * n {
+                log_m[i] = log_m[i] + coeff * a_power[i];
+            }
+            
+            sign = -sign;
+        }
+        
+        Some(log_m)
+    }
+    
     
     /// Compute dimension of vector space spanned by vectors
     fn vector_space_dimension(&self, vectors: &[Vec<P>]) -> usize {
@@ -921,7 +1221,7 @@ impl<P: Float> SymmetryGroup<P> {
         // Main Todd-Coxeter loop
         let max_cosets = 10000; // Prevent infinite loops
         while !deductions.is_empty() && table.num_cosets < max_cosets {
-            let (coset, gen_idx, _target) = deductions.pop_front().unwrap();
+            let (coset, _gen_idx, _target) = deductions.pop_front().unwrap();
             
             // Process all relations at this coset
             for relation in &relations {

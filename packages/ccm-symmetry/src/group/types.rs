@@ -53,3 +53,30 @@ pub struct StabilizerSubgroup<P: Float> {
     /// Generators of the stabilizer subgroup
     pub generators: Vec<GroupElement<P>>,
 }
+
+/// Represents a relation in a group presentation
+/// 
+/// A relation is an equation of the form: word = identity
+/// where word is a product of generators and their inverses
+#[derive(Debug, Clone)]
+pub struct GroupRelation {
+    /// Word on the left-hand side of the relation
+    /// Each element is (generator_index, power)
+    pub word: Vec<(usize, i32)>,
+    /// Optional name/description of the relation
+    pub name: Option<String>,
+}
+
+/// Represents a complete group presentation
+/// 
+/// A group presentation consists of generators and relations:
+/// <g1, g2, ... | r1, r2, ...>
+#[derive(Debug, Clone)]
+pub struct GroupPresentation<P: Float> {
+    /// Generator names (for display purposes)
+    pub generator_names: Vec<String>,
+    /// The actual generator elements
+    pub generators: Vec<GroupElement<P>>,
+    /// Relations between generators
+    pub relations: Vec<GroupRelation>,
+}

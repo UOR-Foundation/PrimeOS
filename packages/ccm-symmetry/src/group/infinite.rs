@@ -15,39 +15,12 @@ use ccm_core::CcmError;
 pub trait InfiniteGroup<P: Float> {
     /// Check if element is in the group (word problem)
     fn contains(&self, element: &GroupElement<P>) -> bool;
-    
-    /// Find a word representation in terms of generators
-    fn word_representation(&self, element: &GroupElement<P>) -> Option<Vec<(usize, i32)>>;
-    
-    /// Solve equations in the group
-    fn solve_equation(&self, lhs: &GroupElement<P>, rhs: &GroupElement<P>) -> Option<GroupElement<P>>;
 }
 
 impl<P: Float> InfiniteGroup<P> for SymmetryGroup<P> {
     /// Check if element is in the group (word problem)
     fn contains(&self, element: &GroupElement<P>) -> bool {
         self.contains(element)
-    }
-    
-    /// Find a word representation in terms of generators
-    fn word_representation(&self, element: &GroupElement<P>) -> Option<Vec<(usize, i32)>> {
-        self.express_as_word(element)
-    }
-    
-    /// Solve equations in the group
-    fn solve_equation(&self, lhs: &GroupElement<P>, rhs: &GroupElement<P>) -> Option<GroupElement<P>> {
-        // Solve lhs * x = rhs for x
-        // This means x = lhs^(-1) * rhs
-        
-        match self.inverse(lhs) {
-            Ok(lhs_inv) => {
-                match self.multiply(&lhs_inv, rhs) {
-                    Ok(solution) => Some(solution),
-                    Err(_) => None,
-                }
-            }
-            Err(_) => None,
-        }
     }
 }
 

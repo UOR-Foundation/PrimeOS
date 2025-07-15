@@ -232,3 +232,129 @@ impl<P: Float> GroupAction<P> for CliffordAction<P> {
         true
     }
 }
+
+/// Action on vector spaces (for affine transformations)
+pub struct VectorSpaceAction {
+    /// Dimension of the vector space
+    dimension: usize,
+}
+
+impl VectorSpaceAction {
+    /// Create a new vector space action
+    pub fn new(dimension: usize) -> Self {
+        Self { dimension }
+    }
+}
+
+impl<P: Float> GroupAction<P> for VectorSpaceAction {
+    type Target = Vec<P>;
+
+    fn apply(&self, g: &GroupElement<P>, x: &Self::Target) -> Result<Self::Target, CcmError> {
+        if x.len() != self.dimension {
+            return Err(CcmError::InvalidInput);
+        }
+
+        // Interpret group element parameters based on dimension
+        let n = g.params.len();
+        
+        // Check for various representations
+        if n == self.dimension * self.dimension + self.dimension {
+            // Affine transformation: matrix + translation
+            self.apply_affine(g, x)
+        } else if n == self.dimension * self.dimension {
+            // Pure matrix transformation
+            self.apply_matrix(g, x)
+        } else if n == self.dimension {
+            // Pure translation
+            self.apply_translation(g, x)
+        } else {
+            // Try to detect structure
+            self.apply_general(g, x)
+        }
+    }
+
+    fn verify_invariance(&self, _g: &GroupElement<P>) -> bool {
+        // Vector space actions preserve vector space structure
+        true
+    }
+}
+
+impl VectorSpaceAction {
+    /// Apply affine transformation: x → Ax + b
+    fn apply_affine<P: Float>(&self, g: &GroupElement<P>, x: &[P]) -> Result<Vec<P>, CcmError> {
+        let n = self.dimension;
+        let mut result = vec![P::zero(); n];
+        
+        // Matrix part
+        for i in 0..n {
+            for j in 0..n {
+                result[i] = result[i] + g.params[i * n + j] * x[j];
+            }
+        }
+        
+        // Translation part
+        for i in 0..n {
+            result[i] = result[i] + g.params[n * n + i];
+        }
+        
+        Ok(result)
+    }
+    
+    /// Apply matrix transformation: x → Ax
+    fn apply_matrix<P: Float>(&self, g: &GroupElement<P>, x: &[P]) -> Result<Vec<P>, CcmError> {
+        let n = self.dimension;
+        let mut result = vec![P::zero(); n];
+        
+        for i in 0..n {
+            for j in 0..n {
+                result[i] = result[i] + g.params[i * n + j] * x[j];
+            }
+        }
+        
+        Ok(result)
+    }
+    
+    /// Apply pure translation: x → x + b
+    fn apply_translation<P: Float>(&self, g: &GroupElement<P>, x: &[P]) -> Result<Vec<P>, CcmError> {
+        let mut result = x.to_vec();
+        
+        for i in 0..self.dimension {
+            result[i] = result[i] + g.params[i];
+        }
+        
+        Ok(result)
+    }
+    
+    /// Apply general transformation based on detected structure
+    fn apply_general<P: Float>(&self, g: &GroupElement<P>, x: &[P]) -> Result<Vec<P>, CcmError> {
+        // For general case, try to detect the transformation type
+        let n = g.params.len();
+        let d = self.dimension;
+        
+        // Check if it's a homogeneous matrix missing last row
+        if n == d * (d + 1) {
+            // Homogeneous coordinates: [A | b] where A is d×d and b is d×1
+            let mut result = vec![P::zero(); d];
+            
+            // Apply matrix part
+            for i in 0..d {
+                for j in 0..d {
+                    result[i] = result[i] + g.params[i * (d + 1) + j] * x[j];
+                }
+                // Add translation
+                result[i] = result[i] + g.params[i * (d + 1) + d];
+            }
+            
+            Ok(result)
+        } else {
+            // Default: treat as componentwise transformation
+            let mut result = x.to_vec();
+            
+            for i in 0..self.dimension.min(n) {
+                result[i] = g.params[i];
+            }
+            
+            Ok(result)
+        }
+    }
+}

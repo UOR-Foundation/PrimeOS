@@ -37,9 +37,17 @@ mod representations;
 mod invariants;
 mod orbits;
 
+// Refactored modules from symmetry_group
+mod word_search;
+mod matrix_operations;
+mod manifold_checks;
+mod group_validation;
+mod schreier_sims;
+mod matrix_logarithm;
+
 // Re-export main types for public API
 pub use element::GroupElement;
-pub use types::{GroupType, StabilizerSubgroup};
+pub use types::{GroupType, StabilizerSubgroup, GroupRelation, GroupPresentation};
 pub use symmetry_group::SymmetryGroup;
 pub use representations::{FiniteGroupRep, ContinuousGroupRep};
 pub use orbits::Orbit;

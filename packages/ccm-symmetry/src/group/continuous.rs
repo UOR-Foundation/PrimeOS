@@ -21,9 +21,6 @@ pub trait ContinuousGroup<P: Float> {
     
     /// Logarithm map from group to Lie algebra
     fn logarithm_map(&self, group_element: &GroupElement<P>) -> Option<Vec<P>>;
-    
-    /// Check if element satisfies group constraints
-    fn verify_constraints(&self, element: &GroupElement<P>) -> bool;
 }
 
 impl<P: Float> ContinuousGroup<P> for SymmetryGroup<P> {
@@ -34,16 +31,34 @@ impl<P: Float> ContinuousGroup<P> for SymmetryGroup<P> {
                 // For matrix groups, compute based on type
                 let n = (self.dimension as f64).sqrt() as usize;
                 if n * n == self.dimension {
-                    // Detect group type based on generators
-                    if self.generators.is_empty() {
-                        return 0;
-                    }
+                    // This is a matrix group
                     
-                    // SO(n) has dimension n(n-1)/2
-                    // SU(n) has dimension n²-1
-                    // For now, use a heuristic based on generator count
-                    self.generators.len()
+                    // Detect the specific type of matrix group
+                    if self.is_special_orthogonal_group(n) {
+                        // SO(n) has dimension n(n-1)/2
+                        n * (n - 1) / 2
+                    } else if self.is_special_unitary_group(n) {
+                        // SU(n) has dimension n²-1
+                        n * n - 1
+                    } else if self.is_general_linear_group(n) {
+                        // GL(n) has dimension n²
+                        n * n
+                    } else if self.is_symplectic_group(n) {
+                        // Sp(2n) has dimension n(2n+1)
+                        // Note: n here is the matrix dimension, so for Sp(2n) we have n/2
+                        if n % 2 == 0 {
+                            let n_half = n / 2;
+                            n_half * (n + 1)
+                        } else {
+                            // Not a valid symplectic group dimension
+                            self.generators.len()
+                        }
+                    } else {
+                        // Unknown matrix group type, use generator count
+                        self.generators.len()
+                    }
                 } else {
+                    // Non-matrix continuous group
                     self.generators.len()
                 }
             }
@@ -62,35 +77,144 @@ impl<P: Float> ContinuousGroup<P> for SymmetryGroup<P> {
     
     /// Logarithm map from group to Lie algebra
     fn logarithm_map(&self, group_element: &GroupElement<P>) -> Option<Vec<P>> {
-        // For elements close to identity, approximate log(I + X) ≈ X
-        let identity = self.identity();
-        let distance = group_element.params.iter()
-            .zip(identity.params.iter())
-            .map(|(a, b)| (*a - *b).powi(2))
-            .fold(P::zero(), |acc, x| acc + x)
-            .sqrt();
-            
-        if distance > P::one() {
-            // Too far from identity for simple approximation
-            return None;
+        match &self.group_type {
+            GroupType::Continuous => {
+                // Detect if this is a matrix group
+                let n_sq = (self.dimension as f64).sqrt() as usize;
+                
+                if n_sq * n_sq == self.dimension {
+                    // This is a matrix group
+                    match n_sq {
+                        2 => {
+                            // Use specialized 2x2 matrix logarithm
+                            self.matrix_log_2x2(&group_element.params)
+                        }
+                        3 => {
+                            // Use specialized 3x3 matrix logarithm
+                            self.matrix_log_3x3(&group_element.params)
+                        }
+                        _ => {
+                            // For larger matrices, use general algorithm
+                            self.matrix_logarithm_general(&group_element.params, n_sq)
+                        }
+                    }
+                } else {
+                    // Non-matrix continuous group
+                    // For elements close to identity, approximate log(I + X) ≈ X
+                    let identity = self.identity();
+                    let distance = group_element.params.iter()
+                        .zip(identity.params.iter())
+                        .map(|(a, b)| (*a - *b).powi(2))
+                        .fold(P::zero(), |acc, x| acc + x)
+                        .sqrt();
+                        
+                    if distance > P::one() {
+                        // Too far from identity for simple approximation
+                        return None;
+                    }
+                    
+                    // Return X = g - I
+                    let lie_element: Vec<P> = group_element.params.iter()
+                        .zip(identity.params.iter())
+                        .map(|(g, e)| *g - *e)
+                        .collect();
+                        
+                    Some(lie_element)
+                }
+            }
+            _ => None, // Not a continuous group
         }
-        
-        // Return X = g - I
-        let lie_element: Vec<P> = group_element.params.iter()
-            .zip(identity.params.iter())
-            .map(|(g, e)| *g - *e)
-            .collect();
-            
-        Some(lie_element)
     }
     
-    /// Check if element satisfies group constraints
-    fn verify_constraints(&self, element: &GroupElement<P>) -> bool {
-        self.contains(element)
-    }
 }
 
 impl<P: Float> SymmetryGroup<P> {
+    /// Check if this is a special orthogonal group SO(n)
+    fn is_special_orthogonal_group(&self, n: usize) -> bool {
+        if self.generators.is_empty() {
+            return false;
+        }
+        
+        // SO(n) generators are skew-symmetric matrices
+        // Check if all generators satisfy A^T = -A
+        for gen in &self.generators {
+            if !self.is_skew_symmetric_matrix(&gen.params, n) {
+                return false;
+            }
+        }
+        
+        // Check if we have the right number of generators
+        let expected_dim = n * (n - 1) / 2;
+        self.generators.len() == expected_dim
+    }
+    
+    /// Check if this is a special unitary group SU(n)
+    fn is_special_unitary_group(&self, n: usize) -> bool {
+        if self.generators.is_empty() {
+            return false;
+        }
+        
+        // SU(n) generators are traceless anti-Hermitian matrices
+        // For real representation, they appear as pairs (real, imaginary)
+        if self.dimension != 2 * n * n {
+            return false; // Need complex representation
+        }
+        
+        // Check if we have the right number of generators
+        let expected_dim = n * n - 1;
+        self.generators.len() == expected_dim
+    }
+    
+    /// Check if this is a general linear group GL(n)
+    fn is_general_linear_group(&self, n: usize) -> bool {
+        // GL(n) has dimension n² and includes all invertible matrices
+        // Generators can be any linearly independent set of matrices
+        self.generators.len() == n * n
+    }
+    
+    /// Check if this is a symplectic group Sp(2n)
+    fn is_symplectic_group(&self, n: usize) -> bool {
+        if n % 2 != 0 {
+            return false; // Symplectic groups have even dimension
+        }
+        
+        // Sp(2n) preserves a symplectic form
+        // Generators satisfy J^T Ω + Ω J = 0 where Ω is the symplectic form
+        let n_half = n / 2;
+        let expected_dim = n_half * (n + 1);
+        self.generators.len() == expected_dim
+    }
+    
+    /// Check if a matrix is skew-symmetric
+    fn is_skew_symmetric_matrix(&self, matrix: &[P], n: usize) -> bool {
+        if matrix.len() != n * n {
+            return false;
+        }
+        
+        let tolerance = P::epsilon() * P::from(10.0).unwrap();
+        
+        for i in 0..n {
+            for j in 0..n {
+                let a_ij = matrix[i * n + j];
+                let a_ji = matrix[j * n + i];
+                
+                if i == j {
+                    // Diagonal elements must be zero
+                    if a_ij.abs() > tolerance {
+                        return false;
+                    }
+                } else {
+                    // Off-diagonal: A[i,j] = -A[j,i]
+                    if (a_ij + a_ji).abs() > tolerance {
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        true
+    }
+    
     /// Generate the special orthogonal group SO(n)
     /// 
     /// SO(n) is the group of n×n orthogonal matrices with determinant 1.
