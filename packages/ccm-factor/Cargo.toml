@@ -1,0 +1,67 @@
+[package]
+name = "ccm-factor"
+version = "0.1.0"
+edition = "2021"
+authors = ["UOR Contributors"]
+description = "Integer factorization using Coherence-Centric Mathematics"
+license = "MIT"
+repository = "https://github.com/UOR-Foundation/PrimeOS"
+
+[dependencies]
+# Core CCM packages
+ccm = { path = "../ccm", default-features = false }
+ccm-core = { path = "../ccm-core", default-features = false }
+ccm-embedding = { path = "../ccm-embedding", default-features = false }
+ccm-coherence = { path = "../ccm-coherence", default-features = false }
+ccm-symmetry = { path = "../ccm-symmetry", default-features = false }
+
+# Numeric libraries
+num-bigint = { version = "0.4", default-features = false }
+num-traits = { version = "0.2", default-features = false }
+num-integer = { version = "0.1", default-features = false }
+num-complex = { version = "0.4", default-features = false }
+
+# Parallelization
+rayon = { version = "1.8", optional = true }
+
+[features]
+default = ["std"]
+std = [
+    "ccm/std",
+    "ccm-core/std",
+    "ccm-embedding/std",
+    "ccm-coherence/std",
+    "ccm-symmetry/std",
+    "num-bigint/std",
+    "num-traits/std",
+    "num-integer/std",
+    "num-complex/std"
+]
+alloc = [
+    "ccm/alloc",
+    "ccm-core/alloc",
+    "ccm-embedding/alloc",
+    "ccm-coherence/alloc",
+    "ccm-symmetry/alloc",
+    "num-bigint/rand"
+]
+parallel = ["rayon", "std"]
+
+[dev-dependencies]
+rand = "0.8"
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.4"
+
+[[bench]]
+name = "factor_bench"
+harness = false
+
+[[example]]
+name = "basic_factorization"
+path = "examples/basic_factorization.rs"
+required-features = ["std"]
+
+[[example]]
+name = "large_integers"
+path = "examples/large_integers.rs"
+required-features = ["std"]

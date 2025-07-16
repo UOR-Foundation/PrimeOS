@@ -1,0 +1,81 @@
+[package]
+name = "ccm-coc"
+version = "0.1.0"
+edition = "2021"
+authors = ["UOR Contributors"]
+description = "Coherent Object Composition framework for CCM"
+license = "MIT"
+repository = "https://github.com/UOR-Foundation/PrimeOS"
+
+[dependencies]
+# Core CCM functionality
+ccm = { path = "../ccm", default-features = false }
+ccm-core = { path = "../ccm-core", default-features = false }
+
+# Import types from mathematical packages
+ccm-coherence = { path = "../ccm-coherence", default-features = false }
+ccm-embedding = { path = "../ccm-embedding", default-features = false }
+ccm-symmetry = { path = "../ccm-symmetry", default-features = false }
+
+# Numeric traits
+num-traits = { version = "0.2", default-features = false }
+num-bigint = { version = "0.4", default-features = false, optional = true }
+
+# Collection types for no_std
+hashbrown = { version = "0.14", default-features = false, optional = true }
+
+# Parallel processing (optional)
+rayon = { version = "1.8", optional = true }
+
+# Serialization (optional)
+serde = { version = "1.0", default-features = false, features = ["derive"], optional = true }
+
+[features]
+default = ["std", "alloc"]
+std = [
+    "ccm/std",
+    "ccm-core/std",
+    "ccm-coherence/std",
+    "ccm-embedding/std",
+    "ccm-symmetry/std",
+    "num-traits/std",
+    "num-bigint/std",
+    "alloc",
+]
+alloc = [
+    "ccm/alloc",
+    "ccm-core/alloc",
+    "ccm-coherence/alloc",
+    "ccm-embedding/alloc",
+    "ccm-symmetry/alloc",
+    "dep:num-bigint",
+    "hashbrown",
+]
+parallel = ["rayon", "std"]
+serde = ["dep:serde", "num-bigint/serde"]
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.4"
+
+# Examples will be added later
+# [[example]]
+# name = "integer_factorization"
+# path = "examples/integer_factorization.rs"
+# required-features = ["std"]
+
+# [[example]]
+# name = "polynomial_factorization"
+# path = "examples/polynomial_factorization.rs"
+# required-features = ["std"]
+
+# [[example]]
+# name = "custom_conservation_law"
+# path = "examples/custom_conservation_law.rs"
+# required-features = ["std"]
+
+# Benchmarks will be added later
+# [[bench]]
+# name = "decomposition_benchmarks"
+# harness = false
+# required-features = ["std"]

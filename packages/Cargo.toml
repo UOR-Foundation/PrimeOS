@@ -6,6 +6,8 @@ members = [
     "ccm-coherence",
     "ccm-symmetry",
     "ccm",
+    "ccm-coc",
+    "ccm-factor",
     "ccm-applications/bjc-codec"
 ]
 
