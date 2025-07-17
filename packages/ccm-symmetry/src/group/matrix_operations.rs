@@ -4,6 +4,7 @@
 //! including determinant, multiplication, logarithm, and exponential.
 
 use num_traits::Float;
+use num_complex::Complex;
 use crate::group::{GroupElement, SymmetryGroup};
 
 impl<P: Float> SymmetryGroup<P> {
@@ -722,6 +723,174 @@ impl<P: Float> SymmetryGroup<P> {
         // For matrices far from identity, use advanced methods
         self.matrix_logarithm_advanced(matrix, n)
     }
+    
+    /// Convert real parameters to complex matrix
+    /// params[2k] + i*params[2k+1] forms the (k/n, k%n)-th element
+    pub(crate) fn params_to_complex_matrix(&self, params: &[P], n: usize) -> Vec<Complex<P>> {
+        let mut complex_matrix = vec![Complex::new(P::zero(), P::zero()); n * n];
+        
+        for i in 0..n {
+            for j in 0..n {
+                let idx = i * n + j;
+                let real_idx = 2 * idx;
+                let imag_idx = real_idx + 1;
+                
+                if real_idx < params.len() && imag_idx < params.len() {
+                    complex_matrix[idx] = Complex::new(params[real_idx], params[imag_idx]);
+                }
+            }
+        }
+        
+        complex_matrix
+    }
+    
+    /// Check if a complex matrix is unitary (M† M = I)
+    pub(crate) fn is_unitary_matrix(&self, matrix: &[Complex<P>], n: usize) -> bool {
+        if matrix.len() != n * n {
+            return false;
+        }
+        
+        // Compute M† M
+        for i in 0..n {
+            for j in 0..n {
+                let mut sum = Complex::new(P::zero(), P::zero());
+                
+                // (M† M)_{ij} = Σ_k M†_{ik} M_{kj} = Σ_k conj(M_{ki}) M_{kj}
+                for k in 0..n {
+                    let m_ki = matrix[k * n + i];
+                    let m_kj = matrix[k * n + j];
+                    sum = sum + m_ki.conj() * m_kj;
+                }
+                
+                // Check if equals identity
+                let expected = if i == j {
+                    Complex::new(P::one(), P::zero())
+                } else {
+                    Complex::new(P::zero(), P::zero())
+                };
+                
+                if (sum - expected).norm() > P::epsilon() {
+                    return false;
+                }
+            }
+        }
+        
+        true
+    }
+    
+    /// Compute determinant of complex matrix
+    pub(crate) fn compute_complex_determinant(&self, matrix: &[Complex<P>], n: usize) -> Option<Complex<P>> {
+        if matrix.len() != n * n {
+            return None;
+        }
+        
+        if n == 0 {
+            return Some(Complex::new(P::one(), P::zero()));
+        }
+        
+        if n == 1 {
+            return Some(matrix[0]);
+        }
+        
+        if n == 2 {
+            // 2×2 determinant: ad - bc
+            return Some(matrix[0] * matrix[3] - matrix[1] * matrix[2]);
+        }
+        
+        if n == 3 {
+            // 3×3 determinant using rule of Sarrus
+            let a = matrix[0] * (matrix[4] * matrix[8] - matrix[5] * matrix[7]);
+            let b = matrix[1] * (matrix[5] * matrix[6] - matrix[3] * matrix[8]);
+            let c = matrix[2] * (matrix[3] * matrix[7] - matrix[4] * matrix[6]);
+            return Some(a - b + c);
+        }
+        
+        // For larger matrices, use LU decomposition with complex arithmetic
+        let mut work_matrix = matrix.to_vec();
+        let mut det = Complex::new(P::one(), P::zero());
+        let mut pivot_sign = 1i32;
+        
+        // Gaussian elimination with partial pivoting
+        for i in 0..n {
+            // Find pivot
+            let mut max_val = P::zero();
+            let mut max_row = i;
+            
+            for k in i..n {
+                let val = work_matrix[k * n + i].norm();
+                if val > max_val {
+                    max_val = val;
+                    max_row = k;
+                }
+            }
+            
+            if max_val < P::epsilon() {
+                // Matrix is singular
+                return Some(Complex::new(P::zero(), P::zero()));
+            }
+            
+            // Swap rows if needed
+            if max_row != i {
+                for j in 0..n {
+                    let idx1 = i * n + j;
+                    let idx2 = max_row * n + j;
+                    work_matrix.swap(idx1, idx2);
+                }
+                pivot_sign = -pivot_sign;
+            }
+            
+            let pivot = work_matrix[i * n + i];
+            det = det * pivot;
+            
+            // Eliminate column
+            for k in (i + 1)..n {
+                let factor = work_matrix[k * n + i] / pivot;
+                for j in (i + 1)..n {
+                    let idx = k * n + j;
+                    work_matrix[idx] = work_matrix[idx] - factor * work_matrix[i * n + j];
+                }
+            }
+        }
+        
+        if pivot_sign < 0 {
+            det = -det;
+        }
+        
+        Some(det)
+    }
+    
+    /// Check if a complex matrix is hermitian (M† = M)
+    pub(crate) fn is_hermitian_matrix(&self, matrix: &[Complex<P>], n: usize) -> bool {
+        if matrix.len() != n * n {
+            return false;
+        }
+        
+        for i in 0..n {
+            for j in 0..n {
+                let m_ij = matrix[i * n + j];
+                let m_ji = matrix[j * n + i];
+                
+                if (m_ij - m_ji.conj()).norm() > P::epsilon() {
+                    return false;
+                }
+            }
+        }
+        
+        true
+    }
+    
+    /// Compute the conjugate transpose (Hermitian conjugate) of a complex matrix
+    pub(crate) fn conjugate_transpose(&self, matrix: &[Complex<P>], n: usize) -> Vec<Complex<P>> {
+        let mut result = vec![Complex::new(P::zero(), P::zero()); n * n];
+        
+        for i in 0..n {
+            for j in 0..n {
+                result[j * n + i] = matrix[i * n + j].conj();
+            }
+        }
+        
+        result
+    }
 }
 
 #[cfg(test)]
@@ -896,5 +1065,124 @@ mod tests {
         println!("\nMaximum difference: {}", max_diff);
         
         assert!(max_diff < 1e-9, "exp(log(R)) != R, max difference: {}", max_diff);
+    }
+    
+    #[test]
+    fn test_complex_matrix_operations() {
+        use num_complex::Complex;
+        let group = SymmetryGroup::<f64>::generate(8).unwrap(); // 8 real params = 2x2 complex
+        
+        // Test params to complex matrix conversion
+        let params = vec![1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0]; // 2x2 identity
+        let complex_matrix = group.params_to_complex_matrix(&params, 2);
+        
+        assert_eq!(complex_matrix[0], Complex::new(1.0, 0.0));
+        assert_eq!(complex_matrix[1], Complex::new(0.0, 1.0));
+        assert_eq!(complex_matrix[2], Complex::new(0.0, 0.0));
+        assert_eq!(complex_matrix[3], Complex::new(1.0, 0.0));
+    }
+    
+    #[test]
+    fn test_unitary_matrix_check() {
+        use num_complex::Complex;
+        let group = SymmetryGroup::<f64>::generate(8).unwrap();
+        
+        // Test with 2x2 identity (is unitary)
+        let identity = vec![
+            Complex::new(1.0, 0.0), Complex::new(0.0, 0.0),
+            Complex::new(0.0, 0.0), Complex::new(1.0, 0.0)
+        ];
+        assert!(group.is_unitary_matrix(&identity, 2));
+        
+        // Test with Pauli X matrix (is unitary)
+        let pauli_x = vec![
+            Complex::new(0.0, 0.0), Complex::new(1.0, 0.0),
+            Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)
+        ];
+        assert!(group.is_unitary_matrix(&pauli_x, 2));
+        
+        // Test with Pauli Y matrix (is unitary)
+        let pauli_y = vec![
+            Complex::new(0.0, 0.0), Complex::new(0.0, -1.0),
+            Complex::new(0.0, 1.0), Complex::new(0.0, 0.0)
+        ];
+        assert!(group.is_unitary_matrix(&pauli_y, 2));
+        
+        // Test with non-unitary matrix
+        let non_unitary = vec![
+            Complex::new(2.0, 0.0), Complex::new(0.0, 0.0),
+            Complex::new(0.0, 0.0), Complex::new(1.0, 0.0)
+        ];
+        assert!(!group.is_unitary_matrix(&non_unitary, 2));
+    }
+    
+    #[test]
+    fn test_complex_determinant() {
+        use num_complex::Complex;
+        let group = SymmetryGroup::<f64>::generate(8).unwrap();
+        
+        // Test 2x2 identity
+        let identity = vec![
+            Complex::new(1.0, 0.0), Complex::new(0.0, 0.0),
+            Complex::new(0.0, 0.0), Complex::new(1.0, 0.0)
+        ];
+        let det = group.compute_complex_determinant(&identity, 2).unwrap();
+        assert!((det - Complex::new(1.0, 0.0)).norm() < 1e-10);
+        
+        // Test 2x2 with known determinant
+        // [[1+i, 2], [3, 4-i]] -> det = (1+i)(4-i) - 2*3 = 4-i+4i+1 - 6 = 5+3i - 6 = -1+3i
+        let matrix = vec![
+            Complex::new(1.0, 1.0), Complex::new(2.0, 0.0),
+            Complex::new(3.0, 0.0), Complex::new(4.0, -1.0)
+        ];
+        let det = group.compute_complex_determinant(&matrix, 2).unwrap();
+        let expected = Complex::new(-1.0, 3.0);
+        assert!((det - expected).norm() < 1e-10);
+        
+        // Test singular matrix
+        let singular = vec![
+            Complex::new(1.0, 0.0), Complex::new(2.0, 0.0),
+            Complex::new(2.0, 0.0), Complex::new(4.0, 0.0)
+        ];
+        let det = group.compute_complex_determinant(&singular, 2).unwrap();
+        assert!(det.norm() < 1e-10);
+    }
+    
+    #[test]
+    fn test_hermitian_check() {
+        use num_complex::Complex;
+        let group = SymmetryGroup::<f64>::generate(8).unwrap();
+        
+        // Test Hermitian matrix
+        let hermitian = vec![
+            Complex::new(1.0, 0.0), Complex::new(2.0, 3.0),
+            Complex::new(2.0, -3.0), Complex::new(4.0, 0.0)
+        ];
+        assert!(group.is_hermitian_matrix(&hermitian, 2));
+        
+        // Test non-Hermitian matrix
+        let non_hermitian = vec![
+            Complex::new(1.0, 0.0), Complex::new(2.0, 3.0),
+            Complex::new(2.0, 3.0), Complex::new(4.0, 0.0)
+        ];
+        assert!(!group.is_hermitian_matrix(&non_hermitian, 2));
+    }
+    
+    #[test]
+    fn test_conjugate_transpose() {
+        use num_complex::Complex;
+        let group = SymmetryGroup::<f64>::generate(8).unwrap();
+        
+        let matrix = vec![
+            Complex::new(1.0, 2.0), Complex::new(3.0, 4.0),
+            Complex::new(5.0, 6.0), Complex::new(7.0, 8.0)
+        ];
+        
+        let conj_transpose = group.conjugate_transpose(&matrix, 2);
+        
+        assert_eq!(conj_transpose[0], Complex::new(1.0, -2.0));
+        assert_eq!(conj_transpose[1], Complex::new(5.0, -6.0));
+        assert_eq!(conj_transpose[2], Complex::new(3.0, -4.0));
+        assert_eq!(conj_transpose[3], Complex::new(7.0, -8.0));
     }
 }

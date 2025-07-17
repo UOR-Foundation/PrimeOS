@@ -29,6 +29,7 @@ pub mod iterator;
 pub mod lie_algebra;
 pub mod matrix_group;
 pub mod orbits;
+pub mod polynomial;
 pub mod special_subgroups;
 pub mod verification;
 
@@ -42,12 +43,18 @@ pub use group::{GroupElement, SymmetryGroup, GroupType, StabilizerSubgroup};
 pub use invariants::{ConservedQuantity, Invariant};
 pub use iterator::GroupElementIterator;
 pub use lie_algebra::{LieAlgebra, LieAlgebraElement};
-pub use orbits::Orbit;
+pub use group::Orbit;
+pub use orbits::{compute_orbit, compute_stabilizer, same_orbit, count_orbits};
 pub use special_subgroups::{
     grade_preserving_subgroup, klein_subgroup, maximal_resonance_subgroup,
     resonance_preserving_subgroup, unity_stabilizer,
 };
 pub use verification::{ActionVerifier, CCMInvarianceVerifier, GroupAxiomVerifier};
+pub use polynomial::{
+    Polynomial, PolynomialRing, Monomial, MonomialOrdering,
+    GroebnerBasis, buchberger_algorithm, ReynoldsOperator,
+    InvariantRing, PolynomialInvariant,
+};
 
 /// Types of symmetries that can be detected and analyzed
 ///

@@ -1,6 +1,6 @@
 //! Symmetry engine wrapper for ccm-symmetry functionality
 
-use ccm_coherence::CliffordElement;
+use ccm_coherence::{CliffordAlgebra, CliffordElement};
 use ccm_core::{BitWord, CcmError, Float};
 use ccm_embedding::AlphaVec;
 use ccm_symmetry::{CliffordAction, GroupAction, GroupElement, KleinSymmetry, SymmetryGroup};
@@ -15,9 +15,22 @@ impl<P: Float + num_traits::FromPrimitive> SymmetryEngine<P> {
     /// Create a new symmetry engine
     pub fn new(dimension: usize) -> Result<Self, CcmError> {
         let group = SymmetryGroup::generate(dimension)?;
+        
+        // Create default CliffordAction if dimension is reasonable
+        let clifford_action = if dimension <= 20 {
+            // For reasonable dimensions, create the Clifford algebra and action
+            match CliffordAlgebra::<P>::generate(dimension) {
+                Ok(algebra) => Some(CliffordAction::new(algebra)),
+                Err(_) => None, // Fall back to None if algebra creation fails
+            }
+        } else {
+            // For very large dimensions, defer creation
+            None
+        };
+        
         Ok(Self {
             group,
-            clifford_action: None,
+            clifford_action,
         })
     }
 
@@ -36,7 +49,15 @@ impl<P: Float + num_traits::FromPrimitive> SymmetryEngine<P> {
         if let Some(action) = &self.clifford_action {
             action.apply(g, x)
         } else {
-            Err(CcmError::NotImplemented)
+            // Try to create CliffordAction on demand
+            let dimension = x.dimension();
+            match CliffordAlgebra::<P>::generate(dimension) {
+                Ok(algebra) => {
+                    let action = CliffordAction::new(algebra);
+                    action.apply(g, x)
+                }
+                Err(_) => Err(CcmError::InvalidInput),
+            }
         }
     }
 
@@ -88,5 +109,14 @@ impl<P: Float + num_traits::FromPrimitive> SymmetryEngine<P> {
     /// Create a group element from parameters
     pub fn element(&self, params: &[P]) -> Result<GroupElement<P>, CcmError> {
         self.group.element(params)
+    }
+    
+    /// Ensure CliffordAction is initialized for the given dimension
+    pub fn ensure_clifford_action(&mut self, dimension: usize) -> Result<(), CcmError> {
+        if self.clifford_action.is_none() {
+            let algebra = CliffordAlgebra::<P>::generate(dimension)?;
+            self.clifford_action = Some(CliffordAction::new(algebra));
+        }
+        Ok(())
     }
 }

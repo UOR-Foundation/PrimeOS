@@ -42,10 +42,147 @@ impl<P: Float> SymmetryGroup<P> {
             presentation: None,
         })
     }
+    
+    /// Create the symmetric group S_n
+    pub fn symmetric_group(n: usize) -> Result<Self, CcmError> {
+        if n == 0 {
+            return Err(SymmetryError::InvalidGroupOperation.into());
+        }
+        
+        // For S_n acting on n objects, we use n×n permutation matrices
+        let dimension = n * n;
+        let mut group = Self {
+            dimension,
+            generators: Vec::new(),
+            group_type: GroupType::Finite { elements: Vec::new() },
+            cached_order: Some(factorial(n)),
+            presentation: None,
+        };
+        
+        // Add transposition generators (i, i+1) for i = 0..n-1
+        for i in 0..n-1 {
+            let mut perm_matrix = vec![P::zero(); dimension];
+            // Create permutation matrix for transposition (i, i+1)
+            // Row j tells us where position j maps to
+            for j in 0..n {
+                if j == i {
+                    // Position i maps to position i+1
+                    perm_matrix[i * n + (i + 1)] = P::one();
+                } else if j == i + 1 {
+                    // Position i+1 maps to position i
+                    perm_matrix[(i + 1) * n + i] = P::one();
+                } else {
+                    // All other positions map to themselves
+                    perm_matrix[j * n + j] = P::one();
+                }
+            }
+            group.generators.push(GroupElement::from_params(perm_matrix));
+        }
+        
+        // Generate all elements for small groups
+        if n <= 5 {
+            group.generate_finite_elements()?;
+        }
+        
+        Ok(group)
+    }
+    
+    /// Generate all elements for finite groups
+    fn generate_finite_elements(&mut self) -> Result<(), CcmError> {
+        // Extract elements temporarily to avoid borrow issues
+        let mut temp_elements = if let GroupType::Finite { elements } = &mut self.group_type {
+            core::mem::take(elements)
+        } else {
+            return Ok(());
+        };
+        
+        temp_elements.clear();
+        temp_elements.push(GroupElement::identity(self.dimension));
+        
+        // Use generators to build all elements
+        let mut new_elements = Vec::new();
+        let mut changed = true;
+        let mut iteration = 0;
+        
+        while changed && temp_elements.len() < 1000 { // Safety limit
+            changed = false;
+            iteration += 1;
+            let current_elements = temp_elements.clone();
+            
+            // Try multiplying each existing element by each generator
+            for g in &current_elements {
+                for gen in &self.generators {
+                    // Multiply from left: gen * g
+                    let product_left = self.multiply_elements(gen, g)?;
+                    if !temp_elements.iter().any(|e| element_equal(e, &product_left)) &&
+                       !new_elements.iter().any(|e| element_equal(e, &product_left)) {
+                        new_elements.push(product_left);
+                        changed = true;
+                    }
+                    
+                    // Multiply from right: g * gen
+                    let product_right = self.multiply_elements(g, gen)?;
+                    if !temp_elements.iter().any(|e| element_equal(e, &product_right)) &&
+                       !new_elements.iter().any(|e| element_equal(e, &product_right)) {
+                        new_elements.push(product_right);
+                        changed = true;
+                    }
+                }
+            }
+            temp_elements.extend(new_elements.drain(..));
+        }
+        
+        // Put elements back
+        if let GroupType::Finite { elements } = &mut self.group_type {
+            *elements = temp_elements;
+        }
+        
+        Ok(())
+    }
+    
+    /// Multiply two elements without borrowing self
+    fn multiply_elements(&self, a: &GroupElement<P>, b: &GroupElement<P>) -> Result<GroupElement<P>, CcmError> {
+        if a.dimension() != self.dimension || b.dimension() != self.dimension {
+            return Err(SymmetryError::InvalidGroupOperation.into());
+        }
+        
+        // For permutation matrices, multiply
+        let n = (self.dimension as f64).sqrt() as usize;
+        if n * n == self.dimension {
+            let mut result = vec![P::zero(); self.dimension];
+            
+            for i in 0..n {
+                for j in 0..n {
+                    let mut sum = P::zero();
+                    for k in 0..n {
+                        sum = sum + a.params[i * n + k] * b.params[k * n + j];
+                    }
+                    result[i * n + j] = sum;
+                }
+            }
+            
+            Ok(GroupElement::from_params(result))
+        } else {
+            // Generic multiplication - component-wise for now
+            let params = a.params.iter()
+                .zip(&b.params)
+                .map(|(x, y)| *x * *y)
+                .collect();
+            Ok(GroupElement::from_params(params))
+        }
+    }
 
     /// Get the identity element
     pub fn identity(&self) -> GroupElement<P> {
         GroupElement::identity(self.dimension)
+    }
+    
+    /// Get all elements (for finite groups)
+    pub fn all_elements(&self) -> Vec<GroupElement<P>> {
+        match &self.group_type {
+            GroupType::Finite { elements } => elements.clone(),
+            _ => vec![self.identity()], // For infinite groups, return just identity
+        }
     }
 
     /// Get group element from parameters
@@ -848,5 +985,68 @@ impl<P: Float> SymmetryGroup<P> {
         }
         
         true
+    }
+}
+
+/// Compute factorial
+fn factorial(n: usize) -> usize {
+    (1..=n).product()
+}
+
+/// Check if two group elements are equal
+fn element_equal<P: Float>(a: &GroupElement<P>, b: &GroupElement<P>) -> bool {
+    if a.params.len() != b.params.len() {
+        return false;
+    }
+    
+    for (x, y) in a.params.iter().zip(&b.params) {
+        if (*x - *y).abs() > P::epsilon() {
+            return false;
+        }
+    }
+    
+    true
+}
+
+#[cfg(test)]
+mod test_group_generation {
+    use super::*;
+    
+    #[test]
+    fn test_s2_generation() {
+        let s2 = SymmetryGroup::<f64>::symmetric_group(2).unwrap();
+        assert_eq!(s2.generators().len(), 1, "S2 should have 1 generator");
+        
+        // Check the generator
+        let gen = &s2.generators()[0];
+        // For S2, the generator should be the transposition (0 1)
+        // As a 2x2 matrix: [[0,1],[1,0]]
+        assert_eq!(gen.params.len(), 4);
+        assert_eq!(gen.params[0], 0.0); // (0,0)
+        assert_eq!(gen.params[1], 1.0); // (0,1)
+        assert_eq!(gen.params[2], 1.0); // (1,0)
+        assert_eq!(gen.params[3], 0.0); // (1,1)
+        
+        // Check that gen^2 = identity
+        let gen_squared = s2.multiply_elements(gen, gen).unwrap();
+        let identity = GroupElement::<f64>::identity(4);
+        
+        // Debug: print the squared result
+        println!("Gen squared params: {:?}", gen_squared.params);
+        println!("Identity params: {:?}", identity.params);
+        
+        assert!(element_equal(&gen_squared, &identity), "Generator squared should be identity");
+        
+        let elements = s2.all_elements();
+        assert_eq!(elements.len(), 2, "S2 should have 2 elements");
+    }
+    
+    #[test]
+    fn test_s3_generation() {
+        let s3 = SymmetryGroup::<f64>::symmetric_group(3).unwrap();
+        assert_eq!(s3.generators().len(), 2, "S3 should have 2 generators");
+        
+        let elements = s3.all_elements();
+        assert_eq!(elements.len(), 6, "S3 should have 6 elements");
     }
 }

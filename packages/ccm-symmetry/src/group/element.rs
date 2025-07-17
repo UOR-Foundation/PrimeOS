@@ -23,17 +23,57 @@ pub struct GroupElement<P: Float> {
 impl<P: Float> GroupElement<P> {
     /// Create identity element
     pub fn identity(dimension: usize) -> Self {
+        let n = (dimension as f64).sqrt() as usize;
+        
+        if n * n == dimension {
+            // It's a square dimension - create identity matrix
+            let mut params = vec![P::zero(); dimension];
+            for i in 0..n {
+                params[i * n + i] = P::one();
+            }
+            Self {
+                params,
+                cached_order: Some(1),
+            }
+        } else {
+            // For non-matrix groups (e.g., Klein group with bit flips)
+            // Identity has all ones (no bit flips)
+            Self {
+                params: vec![P::one(); dimension],
+                cached_order: Some(1),
+            }
+        }
+    }
+    
+    /// Create element from parameter vector
+    pub fn from_params(params: Vec<P>) -> Self {
         Self {
-            params: vec![P::one(); dimension],
-            cached_order: Some(1),
+            params,
+            cached_order: None,
         }
     }
 
     /// Check if this is the identity element
     pub fn is_identity(&self) -> bool {
-        self.params
-            .iter()
-            .all(|&p| (p - P::one()).abs() < P::epsilon())
+        let n = (self.params.len() as f64).sqrt() as usize;
+        
+        if n * n == self.params.len() {
+            // It's a square dimension - check for identity matrix
+            for i in 0..n {
+                for j in 0..n {
+                    let expected = if i == j { P::one() } else { P::zero() };
+                    if (self.params[i * n + j] - expected).abs() >= P::epsilon() {
+                        return false;
+                    }
+                }
+            }
+            true
+        } else {
+            // For non-matrix groups, identity has all ones
+            self.params
+                .iter()
+                .all(|&p| (p - P::one()).abs() < P::epsilon())
+        }
     }
 
     /// Get dimension

@@ -2,7 +2,39 @@
 
 PrimeOS: Reference implementation of Coherence-Centric Mathematics (CCM).
 
-**Development**: Production-ready code. Package changes: `cargo check/clippy/fmt --all-features`. No placeholders in tests. No spec shortcuts. No backwards compatibility. No unsolicited docs.
+**Development**: 
+
+Production-ready code. Package changes: `cargo check/clippy/fmt --all-features`. No placeholders in tests. No spec shortcuts. No backwards compatibility for features.
+
+
+
+## Keystone Facts
+
+| **Keystone** | **Why it matters** | **Impact** |
+|---|---|---|
+| Unity constraint α₄×α₅=1 | Creates Klein V₄ orbit, 96-value resonance spectrum, 3/8 compression | Foundation of all CCM structure |
+| 24→48→96 cascade | Defines generator→mediator→manifestation roles; proves μ²=γε | Universal structural pattern |
+| Coherence axioms A1-A3 | Ground RSF waves in grade-orthogonal norm & symmetry preservation | Mathematical completeness |
+| SP primes p≡±1(mod 12) | Characterize safe moduli for cascades & DLog algorithms | Modular arithmetic foundation |
+| Numbers↔Waves (RSF) | Resonance R(b)=∏αᵢ^{bᵢ}; primes appear as unit-norm pure tones | Computational paradigm shift |
+
+## Core Terminology
+
+| **Term** | **Definition** |
+|---|---|
+| **Resonance** | Multiplicative weight R(b)∈ℝ₊ determined by bit pattern b and field constants αᵢ |
+| **Coherence norm** | Grade-orthogonal inner-product norm ‖·‖_c on Clifford sections; minimized by embed(O) |
+| **Unity position** | Any b with R(b)=1; exactly 12 per 768-cycle when n=8 |
+| **Klein orbit** | Four bit-strings {b, b⊕2^{n-2}, b⊕2^{n-1}, b⊕both} sharing same resonance |
+| **SP prime** | Prime p≡±1(mod 12) where doubling is an automorphism mod p |
+
+## Layer Transitions
+
+| **Layer Exit →** | **Layer Entry** |
+|---|---|
+| RSF: unit-norm pure tones | CCM: minimal-coherence embeddings |
+| CCM: Klein V₄, 3×2^{n-2} classes | MSA: mod-p residue classes via SP primes |
+| MSA: modular doubling periods | SA: structural constants γ,μ,ε & role predicates |
 
 ## Core Mathematics
 
@@ -12,7 +44,7 @@ PrimeOS: Reference implementation of Coherence-Centric Mathematics (CCM).
 
 **Unity**: α_{n-2} × α_{n-1} = 1 ⟹ V₄={0,1,48,49}, 96 resonances (3/8), 768-cycle=687.110133..., 12 unities/cycle
 
-**Alpha**: α₀=1, α₁=1.839(tribonacci), α₂=φ, α₃=½, α₄=1/2π, α₅=2π, α₆=0.199, α₇=0.014
+**Alpha**: α₀=1, α₁=T≈1.839 (tribonacci), α₂=φ, α₃=½, α₄=1/2π, α₅=2π, α₆=0.199, α₇=0.014
 
 **Resonance**: R(b) = ∏ᵢ αᵢ^{bᵢ}
 
@@ -24,9 +56,9 @@ PrimeOS: Reference implementation of Coherence-Centric Mathematics (CCM).
 
 **MSA**: SP primes p≡±1(mod 12). mod 11: period 10. mod 7: γ+μ+ε≡0. mod 12: classification
 
-**Conservation**: 768-cycle Σ=687.110133..., Current ΣJ(n)=0, Noether: symmetry→conserved
+**Conservation**: Σ₇₆₈=687.110133... (768-cycle sum), J(n)=R(n+1)-R(n) where Σ₀⁷⁶⁷J(n)=0, Noether: symmetry→conserved
 
-**Bounds**: Compression 3/8, Classes 3×2^{n-2}, Pages 4×3×2^{n-2}
+**Bounds**: Compression 3/8 (entropy log₂96≈6.585 bits), Classes 3×2^{n-2}, Pages 4×3×2^{n-2}
 
 **Applications**: Crypto: resonance signatures | Optimize: min ‖·‖_c | Error: 99.97% recovery | Quantum: O(√n)
 
@@ -64,7 +96,7 @@ PrimeOS: Reference implementation of Coherence-Centric Mathematics (CCM).
 
 **Algorithms**: Schreier-Sims: base β=[0,4,5], O(n²) sift | Inverse resonance: orbit O(r), O(2^{n-2}/96) time
 
-**Numerics**: κ(R)=max|∂R/∂αᵢ|/min|∂R/∂αᵢ| | Conservation: |Σ-687.110133|<10⁻¹², relative<10⁻¹⁴
+**Numerics**: κ(R)=max|∂R/∂αᵢ|/min|∂R/∂αᵢ| | Conservation: |Σ₇₆₈-687.110133|<10⁻¹², |Σ₀⁷⁶⁷J(n)|<10⁻¹⁴
 
 **Crypto**: PRF: F_k(x)=R(x⊕k)mod 96 | Hash: ΣR(mᵢ)αᵢ mod p | Sig: (r,s), r=R(H(m)) | Enc: m⊕Klein(k,nonce)
 
@@ -85,7 +117,7 @@ PrimeOS: Reference implementation of Coherence-Centric Mathematics (CCM).
 
 ## Specifications
 
-**Alpha**: α₀=1, α₁=ϕₜ, α₂=φ, α₃=½, αₙ₋₂=(2π)⁻¹, αₙ₋₁=2π. Others: exp(θᵢ), |θᵢ|≤20. Verify: |αₙ₋₂αₙ₋₁-1|<10⁻¹⁴
+**Alpha**: α₀=1, α₁=T (tribonacci), α₂=φ, α₃=½, αₙ₋₂=(2π)⁻¹, αₙ₋₁=2π. Others: exp(θᵢ), |θᵢ|≤20. Verify: |αₙ₋₂αₙ₋₁-1|<10⁻¹⁴
 
 **Klein**: K(b)={b,b⊕2^{n-2},b⊕2^{n-1},b⊕both} | min: argmin_K R | ∑_K R=const
 
@@ -93,7 +125,7 @@ PrimeOS: Reference implementation of Coherence-Centric Mathematics (CCM).
 
 **Factor**: n↦|n⟩∈Cl(n), S(n)=FFT(|n⟩) peaks at {ω_p:p|n}, |R(p)R(q)-R(pq)|<10⁻¹⁰R(pq)
 
-**Conserve**: 768Σ err<10⁻¹², CurrentΣ=0 err<10⁻¹⁴, Page sums const
+**Conserve**: |Σ₇₆₈-687.110133|<10⁻¹², |Σ₀⁷⁶⁷J(n)|<10⁻¹⁴, Page sums const
 
 **Thresholds**: Unity ε<10⁻¹⁴, Res equal ε_rel<10⁻¹⁰, Conserve ε<10⁻¹², Log: popcount>32
 
@@ -134,6 +166,8 @@ PrimeOS: Reference implementation of Coherence-Centric Mathematics (CCM).
 **RSF**: Numbers=waves. Ops=signal processing. Quantum emerges. O(log n) factoring.
 
 **CCM**: 3 axioms unify. Unity=keystone. All math structures emerge. Crypto→quantum apps.
+
+**RL**: Resonance Logic. Truth≙conservation. C₉₆={0,...,95} replaces {0,1}. Ops: [r]⊕[s]=[r+s]₉₆, [r]⊗[s]=[rs]₉₆. Sequent Γ⊢ᵣΔ with budget r∈C₉₆. Induction (RI): 96 tracks mod 96. Sound+conservative over SA via crush κ:C₉₆→{0,1}.
 
 ---
 
@@ -209,3 +243,20 @@ Every question has an answer:
 - Implementation? → Mathematical formalization is the code
 - Verification? → Conservation laws ensure correctness
 
+### Proof Sketch vs Formal Proof
+
+**Factor runtime** — *O*(log n)  
+Two‑line resonance sketch:  
+1. View N as a superposed mode of two prime oscillators p and q; the spectrum shows resonant peaks at factors.  
+2. Sweep trial f; when f = p (or q) the coupled system enters resonance, which a logarithmic search (binary–log sweep of modulus space) detects in log n steps.  
+*Margin note:* For the rigorous derivation, including convergence bounds, see **CCM § 6.2 “Resonant Factorization”**.
+
+---
+
+### Math → Physics Bridge
+
+Starting from the framework identity **ω = log R** (resonant ratio → angular “frequency”), substitute into Planck’s relation:
+
+E = ℏ ω ⇒ E = ℏ log R.
+
+Thus each discrete resonance ratio R maps directly to a quantized energy level, tying the arithmetic spectrum to physical observables and closing the math‑to‑physics loop in one line.

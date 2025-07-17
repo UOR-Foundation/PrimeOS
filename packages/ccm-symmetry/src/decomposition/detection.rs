@@ -141,8 +141,8 @@ pub fn has_klein_symmetry<P: Float + FromPrimitive>(element: &CliffordElement<P>
                 let klein_vec: Vec<_> = klein_elements.collect();
                 
                 // Check 2a: Coherence norm preservation
-                let _original_norm = element.coherence_norm();
-                let norm_preserved = true;
+                let original_norm = element.coherence_norm();
+                let mut norm_preserved = true;
                 
                 #[cfg(test)]
                 // Checking Klein action norm preservation

@@ -171,3 +171,30 @@ fn test_embedding_coherence_compatibility() {
     // Klein partners might have different norms but similar structure
     assert!(norm1 > 0.0 && norm2 > 0.0 && norm_partner > 0.0);
 }
+
+#[test]
+fn test_symmetry_engine_clifford_action() {
+    use ccm_symmetry::GroupElement;
+
+    let ccm = StandardCCM::<f64>::new(8).unwrap();
+    let alpha = ccm.generate_alpha().unwrap();
+    
+    // Create a test section
+    let word = BitWord::from_u8(42);
+    let section = ccm.embed(&word, &alpha).unwrap();
+    
+    // Create identity group element
+    let identity = GroupElement::<f64>::identity(8);
+    
+    // Apply symmetry transformation (should work now with fixed SymmetryEngine)
+    let transformed = ccm.apply_symmetry(&section, &identity).unwrap();
+    
+    // Identity transformation should not change the section
+    let orig_norm = ccm.coherence_norm(&section);
+    let trans_norm = ccm.coherence_norm(&transformed);
+    
+    assert!(
+        (orig_norm - trans_norm).abs() < 1e-10,
+        "Identity transformation should preserve norm"
+    );
+}
