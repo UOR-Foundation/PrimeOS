@@ -33,6 +33,7 @@ pub mod unified;
 pub mod single_blade;
 pub mod scalable;
 pub mod sparse_big;
+pub mod optimizations;
 
 #[cfg(test)]
 mod arbitrary_tests;

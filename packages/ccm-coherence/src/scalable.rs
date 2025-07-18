@@ -7,6 +7,7 @@ use crate::{
     arbitrary_support::BigIndex,
     single_blade::SingleBlade,
     sparse::SparseCliffordElement,
+    sparse_big::SparseBigElement,
 };
 use ccm_core::{CcmError, Float};
 use num_complex::Complex;
@@ -37,6 +38,12 @@ impl<P: Float> LazyElement<P> {
     pub fn component(&self, index: &BigIndex) -> Complex<P> {
         (self.compute_fn)(index)
     }
+    
+    /// Note: LazyElement cannot compute coherence norm efficiently for large dimensions
+    /// without additional structural information. For practical use:
+    /// - Use SingleBlade for single blade operations (supports arbitrary dimensions)
+    /// - Use SparseBigElement for multi-blade operations (supports arbitrary dimensions)
+    /// - Convert LazyElement to SparseBigElement if norm is needed
     
     /// Extract non-zero components up to a limit
     pub fn to_sparse(&self, max_components: usize) -> SparseCliffordElement<P> {
@@ -85,6 +92,22 @@ impl<P: Float> Iterator for LazyComponentIterator<P> {
 ///
 /// Unlike `CliffordAlgebraTrait`, this trait returns lazy or sparse
 /// types that don't require materializing full 2^n-dimensional elements.
+///
+/// ## Coherence Norm and CCM Axiom A1
+///
+/// This trait implements the coherence inner product from CCM Axiom A1,
+/// which states that the inner product must be:
+/// - Positive-definite: ⟨⟨x,x⟩⟩ > 0 for all x ≠ 0
+/// - Conjugate symmetric: ⟨⟨x,y⟩⟩ = conj(⟨⟨y,x⟩⟩)
+/// - Linear in second argument
+/// - **Grade-orthogonal**: ⟨⟨x_i,y_j⟩⟩ = 0 if grade(x_i) ≠ grade(y_j)
+///
+/// The grade-orthogonality property is crucial for scalable implementations:
+/// - For `SingleBlade`: Since it has only one grade, ||blade||_c = |coefficient|
+/// - For `SparseBigElement`: Different basis blades have different grades,
+///   so ||element||²_c = Σ|component_i|² (no cross terms)
+///
+/// This allows efficient norm computation without materializing cross products.
 pub trait ScalableCliffordAlgebraTrait<P: Float> {
     /// Get the dimension of the underlying vector space
     fn dimension(&self) -> usize;
@@ -134,6 +157,18 @@ pub trait ScalableCliffordAlgebraTrait<P: Float> {
     
     /// Memory usage estimate in bytes
     fn memory_usage_bytes(&self) -> usize;
+    
+    /// Compute coherence norm for a single blade
+    /// For single blades, this is just |coefficient|
+    fn single_blade_norm(&self, blade: &SingleBlade<P>) -> P {
+        blade.coherence_norm()
+    }
+    
+    /// Compute coherence norm for a sparse element
+    /// This respects grade-orthogonality (Axiom A1)
+    fn sparse_element_norm(&self, element: &SparseBigElement<P>) -> P {
+        element.coherence_norm()
+    }
 }
 
 /// Iterator over basis elements of a specific grade
@@ -236,9 +271,10 @@ impl<P: Float> Iterator for GradeIterator<P> {
 }
 
 /// Scalable Clifford algebra implementation
+#[derive(Clone)]
 pub struct ScalableAlgebra<P: Float> {
-    dimension: usize,
-    signature: (usize, usize, usize),
+    pub(crate) dimension: usize,
+    pub(crate) signature: (usize, usize, usize),
     _phantom: core::marker::PhantomData<P>,
 }
 
@@ -263,6 +299,12 @@ impl<P: Float> ScalableAlgebra<P> {
             signature: (p, q, r),
             _phantom: core::marker::PhantomData,
         })
+    }
+    
+    /// Get memory usage in bytes (minimal for scalable algebra)
+    pub fn memory_usage_bytes(&self) -> usize {
+        // Scalable algebra uses minimal memory - just struct overhead
+        core::mem::size_of::<Self>()
     }
 }
 

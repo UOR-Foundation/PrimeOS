@@ -243,4 +243,40 @@ mod tests {
         let blade = lazy.get();
         assert_eq!(blade.grade(), 2); // Two bits set
     }
+    
+    #[test]
+    fn test_coherence_norm() {
+        // Test scalar blade
+        let scalar = SingleBlade::<f64>::scalar(3.0, 8);
+        assert_eq!(scalar.coherence_norm(), 3.0);
+        
+        // Test basis blade with coefficient
+        let mut blade = SingleBlade::<f64>::from_bitword(0b1010, 8).unwrap();
+        blade.set_coefficient(Complex::new(4.0, 3.0));
+        assert_eq!(blade.coherence_norm(), 5.0); // sqrt(4^2 + 3^2) = 5
+        
+        // Test zero blade
+        let zero = SingleBlade::<f64>::zero(8);
+        assert_eq!(zero.coherence_norm(), 0.0);
+    }
+    
+    #[test]
+    fn test_coherence_norm_large_dimension() {
+        // Test with 4096-bit dimension
+        let dimension = 4096;
+        let mut index = BigIndex::new(dimension);
+        index.set_bit(1000);
+        index.set_bit(2000);
+        index.set_bit(3000);
+        
+        let blade = SingleBlade::<f64>::new(
+            index,
+            Complex::new(6.0, 8.0),
+            dimension
+        );
+        
+        assert_eq!(blade.coherence_norm(), 10.0); // sqrt(6^2 + 8^2) = 10
+        assert_eq!(blade.dimension(), 4096);
+        assert_eq!(blade.grade(), 3);
+    }
 }
