@@ -1,6 +1,7 @@
 //! Embedding operations for mapping between bit patterns and Clifford elements
 
 use crate::{CliffordAlgebra, CliffordElement};
+use crate::unified::{CliffordAlgebraTrait, CliffordAlgebraFactory};
 use ccm_core::{BitWord, CcmError, Float};
 use num_complex::Complex;
 use num_traits::One;
@@ -33,6 +34,29 @@ pub fn bitword_to_clifford<P: Float>(
     Ok(element)
 }
 
+/// Map a BitWord to a CliffordElement using the trait interface
+///
+/// This version works with any CliffordAlgebraTrait implementation
+pub fn bitword_to_clifford_trait<P: Float>(
+    word: &BitWord,
+    algebra: &dyn CliffordAlgebraTrait<P>,
+) -> Result<CliffordElement<P>, CcmError> {
+    if word.len() > algebra.dimension() {
+        return Err(CcmError::InvalidInput);
+    }
+
+    // Convert BitWord to basis element index
+    let mut pattern = 0usize;
+    for i in 0..word.len() {
+        if word.bit(i) {
+            pattern |= 1 << i;
+        }
+    }
+
+    // Use the trait method to get basis element
+    algebra.basis_element(pattern)
+}
+
 /// Map a u8 byte to a CliffordElement  
 pub fn u8_to_clifford<P: Float>(
     byte: u8,
@@ -46,6 +70,18 @@ pub fn u8_to_clifford<P: Float>(
     element.components[byte as usize] = Complex::one();
 
     Ok(element)
+}
+
+/// Map a u8 byte to a CliffordElement using the trait interface
+pub fn u8_to_clifford_trait<P: Float>(
+    byte: u8,
+    algebra: &dyn CliffordAlgebraTrait<P>,
+) -> Result<CliffordElement<P>, CcmError> {
+    if algebra.dimension() < 8 {
+        return Err(CcmError::InvalidInput);
+    }
+
+    algebra.basis_element(byte as usize)
 }
 
 /// Map resonance value to coefficient magnitude
@@ -97,6 +133,39 @@ pub fn index_to_bitword(index: usize, dimension: usize) -> BitWord {
     }
 
     word
+}
+
+/// Optimized embedding for BJC codec usage
+///
+/// For large dimensions, this creates a sparse single-blade element
+/// without allocating the full 2^n components
+pub fn embed_bitword_lazy<P: Float>(
+    word: &BitWord,
+    dimension: usize,
+    resonance: P,
+) -> Result<CliffordElement<P>, CcmError> {
+    if word.len() > dimension {
+        return Err(CcmError::InvalidInput);
+    }
+    
+    // Use factory to get appropriate algebra for dimension
+    let algebra = CliffordAlgebraFactory::create_for_bjc::<P>(dimension)?;
+    
+    // Convert BitWord to basis element index
+    let mut pattern = 0usize;
+    for i in 0..word.len() {
+        if word.bit(i) {
+            pattern |= 1 << i;
+        }
+    }
+    
+    // Get basis element (will be sparse for large dimensions)
+    let mut element = algebra.basis_element(pattern)?;
+    
+    // Scale by resonance
+    apply_resonance(&mut element, resonance);
+    
+    Ok(element)
 }
 
 #[cfg(test)]

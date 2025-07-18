@@ -23,7 +23,45 @@ pub type Section<P> = CliffordElement<P>;
 impl<P: Float> CliffordElement<P> {
     /// Create a new zero element in n-dimensional Clifford algebra
     pub fn zero(dimension: usize) -> Self {
+        Self::zero_with_capacity(dimension, None)
+    }
+    
+    /// Create a zero element with optional capacity limit
+    /// If capacity is provided, creates a sparse-like element that only stores non-zero components
+    pub fn zero_with_capacity(dimension: usize, max_capacity: Option<usize>) -> Self {
+        // Check for overflow before shifting
+        if dimension >= core::mem::size_of::<usize>() * 8 {
+            // For very large dimensions, create a minimal element
+            if let Some(capacity) = max_capacity {
+                // Create with limited capacity - acts like a sparse element
+                let components = vec![Complex::zero(); capacity.min(1024)].into_boxed_slice();
+                return Self {
+                    components,
+                    dimension,
+                };
+            } else {
+                panic!("Dimension {} is too large for dense storage. Use SparseCliffordElement or LazyCliffordAlgebra instead.", dimension);
+            }
+        }
+        
         let num_components = 1usize << dimension; // 2^n
+        
+        // Additional safety check for memory allocation
+        const MAX_COMPONENTS: usize = 1 << 20; // 1M components = 16MB for Complex<f64>
+        if num_components > MAX_COMPONENTS {
+            if let Some(capacity) = max_capacity {
+                // Create with limited capacity
+                let components = vec![Complex::zero(); capacity.min(MAX_COMPONENTS)].into_boxed_slice();
+                return Self {
+                    components,
+                    dimension,
+                };
+            } else {
+                panic!("Dimension {} requires {} components, exceeding the maximum of {}. Use SparseCliffordElement or LazyCliffordAlgebra instead.", 
+                       dimension, num_components, MAX_COMPONENTS);
+            }
+        }
+        
         let components = vec![Complex::zero(); num_components].into_boxed_slice();
         Self {
             components,
@@ -111,6 +149,11 @@ impl<P: Float> CliffordElement<P> {
 
     /// Get all indices that correspond to a specific grade
     pub fn indices_of_grade(grade: usize, dimension: usize) -> Vec<usize> {
+        // Check for overflow before shifting
+        if dimension >= core::mem::size_of::<usize>() * 8 {
+            panic!("Dimension {} is too large for index enumeration", dimension);
+        }
+        
         let max_index = 1usize << dimension;
         (0..max_index)
             .filter(|&i| Self::grade_of_index(i) == grade)

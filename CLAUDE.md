@@ -260,3 +260,88 @@ Starting from the framework identity **ω = log R** (resonant ratio → an
 E = ℏ ω ⇒ E = ℏ log R.
 
 Thus each discrete resonance ratio R maps directly to a quantized energy level, tying the arithmetic spectrum to physical observables and closing the math‑to‑physics loop in one line.
+
+## Mathematodynamics
+
+**Phase Space**: Γ={(q,p,s,τ)} where q∈M=(x,R(x),I(x),S(x)), p=∂L/∂q̇, s∈S(q), τ∈ℝ
+
+**Coherence Field**: Ψ:M→ℂ^(2^n), field eq: □Ψ+m²Ψ+λ‖Ψ‖²_cΨ=J
+
+**Conservation**: ∂_μj^μ_R=0 (resonance), dI/dτ+∇·J_I=0 (information), ∂_τ‖Ψ‖²_c+∇·flux=0 (coherence)
+
+**Hamiltonian**: H=T+V+U where T=½‖∇Ψ‖²_c, V=V_eff(‖Ψ‖_c), U=Σᵢⱼ U(‖Ψᵢ-Ψⱼ‖_c)
+
+**Prime Dynamics**: H_prime=½‖(ξ,η,ζ)‖²_c-log|ζ(1+ix)|+I(x) where ξ=log(n)-li(n), η=Σ_{p|n}log(p)/p, ζ=ψ(n)-n
+
+**Forces**: F_c=-∇V_c (coherence), F_R=-α∇R(x) (resonance), F_I=-k_BT∇S (information), F_S=-∇V_symmetry
+
+**Lagrangian**: ℒ=½(∂_μΨ)†(∂^μΨ)-m²Ψ†Ψ-λ(Ψ†Ψ)²-J†Ψ, Action: S[Ψ]=∫d⁴xℒ
+
+**Symmetry**: G_math=SL(2,ℤ)⋉(ℤ/2ℤ)^∞×U(1)_phase, Gauge: Ψ→e^{iθ(x)}Ψ, Discrete: P,T,C
+
+**Phase Transitions**: Order params: η(prime/composite), ξ(complexity), δ(decidability). Critical: ξ~|T-T_c|^{-ν}
+
+**Quantum**: {A,B}→-i[Â,B̂], ΔR·ΔI≥ℏ_math/2, Path integral: ⟨x_f|e^{-iHt}|x_i⟩=∫𝒟xe^{iS[x]}
+
+**Thermodynamics**: 1/T_math=∂S/∂E, F=E-T_mathS, Compression≥3/8 (CCM bound)
+
+**Constants**: α_c≈1/137 (coherence coupling), ℏ_math (action quantum), c_math (causation speed), G_math (gravitational)
+
+**Master Equation**: δS/δΨ=0 unifies all forces+constraints
+
+**Bootstrap**: Mathematodynamics laws themselves follow mathematodynamics - complete self-consistency
+
+## Homomorphic Resonance Factorization (HRF)
+
+**Core Discovery**: Resonance function R exhibits homomorphic properties under specific operations, enabling streaming factorization.
+
+### HRF Fundamentals
+
+**Homomorphic Subgroups**: 5 groups preserve R(a⊕b)=R(a)R(b):
+- H₀ = {0} (trivial)
+- H₁ = {0,1} (binary)
+- H₂ = {0,48} (periodic-48)
+- H₃ = {0,49} (composite)
+- H₄ = V₄ = {0,1,48,49} (Klein)
+
+**Concatenation**: R(a||b) = R(a) · R(b) · κᵢ(|a|,|b|) for subgroup Hᵢ
+
+**Prime Signature**: R(p)=1, ||embed(p)||_c=1 for prime p
+
+**Factor Spectrum**: If n=p·q, then Spec_R(n) = Spec_R(p) ⊛ Spec_R(q) + I(p,q)
+
+### Streaming Framework
+
+**Chunking**: n = ⊕ᵢ cᵢ·2^{ik}, process k-bit chunks cᵢ
+
+**Resonance Flow**: F(chunks) preserves factor structure with periodic patterns
+
+**Accumulator**: Aᵢ₊₁ = Φ(Aᵢ, R(cᵢ), i); factors appear as fixed points
+
+**Scale Invariance**: Patterns at scale s relate to patterns at scale 2s
+
+### Complexity & Bounds
+
+**Streaming Complexity**:
+- Space: O(polylog(N))
+- Time: O(N·polylog(N))
+- Chunk size: k_min ≥ log²(p)
+
+**Information Limit**: I(chunk_i) ≥ H(factors)/N (holographic principle)
+
+**Quantum Interpretation**: Chunks as measurements partially collapse factor superposition
+
+### Detection Principles
+
+1. **Periodic Patterns**: Scan resonance sequence for periods
+2. **Fixed Points**: Identify accumulator stabilization
+3. **Cross-Scale Peaks**: Factors persist across scales
+4. **Interference Max**: Factors maximize self-interference
+
+**Verification**: P(p̃·q̃ = n | resonance_match) > 1 - 2^{-k}
+
+### Universal Property
+
+**Conjecture**: HRF captures all computational aspects of factorization - any algorithm expressible as resonance flow operations.
+
+Transforms factorization from discrete search to continuous flow in resonance space.

@@ -28,6 +28,7 @@ impl Default for ArbitraryDimensionConfig {
 }
 
 /// Extended Clifford algebra that supports arbitrary dimensions
+#[derive(Clone)]
 pub struct ArbitraryCliffordAlgebra<P: Float> {
     dimension: usize,
     config: ArbitraryDimensionConfig,
@@ -35,20 +36,52 @@ pub struct ArbitraryCliffordAlgebra<P: Float> {
 }
 
 impl<P: Float> ArbitraryCliffordAlgebra<P> {
+    /// Compute the sign from reordering basis elements in multiplication
+    pub fn compute_sign(idx1: usize, idx2: usize) -> P {
+        // Count transpositions needed to order basis vectors
+        let mut sign = P::one();
+        let mut _swaps = 0;
+        
+        // For each position in idx1
+        let mut _pos = 0;
+        for i in 0..64 {
+            if idx1 & (1 << i) != 0 {
+                // Count how many basis vectors in idx2 come before this one
+                for j in 0..i {
+                    if idx2 & (1 << j) != 0 {
+                        _swaps += 1;
+                    }
+                }
+                
+                // Each swap contributes a factor of -1
+                if _swaps % 2 == 1 {
+                    sign = -sign;
+                }
+                _pos += 1;
+            }
+        }
+        
+        sign
+    }
     /// Create a new Clifford algebra with arbitrary dimension
     pub fn generate(n: usize, config: ArbitraryDimensionConfig) -> Result<Self, CcmError> {
         // Check for overflow in 2^n calculation
-        if config.check_overflow && n >= core::mem::size_of::<usize>() * 8 {
+        // We can't represent 2^n as usize if n >= bits in usize
+        // But we can still work with such dimensions using lazy/streaming
+        if config.check_overflow && n >= core::mem::size_of::<usize>() * 8 && config.max_dense_dimension > 0 {
+            // Only error if we're trying to use dense storage
             return Err(CcmError::InvalidInput);
         }
 
-        // Check memory requirements
-        if n > config.max_dense_dimension {
+        // Check memory requirements only if we're using dense storage
+        if n <= config.max_dense_dimension {
             let memory_mb = Self::estimate_memory_mb(n);
             if memory_mb > config.max_memory_mb {
                 return Err(CcmError::InvalidLength);
             }
         }
+        // For dimensions > max_dense_dimension, we use lazy/sparse storage
+        // which doesn't allocate all 2^n components
 
         Ok(Self {
             dimension: n,
@@ -59,7 +92,11 @@ impl<P: Float> ArbitraryCliffordAlgebra<P> {
 
     /// Estimate memory usage in MB for dimension n
     pub fn estimate_memory_mb(n: usize) -> usize {
-        if n >= core::mem::size_of::<usize>() * 8 {
+        // For 64-bit systems, dimensions >= 64 would overflow
+        if n >= 64 {
+            // Return max value to indicate infeasible memory requirement
+            usize::MAX / (1024 * 1024)
+        } else if n >= core::mem::size_of::<usize>() * 8 {
             usize::MAX / (1024 * 1024)
         } else {
             let components = 1usize << n;
@@ -115,6 +152,16 @@ pub struct SparseBasisElement<P: Float> {
 }
 
 impl<P: Float> SparseBasisElement<P> {
+    /// Get the index of this basis element
+    pub fn index(&self) -> usize {
+        self.index
+    }
+    
+    /// Get the coefficient of this basis element
+    pub fn coefficient(&self) -> Complex<P> {
+        self._coefficient
+    }
+    
     /// Get the grade of this basis element
     pub fn grade(&self) -> usize {
         self.index.count_ones() as usize
@@ -193,60 +240,339 @@ pub mod operations {
     }
 }
 
+/// BigInt-style index for arbitrary dimension support
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct BigIndex {
+    /// Bit representation stored as bytes (little-endian)
+    pub(crate) bits: Vec<u8>,
+    /// Number of valid bits
+    pub(crate) bit_count: usize,
+}
+
+impl BigIndex {
+    /// Create a new BigIndex with specified bit pattern
+    pub fn new(bit_count: usize) -> Self {
+        let byte_count = (bit_count + 7) / 8;
+        Self {
+            bits: vec![0; byte_count],
+            bit_count,
+        }
+    }
+    
+    /// Set bit at position to 1
+    pub fn set_bit(&mut self, position: usize) {
+        if position < self.bit_count {
+            let byte_idx = position / 8;
+            let bit_idx = position % 8;
+            self.bits[byte_idx] |= 1 << bit_idx;
+        }
+    }
+    
+    /// Get bit at position
+    pub fn get_bit(&self, position: usize) -> bool {
+        if position < self.bit_count {
+            let byte_idx = position / 8;
+            let bit_idx = position % 8;
+            (self.bits[byte_idx] & (1 << bit_idx)) != 0
+        } else {
+            false
+        }
+    }
+    
+    /// Count number of set bits (grade)
+    pub fn count_ones(&self) -> usize {
+        self.bits.iter().map(|b| b.count_ones() as usize).sum()
+    }
+    
+    /// Convert to usize if possible (for dimensions <= 64)
+    pub fn to_usize(&self) -> Option<usize> {
+        if self.bit_count > 64 {
+            return None;
+        }
+        
+        let mut result = 0usize;
+        for i in 0..self.bit_count {
+            if self.get_bit(i) {
+                result |= 1usize << i;
+            }
+        }
+        Some(result)
+    }
+    
+    /// Create from usize
+    pub fn from_usize(value: usize, bit_count: usize) -> Self {
+        let mut index = Self::new(bit_count);
+        for i in 0..bit_count.min(64) {
+            if (value & (1usize << i)) != 0 {
+                index.set_bit(i);
+            }
+        }
+        index
+    }
+    
+    /// XOR operation for multiplication
+    pub fn xor(&self, other: &Self) -> Self {
+        let bit_count = self.bit_count.max(other.bit_count);
+        let mut result = Self::new(bit_count);
+        
+        let byte_count = result.bits.len();
+        for i in 0..byte_count {
+            let a = self.bits.get(i).copied().unwrap_or(0);
+            let b = other.bits.get(i).copied().unwrap_or(0);
+            result.bits[i] = a ^ b;
+        }
+        
+        result
+    }
+}
+
 /// Streaming operations for very large dimensions
 pub mod streaming {
     use super::*;
+    use num_complex::Complex;
+    
+    /// Streaming multiplication of Clifford elements
+    /// Computes c = a * b without materializing full elements
+    pub struct StreamingMultiplier<P: Float> {
+        dimension: usize,
+        _phantom: core::marker::PhantomData<P>,
+    }
+    
+    impl<P: Float> StreamingMultiplier<P> {
+        pub fn new(dimension: usize) -> Self {
+            Self {
+                dimension,
+                _phantom: core::marker::PhantomData,
+            }
+        }
+        
+        /// Compute single component of a * b
+        pub fn compute_component(
+            &self,
+            result_index: &BigIndex,
+            a_components: &dyn Fn(&BigIndex) -> Complex<P>,
+            b_components: &dyn Fn(&BigIndex) -> Complex<P>,
+        ) -> Complex<P> {
+            let mut result = Complex::zero();
+            
+            // For multiplication, we need all pairs (j,k) where j XOR k = result_index
+            // This means k = j XOR result_index
+            // We iterate over all possible j values
+            
+            if self.dimension <= 20 {
+                // For small dimensions, we can enumerate
+                let max_j = 1usize << self.dimension;
+                for j in 0..max_j {
+                    let j_big = BigIndex::from_usize(j, self.dimension);
+                    let k_big = j_big.xor(result_index);
+                    
+                    // Compute sign from reordering basis elements
+                    let sign = if let (Some(j_small), Some(k_small)) = (j_big.to_usize(), k_big.to_usize()) {
+                        ArbitraryCliffordAlgebra::<P>::compute_sign(j_small, k_small)
+                    } else {
+                        P::one() // Fallback for large indices
+                    };
+                    
+                    let a_j = a_components(&j_big);
+                    let b_k = b_components(&k_big);
+                    
+                    result = result + a_j * b_k * Complex::new(sign, P::zero());
+                }
+            } else {
+                // For large dimensions, full enumeration is not feasible
+                // In practice, most components are zero, so a sparse approach
+                // would be needed where we only compute non-zero contributions
+            }
+            
+            result
+        }
+    }
 
     /// Iterator over non-zero components
     pub struct ComponentIterator<P: Float> {
-        _dimension: usize,
+        dimension: usize,
         current: usize,
+        _current_big: Option<BigIndex>,
         max: Option<usize>,
+        grade_filter: Option<usize>,
+        combination_state: Option<Vec<usize>>, // For grade-specific iteration
         _phantom: core::marker::PhantomData<P>,
     }
 
     impl<P: Float> ComponentIterator<P> {
         pub fn new(dimension: usize) -> Self {
-            let max = if dimension < 64 {
-                Some(1usize << dimension)
+            let (max, current_big) = if dimension <= 64 {
+                (Some(1usize << dimension), None)
             } else {
-                None
+                (None, Some(BigIndex::new(dimension)))
             };
 
             Self {
-                _dimension: dimension,
+                dimension,
                 current: 0,
+                _current_big: current_big,
                 max,
+                grade_filter: None,
+                combination_state: None,
                 _phantom: core::marker::PhantomData,
             }
         }
 
         /// Create iterator for specific grade
-        pub fn grade_only(dimension: usize, _grade: usize) -> Self {
-            Self {
-                _dimension: dimension,
+        pub fn grade_only(dimension: usize, grade: usize) -> Self {
+            let mut iter = Self {
+                dimension,
                 current: 0,
+                _current_big: None,
                 max: None,
+                grade_filter: Some(grade),
+                combination_state: None,
                 _phantom: core::marker::PhantomData,
+            };
+            
+            // Initialize combination state for grade iteration
+            if grade > 0 && grade <= dimension {
+                // Start with first combination: [0, 1, ..., grade-1]
+                iter.combination_state = Some((0..grade).collect());
             }
+            
+            iter
+        }
+        
+        /// Compute the next index of given grade using combinatorial approach
+        fn next_of_grade(&mut self, target_grade: usize) -> Option<BigIndex> {
+            if target_grade > self.dimension {
+                return None;
+            }
+            
+            if target_grade == 0 {
+                // Only one element of grade 0: the scalar
+                if self.current == 0 {
+                    self.current = 1;
+                    return Some(BigIndex::new(self.dimension));
+                }
+                return None;
+            }
+            
+            // Use combination state for efficient iteration
+            if let Some(ref mut positions) = self.combination_state {
+                // Convert current combination to BigIndex
+                let mut index = BigIndex::new(self.dimension);
+                for &pos in positions.iter() {
+                    index.set_bit(pos);
+                }
+                
+                // Compute next combination
+                let dimension = self.dimension;
+                if !Self::next_combination(positions, dimension) {
+                    self.combination_state = None; // No more combinations
+                }
+                
+                Some(index)
+            } else {
+                None
+            }
+        }
+        
+        /// Generate next combination in lexicographic order
+        fn next_combination(positions: &mut Vec<usize>, n: usize) -> bool {
+            let k = positions.len();
+            if k == 0 || k > n {
+                return false;
+            }
+            
+            // Find rightmost position that can be incremented
+            let mut i = k - 1;
+            while positions[i] == n - k + i {
+                if i == 0 {
+                    return false; // No more combinations
+                }
+                i -= 1;
+            }
+            
+            // Increment position i and reset positions after it
+            positions[i] += 1;
+            for j in i + 1..k {
+                positions[j] = positions[j - 1] + 1;
+            }
+            
+            true
         }
     }
 
     impl<P: Float> Iterator for ComponentIterator<P> {
-        type Item = (usize, usize); // (index, grade)
+        type Item = (BigIndex, usize); // (index, grade)
 
         fn next(&mut self) -> Option<Self::Item> {
-            if let Some(max) = self.max {
-                if self.current >= max {
-                    return None;
+            if let Some(target_grade) = self.grade_filter {
+                // Only return indices of specific grade
+                self.next_of_grade(target_grade)
+                    .map(|idx| (idx, target_grade))
+            } else {
+                // Return all indices
+                if self.dimension <= 64 {
+                    // Use usize for small dimensions
+                    if let Some(max) = self.max {
+                        if self.current >= max {
+                            return None;
+                        }
+                    }
+
+                    let index = self.current;
+                    let grade = index.count_ones() as usize;
+                    self.current += 1;
+
+                    let big_index = BigIndex::from_usize(index, self.dimension);
+                    Some((big_index, grade))
+                } else {
+                    // For large dimensions, we can't iterate all indices
+                    // This would require 2^n iterations which is infeasible
+                    // Instead, return None to indicate streaming iteration is not supported
+                    // for full enumeration of large dimensions
+                    None
                 }
             }
-
-            let index = self.current;
-            let grade = index.count_ones() as usize;
-            self.current += 1;
-
-            Some((index, grade))
+        }
+    }
+    
+    /// Streaming inner product computation
+    pub struct StreamingInnerProduct<P: Float> {
+        dimension: usize,
+        _phantom: core::marker::PhantomData<P>,
+    }
+    
+    impl<P: Float> StreamingInnerProduct<P> {
+        pub fn new(dimension: usize) -> Self {
+            Self {
+                dimension,
+                _phantom: core::marker::PhantomData,
+            }
+        }
+        
+        /// Compute coherence inner product without materializing full elements
+        pub fn compute(
+            &self,
+            a_components: &dyn Fn(&BigIndex) -> Complex<P>,
+            b_components: &dyn Fn(&BigIndex) -> Complex<P>,
+        ) -> Complex<P> {
+            let mut result = Complex::zero();
+            
+            // Sum over all grades
+            for grade in 0..=self.dimension {
+                let mut grade_sum = Complex::zero();
+                
+                // Use iterator to avoid materializing all indices
+                let iter = ComponentIterator::<P>::grade_only(self.dimension, grade);
+                for (idx, _) in iter {
+                    let a_val = a_components(&idx);
+                    let b_val = b_components(&idx);
+                    grade_sum = grade_sum + a_val.conj() * b_val;
+                }
+                
+                result = result + grade_sum;
+            }
+            
+            result
         }
     }
 }

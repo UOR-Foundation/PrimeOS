@@ -78,7 +78,9 @@ impl<P: Float> SparseCliffordElement<P> {
 
     /// Set a component by index
     pub fn set_component(&mut self, index: usize, value: Complex<P>) -> Result<(), CcmError> {
-        if index >= (1usize << self.dimension) {
+        // For large dimensions, we can't check against 2^n
+        // Instead, check if the index could be valid based on dimension
+        if self.dimension < 64 && index >= (1usize << self.dimension) {
             return Err(CcmError::InvalidInput);
         }
 
@@ -224,6 +226,10 @@ impl<P: Float> SparseCliffordElement<P> {
         }
 
         let mut element = Self::zero(dimension);
+        // Check for overflow before shifting
+        if i >= 64 {
+            return Err(CcmError::Custom("Basis vector index too large for sparse storage"));
+        }
         let index = 1usize << i;
         element.set_component(index, Complex::one())?;
         Ok(element)
@@ -241,6 +247,9 @@ impl<P: Float> SparseCliffordElement<P> {
         // Convert indices to bit pattern
         let mut bit_pattern = 0usize;
         for &i in indices {
+            if i >= 64 {
+                return Err(CcmError::Custom("Basis blade index too large for sparse storage"));
+            }
             if bit_pattern & (1 << i) != 0 {
                 // Repeated index
                 return Err(CcmError::InvalidInput);

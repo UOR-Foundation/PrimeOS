@@ -82,9 +82,11 @@ mod tests {
 
     #[test]
     fn test_lazy_evaluation_limits() {
-        // Lazy evaluation still has dimension limits
+        // Lazy evaluation allows larger dimensions than standard algebra
         assert!(LazyCliffordAlgebra::<f64>::generate(12).is_ok());
-        assert!(LazyCliffordAlgebra::<f64>::generate(13).is_err());
+        assert!(LazyCliffordAlgebra::<f64>::generate(20).is_ok());
+        // But still has practical limits
+        assert!(LazyCliffordAlgebra::<f64>::generate(64).is_err());
 
         // Test that lazy evaluation actually saves memory
         if let Ok(lazy) = LazyCliffordAlgebra::<f64>::generate(10) {

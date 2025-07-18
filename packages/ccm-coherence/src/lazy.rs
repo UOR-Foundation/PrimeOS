@@ -15,6 +15,7 @@ use alloc::collections::BTreeMap;
 /// Lazy basis generator for Clifford algebras
 ///
 /// Generates basis elements on demand rather than pre-computing all 2^n elements
+#[derive(Clone)]
 pub struct LazyBasis<P: Float> {
     /// The dimension of the underlying vector space
     dimension: usize,
@@ -196,6 +197,7 @@ impl<'a, P: Float> Iterator for GradeIterator<'a, P> {
 }
 
 /// Lazy Clifford algebra that generates operations on demand
+#[derive(Clone)]
 pub struct LazyCliffordAlgebra<P: Float> {
     /// The underlying algebra
     algebra: CliffordAlgebra<P>,
@@ -206,7 +208,8 @@ pub struct LazyCliffordAlgebra<P: Float> {
 impl<P: Float> LazyCliffordAlgebra<P> {
     /// Create a new lazy Clifford algebra
     pub fn generate(n: usize) -> Result<Self, CcmError> {
-        let algebra = CliffordAlgebra::generate(n)?;
+        // Use generate_with_limit to allow larger dimensions
+        let algebra = CliffordAlgebra::generate_with_limit(n, n)?;
         let basis = LazyBasis::new(algebra.clone());
 
         Ok(Self { algebra, basis })
@@ -215,6 +218,11 @@ impl<P: Float> LazyCliffordAlgebra<P> {
     /// Get the dimension
     pub fn dimension(&self) -> usize {
         self.algebra.dimension()
+    }
+    
+    /// Get the metric signature
+    pub fn signature(&self) -> (usize, usize, usize) {
+        self.algebra.signature()
     }
 
     /// Get a basis element lazily
@@ -251,6 +259,33 @@ impl<P: Float> LazyCliffordAlgebra<P> {
         b: &CliffordElement<P>,
     ) -> Result<CliffordElement<P>, CcmError> {
         self.algebra.geometric_product(a, b)
+    }
+    
+    /// Wedge product using lazy evaluation
+    pub fn wedge_product(
+        &self,
+        a: &CliffordElement<P>,
+        b: &CliffordElement<P>,
+    ) -> Result<CliffordElement<P>, CcmError> {
+        self.algebra.wedge_product(a, b)
+    }
+    
+    /// Inner product using lazy evaluation
+    pub fn inner_product(
+        &self,
+        a: &CliffordElement<P>,
+        b: &CliffordElement<P>,
+    ) -> Result<CliffordElement<P>, CcmError> {
+        self.algebra.inner_product(a, b)
+    }
+    
+    /// Scalar product using lazy evaluation
+    pub fn scalar_product(
+        &self,
+        a: &CliffordElement<P>,
+        b: &CliffordElement<P>,
+    ) -> Result<Complex<P>, CcmError> {
+        self.algebra.scalar_product(a, b)
     }
 
     /// Get memory usage statistics

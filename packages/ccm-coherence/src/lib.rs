@@ -29,6 +29,10 @@ pub mod metric;
 pub mod optimization;
 pub mod rotor;
 pub mod sparse;
+pub mod unified;
+pub mod single_blade;
+pub mod scalable;
+pub mod sparse_big;
 
 #[cfg(test)]
 mod arbitrary_tests;
@@ -42,6 +46,21 @@ pub use decomposition::{CoherentDecomposition, GradeComponent, CoherenceBoundary
 pub use element::{CliffordElement, Section};
 pub use embedding::{bitword_to_clifford, embed_with_resonance, u8_to_clifford};
 pub use metric::{coherence_norm, coherence_product};
+
+// Re-export unified API
+pub use unified::{CliffordAlgebraTrait, CliffordAlgebraFactory, UnifiedCliffordAlgebra};
+pub use arbitrary_support::{ArbitraryCliffordAlgebra, ArbitraryDimensionConfig};
+pub use lazy::LazyCliffordAlgebra;
+pub use sparse::SparseCliffordElement;
+
+// Re-export new embedding functions
+pub use embedding::{bitword_to_clifford_trait, u8_to_clifford_trait, embed_bitword_lazy};
+
+// Re-export scalable API
+pub use scalable::{ScalableCliffordAlgebraTrait, ScalableAlgebra, LazyElement, GradeIterator};
+pub use single_blade::{SingleBlade, LazySingleBlade};
+pub use arbitrary_support::BigIndex;
+pub use sparse_big::SparseBigElement;
 
 #[cfg(test)]
 mod tests {
